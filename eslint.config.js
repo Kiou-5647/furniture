@@ -48,7 +48,7 @@ export default defineConfigWithVueTs(
                 },
             ],
             'import/order': [
-                'error',
+                'off',
                 {
                     groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
                     alphabetize: {

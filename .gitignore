@@ -12,8 +12,7 @@
 /vendor
 .DS_Store
 .env
-.env.backup
-.env.production
+.env.*
 .phpactor.json
 .phpunit.result.cache
 Homestead.json
@@ -26,3 +25,7 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+.ai
+.agents
+.docs/
+.ignore

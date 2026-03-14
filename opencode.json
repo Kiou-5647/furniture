@@ -10,5 +10,21 @@
                 "boost:mcp"
             ]
         }
-    }
+    },
+    "permission": {
+        "edit": "ask",
+        "bash": "ask",
+        "skill": "allow"
+    },
+    "watcher": {
+        "ignore": [
+            "node_modules/**",
+            "dist/**",
+            ".git/**"
+        ]
+    },
+    "instructions": [
+        "AGENTS.md",
+        ".docs/*.md"
+    ]
 }
