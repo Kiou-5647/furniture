@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
-use App\Actions\Fortify\CreateNewUser;
+use App\Actions\Fortify\CreateCustomer;
 use App\Actions\Fortify\ResetUserPassword;
+use App\Actions\Fortify\Response\CustomLoginResponse;
+use App\Actions\Fortify\Response\CustomRegisterResponse;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -11,6 +13,8 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
+use Laravel\Fortify\Contracts\LoginResponse;
+use Laravel\Fortify\Contracts\RegisterResponse;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
 
@@ -40,6 +44,7 @@ class FortifyServiceProvider extends ServiceProvider
         $this->configureActions();
         $this->configureViews();
         $this->configureRateLimiting();
+        $this->configureResponses();
     }
 
     /**
@@ -48,7 +53,7 @@ class FortifyServiceProvider extends ServiceProvider
     private function configureActions(): void
     {
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
-        Fortify::createUsersUsing(CreateNewUser::class);
+        Fortify::createUsersUsing(CreateCustomer::class);
     }
 
     /**
@@ -96,5 +101,12 @@ class FortifyServiceProvider extends ServiceProvider
 
             return Limit::perMinute(5)->by($throttleKey);
         });
+    }
+
+    private function configureResponses(): void
+    {
+        // Bind custom redirect responses
+        $this->app->bind(LoginResponse::class, CustomLoginResponse::class);
+        $this->app->bind(RegisterResponse::class, CustomRegisterResponse::class);
     }
 }
