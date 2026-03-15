@@ -26,16 +26,16 @@ const mainNavItems: NavItem[] = [
 ];
 
 const footerNavItems: NavItem[] = [
-    {
-        title: 'Kho lưu trữ',
-        href: 'https://github.com/laravel/vue-starter-kit',
-        icon: FolderGit2,
-    },
-    {
-        title: 'Tài liệu',
-        href: 'https://laravel.com/docs/starter-kits#vue',
-        icon: BookOpen,
-    },
+    //{
+    //    title: 'Kho lưu trữ',
+    //    href: 'https://github.com/laravel/vue-starter-kit',
+    //    icon: FolderGit2,
+    //},
+    //{
+    //    title: 'Tài liệu',
+    //    href: 'https://laravel.com/docs/starter-kits#vue',
+    //    icon: BookOpen,
+    //},
 ];
 </script>
 

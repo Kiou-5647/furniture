@@ -127,7 +127,6 @@ CREATE TABLE IF NOT EXISTS vendors (
     total_revenue DECIMAL(15,2) DEFAULT 0.00,
 
     is_active BOOLEAN DEFAULT true,
-    is_verified BOOLEAN DEFAULT false,
     is_preferred BOOLEAN DEFAULT false,
 
     verified_at TIMESTAMP,
@@ -138,7 +137,7 @@ CREATE TABLE IF NOT EXISTS vendors (
 );
 CREATE INDEX IF NOT EXISTS idx_vendors_active ON vendors(is_active) WHERE is_active = true AND deleted_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_vendors_deleted_at ON vendors(deleted_at) WHERE deleted_at IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_vendors_is_verified ON vendors(is_verified) WHERE is_verified = true;
+CREATE INDEX IF NOT EXISTS idx_vendors_verified_at ON vendors(verified_at) WHERE verified_at IS NOT NULL;
 
 
 CREATE TABLE IF NOT EXISTS vendor_users (

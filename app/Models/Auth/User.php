@@ -10,9 +10,8 @@ use App\Models\Vendor\VendorUser;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -96,13 +95,20 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasOne(Customer::class);
     }
 
-    public function vendorUsers(): HasMany
+    public function vendorUser(): HasOne
     {
-        return $this->hasMany(VendorUser::class);
+        return $this->hasOne(VendorUser::class);
     }
 
-    public function vendors(): BelongsToMany
+    public function vendor(): HasOneThrough
     {
-        return $this->belongsToMany(Vendor::class, 'vendor_users');
+        return $this->hasOneThrough(
+            Vendor::class,
+            VendorUser::class,
+            'user_id',
+            'id',
+            'id',
+            'vendor_id'
+        );
     }
 }

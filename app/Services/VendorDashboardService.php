@@ -20,7 +20,7 @@ class VendorDashboardService
                 'roles' => $user->getRoleNames()->toArray(),
                 'permissions' => $user->getPermissionNames()->toArray(),
             ],
-            'vendor' => $user->vendors()->first(),
+            'vendor' => $user->vendor()->first(),
         ];
     }
 }

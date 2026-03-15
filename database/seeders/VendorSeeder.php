@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Enums\UserType;
 use App\Models\Auth\User;
 use App\Models\Vendor\Vendor;
+use App\Models\Vendor\VendorUser;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -59,14 +60,19 @@ class VendorSeeder extends Seeder
                 'password' => Hash::make('password'),
                 'type' => UserType::Vendor,
                 'is_active' => true,
-                'email_verified_at' => $isVerified ? now() : null,
+                // 'email_verified_at' => $isVerified ? now() : null,
+                'email_verified_at' => now(),
             ]
         );
-        if (! $user->vendors()->exists()) {
-            $user->vendors()->attach($vendor->id, [
-                'full_name' => $contactName,
-                'phone' => $phone,
-            ]);
+        if (! $user->vendor()->exists()) {
+            if (! $user->vendorUser) {
+                VendorUser::create([
+                    'user_id' => $user->id,
+                    'vendor_id' => $vendor->id,
+                    'full_name' => $contactName,
+                    'phone' => $phone,
+                ]);
+            }
         }
 
         return $vendor;

@@ -41,7 +41,6 @@ class Vendor extends Model
         'total_orders',
         'total_revenue',
         'is_active',
-        'is_verified',
         'is_preferred',
         'verified_at',
     ];
@@ -54,7 +53,6 @@ class Vendor extends Model
         'rating' => 'decimal:2',
         'total_revenue' => 'decimal:2',
         'is_active' => 'boolean',
-        'is_verified' => 'boolean',
         'is_preferred' => 'boolean',
         'verified_at' => 'datetime',
     ];
