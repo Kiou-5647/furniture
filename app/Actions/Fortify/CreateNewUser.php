@@ -22,20 +22,20 @@ class CreateNewUser implements CreatesNewUsers
      */
     public function create(array $input): User
     {
-        // Role is required for admin creation
+        // Type is required for admin creation
         Validator::make($input, [
             'name' => $this->nameRules(),
             'email' => $this->emailRules(),
             'password' => $this->passwordRules(),
-            'role' => ['required', 'string', 'in:employee,customer,vendor'],
+            'type' => ['required', 'string', 'in:employee,customer,vendor'],
         ])->validate();
         $user = User::create([
             'name' => $input['name'],
             'email' => $input['email'],
             'password' => $input['password'],
-            'role' => $input['role'],
+            'type' => $input['type'],
         ]);
-        match ($input['role']) {
+        match ($input['type']) {
             'customer' => (new CreateCustomerProfile)->create($user, $input),
             'employee' => $this->createEmployeeProfileAndVerify($user, $input),
             'vendor' => (new CreateVendorProfile)->create($user, $input),
@@ -53,7 +53,6 @@ class CreateNewUser implements CreatesNewUsers
 
         // Auto-verify employees
         $user->update([
-            'is_verified' => true,
             'email_verified_at' => now(),
         ]);
         // Send welcome email with password reset instructions

@@ -12,15 +12,15 @@ import type { NavItem } from '@/types';
 
 const sidebarNavItems: NavItem[] = [
     {
-        title: 'Profile',
+        title: 'Hồ sơ',
         href: editProfile(),
     },
     {
-        title: 'Security',
+        title: 'Bảo mật',
         href: editSecurity(),
     },
     {
-        title: 'Appearance',
+        title: 'Giao diện',
         href: editAppearance(),
     },
 ];
@@ -31,8 +31,8 @@ const { isCurrentOrParentUrl } = useCurrentUrl();
 <template>
     <div class="px-4 py-6">
         <Heading
-            title="Settings"
-            description="Manage your profile and account settings"
+            title="Cài đặt"
+            description="Quản lý hồ sơ và cài đặt tài khoản của bạn"
         />
 
         <div class="flex flex-col lg:flex-row lg:space-x-12">

@@ -29,7 +29,7 @@ class CreateCustomer implements CreatesNewUsers
             'name' => $input['name'],
             'email' => $input['email'],
             'password' => $input['password'],
-            'role' => 'customer', // force
+            'type' => 'customer',
         ]);
         (new CreateCustomerProfile)->create($user, $input);
 

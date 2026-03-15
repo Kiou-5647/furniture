@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Enums\UserRole;
+use App\Enums\UserType;
 use App\Models\Auth\Role;
 use App\Models\Auth\User;
 use Illuminate\Database\Seeder;
@@ -18,9 +18,8 @@ class SuperAdminSeeder extends Seeder
                 'name' => 'Super Admin',
                 'password' => Hash::make('password'),
                 'is_active' => true,
-                'is_verified' => true,
                 'email_verified_at' => now(),
-                'role' => UserRole::Employee,
+                'type' => UserType::Employee,
             ]
         );
 

@@ -23,7 +23,7 @@ defineProps<Props>();
 
 const breadcrumbItems: BreadcrumbItem[] = [
     {
-        title: 'Profile settings',
+        title: 'Cài đặt hồ sơ',
         href: edit(),
     },
 ];
@@ -34,16 +34,16 @@ const user = computed(() => page.props.auth.user);
 
 <template>
     <AppLayout :breadcrumbs="breadcrumbItems">
-        <Head title="Profile settings" />
+        <Head title="Cài đặt hồ sơ" />
 
-        <h1 class="sr-only">Profile settings</h1>
+        <h1 class="sr-only">Cài đặt hồ sơ</h1>
 
         <SettingsLayout>
             <div class="flex flex-col space-y-6">
                 <Heading
                     variant="small"
-                    title="Profile information"
-                    description="Update your name and email address"
+                    title="Thông tin hồ sơ"
+                    description="Cập nhật tên và địa chỉ email của bạn"
                 />
 
                 <Form
@@ -52,7 +52,7 @@ const user = computed(() => page.props.auth.user);
                     v-slot="{ errors, processing, recentlySuccessful }"
                 >
                     <div class="grid gap-2">
-                        <Label for="name">Name</Label>
+                        <Label for="name">Tên</Label>
                         <Input
                             id="name"
                             class="mt-1 block w-full"
@@ -60,13 +60,13 @@ const user = computed(() => page.props.auth.user);
                             :default-value="user.name"
                             required
                             autocomplete="name"
-                            placeholder="Full name"
+                            placeholder="Họ và tên"
                         />
                         <InputError class="mt-2" :message="errors.name" />
                     </div>
 
                     <div class="grid gap-2">
-                        <Label for="email">Email address</Label>
+                        <Label for="email">Địa chỉ email</Label>
                         <Input
                             id="email"
                             type="email"
@@ -75,20 +75,20 @@ const user = computed(() => page.props.auth.user);
                             :default-value="user.email"
                             required
                             autocomplete="username"
-                            placeholder="Email address"
+                            placeholder="Địa chỉ email"
                         />
                         <InputError class="mt-2" :message="errors.email" />
                     </div>
 
                     <div v-if="mustVerifyEmail && !user.email_verified_at">
                         <p class="-mt-4 text-sm text-muted-foreground">
-                            Your email address is unverified.
+                            Địa chỉ email của bạn chưa được xác minh.
                             <Link
                                 :href="send()"
                                 as="button"
                                 class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
                             >
-                                Click here to resend the verification email.
+                                Nhấn vào đây để gửi lại email xác minh.
                             </Link>
                         </p>
 
@@ -96,8 +96,8 @@ const user = computed(() => page.props.auth.user);
                             v-if="status === 'verification-link-sent'"
                             class="mt-2 text-sm font-medium text-green-600"
                         >
-                            A new verification link has been sent to your email
-                            address.
+                            Một liên kết xác minh mới đã được gửi đến địa chỉ
+                            email của bạn.
                         </div>
                     </div>
 
@@ -105,7 +105,7 @@ const user = computed(() => page.props.auth.user);
                         <Button
                             :disabled="processing"
                             data-test="update-profile-button"
-                            >Save</Button
+                            >Lưu</Button
                         >
 
                         <Transition
@@ -118,7 +118,7 @@ const user = computed(() => page.props.auth.user);
                                 v-show="recentlySuccessful"
                                 class="text-sm text-neutral-600"
                             >
-                                Saved.
+                                Đã lưu.
                             </p>
                         </Transition>
                     </div>

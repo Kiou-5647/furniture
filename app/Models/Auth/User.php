@@ -2,11 +2,12 @@
 
 namespace App\Models\Auth;
 
-use App\Enums\UserRole;
+use App\Enums\UserType;
 use App\Models\Customer\Customer;
 use App\Models\Employee\Employee;
 use App\Models\Vendor\Vendor;
 use App\Models\Vendor\VendorUser;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -18,7 +19,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasRoles, HasUuids, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
@@ -31,12 +32,11 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'role',
+        'type',
         'name',
         'email',
         'password',
         'is_active',
-        'is_verified',
         'email_verified_at',
         'last_login_ip',
         'last_login_at',
@@ -62,29 +62,28 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'role' => UserRole::class,
+            'type' => UserType::class,
             'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
             'is_active' => 'boolean',
-            'is_verified' => 'boolean',
         ];
     }
 
     public function isEmployee(): bool
     {
-        return $this->role === UserRole::Employee;
+        return $this->type === UserType::Employee;
     }
 
     public function isVendor(): bool
     {
-        return $this->role === UserRole::Vendor;
+        return $this->type === UserType::Vendor;
     }
 
     public function isCustomer(): bool
     {
-        return $this->role === UserRole::Customer;
+        return $this->type === UserType::Customer;
     }
 
     public function employee(): HasOne

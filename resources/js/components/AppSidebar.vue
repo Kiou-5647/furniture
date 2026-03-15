@@ -19,7 +19,7 @@ import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
     {
-        title: 'Dashboard',
+        title: 'Bảng điều khiển',
         href: dashboard(),
         icon: LayoutGrid,
     },
@@ -27,12 +27,12 @@ const mainNavItems: NavItem[] = [
 
 const footerNavItems: NavItem[] = [
     {
-        title: 'Repository',
+        title: 'Kho lưu trữ',
         href: 'https://github.com/laravel/vue-starter-kit',
         icon: FolderGit2,
     },
     {
-        title: 'Documentation',
+        title: 'Tài liệu',
         href: 'https://laravel.com/docs/starter-kits#vue',
         icon: BookOpen,
     },

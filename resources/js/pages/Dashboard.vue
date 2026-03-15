@@ -7,14 +7,14 @@ import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Dashboard',
+        title: 'Bảng điều khiển',
         href: dashboard(),
     },
 ];
 </script>
 
 <template>
-    <Head title="Dashboard" />
+    <Head title="Bảng điều khiển" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div

@@ -13,12 +13,13 @@ class CustomLoginResponse implements LoginResponse
     public function toResponse($request): RedirectResponse
     {
         $user = $request->user();
+
         if ($user->isEmployee()) {
-            return redirect()->intended('/dashboard');
+            return redirect()->intended(route('employee.dashboard'));
         } elseif ($user->isVendor()) {
-            return redirect()->intended('/vendor/dashboard');
+            return redirect()->intended(route('vendor.dashboard'));
         }
 
-        return redirect()->intended('/');
+        return redirect()->intended(route('home'));
     }
 }

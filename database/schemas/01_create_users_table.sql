@@ -2,7 +2,7 @@
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
-    role VARCHAR(20) NOT NULL CHECK (role IN ('employee', 'vendor', 'customer')) DEFAULT 'customer',
+    type VARCHAR(20) NOT NULL CHECK (type IN ('employee', 'vendor', 'customer')) DEFAULT 'customer',
 
     name VARCHAR(255) NOT NULL,
 
@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS users (
     -- Indexes
     CONSTRAINT users_email_uniq UNIQUE (email)
 );
+CREATE INDEX IF NOT EXISTS idx_users_type ON users(type);
 CREATE INDEX IF NOT EXISTS idx_users_is_active ON users(is_active) WHERE is_active = true;
 CREATE INDEX IF NOT EXISTS idx_users_deleted_at ON users(deleted_at) WHERE deleted_at IS NOT NULL;
 

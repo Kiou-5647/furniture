@@ -11,10 +11,10 @@ class CustomRegisterResponse implements RegisterResponse
     {
         $user = $request->user();
 
-        return match ($user?->role?->value) {
-            'employee' => redirect('/dashboard'),
-            'vendor' => redirect('/vendor/dashboard'),
-            default => redirect('/'),
+        return match ($user?->type?->value) {
+            'employee' => redirect()->route('employee.dashboard'),
+            'vendor' => redirect()->route('vendor.dashboard'),
+            default => redirect()->route('home'),
         };
     }
 }

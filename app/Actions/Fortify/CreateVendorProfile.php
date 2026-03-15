@@ -21,7 +21,6 @@ class CreateVendorProfile
                 'email' => $input['email'] ?? null,
                 'phone' => $input['phone'] ?? null,
                 'is_active' => true,
-                'is_verified' => false,
                 'payment_terms_days' => 30,
                 'lead_time_days' => 7,
                 'minimum_order_amount' => 0,
@@ -51,7 +50,7 @@ class CreateVendorProfile
             for ($i = 0; $i < 8; $i++) {
                 $random .= $characters[random_int(0, strlen($characters) - 1)];
             }
-            $code = 'VD='.$random;
+            $code = 'VD-'.$random;
         } while (Vendor::where('code', $code)->exists());
 
         return $code;

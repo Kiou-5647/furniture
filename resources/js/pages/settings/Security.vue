@@ -31,7 +31,7 @@ withDefaults(defineProps<Props>(), {
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Security settings',
+        title: 'Cài đặt bảo mật',
         href: edit(),
     },
 ];
@@ -44,16 +44,16 @@ onUnmounted(() => clearTwoFactorAuthData());
 
 <template>
     <AppLayout :breadcrumbs="breadcrumbs">
-        <Head title="Security settings" />
+        <Head title="Cài đặt bảo mật" />
 
-        <h1 class="sr-only">Security settings</h1>
+        <h1 class="sr-only">Cài đặt bảo mật</h1>
 
         <SettingsLayout>
             <div class="space-y-6">
                 <Heading
                     variant="small"
-                    title="Update password"
-                    description="Ensure your account is using a long, random password to stay secure"
+                    title="Cập nhật mật khẩu"
+                    description="Đảm bảo tài khoản của bạn đang sử dụng mật khẩu dài, ngẫu nhiên để bảo mật"
                 />
 
                 <Form
@@ -71,39 +71,39 @@ onUnmounted(() => clearTwoFactorAuthData());
                     v-slot="{ errors, processing, recentlySuccessful }"
                 >
                     <div class="grid gap-2">
-                        <Label for="current_password">Current password</Label>
+                        <Label for="current_password">Mật khẩu hiện tại</Label>
                         <PasswordInput
                             id="current_password"
                             name="current_password"
                             class="mt-1 block w-full"
                             autocomplete="current-password"
-                            placeholder="Current password"
+                            placeholder="Mật khẩu hiện tại"
                         />
                         <InputError :message="errors.current_password" />
                     </div>
 
                     <div class="grid gap-2">
-                        <Label for="password">New password</Label>
+                        <Label for="password">Mật khẩu mới</Label>
                         <PasswordInput
                             id="password"
                             name="password"
                             class="mt-1 block w-full"
                             autocomplete="new-password"
-                            placeholder="New password"
+                            placeholder="Mật khẩu mới"
                         />
                         <InputError :message="errors.password" />
                     </div>
 
                     <div class="grid gap-2">
                         <Label for="password_confirmation"
-                            >Confirm password</Label
+                            >Xác nhận mật khẩu</Label
                         >
                         <PasswordInput
                             id="password_confirmation"
                             name="password_confirmation"
                             class="mt-1 block w-full"
                             autocomplete="new-password"
-                            placeholder="Confirm password"
+                            placeholder="Xác nhận mật khẩu"
                         />
                         <InputError :message="errors.password_confirmation" />
                     </div>
@@ -113,7 +113,7 @@ onUnmounted(() => clearTwoFactorAuthData());
                             :disabled="processing"
                             data-test="update-password-button"
                         >
-                            Save password
+                            Lưu mật khẩu
                         </Button>
 
                         <Transition
@@ -126,7 +126,7 @@ onUnmounted(() => clearTwoFactorAuthData());
                                 v-show="recentlySuccessful"
                                 class="text-sm text-neutral-600"
                             >
-                                Saved.
+                                Đã lưu.
                             </p>
                         </Transition>
                     </div>
@@ -136,8 +136,8 @@ onUnmounted(() => clearTwoFactorAuthData());
             <div v-if="canManageTwoFactor" class="space-y-6">
                 <Heading
                     variant="small"
-                    title="Two-factor authentication"
-                    description="Manage your two-factor authentication settings"
+                    title="Xác thực hai yếu tố"
+                    description="Quản lý cài đặt xác thực hai yếu tố của bạn"
                 />
 
                 <div
@@ -145,10 +145,10 @@ onUnmounted(() => clearTwoFactorAuthData());
                     class="flex flex-col items-start justify-start space-y-4"
                 >
                     <p class="text-sm text-muted-foreground">
-                        When you enable two-factor authentication, you will be
-                        prompted for a secure pin during login. This pin can be
-                        retrieved from a TOTP-supported application on your
-                        phone.
+                        Khi bạn bật xác thực hai yếu tố, bạn sẽ được nhắc nhập
+                        mã PIN bảo mật trong quá trình đăng nhập. Mã PIN này có
+                        thể được lấy từ ứng dụng hỗ trợ TOTP trên điện thoại của
+                        bạn.
                     </p>
 
                     <div>
@@ -156,7 +156,7 @@ onUnmounted(() => clearTwoFactorAuthData());
                             v-if="hasSetupData"
                             @click="showSetupModal = true"
                         >
-                            <ShieldCheck />Continue setup
+                            <ShieldCheck />Tiếp tục cài đặt
                         </Button>
                         <Form
                             v-else
@@ -165,7 +165,7 @@ onUnmounted(() => clearTwoFactorAuthData());
                             #default="{ processing }"
                         >
                             <Button type="submit" :disabled="processing">
-                                Enable 2FA
+                                Bật 2FA
                             </Button>
                         </Form>
                     </div>
@@ -176,9 +176,9 @@ onUnmounted(() => clearTwoFactorAuthData());
                     class="flex flex-col items-start justify-start space-y-4"
                 >
                     <p class="text-sm text-muted-foreground">
-                        You will be prompted for a secure, random pin during
-                        login, which you can retrieve from the TOTP-supported
-                        application on your phone.
+                        Bạn sẽ được nhắc nhập mã PIN bảo mật, ngẫu nhiên trong
+                        quá trình đăng nhập, mà bạn có thể lấy từ ứng dụng hỗ
+                        trợ TOTP trên điện thoại của bạn.
                     </p>
 
                     <div class="relative inline">
@@ -188,7 +188,7 @@ onUnmounted(() => clearTwoFactorAuthData());
                                 type="submit"
                                 :disabled="processing"
                             >
-                                Disable 2FA
+                                Tắt 2FA
                             </Button>
                         </Form>
                     </div>
