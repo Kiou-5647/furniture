@@ -12,7 +12,8 @@
 /vendor
 .DS_Store
 .env
-.env.*
+.env.testing
+.env.production
 .phpactor.json
 .phpunit.result.cache
 Homestead.json
@@ -29,4 +30,6 @@ yarn-error.log
 .agents
 .docs/
 .ignore
+/tests
 opencode.json
+AGENTS.md
