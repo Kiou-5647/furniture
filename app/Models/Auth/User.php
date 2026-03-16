@@ -26,22 +26,6 @@ class User extends Authenticatable implements MustVerifyEmail
     public $incrementing = false;
 
     /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
-    protected $fillable = [
-        'type',
-        'name',
-        'email',
-        'password',
-        'is_active',
-        'email_verified_at',
-        'last_login_ip',
-        'last_login_at',
-    ];
-
-    /**
      * The attributes that should be hidden for serialization.
      *
      * @var list<string>

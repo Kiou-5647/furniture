@@ -40,8 +40,9 @@ CREATE TABLE IF NOT EXISTS positions (
 CREATE TABLE IF NOT EXISTS lookups (
     id SERIAL PRIMARY KEY,
     namespace VARCHAR(64) NOT NULL,                                     -- Container name to categorize lookups into groups
-    value VARCHAR(255) NOT NULL,
-    slug VARCHAR(64) UNIQUE,                                            -- Slug ( if needed )
+    key VARCHAR(64) UNIQUE,                                             -- key (slug)
+    display_name VARCHAR(255) NOT NULL,
+
     metadata JSONB DEFAULT '{}'::jsonb,                                 -- to store metadata of the lookup like images, validation rules, configuaration, hex color code,....
 
     is_active BOOLEAN DEFAULT true,
@@ -50,10 +51,10 @@ CREATE TABLE IF NOT EXISTS lookups (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    UNIQUE (namespace, value)
+    UNIQUE (namespace, key)
 );
 CREATE INDEX IF NOT EXISTS idx_lookups_namespace ON lookups(namespace);
-CREATE INDEX IF NOT EXISTS idx_lookups_value ON lookups(value);
+CREATE INDEX IF NOT EXISTS idx_lookups_display_name_trgm ON lookups USING GIN(display_name gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_lookups_is_active ON lookups(is_active) WHERE is_active = true;
 CREATE INDEX IF NOT EXISTS idx_lookups_system ON lookups(is_system) WHERE is_system = true;
 CREATE INDEX IF NOT EXISTS idx_lookups_custom ON lookups(is_system) WHERE is_system = false;

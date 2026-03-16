@@ -15,18 +15,6 @@ class CustomerAddress extends Model
 
     public $incrementing = false;
 
-    protected $fillable = [
-        'customer_id',
-        'type',
-        'delivery_instructions',
-        'province_code',
-        'ward_code',
-        'province_name',
-        'ward_name',
-        'address_data',
-        'is_default',
-    ];
-
     protected $casts = [
         'address_data' => 'array',
         'is_default' => 'boolean',

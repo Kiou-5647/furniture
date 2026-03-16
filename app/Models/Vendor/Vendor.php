@@ -17,34 +17,6 @@ class Vendor extends Model
 
     public $incrementing = false;
 
-    protected $fillable = [
-        'verified_by',
-        'name',
-        'code',
-        'contact_name',
-        'email',
-        'phone',
-        'website',
-        'webhook_url',
-        'address',
-        'notes',
-        'bank_name',
-        'bank_account_number',
-        'bank_account_holder',
-        'api_credentials',
-        'shipping_regions',
-        'tags',
-        'payment_terms_days',
-        'lead_time_days',
-        'minimum_order_amount',
-        'rating',
-        'total_orders',
-        'total_revenue',
-        'is_active',
-        'is_preferred',
-        'verified_at',
-    ];
-
     protected $casts = [
         'api_credentials' => 'array',
         'shipping_regions' => 'array',

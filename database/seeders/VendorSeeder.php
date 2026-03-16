@@ -60,8 +60,7 @@ class VendorSeeder extends Seeder
                 'password' => Hash::make('password'),
                 'type' => UserType::Vendor,
                 'is_active' => true,
-                // 'email_verified_at' => $isVerified ? now() : null,
-                'email_verified_at' => now(),
+                'email_verified_at' => $isVerified ? now() : null,
             ]
         );
         if (! $user->vendor()->exists()) {

@@ -22,6 +22,7 @@ class PermissionSeeder extends Seeder
             );
         }
 
+        $this->createSuperAdminRole();
         $this->createRoles();
     }
 
@@ -41,6 +42,12 @@ class PermissionSeeder extends Seeder
             ['name' => 'roles.delete', 'description' => 'Delete roles'],
             ['name' => 'permissions.view', 'description' => 'View permissions'],
             ['name' => 'permissions.assign', 'description' => 'Assign permissions'],
+
+            // Lookups
+            ['name' => 'lookup.view', 'description' => 'View lookups'],
+            ['name' => 'lookup.create', 'description' => 'Create lookups'],
+            ['name' => 'lookup.update', 'description' => 'Update lookups'],
+            ['name' => 'lookup.delete', 'description' => 'Delete lookups'],
 
             // Products
             ['name' => 'products.view', 'description' => 'View products'],
@@ -110,11 +117,21 @@ class PermissionSeeder extends Seeder
         ];
     }
 
+    protected function createSuperAdminRole(): void
+    {
+        $permissions = $this->getPermissions();
+        $role = Role::firstOrCreate(
+            ['name' => 'super_admin', 'guard_name' => 'web']
+        );
+
+        foreach ($permissions as $permission) {
+            $role->givePermissionTo($permission['name']);
+        }
+    }
+
     protected function createRoles(): void
     {
         $rolesPermissions = [
-            'super_admin' => null,
-
             'admin' => [
                 'users.view', 'users.update',
                 'roles.view', 'permissions.view',

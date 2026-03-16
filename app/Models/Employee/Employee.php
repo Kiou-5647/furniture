@@ -16,16 +16,6 @@ class Employee extends Model
 
     public $incrementing = false;
 
-    protected $fillable = [
-        'user_id',
-        'department_id',
-        'full_name',
-        'phone',
-        'avatar_path',
-        'hire_date',
-        'termination_date',
-    ];
-
     protected $casts = [
         'hire_date' => 'date',
         'termination_date' => 'date',

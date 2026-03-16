@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             SuperAdminSeeder::class,
             GeodataSeeder::class,
             VendorSeeder::class,
+            LookupSeeder::class,
         ]);
     }
 }

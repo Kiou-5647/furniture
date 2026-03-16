@@ -16,13 +16,6 @@ class Department extends Model
 
     public $incrementing = false;
 
-    protected $fillable = [
-        'name',
-        'code',
-        'description',
-        'is_active',
-    ];
-
     protected $casts = [
         'is_active' => 'boolean',
     ];

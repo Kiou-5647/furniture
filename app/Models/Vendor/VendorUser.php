@@ -16,14 +16,6 @@ class VendorUser extends Model
 
     public $incrementing = false;
 
-    protected $fillable = [
-        'user_id',
-        'vendor_id',
-        'full_name',
-        'phone',
-        'avatar_path',
-    ];
-
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

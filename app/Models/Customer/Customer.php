@@ -17,15 +17,6 @@ class Customer extends Model
 
     public $incrementing = false;
 
-    protected $fillable = [
-        'user_id',
-        'full_name',
-        'phone',
-        'avatar_path',
-        'total_spent',
-        'loyalty_points',
-    ];
-
     protected $casts = [
         'total_spent' => 'decimal:2',
         'loyalty_points' => 'integer',
