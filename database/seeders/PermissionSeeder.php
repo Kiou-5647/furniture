@@ -22,7 +22,6 @@ class PermissionSeeder extends Seeder
             );
         }
 
-        $this->createSuperAdminRole();
         $this->createRoles();
     }
 
@@ -117,21 +116,10 @@ class PermissionSeeder extends Seeder
         ];
     }
 
-    protected function createSuperAdminRole(): void
-    {
-        $permissions = $this->getPermissions();
-        $role = Role::firstOrCreate(
-            ['name' => 'super_admin', 'guard_name' => 'web']
-        );
-
-        foreach ($permissions as $permission) {
-            $role->givePermissionTo($permission['name']);
-        }
-    }
-
     protected function createRoles(): void
     {
         $rolesPermissions = [
+            'super_admin' => null,
             'admin' => [
                 'users.view', 'users.update',
                 'roles.view', 'permissions.view',

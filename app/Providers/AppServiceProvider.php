@@ -2,10 +2,12 @@
 
 namespace App\Providers;
 
+use App\Models\Auth\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -26,6 +28,10 @@ class AppServiceProvider extends ServiceProvider
     {
         Model::unguard();
         $this->configureDefaults();
+
+        Gate::before(function (User $user, string $ability) {
+            return $user->hasRole('super_admin') ? true : null;
+        });
     }
 
     /**

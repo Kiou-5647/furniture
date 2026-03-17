@@ -2,15 +2,19 @@
 import AppSidebarLayout from '@/layouts/app/AppSidebarLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 
-defineProps<{
+type Props = {
     breadcrumbs?: BreadcrumbItem[];
-    user: {
+    user?: {
         name: string;
         email: string;
         roles: string[];
         permissions: string[];
     };
-}>();
+};
+
+withDefaults(defineProps<Props>(), {
+    breadcrumbs: () => [],
+});
 </script>
 
 <template>

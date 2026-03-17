@@ -7,7 +7,8 @@
     "mcp": true,
     "nightwatch_mcp": false,
     "packages": [
-        "laravel/fortify"
+        "laravel/fortify",
+        "spatie/laravel-permission"
     ],
     "sail": false,
     "skills": [
@@ -16,15 +17,16 @@
         "inertia-vue-development",
         "tailwindcss-development",
         "fortify-development",
+        "laravel-permission-development",
         "create-adaptable-composable",
         "eloquent-best-practices",
         "find-skills",
         "laravel-best-practices",
         "laravel-controllers",
         "laravel-models",
-        "laravel-permission-development",
         "laravel-testing",
         "php-best-practices",
+        "primevue",
         "redis-best-practices",
         "redis-development",
         "shadcn-vue",

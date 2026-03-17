@@ -2,7 +2,7 @@
 
 namespace App\Actions\Fortify\Response;
 
-use App\Services\VendorVerificationService;
+use App\Services\Vendor\VendorVerificationService;
 use Illuminate\Http\RedirectResponse;
 use Laravel\Fortify\Contracts\LoginResponse;
 

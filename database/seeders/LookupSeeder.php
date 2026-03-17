@@ -12,78 +12,10 @@ class LookupSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->seedSecret();
         $this->seedDatatypes();
         $this->seedRooms();
         $this->seedStyles();
         $this->seedColors();
-    }
-
-    protected function seedSecret(): void
-    {
-        $secrets = [
-            [
-                'key' => 'input',
-                'display_name' => 'Nhập liệu',
-                'namespace' => 'secret',
-                'metadata' => [
-                    'fields', 'unit',
-                ],
-                'is_system' => true,
-            ],
-            [
-                'key' => 'validation',
-                'display_name' => 'Ràng buộc',
-                'namespace' => 'secret',
-                'metadata' => [
-                    'datatype', 'min', 'max', 'regex',
-                ],
-                'is_system' => true,
-            ],
-            [
-                'key' => 'datatype',
-                'display_name' => 'Kiểu dữ liệu',
-                'namespace' => 'secret',
-                'metadata' => [
-                    'input', 'validation',
-                ],
-                'is_system' => true,
-            ],
-            [
-                'key' => 'rooms',
-                'display_name' => 'Phòng',
-                'namespace' => 'secret',
-                'metadata' => [
-                    'images',
-                ],
-                'is_system' => true,
-            ],
-            [
-                'key' => 'styles',
-                'display_name' => 'Phong cách',
-                'namespace' => 'secret',
-                'metadata' => [
-                    'images',
-                ],
-                'is_system' => true,
-            ],
-            [
-                'key' => 'colors',
-                'display_name' => 'Màu sắc',
-                'namespace' => 'secret',
-                'metadata' => [
-                    'hex_code',
-                ],
-                'is_system' => true,
-            ],
-        ];
-        foreach ($secrets as $secret) {
-            Lookup::updateOrCreate(
-                ['namespace' => $secret['namespace'], 'key' => $secret['key']],
-                $secret
-            );
-        }
-        $this->command->info('Seeded secrets');
     }
 
     protected function seedDatatypes(): void
@@ -92,28 +24,28 @@ class LookupSeeder extends Seeder
             [
                 'key' => 'text',
                 'display_name' => 'Văn bản',
-                'namespace' => 'datatype',
+                'namespace' => 'datatypes',
                 'metadata' => ['input' => ['fields' => ['value']], 'validation' => []],
                 'is_system' => true,
             ],
             [
                 'key' => 'number',
                 'display_name' => 'Số',
-                'namespace' => 'datatype',
+                'namespace' => 'datatypes',
                 'metadata' => ['input' => ['fields' => ['value']], 'validation' => []],
                 'is_system' => true,
             ],
             [
                 'key' => 'boolean',
                 'display_name' => 'Boolean',
-                'namespace' => 'datatype',
+                'namespace' => 'datatypes',
                 'metadata' => ['input' => ['fields' => ['value']], 'validation' => []],
                 'is_system' => true,
             ],
             [
                 'key' => 'color',
                 'display_name' => 'Màu sắc',
-                'namespace' => 'datatype',
+                'namespace' => 'datatypes',
                 'metadata' => [
                     'input' => ['fields' => ['value']],
                     'validation' => ['lookup' => 'colors'],
@@ -123,14 +55,14 @@ class LookupSeeder extends Seeder
             [
                 'key' => 'dimensions',
                 'display_name' => 'Kích thước',
-                'namespace' => 'datatype',
+                'namespace' => 'datatypes',
                 'metadata' => [
                     'input' => [
                         'fields' => ['height', 'width', 'depth'],
                         'unit' => 'cm',
                     ],
                     'validation' => [
-                        'datatype' => 'number',
+                        'datatypes' => 'number',
                         'min' => [
                             'required' => true,
                             'default' => 0,
@@ -146,14 +78,14 @@ class LookupSeeder extends Seeder
             [
                 'key' => 'weight',
                 'display_name' => 'Cân nặng',
-                'namespace' => 'datatype',
+                'namespace' => 'datatypes',
                 'metadata' => [
                     'input' => [
                         'fields' => ['value'],
                         'unit' => 'kg',
                     ],
                     'validation' => [
-                        'datatype' => 'number',
+                        'datatypes' => 'number',
                         'min' => [
                             'required' => true,
                             'default' => 0,

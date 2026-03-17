@@ -2,6 +2,7 @@
 
 namespace App\Models\Setting;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class Lookup extends Model
@@ -12,7 +13,6 @@ class Lookup extends Model
     {
         return [
             'metadata' => 'array',
-            'is_active' => 'boolean',
             'is_system' => 'boolean',
         ];
     }
@@ -21,17 +21,22 @@ class Lookup extends Model
         'is_system',
     ];
 
-    public function scopeByNamespace($query, string $namespace)
+    public function scopeByNamespace(Builder $query, string $namespace): Builder
     {
         return $query->where('namespace', $namespace);
     }
 
-    public function scopeActive($query)
+    public function scopeSearch(Builder $query, string $search): Builder
     {
-        return $query->where('is_active', true);
+        return $query->where('display_name', 'ilike', "%{$search}%");
     }
 
-    public function scopeCustom($query)
+    public function scopeSystem(Builder $query): Builder
+    {
+        return $query->where('is_system', true);
+    }
+
+    public function scopeCustom(Builder $query): Builder
     {
         return $query->where('is_system', false);
     }
