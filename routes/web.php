@@ -7,7 +7,7 @@ Route::inertia('/', 'Welcome', [
     'canRegister' => Features::enabled(Features::registration()),
 ])->name('home');
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'user_type:customer'])->group(function () {
     Route::inertia('dashboard', 'Dashboard')->name('dashboard');
 });
 

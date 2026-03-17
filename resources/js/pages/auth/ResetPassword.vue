@@ -13,7 +13,7 @@ import { update } from '@/routes/password';
     <AuthBase title="Đặt lại mật khẩu" description="Nhập mật khẩu mới của bạn">
         <Head title="Đặt lại mật khẩu" />
         <Form
-            v-bind="update.form()"
+            v-bind="update()"
             :reset-on-success="['password', 'password_confirmation']"
             v-slot="{ errors, processing }"
             class="flex flex-col gap-6"

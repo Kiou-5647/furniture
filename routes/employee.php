@@ -17,9 +17,6 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->group(function ()
     Route::middleware(['can:lookup.view'])->get('/nhan-vien/tra-cuu', [LookupController::class, 'index'])
         ->name('employee.lookups.index');
 
-    Route::middleware(['can:lookup.view'])->get('/nhan-vien/tra-cuu/{namespace}', [LookupController::class, 'show'])
-        ->name('employee.lookups.show');
-
     Route::middleware(['can:lookup.create'])->post('/nhan-vien/tra-cuu', [LookupController::class, 'store'])
         ->name('employee.lookups.store');
 

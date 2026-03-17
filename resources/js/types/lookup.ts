@@ -9,6 +9,7 @@ export interface Lookup {
 export interface LookupNamespace {
     namespace: string;
     count: number;
+    current_namespace?: string;
 }
 
 export interface LookupPagination {

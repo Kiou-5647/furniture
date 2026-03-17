@@ -22,7 +22,7 @@ import { email } from '@/routes/password';
             khẩu qua email để bạn có thể tạo mật khẩu mới.
         </div>
         <Form
-            v-bind="email.form()"
+            v-bind="email()"
             v-slot="{ errors, processing }"
             class="flex flex-col gap-6"
         >

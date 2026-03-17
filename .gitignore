@@ -33,3 +33,7 @@ yarn-error.log
 /tests
 opencode.json
 AGENTS.md
+GEMINI.md
+.geminiignore
+.opencode
+.gemini

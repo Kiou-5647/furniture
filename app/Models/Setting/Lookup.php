@@ -2,9 +2,16 @@
 
 namespace App\Models\Setting;
 
-use Illuminate\Database\Eloquent\Builder;
+use App\Builders\Setting\LookupBuilder;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @method static LookupBuilder|Lookup query()
+ * @method static LookupBuilder|Lookup byNamespace(string $namespace)
+ * @method static LookupBuilder|Lookup search(string $search)
+ * @method static LookupBuilder|Lookup isSystem()
+ * @method static LookupBuilder|Lookup isCustom()
+ */
 class Lookup extends Model
 {
     protected $table = 'lookups';
@@ -21,28 +28,13 @@ class Lookup extends Model
         'is_system',
     ];
 
-    public function scopeByNamespace(Builder $query, string $namespace): Builder
-    {
-        return $query->where('namespace', $namespace);
-    }
-
-    public function scopeSearch(Builder $query, string $search): Builder
-    {
-        return $query->where('display_name', 'ilike', "%{$search}%");
-    }
-
-    public function scopeSystem(Builder $query): Builder
-    {
-        return $query->where('is_system', true);
-    }
-
-    public function scopeCustom(Builder $query): Builder
-    {
-        return $query->where('is_system', false);
-    }
-
     public function canDelete(): bool
     {
         return ! $this->is_system;
+    }
+
+    public function newEloquentBuilder($query): LookupBuilder
+    {
+        return new LookupBuilder($query);
     }
 }
