@@ -21,7 +21,7 @@ class LookupFilterData
     public static function fromRequest(Request $request): self
     {
         return new self(
-            namespace: LookupType::tryFrom($request->query('namespace', 'colors')),
+            namespace: LookupType::tryFrom($request->query('namespace')) ?? LookupType::Colors,
             search: $request->query('search'),
             order_by: $request->query('order_by', 'key'),
             order_direction: $request->query('order_direction', 'asc'),
