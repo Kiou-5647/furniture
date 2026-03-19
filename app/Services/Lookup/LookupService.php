@@ -25,9 +25,7 @@ class LookupService
         return Lookup::query()
             ->when($filter->namespace, fn (LookupBuilder $q) => $q->byNamespace($filter->namespace))
             ->when($filter->search, fn (LookupBuilder $q) => $q->search($filter->search))
-            ->when($filter->systemOnly, fn (LookupBuilder $q) => $q->isSystem())
-            ->when($filter->customOnly, fn (LookupBuilder $q) => $q->isCustom())
-            ->orderBy($filter->orderBy ?? 'key', $filter->orderDirection ?? 'asc')
-            ->paginate($filter->perPage ?? 15);
+            ->orderBy($filter->order_by ?? 'key', $filter->order_direction ?? 'asc')
+            ->paginate($filter->per_page ?? 15);
     }
 }

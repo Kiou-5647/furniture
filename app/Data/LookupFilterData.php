@@ -2,6 +2,7 @@
 
 namespace App\Data;
 
+use App\Enums\LookupType;
 use Illuminate\Http\Request;
 
 class LookupFilterData
@@ -10,25 +11,21 @@ class LookupFilterData
      * Create a new class instance.
      */
     public function __construct(
-        public readonly ?string $namespace,
+        public readonly ?LookupType $namespace,
         public readonly ?string $search,
-        public readonly bool $systemOnly,
-        public readonly bool $customOnly,
-        public readonly ?string $orderBy,
-        public readonly ?string $orderDirection,
-        public readonly ?int $perPage
+        public readonly ?string $order_by,
+        public readonly ?string $order_direction,
+        public readonly ?int $per_page
     ) {}
 
     public static function fromRequest(Request $request): self
     {
         return new self(
-            namespace: $request->query('namespace'),
+            namespace: LookupType::tryFrom($request->query('namespace', 'colors')),
             search: $request->query('search'),
-            systemOnly: $request->boolean('system_only'),
-            customOnly: $request->boolean('custom_only'),
-            orderBy: $request->query('order_by', 'key'),
-            orderDirection: $request->query('order_direction', 'asc'),
-            perPage: (int) $request->query('perPage', 15)
+            order_by: $request->query('order_by', 'key'),
+            order_direction: $request->query('order_direction', 'asc'),
+            per_page: (int) $request->query('per_page', 15)
         );
     }
 }

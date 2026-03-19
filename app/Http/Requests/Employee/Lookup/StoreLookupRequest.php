@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Employee\Lookup;
 
+use App\Enums\LookupType;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -23,9 +24,7 @@ class StoreLookupRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'namespace' => [
-                'required', 'string', 'max:64', 'exists:lookups,namespace',
-            ],
+            'namespace' => ['required', Rule::enum(LookupType::class)],
             'key' => [
                 'required', 'string', 'max:64',
                 Rule::unique('lookups')->where(fn ($q) => $q->where('namespace', $this->input('namespace'))),
@@ -34,7 +33,11 @@ class StoreLookupRequest extends FormRequest
                 'required', 'string', 'max:255',
             ],
             'metadata' => ['nullable', 'array'],
-            'is_active' => ['sometimes', 'boolean'],
+            'metadata.hex_code' => [
+                Rule::requiredIf($this->input('namespace') === LookupType::Colors->value),
+                'nullable', 'string', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/',
+            ],
+            'metadata.image' => ['nullable', 'image', 'max:2048'],
         ];
     }
 
@@ -44,6 +47,8 @@ class StoreLookupRequest extends FormRequest
             'namespace.required' => 'Vui lòng chọn namespace.',
             'namespace.in' => 'Namespace đã chọn không tồn tại.',
             'key.unique' => 'Khóa đã tồn tại trong namespace được chọn.',
+            'metadata.hex_code.required' => 'Vui lòng cung cấp mã màu HEX.',
+            'metadata.hex_code.regex' => 'Định dạng mã màu không hợp lệ (VD: #FFFFFF).',
         ];
     }
 }

@@ -70,7 +70,7 @@ export default defineConfigWithVueTs(
         },
         rules: {
             '@stylistic/padding-line-between-statements': [
-                'error',
+                'off',
                 ...paddingAroundControl,
             ],
         },
@@ -95,8 +95,8 @@ export default defineConfigWithVueTs(
             '@stylistic': stylistic,
         },
         rules: {
-            curly: ['error', 'all'],
-            '@stylistic/brace-style': ['error', '1tbs', { allowSingleLine: false }],
+            curly: ['off', 'all'],
+            '@stylistic/brace-style': ['off', '1tbs', { allowSingleLine: false }],
         },
     },
 );

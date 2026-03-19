@@ -24,4 +24,9 @@ export default defineConfig({
             formVariants: true,
         }),
     ],
+    resolve: {
+        alias: {
+            'node:url': 'url',
+        }
+    }
 });

@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Employee\Lookup;
 
-use App\Models\Setting\Lookup;
-use Illuminate\Contracts\Validation\ValidationRule;
+use App\Enums\LookupType;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 class UpdateLookupRequest extends FormRequest
@@ -14,10 +14,9 @@ class UpdateLookupRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()->can(
-            'lookup.update',
-            $this->route('id') ? Lookup::find($this->route('id')) : null
-        );
+        $lookup = $this->route('lookup');
+
+        return $this->user()->can('lookup.update', $lookup);
     }
 
     /**
@@ -27,29 +26,37 @@ class UpdateLookupRequest extends FormRequest
      */
     public function rules(): array
     {
-        $lookupId = $this->route('id');
+        $lookup = $this->route('lookup');
+        $lookupId = $lookup->id;
         $namespace = $this->input('namespace');
 
+        Log::info('Start valicating');
+
         return [
-            'namespace' => ['required', 'string', 'max:64', 'exists:lookups,namespace'],
+            'namespace' => ['required', Rule::enum(LookupType::class)],
             'key' => [
-                'required',
-                'string',
-                'max:64',
+                'required', 'string', 'max:64',
                 Rule::unique('lookups')
                     ->ignore($lookupId)
                     ->where(fn ($q) => $q->where('namespace', $namespace)),
             ],
             'display_name' => ['required', 'string', 'max:255'],
             'metadata' => ['nullable', 'array'],
-            'is_active' => ['sometimes', 'boolean'],
+            'metadata.hex_code' => [
+                Rule::requiredIf($namespace === LookupType::Colors->value),
+                'nullable', 'string', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/',
+            ],
+            'metadata.image' => ['nullable', 'image', 'max:2048'],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'key.unique' => 'Khóa đã tồn tại trong namespace được chọn.',
+            'namespace.enum' => 'Danh mục không hợp lệ.',
+            'key.unique' => 'Khóa này đã tồn tại trong danh mục.',
+            'metadata.hex_code.required' => 'Vui lòng cung cấp mã màu HEX.',
+            'metadata.hex_code.regex' => 'Định dạng mã màu không hợp lệ (VD: #FFFFFF).',
         ];
     }
 }
