@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS positions (
 CREATE TABLE IF NOT EXISTS lookups (
     id SERIAL PRIMARY KEY,
     namespace VARCHAR(64),
-    slug VARCHAR(64) UNIQUE NOT NULL,
+    slug VARCHAR(64) NOT NULL,
     display_name VARCHAR(255) NOT NULL,
     description TEXT,
     image_path VARCHAR(255),
@@ -39,8 +39,12 @@ CREATE TABLE IF NOT EXISTS lookups (
     metadata JSONB DEFAULT '{}'::jsonb, -- to store metadata of the lookup like images, validation rules, configuaration, hex color code,....
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (namespace, slug)
+    deleted_at TIMESTAMP
 );
+
+CREATE UNIQUE INDEX unq_lookup_namespace_slug_active ON lookups (namespace, slug)
+WHERE
+    deleted_at IS NULL;
 
 CREATE INDEX IF NOT EXISTS idx_lookups_namespace ON lookups (namespace);
 

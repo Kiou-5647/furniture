@@ -6,6 +6,7 @@ use App\Builders\Setting\LookupBuilder;
 use App\Enums\LookupType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @method static LookupBuilder|Lookup query()
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Lookup extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'lookups';
 

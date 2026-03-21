@@ -27,7 +27,9 @@ class StoreLookupRequest extends FormRequest
             'namespace' => ['required', Rule::enum(LookupType::class)],
             'slug' => [
                 'required', 'string', 'max:64',
-                Rule::unique('lookups')->where(fn ($q) => $q->where('namespace', $this->input('namespace'))),
+                Rule::unique('lookups')
+                    ->whereNull('deleted_at')
+                    ->where(fn ($q) => $q->where('namespace', $this->input('namespace'))),
             ],
             'display_name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],

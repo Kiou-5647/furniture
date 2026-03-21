@@ -4,23 +4,29 @@ use App\Http\Controllers\Employee\EmployeeDashboardController;
 use App\Http\Controllers\Employee\Setting\LookupController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'verified', 'user_type:employee'])->group(function () {
+Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien')->group(function () {
     /**
      * Dashboard route
      */
-    Route::get('/nhan-vien/dashboard', [EmployeeDashboardController::class, 'index'])->name('employee.dashboard');
+    Route::get('/dashboard', [EmployeeDashboardController::class, 'index'])->name('employee.dashboard');
 
     /**
      * Lookups routes
      */
     Route::middleware(['can:lookups.view'])->group(function () {
-        Route::get('/nhan-vien/tra-cuu/{namespace?}', [LookupController::class, 'index'])->name('employee.lookups.index');
+        Route::get('/tra-cuu/{namespace?}', [LookupController::class, 'index'])->name('employee.lookups.index');
     });
 
-    Route::middleware(['can:lookups.manage'])->group(function () {
-        Route::post('/nhan-vien/tra-cuu', [LookupController::class, 'store'])->name('employee.lookups.store');
-        Route::put('/nhan-vien/tra-cuu/{lookup}', [LookupController::class, 'update'])->name('employee.lookups.update');
-        Route::delete('/nhan-vien/tra-cuu/{lookup}', [LookupController::class, 'destroy'])->name('employee.lookups.destroy');
+    Route::middleware(['can:lookups.manage'])->prefix('tra-cuu')->group(function () {
+        Route::post('/', [LookupController::class, 'store'])->name('employee.lookups.store');
+        Route::put('/{lookup}', [LookupController::class, 'update'])->name('employee.lookups.update');
+        Route::delete('/{lookup}', [LookupController::class, 'destroy'])->name('employee.lookups.destroy');
+
+        Route::prefix('trash')->group(function () {
+            Route::get('/', [LookupController::class, 'trash'])->name('employee.lookups.trash');
+            Route::post('/{id}/restore', [LookupController::class, 'restore'])->name('employee.lookups.restore');
+            Route::delete('/{id}/force', [LookupController::class, 'forceDestroy'])->name('employee.lookups.force-destroy');
+        });
     });
 
     /**

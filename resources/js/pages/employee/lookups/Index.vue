@@ -309,7 +309,7 @@ function handlePreviewImage(url: string) {
                 <AlertDialogFooter>
                     <AlertDialogCancel @click="selectedLookup = null">Hủy</AlertDialogCancel>
                     <AlertDialogAction @click="performDelete" class="bg-destructive hover:bg-destructive/90">
-                        Xóa vĩnh viễn
+                        Xóa
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>

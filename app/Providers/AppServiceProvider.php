@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Models\Auth\User;
+use App\Models\Setting\Lookup;
+use App\Observers\LookupObserver;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Date;
@@ -32,6 +34,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::before(function (User $user, string $ability) {
             return $user->hasRole('super_admin') ? true : null;
         });
+
+        Lookup::observe(LookupObserver::class);
     }
 
     /**
