@@ -14,6 +14,9 @@ class LookupBuilder extends Builder
 
     public function search(string $search): self
     {
-        return $this->where('display_name', 'ilike', "%{$search}%");
+        return $this->where(function ($query) use ($search) {
+            $query->where('display_name', 'ilike', "%{$search}%")
+                ->orWhere('slug', 'ilike', "%{$search}%");
+        });
     }
 }

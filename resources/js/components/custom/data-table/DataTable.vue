@@ -7,92 +7,145 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { FlexRender, getCoreRowModel, useVueTable } from '@tanstack/vue-table';
-import type { ColumnDef } from '@tanstack/vue-table';
+import { FlexRender } from '@tanstack/vue-table';
+import type { Table as VueTable } from '@tanstack/vue-table';
 import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-vue-next';
 
-interface DataTableProps {
-    columns: ColumnDef<any, any>[];
-    data: any[];
+const props = defineProps<{
+    table: VueTable<any>;
     order_by?: string;
-    order_direction?: string;
-}
-
-const props = defineProps<DataTableProps>();
-
-const table = useVueTable({
-    get data() {
-        return props.data;
-    },
-    get columns() {
-        return props.columns;
-    },
-    getCoreRowModel: getCoreRowModel(),
-});
-
+    order_direction?: 'asc' | 'desc' | null;
+}>();
 const emit = defineEmits(['sort']);
 
-function handleHeaderClick(columnId: string) {
-    if (['actions', 'color'].includes(columnId)) return;
+function handleHeaderClick(header: any) {
+    const columnId = header.column.id;
+    if (!header.column.getCanSort()) return;
+
     emit('sort', columnId);
 }
 </script>
+
 <template>
-    <div class="overflow-x-auto rounded-md border bg-card">
-        <Table class="table-fixed w-full">
-            <TableHeader>
-                <TableRow v-for="headerGroup in table.getHeaderGroups()" :key="headerGroup.id">
-                    <TableHead v-for="header in headerGroup.headers" :key="header.id"
-                        @click="handleHeaderClick(header.id)" :style="{
-                            width: header.column.getSize() !== 0 ? `${header.column.getSize()}px` : 'auto'
-                        }" :class="[
-                            'font-semibold transition-colors truncate px-5',
-                            header.column.columnDef.meta?.align === 'center' ? 'text-center' : 'text-left',
-                            !['actions', 'color'].includes(header.id) ? 'cursor-pointer hover:bg-muted/50 hover:text-foreground' : ''
-                        ]">
-                        <div :class="[
-                            'flex items-center gap-2',
-                            header.column.columnDef.meta?.align === 'center' ? 'justify-center' : 'justify-start'
-                        ]">
-                            <FlexRender v-if="!header.isPlaceholder" :render="header.column.columnDef.header"
-                                :props="header.getContext()" />
-                            <!-- Sorting Icons Logic -->
-                            <template v-if="!['actions', 'color'].includes(header.id)">
-                                <ArrowUp v-if="order_by === header.id && order_direction === 'asc'"
-                                    class="h-4 w-4 text-primary" />
-                                <ArrowDown v-else-if="order_by === header.id && order_direction === 'desc'"
-                                    class="h-4 w-4 text-primary" />
-                                <ArrowUpDown v-else class="h-3 w-3 text-muted-foreground/50" />
-                            </template>
-                        </div>
-                    </TableHead>
-                </TableRow>
-            </TableHeader>
+    <div class="w-full space-y-4">
+        <slot name="toolbar" :table="table" />
+        <!-- Table Container -->
+        <div class="rounded-md border bg-card">
+            <Table class="w-full">
+                <TableHeader>
+                    <TableRow
+                        v-for="headerGroup in table.getHeaderGroups()"
+                        :key="headerGroup.id"
+                    >
+                        <TableHead
+                            v-for="header in headerGroup.headers"
+                            :key="header.id"
+                            :style="{
+                                maxWidth: `${header.column.getSize()}px`,
+                            }"
+                            :class="[
+                                'h-11 px-4 font-bold transition-colors',
+                                header.column.columnDef.meta?.align === 'center'
+                                    ? 'text-center'
+                                    : 'text-left',
+                                header.column.getCanSort()
+                                    ? 'cursor-pointer hover:bg-muted/50 hover:text-foreground'
+                                    : '',
+                            ]"
+                            @click="handleHeaderClick(header)"
+                        >
+                            <div
+                                :class="[
+                                    'flex items-center gap-2',
+                                    header.column.columnDef.meta?.align ===
+                                    'center'
+                                        ? 'justify-center'
+                                        : 'justify-start',
+                                ]"
+                            >
+                                <FlexRender
+                                    v-if="!header.isPlaceholder"
+                                    :render="header.column.columnDef.header"
+                                    :props="header.getContext()"
+                                />
 
-            <TableBody>
-                <template v-if="table.getRowModel().rows?.length">
-                    <TableRow v-for="row in table.getRowModel().rows" :key="row.id"
-                        class="transition-colors hover:bg-muted">
-                        <TableCell v-for="cell in row.getVisibleCells()" :key="cell.id"
-                            :style="{ width: cell.column.getSize() !== 150 ? `${cell.column.getSize()}px` : 'auto' }">
-                            <div :class="[
-                                'flex items-center w-full',
-                                cell.column.columnDef.meta?.align === 'center' ? 'justify-center' : 'justify-start'
-                            ]">
-                                <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
+                                <!-- Icons Sắp xếp -->
+                                <template v-if="header.column.getCanSort()">
+                                    <ArrowUp
+                                        v-if="
+                                            order_by === header.id &&
+                                            order_direction === 'asc'
+                                        "
+                                        class="h-3.5 w-3.5 text-primary"
+                                    />
+                                    <ArrowDown
+                                        v-else-if="
+                                            order_by === header.id &&
+                                            order_direction === 'desc'
+                                        "
+                                        class="h-3.5 w-3.5 text-primary"
+                                    />
+                                    <ArrowUpDown
+                                        v-else
+                                        class="h-3 w-3 text-muted-foreground/30"
+                                    />
+                                </template>
                             </div>
-                        </TableCell>
+                        </TableHead>
                     </TableRow>
-                </template>
+                </TableHeader>
 
-                <template v-else>
-                    <TableRow>
-                        <TableCell :colspan="columns.length" class="h-32 text-center text-muted-foreground italic">
-                            Không tìm thấy dữ liệu nào.
-                        </TableCell>
-                    </TableRow>
-                </template>
-            </TableBody>
-        </Table>
+                <TableBody>
+                    <template v-if="table.getRowModel().rows?.length">
+                        <TableRow
+                            v-for="row in table.getRowModel().rows"
+                            :key="row.id"
+                            class="transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
+                        >
+                            <TableCell
+                                v-for="cell in row.getVisibleCells()"
+                                :key="cell.id"
+                                :style="{
+                                    maxWidth: `${cell.column.getSize()}px`,
+                                }"
+                                :class="[
+                                    'p-3',
+                                    cell.column.columnDef.meta?.align ===
+                                    'center'
+                                        ? 'text-center'
+                                        : 'text-left',
+                                ]"
+                            >
+                                <div
+                                    :class="[
+                                        'flex w-full items-center',
+                                        cell.column.columnDef.meta?.align ===
+                                        'center'
+                                            ? 'justify-center'
+                                            : 'justify-start',
+                                    ]"
+                                >
+                                    <FlexRender
+                                        :render="cell.column.columnDef.cell"
+                                        :props="cell.getContext()"
+                                    />
+                                </div>
+                            </TableCell>
+                        </TableRow>
+                    </template>
+
+                    <template v-else>
+                        <TableRow>
+                            <TableCell
+                                :colspan="table.getAllColumns().length"
+                                class="h-32 text-center text-muted-foreground italic"
+                            >
+                                Không tìm thấy kết quả nào phù hợp.
+                            </TableCell>
+                        </TableRow>
+                    </template>
+                </TableBody>
+            </Table>
+        </div>
     </div>
 </template>

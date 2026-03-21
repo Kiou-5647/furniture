@@ -11,64 +11,85 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Pencil, Trash2 } from 'lucide-vue-next';
+import { CheckCircle2, CircleDashed, MoreHorizontal, Pencil, Trash2 } from 'lucide-vue-next';
 
 export const baseColumns = (
     onEdit: (lookup: Lookup) => void,
     onDelete: (lookup: Lookup) => void,
 ): ColumnDef<Lookup>[] => [
         {
+            id: 'display_name',
             accessorKey: 'display_name',
             header: 'Tên hiển thị',
+            size: 500,
+            enableSorting: true,
         },
         {
-            accessorKey: 'key',
-            header: 'Khóa',
+            id: 'slug',
+            accessorKey: 'slug',
+            header: 'Slug',
+            size: 150,
+            enableSorting: true,
+            meta: { align: 'center' },
+            cell: ({ row }) => h(
+                Badge,
+                { variant: 'outline', class: '' },
+                () => row.getValue('slug'),
+            ),
+        },
+        {
+            id: 'description',
+            accessorKey: 'description',
+            header: 'Description',
+            size: 300,
+            enableSorting: false
+        },
+        {
+            id: 'is_active',
+            accessorKey: 'is_active',
+            header: 'Trạng thái',
             size: 100,
-            meta: {
-                align: 'center'
-            },
+            enableSorting: false,
+            meta: { align: 'center' },
             cell: ({ row }) => {
+                const isActive = row.getValue('is_active') as boolean;
                 return h(
-                    Badge,
-                    {
-                        variant: 'default',
-                        class: 'flex justify-self-center ',
-                    },
-                    () => row.getValue('key'),
+                    'div',
+                    { class: 'flex items-center gap-1.5' },
+                    [
+                        isActive
+                            ? h(CheckCircle2, { class: 'h-3.5 w-3.5 text-green-500' })
+                            : h(CircleDashed, { class: 'h-3.5 w-3.5 text-muted-foreground' }),
+                        h('span', { class: isActive ? 'text-green-600 font-medium' : 'text-muted-foreground' }, isActive ? 'Hiện' : 'Ẩn')
+                    ]
                 );
-            },
+            }
         },
         {
-            accessorKey: 'actions',
+            id: 'actions',
             header: 'Thao tác',
-            size: 50,
-            meta: {
-                align: 'center'
-            },
+            size: 80,
+            enableSorting: false,
+            meta: { align: 'center' },
             cell: ({ row }) => {
                 const lookup = row.original;
-
                 return h(
                     DropdownMenu,
                     {},
                     {
                         default: () => [
                             h(DropdownMenuTrigger, { asChild: true }, () =>
-                                h(Button, { variant: 'secondary', class: 'h-8 w-8 p-0 hover:bg-white dark:hover:bg-black ' }, () =>
+                                h(Button, { variant: 'ghost', class: 'h-8 w-8 p-0' }, () =>
                                     h(MoreHorizontal, { class: 'h-4 w-4' }),
                                 ),
                             ),
-                            h(DropdownMenuContent, { align: 'end' }, () => [
-                                h(DropdownMenuLabel, {}, () => 'Thao tác'),
+                            h(DropdownMenuContent, { align: 'end', class: 'w-[160px]' }, () => [
+                                h(DropdownMenuLabel, {}, () => 'Quản lý'),
                                 h(DropdownMenuSeparator),
                                 h(
                                     DropdownMenuItem,
                                     { onClick: () => onEdit(lookup) },
-                                    () => [
-                                        h(Pencil, { class: 'mr-2 h-4 w-4' }),
-                                        'Chỉnh sửa',
-                                    ],
+                                    () => [h(Pencil, { class: 'mr-2 h-4 w-4' }), 'Chỉnh sửa'],
                                 ),
                                 h(
                                     DropdownMenuItem,
@@ -76,10 +97,7 @@ export const baseColumns = (
                                         class: 'text-destructive focus:text-destructive',
                                         onClick: () => onDelete(lookup),
                                     },
-                                    () => [
-                                        h(Trash2, { class: 'mr-2 h-4 w-4' }),
-                                        'Xóa',
-                                    ],
+                                    () => [h(Trash2, { class: 'mr-2 h-4 w-4' }), 'Xóa mục này'],
                                 ),
                             ]),
                         ],
@@ -89,39 +107,30 @@ export const baseColumns = (
         },
     ];
 
-const colorColumn = (onPreviewImage: (url: string) => void): ColumnDef<Lookup>[] => [
+const colorColumn: ColumnDef<Lookup>[] = [
     {
         accessorKey: 'color',
-        header: 'Màu sắc',
+        header: 'Màu',
         size: 50,
         meta: {
             align: 'center',
         },
+        enableSorting: false,
         cell: ({ row }) => {
-            const metadata = row.original.metadata;
-
-            if (metadata?.image) {
-                return h('img', {
-                    src: metadata.image,
-                    alt: row.original.display_name,
-                    class: 'w-5 h-5 flex justify-self-center rounded-full border shadow-sm cursor-zoom-in hover:scale-105 object-contain',
-                    onClick: () => onPreviewImage(metadata.image)
-                });
-            }
+            const lookup = row.original;
 
             // Check for hex code
-            if (metadata?.hex_code) {
+            if (lookup.metadata?.hex_code) {
                 return h('div', {
-                    class: 'w-5 h-5 flex justify-self-center rounded-full border shadow-sm',
-                    style: { backgroundColor: metadata.hex_code ?? '#ffffff' },
+                    class: 'w-5 h-5 rounded-full border shadow-sm',
+                    style: { backgroundColor: lookup.metadata.hex_code },
                 });
             }
 
-            // Fallback (Empty state)
             return h(
                 'div',
                 {
-                    class: 'w-10 h-10 rounded-full bg-muted flex items-center justify-center border text-[10px] text-muted-foreground italic',
+                    class: 'rounded-full bg-muted flex items-center justify-center border text-[10px] text-muted-foreground italic',
                 },
                 () => 'None',
             );
@@ -131,32 +140,30 @@ const colorColumn = (onPreviewImage: (url: string) => void): ColumnDef<Lookup>[]
 
 const imageColumn = (onPreviewImage: (url: string) => void): ColumnDef<Lookup>[] => [
     {
-        accessorKey: 'image',
+        accessorKey: 'image_path',
         header: 'Hình ảnh',
-        size: 50,
-        meta: {
-            align: 'center',
-        },
+        size: 80,
+        enableSorting: false,
+        meta: { align: 'center' },
         cell: ({ row }) => {
-            const metadata = row.original.metadata;
+            const lookup = row.original;
 
-            // Check for image
-            if (metadata?.image) {
-                return h('img', {
-                    src: metadata.image,
-                    alt: row.original.display_name,
-                    class: 'min-w-20 max-w-30 min-h-10 max-h-20  flex justify-self-center rounded-md object-cover border shadow-sm cursor-zoom-in hover:scale-105',
-                    onClick: () => onPreviewImage(metadata.image)
-                });
+            if (lookup.image_path) {
+                return h(
+                    'div',
+                    {
+                        class: 'max-w-32 max-h-32'
+                    },
+                    h('img', {
+                        src: lookup.image_path,
+                        alt: lookup.display_name,
+                        class: 'rounded-md object-cover border shadow-sm cursor-zoom-in hover:scale-105 transition-transform',
+                        onClick: () => onPreviewImage(lookup.image_path!)
+                    })
+                );
             }
 
-            return h(
-                'div',
-                {
-                    class: 'min-w-20 min-h-20 rounded-md bg-muted flex items-center justify-center border text-[10px] text-muted-foreground italic',
-                },
-                () => 'None',
-            );
+            return h('div', { class: 'min-w-8 min-h-8 max-w-16 max-h-16 rounded-md bg-muted flex items-center justify-center border text-[10px] text-muted-foreground' }, 'Không ảnh');
         }
     }
 ]
@@ -170,7 +177,7 @@ export function getColumns(
     const base = baseColumns(onEdit, onDelete);
 
     if (namespace === 'mau-sac') {
-        return [...colorColumn(onPreviewImage), ...base];
+        return [...imageColumn(onPreviewImage), ...colorColumn, ...base];
     }
 
     return [...imageColumn(onPreviewImage), ...base];

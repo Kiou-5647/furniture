@@ -16,10 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, Plus, Search } from 'lucide-vue-next';
-import { Input } from '@/components/ui/input';
-import { Skeleton } from '@/components/ui/skeleton';
-import DataTable from '@/components/custom/data-table/DataTable.vue';
+import { Eye, EyeOff, Plus } from 'lucide-vue-next';
 import LookupFormModal from './LookupFormModal.vue';
 import {
     AlertDialog,
@@ -32,9 +29,16 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { destroy } from '@/routes/employee/lookups';
-import DataTablePagination from '@/components/custom/data-table/DataTablePagination.vue';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { VisuallyHidden } from 'reka-ui';
+import DataTableGroup from '@/components/custom/data-table/DataTableGroup.vue';
+import { cleanQuery } from '@/lib/utils';
+import DataTableFacetedFilter from '@/components/custom/data-table/DataTableFacetedFilter.vue';
 
 const props = defineProps<{
     namespaces: LookupNamespace[];
@@ -42,51 +46,83 @@ const props = defineProps<{
     filters: LookupFilterData;
 }>();
 
-const breadcrumbs: BreadcrumbItem[] = [{ title: 'Tra cứu', href: index() }];
-const activeColumns = computed(() => getColumns(props.filters.namespace!, handleEdit, confirmDelete, handlePreviewImage));
-const search = ref(props.filters.search ?? '');
-
-const isActuallyLoading = ref(true);
-let loadingTimeout: any = null;
-
+const breadcrumbs: BreadcrumbItem[] = [{ title: 'Tra cứu', href: index().url }];
+const activeColumns = computed(() =>
+    getColumns(
+        props.filters.namespace!,
+        handleEdit,
+        confirmDelete,
+        handlePreviewImage,
+    ),
+);
 const showFormModal = ref(false);
 const showDeleteDialog = ref(false);
 const selectedLookup = ref<Lookup | null>(null);
-
-const updateSearch = debounce((value: string) => {
-    router.get(
-        index(),
-        {
-            ...props.filters,
-            search: value,
-            page: 1,
-        },
-        {
-            preserveState: true,
-            replace: true,
-        },
-    );
-}, 300);
-
+const previewImageUrl = ref<string | null>(null);
+const isActuallyLoading = ref(true);
+const search = ref(props.filters.search ?? '');
 const hasActiveFilters = computed(() => {
-    return !!props.filters.search || !!props.filters.order_by;
+    return (
+        !!props.filters.search ||
+        !!props.filters.order_by ||
+        (props.filters.is_active !== undefined &&
+            props.filters.is_active !== null)
+    );
 });
 
-const previewImageUrl = ref<string | null>(null);
+const selectedStatuses = ref<boolean[]>(
+    props.filters.is_active === undefined || props.filters.is_active === null
+        ? []
+        : [props.filters.is_active],
+);
 
+const statusOptions = [
+    { label: 'Đang hiện', value: true, icon: Eye },
+    { label: 'Đang ẩn', value: false, icon: EyeOff },
+];
+const updateSearch = debounce(() => {
+    const { namespace, ...restFilters } = props.filters;
+
+    let isActiveValue: boolean | undefined = undefined;
+    if (selectedStatuses.value.length === 1) {
+        isActiveValue = selectedStatuses.value[0];
+    }
+    const rawQuery = {
+        ...restFilters,
+        search: search.value,
+        is_active: isActiveValue,
+        page: 1,
+    };
+
+    router.get(index(namespace), cleanQuery(rawQuery), {
+        preserveState: true,
+        replace: true,
+    });
+}, 500);
+
+let loadingTimeout: any = null;
 
 watch(search, (newValue) => {
     if (newValue === (props.filters.search ?? '')) return;
-    updateSearch(newValue);
+    updateSearch();
 });
 
-watch(() => props.filters.search, (newSearch) => {
-    search.value = newSearch ?? '';
+watch(selectedStatuses, () => {
+    updateSearch();
 });
 
 watch(
+    () => props.filters.search,
+    (newSearch) => {
+        search.value = newSearch ?? '';
+    },
+);
+
+watch(
     () => [props.filters],
-    () => { isActuallyLoading.value = true; }
+    () => {
+        isActuallyLoading.value = true;
+    },
 );
 
 watch(
@@ -107,40 +143,38 @@ function getDisplayNamespace(namespace: string) {
         'mau-sac': 'Màu sắc',
         'phong': 'Phòng',
         'phong-cach': 'Phong cách',
-        'tinh-nang': 'Tính năng'
+        'tinh-nang': 'Tính năng',
     };
     return labels[namespace] || capitalize(namespace);
 }
 
 function handleSort(column: string) {
-    let nextDirection: 'asc' | 'desc' | null = 'asc';
+    const { namespace, ...restFilters } = props.filters;
+    const direction = props.filters.order_direction === 'asc' ? 'desc' : 'asc';
 
-    if (props.filters.order_by === column) {
-        if (props.filters.order_direction === 'asc') nextDirection = 'desc';
-        else if (props.filters.order_direction === 'desc') nextDirection = null;
-    }
+    const query = {
+        ...restFilters,
+        order_by: column,
+        order_direction: direction,
+        page: 1,
+    };
 
-    router.get(
-        index().url,
-        {
-            ...props.filters,
-            order_by: nextDirection ? column : undefined,
-            order_direction: nextDirection ?? undefined,
-            page: 1,
-        },
-        { preserveState: true }
-    );
+    router.get(index(namespace).url, cleanQuery(query), {
+        preserveState: true,
+    });
 }
 
 function resetFilters() {
     updateSearch.cancel();
+
     router.get(
-        index().url,
-        { namespace: props.filters.namespace },
-        { preserveState: true }
+        index(props.filters.namespace),
+        {},
+        {
+            preserveState: false,
+        },
     );
 }
-
 function handleCreate() {
     selectedLookup.value = null;
     showFormModal.value = true;
@@ -168,32 +202,53 @@ function performDelete() {
 }
 
 function handlePageChange(page: number) {
-    router.get(index().url, {
-        ...props.filters,
-        page
-    }, { preserveState: true, preserveScroll: true });
+    const { namespace, ...restFilters } = props.filters;
+
+    let isActiveValue: boolean | undefined = undefined;
+    if (selectedStatuses.value.length === 1) {
+        isActiveValue = selectedStatuses.value[0];
+    }
+
+    const rawQuery = {
+        ...restFilters,
+        is_active: isActiveValue,
+        page,
+    };
+
+    router.get(index(namespace).url, cleanQuery(rawQuery), {
+        preserveState: true,
+        preserveScroll: true,
+    });
 }
 
 function handlePageSizeChange(per_page: number) {
-    router.get(index().url, {
-        ...props.filters,
-        per_page,
-        page: 1 // Reset to page 1 when changing size
-    }, { preserveState: true, preserveScroll: true });
-}
+    const { namespace, ...restFilters } = props.filters;
 
+    let isActiveValue: boolean | undefined = undefined;
+    if (selectedStatuses.value.length === 1) {
+        isActiveValue = selectedStatuses.value[0];
+    }
+
+    const rawQuery = {
+        ...restFilters,
+        is_active: isActiveValue,
+        per_page,
+        page: 1,
+    };
+    router.get(index(namespace).url, cleanQuery(rawQuery), {
+        preserveState: true,
+        preserveScroll: true,
+    });
+}
 function handlePreviewImage(url: string) {
     previewImageUrl.value = url;
 }
-
-
-
 </script>
 <template>
 
     <Head title="Tra cứu" />
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="space-y-6 p-6">
+        <div class="space-y-4 p-4">
             <div class="flex items-center justify-between">
                 <Heading title="Quản lý tra cứu" description="Định nghĩa các kiểu dữ liệu và giá trị cho hệ thống" />
                 <Button @click="handleCreate">
@@ -201,55 +256,39 @@ function handlePreviewImage(url: string) {
                 </Button>
             </div>
 
-            <div class="grid items-start grid-cols-1 lg:grid-cols-12 lg:gap-3">
+            <div class="grid grid-cols-1 items-start lg:grid-cols-12 lg:gap-3">
                 <Card class="col-span-1 lg:col-span-3">
                     <CardHeader>
                         <CardTitle class="text-lg font-medium">Danh mục</CardTitle>
                     </CardHeader>
                     <CardContent class="grid gap-1">
-                        <Link v-for="item in namespaces" :key="item.namespace" :href="index({ query: { namespace: item.namespace } })
-                            .url
-                            " :class="[
-                                'group flex items-center justify-between rounded-md px-3 py-2 transition-all duration-200',
-                                filters.namespace === item.namespace
-                                    ? 'bg-primary/10 text-primary shadow-sm'
-                                    : 'text-muted-foreground hover:bg-muted',
-                            ]" preserve-state preserve-scroll>
+                        <Link v-for="item in namespaces" :key="item.namespace" :href="index(item.namespace).url" :class="[
+                            'group flex items-center justify-between rounded-md px-3 py-2 transition-all duration-200',
+                            filters.namespace === item.namespace
+                                ? 'bg-primary/10 text-primary shadow-sm'
+                                : 'text-muted-foreground hover:bg-muted',
+                        ]" preserve-state preserve-scroll>
                             <span :class="[capitalize, 'font-medium']">
                                 {{ getDisplayNamespace(item.namespace) }}</span>
-                            <Badge variant="secondary" class="transition-colors group-hover:bg-background">{{ item.count
-                            }}</Badge>
+                            <Badge variant="secondary" class="transition-colors group-hover:bg-background">
+                                {{ item.count }}
+                            </Badge>
                         </Link>
                     </CardContent>
                 </Card>
 
-                <div class="col-span-1 lg:col-span-9 space-y-4">
-                    <!-- Filters Bar -->
-                    <div class="flex items-center gap-4">
-                        <div class="relative mt-3 w-full max-w-sm lg:mt-0">
-                            <Search class="absolute top-2.5 left-2.5 h-4 w-4 text-muted-foreground" />
-                            <Input v-model="search" placeholder="Tìm kiếm theo tên hoặc khóa..." class="pl-8" />
-                        </div>
-                        <Transition name="fade">
-                            <Button v-if="hasActiveFilters" variant="ghost" size="sm" @click="resetFilters"
-                                class="h-9 mt-3 px-2 lg:mt-0 lg:px-3 text-muted-foreground hover:text-foreground">
-                                Xóa bộ lọc
-                                <X class="ml-2 h-4 w-4" />
-                            </Button>
-                        </Transition>
-                    </div>
-
-                    <!-- Datatable -->
-                    <Transition name="fade" mode="out-in">
-                        <div v-if="isActuallyLoading" class="space-y-4">
-                            <Skeleton v-for="i in 5" :key="i" class="h-8 w-full" />
-                        </div>
-                        <DataTable v-else :columns="activeColumns" :data="lookups!.data" :order-by="filters.order_by"
-                            :order-direction="filters.order_direction" @sort="handleSort" />
-                    </Transition>
-                    <DataTablePagination v-if="lookups" :total="lookups.total" :page-size="lookups.per_page"
-                        :current-page="lookups.current_page" :last-page="lookups.last_page"
-                        @update:page="handlePageChange" @update:pageSize="handlePageSizeChange" />
+                <div class="col-span-1 space-y-4 lg:col-span-9">
+                    <DataTableGroup v-model:search="search" :is-actually-loading="isActuallyLoading"
+                        :columns="activeColumns" :data="lookups?.data ?? []" :has-active-filters="hasActiveFilters"
+                        :total="lookups?.total ?? 0" :page-size="lookups?.per_page ?? 15"
+                        :current-page="lookups?.current_page ?? 1" :last-page="lookups?.last_page ?? 1"
+                        :order-by="filters.order_by" :order-direction="filters.order_direction" @reset="resetFilters"
+                        @sort="handleSort" @update:page="handlePageChange" @update:pageSize="handlePageSizeChange">
+                        <template #filters>
+                            <DataTableFacetedFilter title="Trạng thái" v-model="selectedStatuses"
+                                :options="statusOptions" />
+                        </template>
+                    </DataTableGroup>
                 </div>
             </div>
         </div>
@@ -262,30 +301,27 @@ function handlePreviewImage(url: string) {
                 <AlertDialogHeader>
                     <AlertDialogTitle>Xác nhận xóa</AlertDialogTitle>
                     <AlertDialogDescription>
-                        Bạn có chắc chắn muốn xóa tra cứu "{{ selectedLookup?.display_name }}"?
-                        Hành động này không thể hoàn tác.
+                        Bạn có chắc chắn muốn xóa tra cứu "{{
+                            selectedLookup?.display_name
+                        }}"? Hành động này không thể hoàn tác.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel @click="selectedLookup = null">Hủy</AlertDialogCancel>
                     <AlertDialogAction @click="performDelete" class="bg-destructive hover:bg-destructive/90">
-                        Xóa ngay
+                        Xóa vĩnh viễn
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
         <Dialog :open="!!previewImageUrl" @update:open="previewImageUrl = null">
-            <DialogContent class="max-w-[90vw] max-h-[90vh] border-none bg-transparent p-0 shadow-none sm:rounded-none">
+            <DialogContent class="w-[90vw] h-[90vh] border-none bg-transparent p-0 shadow-none sm:rounded-none">
                 <VisuallyHidden>
                     <DialogTitle />
                     <DialogDescription />
                 </VisuallyHidden>
                 <div class="relative flex items-center justify-center">
-                    <img
-                        :src="previewImageUrl!"
-                        class="rounded-lg w-full h-full shadow-2xl"
-                    />
-
+                    <img :src="previewImageUrl!" class="h-auto w-auto rounded-lg shadow-2xl" />
                 </div>
             </DialogContent>
         </Dialog>

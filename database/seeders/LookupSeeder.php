@@ -20,18 +20,18 @@ class LookupSeeder extends Seeder
     protected function seedRooms(): void
     {
         $rooms = [
-            ['key' => 'phong-khach', 'display_name' => 'Phòng khách', 'namespace' => 'phong'],
-            ['key' => 'phong-ngu', 'display_name' => 'Phòng ngủ', 'namespace' => 'phong'],
-            ['key' => 'phong-an', 'display_name' => 'Phòng ăn', 'namespace' => 'phong'],
-            ['key' => 'nha-bep', 'display_name' => 'Nhà bếp', 'namespace' => 'phong'],
-            ['key' => 'phong-tam', 'display_name' => 'Phòng tắm', 'namespace' => 'phong'],
-            ['key' => 'van-phong', 'display_name' => 'Văn phòng', 'namespace' => 'phong'],
-            ['key' => 'hanh-lang', 'display_name' => 'Hành lang', 'namespace' => 'phong'],
-            ['key' => 'san-vuon', 'display_name' => 'Sân vườn', 'namespace' => 'phong'],
+            ['slug' => 'phong-khach', 'display_name' => 'Phòng khách', 'namespace' => 'phong'],
+            ['slug' => 'phong-ngu', 'display_name' => 'Phòng ngủ', 'namespace' => 'phong'],
+            ['slug' => 'phong-an', 'display_name' => 'Phòng ăn', 'namespace' => 'phong'],
+            ['slug' => 'nha-bep', 'display_name' => 'Nhà bếp', 'namespace' => 'phong'],
+            ['slug' => 'phong-tam', 'display_name' => 'Phòng tắm', 'namespace' => 'phong'],
+            ['slug' => 'van-phong', 'display_name' => 'Văn phòng', 'namespace' => 'phong'],
+            ['slug' => 'hanh-lang', 'display_name' => 'Hành lang', 'namespace' => 'phong'],
+            ['slug' => 'san-vuon', 'display_name' => 'Sân vườn', 'namespace' => 'phong'],
         ];
         foreach ($rooms as $room) {
             Lookup::updateOrCreate(
-                ['namespace' => $room['namespace'], 'key' => $room['key']],
+                ['namespace' => $room['namespace'], 'slug' => $room['slug']],
                 $room
             );
         }
@@ -41,18 +41,18 @@ class LookupSeeder extends Seeder
     protected function seedStyles(): void
     {
         $styles = [
-            ['key' => 'hien-dai', 'display_name' => 'Hiện đại', 'namespace' => 'phong-cach'],
-            ['key' => 'co-dien', 'display_name' => 'Cổ điển', 'namespace' => 'phong-cach'],
-            ['key' => 'toi-gian', 'display_name' => 'Tối giản', 'namespace' => 'phong-cach'],
-            ['key' => 'cong-nghiep', 'display_name' => 'Công nghiệp', 'namespace' => 'phong-cach'],
-            ['key' => 'scandinavian', 'display_name' => 'Scandinavian', 'namespace' => 'phong-cach'],
-            ['key' => 'vintage', 'display_name' => 'Vintage', 'namespace' => 'phong-cach'],
-            ['key' => 'boho', 'display_name' => 'Boho', 'namespace' => 'phong-cach'],
-            ['key' => 'nordic', 'display_name' => 'Nordic', 'namespace' => 'phong-cach'],
+            ['slug' => 'hien-dai', 'display_name' => 'Hiện đại', 'namespace' => 'phong-cach'],
+            ['slug' => 'co-dien', 'display_name' => 'Cổ điển', 'namespace' => 'phong-cach'],
+            ['slug' => 'toi-gian', 'display_name' => 'Tối giản', 'namespace' => 'phong-cach'],
+            ['slug' => 'cong-nghiep', 'display_name' => 'Công nghiệp', 'namespace' => 'phong-cach'],
+            ['slug' => 'scandinavian', 'display_name' => 'Scandinavian', 'namespace' => 'phong-cach'],
+            ['slug' => 'vintage', 'display_name' => 'Vintage', 'namespace' => 'phong-cach'],
+            ['slug' => 'boho', 'display_name' => 'Boho', 'namespace' => 'phong-cach'],
+            ['slug' => 'nordic', 'display_name' => 'Nordic', 'namespace' => 'phong-cach'],
         ];
         foreach ($styles as $style) {
             Lookup::updateOrCreate(
-                ['namespace' => $style['namespace'], 'key' => $style['key']],
+                ['namespace' => $style['namespace'], 'slug' => $style['slug']],
                 $style
             );
         }
@@ -62,22 +62,22 @@ class LookupSeeder extends Seeder
     protected function seedColors(): void
     {
         $colors = [
-            ['key' => 'trang', 'display_name' => 'Trắng', 'namespace' => 'mau-sac', 'metadata' => ['hex_code' => '#FFFFFF']],
-            ['key' => 'den', 'display_name' => 'Đen', 'namespace' => 'mau-sac', 'metadata' => ['hex_code' => '#000000']],
-            ['key' => 'xam', 'display_name' => 'Xám', 'namespace' => 'mau-sac', 'metadata' => ['hex_code' => '#808080']],
-            ['key' => 'nau', 'display_name' => 'Nâu', 'namespace' => 'mau-sac', 'metadata' => ['hex_code' => '#8B4513']],
-            ['key' => 'xanh-duong', 'display_name' => 'Xanh dương', 'namespace' => 'mau-sac', 'metadata' => ['hex_code' => '#0000FF']],
-            ['key' => 'xanh-la', 'display_name' => 'Xanh lá', 'namespace' => 'mau-sac', 'metadata' => ['hex_code' => '#008000']],
-            ['key' => 'do', 'display_name' => 'Đỏ', 'namespace' => 'mau-sac', 'metadata' => ['hex_code' => '#FF0000']],
-            ['key' => 'vang', 'display_name' => 'Vàng', 'namespace' => 'mau-sac', 'metadata' => ['hex_code' => '#FFD700']],
-            ['key' => 'cam', 'display_name' => 'Cam', 'namespace' => 'mau-sac', 'metadata' => ['hex_code' => '#FFA500']],
-            ['key' => 'tim', 'display_name' => 'Tím', 'namespace' => 'mau-sac', 'metadata' => ['hex_code' => '#800080']],
-            ['key' => 'hong', 'display_name' => 'Hồng', 'namespace' => 'mau-sac', 'metadata' => ['hex_code' => '#FFC0CB']],
-            ['key' => 'xanh-ngoc', 'display_name' => 'Xanh ngọc', 'namespace' => 'mau-sac', 'metadata' => ['hex_code' => '#40E0D0']],
+            ['slug' => 'trang', 'display_name' => 'Trắng', 'namespace' => 'mau-sac', 'metadata' => ['hex_code' => '#FFFFFF']],
+            ['slug' => 'den', 'display_name' => 'Đen', 'namespace' => 'mau-sac', 'metadata' => ['hex_code' => '#000000']],
+            ['slug' => 'xam', 'display_name' => 'Xám', 'namespace' => 'mau-sac', 'metadata' => ['hex_code' => '#808080']],
+            ['slug' => 'nau', 'display_name' => 'Nâu', 'namespace' => 'mau-sac', 'metadata' => ['hex_code' => '#8B4513']],
+            ['slug' => 'xanh-duong', 'display_name' => 'Xanh dương', 'namespace' => 'mau-sac', 'metadata' => ['hex_code' => '#0000FF']],
+            ['slug' => 'xanh-la', 'display_name' => 'Xanh lá', 'namespace' => 'mau-sac', 'metadata' => ['hex_code' => '#008000']],
+            ['slug' => 'do', 'display_name' => 'Đỏ', 'namespace' => 'mau-sac', 'metadata' => ['hex_code' => '#FF0000']],
+            ['slug' => 'vang', 'display_name' => 'Vàng', 'namespace' => 'mau-sac', 'metadata' => ['hex_code' => '#FFD700']],
+            ['slug' => 'cam', 'display_name' => 'Cam', 'namespace' => 'mau-sac', 'metadata' => ['hex_code' => '#FFA500']],
+            ['slug' => 'tim', 'display_name' => 'Tím', 'namespace' => 'mau-sac', 'metadata' => ['hex_code' => '#800080']],
+            ['slug' => 'hong', 'display_name' => 'Hồng', 'namespace' => 'mau-sac', 'metadata' => ['hex_code' => '#FFC0CB']],
+            ['slug' => 'xanh-ngoc', 'display_name' => 'Xanh ngọc', 'namespace' => 'mau-sac', 'metadata' => ['hex_code' => '#40E0D0']],
         ];
         foreach ($colors as $color) {
             Lookup::updateOrCreate(
-                ['namespace' => $color['namespace'], 'key' => $color['key']],
+                ['namespace' => $color['namespace'], 'slug' => $color['slug']],
                 $color
             );
         }
