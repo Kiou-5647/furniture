@@ -12,6 +12,7 @@ enum LookupType: string
     case Shape = 'hinh-dang';
     case Size = 'kich-co';
     case Pattern = 'hoa-van';
+    case CategoryGroup = 'nhom-danh-muc';
 
     public function label(): string
     {
@@ -24,6 +25,7 @@ enum LookupType: string
             self::Shape => 'Hình dáng',
             self::Size => 'Kích cỡ',
             self::Pattern => 'Hoa văn',
+            self::CategoryGroup => 'Nhóm danh mục',
         };
     }
 }

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Employee\Setting;
 
-use App\Actions\Setting\DeleteLookupAction;
 use App\Actions\Setting\UpsertLookupAction;
 use App\Data\LookupFilterData;
 use App\Enums\LookupType;
@@ -46,14 +45,25 @@ class LookupController extends Controller
         return back()->with('success', 'Đã cập nhật tra cứu.');
     }
 
-    public function destroy(Lookup $lookup, DeleteLookupAction $action)
+    public function destroy(Lookup $lookup)
     {
         if (! Auth::user()->can('lookups.manage')) {
             return back()->with('error', 'Không đủ quyền hạn để xóa tra cứu!');
         }
 
-        $action->execute($lookup);
+        $lookup->delete();
 
         return back()->with('success', 'Đã xóa tra cứu.');
+    }
+
+    public function forceDestroy(Lookup $lookup)
+    {
+        if (! Auth::user()->can('lookups.manage')) {
+            return back()->with('error', 'Không đủ quyền hạn để xóa tra cứu!');
+        }
+
+        $lookup->forceDelete();
+
+        return back()->with('success', 'Đã xóa vĩnh viễn tra cứu.');
     }
 }
