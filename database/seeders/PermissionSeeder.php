@@ -43,10 +43,8 @@ class PermissionSeeder extends Seeder
             ['name' => 'permissions.assign', 'description' => 'Assign permissions'],
 
             // Lookups
-            ['name' => 'lookup.view', 'description' => 'View lookups'],
-            ['name' => 'lookup.create', 'description' => 'Create lookups'],
-            ['name' => 'lookup.update', 'description' => 'Update lookups'],
-            ['name' => 'lookup.delete', 'description' => 'Delete lookups'],
+            ['name' => 'lookups.view', 'description' => 'View lookups'],
+            ['name' => 'lookups.manage', 'description' => 'Manage lookups'],
 
             // Products
             ['name' => 'products.view', 'description' => 'View products'],
@@ -57,9 +55,7 @@ class PermissionSeeder extends Seeder
 
             // Categories
             ['name' => 'categories.view', 'description' => 'View categories'],
-            ['name' => 'categories.create', 'description' => 'Create categories'],
-            ['name' => 'categories.update', 'description' => 'Update categories'],
-            ['name' => 'categories.delete', 'description' => 'Delete categories'],
+            ['name' => 'categories.manage', 'description' => 'Manage categories'],
 
             // Orders
             ['name' => 'orders.view', 'description' => 'View orders'],
@@ -124,7 +120,7 @@ class PermissionSeeder extends Seeder
                 'users.view', 'users.update',
                 'roles.view', 'permissions.view',
                 'products.view', 'products.create', 'products.update', 'products.delete', 'products.publish',
-                'categories.view', 'categories.create', 'categories.update', 'categories.delete',
+                'categories.view', 'categories.manage',
                 'orders.view', 'orders.create', 'orders.update', 'orders.cancel', 'orders.refund',
                 'inventory.view', 'inventory.update', 'inventory.transfer', 'inventory.adjust',
                 'customers.view', 'customers.update',
@@ -145,7 +141,7 @@ class PermissionSeeder extends Seeder
 
             'content_manager' => [
                 'products.view', 'products.create', 'products.update', 'products.publish',
-                'categories.view', 'categories.create', 'categories.update', 'categories.delete',
+                'categories.view', 'categories.manage',
                 'services.view', 'services.create', 'services.update', 'services.delete',
                 'content.view', 'content.manage',
             ],

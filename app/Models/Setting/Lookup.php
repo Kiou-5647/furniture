@@ -4,6 +4,7 @@ namespace App\Models\Setting;
 
 use App\Builders\Setting\LookupBuilder;
 use App\Enums\LookupType;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -13,12 +14,16 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Lookup extends Model
 {
+    use HasFactory;
+
     protected $table = 'lookups';
 
     protected function casts(): array
     {
         return [
+            'namespace' => LookupType::class,
             'metadata' => 'array',
+            'is_active' => 'boolean',
         ];
     }
 

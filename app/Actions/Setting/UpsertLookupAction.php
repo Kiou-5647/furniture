@@ -5,7 +5,6 @@ namespace App\Actions\Setting;
 use App\Models\Setting\Lookup;
 use App\Services\Field\FileUploadService;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class UpsertLookupAction
@@ -15,25 +14,26 @@ class UpsertLookupAction
      */
     public function execute(array $data, ?Lookup $lookup = null): Lookup
     {
-        if (isset($data['key'])) {
-            $data['key'] = Str::slug($data['key']);
+        if (isset($data['slug'])) {
+            $data['slug'] = Str::slug($data['slug']);
         }
 
-        $metadata = $lookup ? ($lookup->metadata ?? []) : ($data['metadata'] ?? []);
-
-        if (isset($data['metadata']['image']) && $data['metadata']['image'] instanceof UploadedFile) {
-            Log::info('Image detected');
-
+        if (isset($data['image_path']) && $data['image_path'] instanceof UploadedFile) {
             $service = app(FileUploadService::class);
-            if ($lookup && isset($lookup->metadata['image'])) {
-                $service->delete($lookup->metadata['image']);
+
+            if ($lookup && $lookup->image_path) {
+                $service->delete($lookup->image_path);
             }
 
-            $filenamePrefix = $data['key'] ?? ($lookup ? $lookup->key : 'lookup');
-            $metadata['image'] = $service->upload($data['metadata']['image'], 'lookups', $filenamePrefix);
+            $filenamePrefix = $data['slug'] ?? ($lookup ? $lookup->slug : 'lookup');
+            $data['image_path'] = $service->upload($data['image_path'], 'lookups', $filenamePrefix);
+        } else {
+            unset($data['image_path']);
         }
 
-        $data['metadata'] = $metadata;
+        if ($lookup && ! isset($data['metadata'])) {
+            $data['metadata'] = $lookup->metadata;
+        }
 
         if ($lookup) {
             $lookup->update($data);
@@ -41,7 +41,6 @@ class UpsertLookupAction
             return $lookup;
         }
 
-        // 3. Otherwise, create a new record
         return Lookup::create($data);
     }
 }

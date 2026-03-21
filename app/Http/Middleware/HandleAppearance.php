@@ -16,6 +16,9 @@ class HandleAppearance
      */
     public function handle(Request $request, Closure $next): Response
     {
+        if ($request->has('per_page')) {
+            cookie()->queue('per_page', $request->query('per_page'), 60 * 24 * 30);
+        }
         View::share('appearance', $request->cookie('appearance') ?? 'system');
 
         return $next($request);
