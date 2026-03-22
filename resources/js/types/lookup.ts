@@ -5,6 +5,7 @@ export type WeightUnit = 'kg' | 'lb';
 export interface Lookup {
     id: number;
     namespace: string;
+    namespace_label: string;
     slug: string;
     display_name: string;
     description: string | null;
@@ -19,7 +20,6 @@ export interface LookupNamespace {
     namespace: string;
     label: string;
     count: number;
-    current_namespace?: string;
 }
 
 export interface LookupPagination {

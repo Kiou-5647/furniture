@@ -4,6 +4,7 @@ use App\Http\Middleware\EnsureUserType;
 use App\Http\Middleware\EnsureVendorVerified;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\SetUserTimezone;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -16,9 +17,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->encryptCookies(except: ['appearance', 'sidebar_state', 'per_page']);
+        $middleware->encryptCookies(except: ['appearance', 'sidebar_state', 'per_page', 'user_timezone']);
 
         $middleware->web(append: [
+            SetUserTimezone::class,
             HandleAppearance::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,

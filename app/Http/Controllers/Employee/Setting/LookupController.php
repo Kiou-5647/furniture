@@ -7,6 +7,7 @@ use App\Data\Setting\LookupFilterData;
 use App\Enums\LookupType;
 use App\Http\Requests\Setting\Lookup\StoreLookupRequest;
 use App\Http\Requests\Setting\Lookup\UpdateLookupRequest;
+use App\Http\Resources\Setting\Lookup\EmployeeLookupResource;
 use App\Models\Setting\Lookup;
 use App\Services\Setting\LookupService;
 use Illuminate\Http\Request;
@@ -18,13 +19,13 @@ class LookupController
 {
     public function __construct(private LookupService $service) {}
 
-    public function index(Request $request, ?string $namespace = LookupType::Colors->value): Response
+    public function index(Request $request, ?string $namespace = LookupType::Rooms->value): Response
     {
         $filter = LookupFilterData::fromRequest($request, $namespace);
 
         return Inertia::render('employee/lookups/Index', [
             'namespaces' => $this->service->getNamespaces(),
-            'lookups' => Inertia::defer(fn () => $this->service->getByNamespace($filter)),
+            'lookups' => Inertia::defer(fn () => EmployeeLookupResource::collection($this->service->getByNamespace($filter))),
             'filters' => $filter,
         ]);
     }

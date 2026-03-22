@@ -26,3 +26,9 @@ createInertiaApp({
 
 // This will set light / dark mode on page load...
 initializeTheme();
+
+// Automatically detect and sync the user's timezone
+const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+if (timezone) {
+    document.cookie = `user_timezone=${timezone}; path=/; max-age=31536000; samesite=lax`;
+}
