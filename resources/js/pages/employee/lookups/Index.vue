@@ -100,6 +100,15 @@ const updateSearch = debounce(() => {
     });
 }, 500);
 
+const namespaceMap = computed(() => {
+    return props.namespaces.reduce((acc, item) => {
+        acc[item.namespace] = item.label;
+        return acc;
+    }, {} as Record<string, string>)
+})
+
+const label = computed(() => namespaceMap.value[props.filters.namespace] ?? 'Không xác định');
+
 let loadingTimeout: any = null;
 
 watch(search, (newValue) => {
@@ -137,16 +146,6 @@ watch(
     },
     { immediate: true },
 );
-
-function getDisplayNamespace(namespace: string) {
-    const labels: Record<string, string> = {
-        'mau-sac': 'Màu sắc',
-        'phong': 'Phòng',
-        'phong-cach': 'Phong cách',
-        'tinh-nang': 'Tính năng',
-    };
-    return labels[namespace] || capitalize(namespace);
-}
 
 function handleSort(column: string) {
     const { namespace, ...restFilters } = props.filters;
@@ -269,7 +268,7 @@ function handlePreviewImage(url: string) {
                                 : 'text-muted-foreground hover:bg-muted',
                         ]" preserve-state preserve-scroll>
                             <span :class="[capitalize, 'font-medium']">
-                                {{ getDisplayNamespace(item.namespace) }}</span>
+                                {{ item.label }}</span>
                             <Badge variant="secondary" class="transition-colors group-hover:bg-background">
                                 {{ item.count }}
                             </Badge>
@@ -292,9 +291,8 @@ function handlePreviewImage(url: string) {
                 </div>
             </div>
         </div>
-        <LookupFormModal :open="showFormModal" :namespace="filters.namespace!"
-            :display_namespace="getDisplayNamespace(filters.namespace!)" :lookup="selectedLookup"
-            @close="showFormModal = false" />
+        <LookupFormModal :open="showFormModal" :namespace="filters.namespace!" :display_namespace="label"
+            :lookup="selectedLookup" @close="showFormModal = false" />
 
         <AlertDialog :open="showDeleteDialog" @update:open="showDeleteDialog = $event">
             <AlertDialogContent>
