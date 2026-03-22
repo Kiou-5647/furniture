@@ -16,14 +16,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import InputError from '@/components/InputError.vue';
-import type { Lookup, LookupType } from '@/types/lookup';
+import type { Lookup} from '@/types/lookup';
 import { store, update } from '@/routes/employee/lookups';
 import { ImageIcon, X, Loader2, Globe } from 'lucide-vue-next';
 import { slugify } from '@/lib/utils';
 
 const props = defineProps<{
     open: boolean;
-    namespace: LookupType;
+    namespace: string;
     display_namespace: string;
     lookup: Lookup | null;
 }>();
@@ -49,9 +49,7 @@ console.info(form.is_active);
 const fileInput = useTemplateRef<HTMLInputElement>('fileInput');
 
 watch(() => form.display_name, (newName) => {
-    if (!props.lookup) {
-        form.slug = slugify(newName);
-    }
+    form.slug = slugify(newName);
 });
 
 watch(
@@ -112,8 +110,8 @@ function onFileSelect(event: Event) {
 function submit() {
     if (props.lookup) {
         form.put(update(props.lookup).url, {
-                onSuccess: () => closeModal(),
-            });
+            onSuccess: () => closeModal(),
+        });
     } else {
         form.post(store().url, {
             onSuccess: () => closeModal(),
@@ -159,8 +157,7 @@ const placeholders = computed(() => {
 
                     <div class="grid gap-2">
                         <Label for="slug">Đường dẫn (Slug)</Label>
-                        <Input id="slug" v-model="form.slug" :placeholder="`VD: ${placeholders.slug}`"
-                            :disabled="!!lookup" />
+                        <Input id="slug" v-model="form.slug" :placeholder="`VD: ${placeholders.slug}`" />
                         <InputError :message="form.errors.slug" />
                     </div>
 
@@ -242,7 +239,8 @@ const placeholders = computed(() => {
                         <Label class="text-base">Kích hoạt mục này</Label>
                         <p class="text-xs text-muted-foreground">Nếu tắt, mục này sẽ không xuất hiện trên website.</p>
                     </div>
-                    <Switch id="is_active" v-model="form.is_active" @update:model-value="form.is_active = $event" @click="console.info(form.is_active)" />
+                    <Switch id="is_active" v-model="form.is_active" @update:model-value="form.is_active = $event"
+                        @click="console.info(form.is_active)" />
                 </div>
 
                 <DialogFooter>

@@ -1,5 +1,5 @@
 import { Badge } from '@/components/ui/badge';
-import type { Lookup, LookupType } from '@/types/lookup';
+import type { Lookup } from '@/types/lookup';
 import type { ColumnDef } from '@tanstack/vue-table';
 import { h } from 'vue';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,7 @@ export const baseColumns = (
             header: 'Tên hiển thị',
             size: 500,
             enableSorting: true,
+            enableHiding: false
         },
         {
             id: 'slug',
@@ -66,10 +67,29 @@ export const baseColumns = (
             }
         },
         {
+            id: 'created_at',
+            accessorKey: 'created_at',
+            header: 'Ngày tạo',
+            size: 150,
+            enableSorting: true,
+            meta: { align: 'center' },
+            cell: ({ row }) => h('span', { class: 'text-muted-foreground tabular-nums' }, row.getValue('created_at')),
+        },
+        {
+            id: 'updated_at',
+            accessorKey: 'updated_at',
+            header: 'Ngày sửa đổi',
+            size: 150,
+            enableSorting: true,
+            meta: { align: 'center' },
+            cell: ({ row }) => h('span', { class: 'text-muted-foreground tabular-nums' }, row.getValue('updated_at')),
+        },
+        {
             id: 'actions',
             header: 'Thao tác',
             size: 80,
             enableSorting: false,
+            enableHiding: false,
             meta: { align: 'center' },
             cell: ({ row }) => {
                 const lookup = row.original;
