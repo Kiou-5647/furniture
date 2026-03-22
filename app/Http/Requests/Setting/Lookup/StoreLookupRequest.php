@@ -13,7 +13,7 @@ class StoreLookupRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()->can('lookups.manage');
+        return $this->user()->can('lookups.manage', $this->route('lookup'));
     }
 
     /**
@@ -48,7 +48,7 @@ class StoreLookupRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'namespace.required' => 'Vui lòng chọn namespace.',
+            'namespace.required' => 'Vui lòng chọn danh mục.',
             'namespace.enum' => 'Danh mục đã chọn không tồn tại.',
             'slug.unique' => 'Khóa đã tồn tại trong danh mục được chọn.',
             'metadata.hex_code.required' => 'Vui lòng cung cấp mã màu HEX.',

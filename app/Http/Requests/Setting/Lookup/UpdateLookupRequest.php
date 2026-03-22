@@ -24,14 +24,14 @@ class UpdateLookupRequest extends FormRequest
     public function rules(): array
     {
         $lookup = $this->route('lookup');
-        $lookupId = $lookup->id;
         $namespace = $this->input('namespace');
 
         return [
             'namespace' => ['required', Rule::enum(LookupType::class)],
             'slug' => [
                 'required', 'string', 'max:64',
-                Rule::unique('lookups')->ignore($lookupId)->where(fn ($q) => $q->where('namespace', $namespace)),
+                Rule::unique('lookups')->ignore($lookup->id)
+                    ->where(fn ($q) => $q->where('namespace', $namespace)),
             ],
             'display_name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
