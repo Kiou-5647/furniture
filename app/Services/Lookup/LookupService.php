@@ -4,20 +4,29 @@ namespace App\Services\Lookup;
 
 use App\Builders\Setting\LookupBuilder;
 use App\Data\LookupFilterData;
+use App\Enums\LookupType;
 use App\Models\Setting\Lookup;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 class LookupService
 {
     public function getNamespaces(): Collection
     {
-        return Lookup::query()
+        $databaseCounts = Lookup::query()
             ->select('namespace')
             ->selectRaw('COUNT(*) AS count')
             ->groupBy('namespace')
-            ->orderBy('namespace')
-            ->get();
+            ->pluck('count', 'namespace')
+            ->toArray();
+
+        return collect(LookupType::cases())->map(function (LookupType $type) use ($databaseCounts) {
+            return [
+                'namespace' => $type->value,
+                'label' => $type->label(),
+                'count' => $databaseCounts[$type->value] ?? 0,
+            ];
+        });
     }
 
     public function getByNamespace(LookupFilterData $filter): LengthAwarePaginator

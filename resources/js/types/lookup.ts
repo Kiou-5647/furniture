@@ -1,11 +1,10 @@
-export type LookupType = 'phong' | 'phong-cach' | 'loi-song' | 'mau-sac' | 'tinh-nang' | 'hinh-dang' | 'kich-co' | 'hoa-van';
 export type AttributeType = 'text' | 'number' | 'boolean' | 'color' | 'dimensions' | 'weight';
 export type DimensionUnit = 'mm' | 'cm' | 'm' | 'inch' | 'ft';
 export type WeightUnit = 'kg' | 'lb';
 
 export interface Lookup {
     id: number;
-    namespace: LookupType;
+    namespace: string;
     slug: string;
     display_name: string;
     description: string | null;
@@ -17,7 +16,8 @@ export interface Lookup {
 }
 
 export interface LookupNamespace {
-    namespace: LookupType;
+    namespace: string;
+    label: string;
     count: number;
     current_namespace?: string;
 }
@@ -32,7 +32,7 @@ export interface LookupPagination {
 }
 
 export interface LookupFilterData {
-    namespace: LookupType;
+    namespace: string;
     search?: string;
     is_active?: boolean;
     order_by?: string;
