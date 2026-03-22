@@ -46,32 +46,13 @@ CREATE UNIQUE INDEX unq_lookup_namespace_slug_active ON lookups (namespace, slug
 WHERE
     deleted_at IS NULL;
 
-CREATE INDEX IF NOT EXISTS idx_lookups_namespace ON lookups (namespace);
+CREATE INDEX idx_lookups_namespace ON lookups (namespace);
 
-CREATE INDEX IF NOT EXISTS idx_lookups_display_name_trgm ON lookups USING GIN (display_name gin_trgm_ops);
+CREATE INDEX idx_lookups_display_name_trgm ON lookups USING GIN (display_name gin_trgm_ops);
 
-CREATE TABLE IF NOT EXISTS metafields (
-    id SERIAL PRIMARY KEY,
-    owner_table VARCHAR(255) DEFAULT 'any',
-    namespace VARCHAR(255) DEFAULT 'system', -- Container name for categorization
-    key VARCHAR(64) NOT NULL, -- key for attributes
-    display_name VARCHAR(255) NOT NULL,
-    description TEXT,
-    type VARCHAR(64) NOT NULL, -- contain lookup namespace for references data or datatypes
-    validation_config JSONB,
-    metadata JSONB,
-    is_filterable BOOLEAN DEFAULT false,
-    is_storefront BOOLEAN DEFAULT false,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (namespace, key)
-);
-
-CREATE INDEX IF NOT EXISTS idx_metafields_is_filterable ON metafields (is_filterable)
+CREATE INDEX idx_lookups_deleted ON lookups (deleted_at)
 WHERE
-    is_filterable = true;
-
-CREATE INDEX IF NOT EXISTS idx_metafields_owner_table ON metafields (owner_table);
+    deleted_at IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS password_reset_tokens (
     email VARCHAR(255) PRIMARY KEY,

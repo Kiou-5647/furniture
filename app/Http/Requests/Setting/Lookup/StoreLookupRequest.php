@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Employee\Lookup;
+namespace App\Http\Requests\Setting\Lookup;
 
 use App\Enums\LookupType;
 use Illuminate\Foundation\Http\FormRequest;

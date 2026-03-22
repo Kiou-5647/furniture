@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Data;
+namespace App\Data\Setting;
 
 use App\Enums\LookupType;
 use Illuminate\Http\Request;
@@ -24,7 +24,7 @@ class LookupFilterData
         $defaultPerPage = $request->cookie('per_page', 15);
 
         $nsValue = $pathNamespace ?? $request->query('namespace');
-        $namespace = LookupType::tryFrom($nsValue) ?? LookupType::Colors;
+        $namespace = LookupType::tryFrom($nsValue) ?? LookupType::Rooms;
 
         return new self(
             namespace: $namespace,

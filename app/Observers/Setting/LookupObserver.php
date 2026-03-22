@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Observers;
+namespace App\Observers\Setting;
 
 use App\Models\Setting\Lookup;
 use App\Services\Field\FileUploadService;
