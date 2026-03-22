@@ -1,14 +1,13 @@
 <?php
 
-namespace App\Http\Requests\Settings;
+namespace App\Http\Requests\Account;
 
-use Illuminate\Contracts\Validation\ValidationRule;
+use App\Concerns\ProfileValidationRules;
 use Illuminate\Foundation\Http\FormRequest;
-use Laravel\Fortify\InteractsWithTwoFactorState;
 
-class TwoFactorAuthenticationRequest extends FormRequest
+class ProfileUpdateRequest extends FormRequest
 {
-    use InteractsWithTwoFactorState;
+    use ProfileValidationRules;
 
     /**
      * Get the validation rules that apply to the request.
@@ -17,6 +16,6 @@ class TwoFactorAuthenticationRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [];
+        return $this->profileRules($this->user()->id);
     }
 }

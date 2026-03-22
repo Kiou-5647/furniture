@@ -4,7 +4,7 @@ namespace App\Providers;
 
 use App\Models\Auth\User;
 use App\Models\Setting\Lookup;
-use App\Observers\LookupObserver;
+use App\Observers\Setting\LookupObserver;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Date;

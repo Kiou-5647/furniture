@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Services\Lookup;
+namespace App\Services\Setting;
 
 use App\Builders\Setting\LookupBuilder;
-use App\Data\LookupFilterData;
+use App\Data\Setting\LookupFilterData;
 use App\Enums\LookupType;
 use App\Models\Setting\Lookup;
 use Illuminate\Pagination\LengthAwarePaginator;

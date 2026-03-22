@@ -3,19 +3,18 @@
 namespace App\Http\Controllers\Employee\Setting;
 
 use App\Actions\Setting\UpsertLookupAction;
-use App\Data\LookupFilterData;
+use App\Data\Setting\LookupFilterData;
 use App\Enums\LookupType;
-use App\Http\Controllers\Controller;
-use App\Http\Requests\Employee\Lookup\StoreLookupRequest;
-use App\Http\Requests\Employee\Lookup\UpdateLookupRequest;
+use App\Http\Requests\Setting\Lookup\StoreLookupRequest;
+use App\Http\Requests\Setting\Lookup\UpdateLookupRequest;
 use App\Models\Setting\Lookup;
-use App\Services\Lookup\LookupService;
+use App\Services\Setting\LookupService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class LookupController extends Controller
+class LookupController
 {
     public function __construct(private LookupService $service) {}
 
