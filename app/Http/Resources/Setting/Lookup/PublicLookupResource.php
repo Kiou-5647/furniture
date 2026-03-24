@@ -24,7 +24,7 @@ class PublicLookupResource extends JsonResource
             'meta' => [
                 'title' => $this->metadata['meta_title'] ?? $this->display_name,
                 'description' => $this->metadata['meta_description'] ?? $this->description,
-                'canonical' => $this->metadata['canonical'] ?? null,
+                'canonical' => $this->metadata['canonical'] ?? url('/danh-muc/'.$this->slug),
                 'robots' => $this->metadata['robots'] ?? 'index, follow',
             ],
         ];

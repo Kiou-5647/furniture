@@ -1,7 +1,3 @@
-export type AttributeType = 'text' | 'number' | 'boolean' | 'color' | 'dimensions' | 'weight';
-export type DimensionUnit = 'mm' | 'cm' | 'm' | 'inch' | 'ft';
-export type WeightUnit = 'kg' | 'lb';
-
 export interface Lookup {
     id: number;
     namespace: string;
@@ -24,11 +20,21 @@ export interface LookupNamespace {
 
 export interface LookupPagination {
     data: Lookup[];
-    current_page: number;
-    last_page: number;
-    per_page: number;
-    total: number;
-    links: { url: string | null; label: string; active: boolean }[];
+    meta: {
+        current_page: number,
+        from: number,
+        last_page: number,
+        path: string,
+        per_page: number,
+        to: number,
+        total: number
+    };
+    links: {
+        first: string,
+        last: string,
+        prev: string,
+        next: string
+    };
 }
 
 export interface LookupFilterData {

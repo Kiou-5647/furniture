@@ -3,11 +3,13 @@
 namespace App\Providers;
 
 use App\Models\Auth\User;
+// use App\Models\Product\Category;
 use App\Models\Setting\Lookup;
+// use App\Observers\Product\CategoryObserver;
 use App\Observers\Setting\LookupObserver;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\Resources\Json\JsonResource;
+// use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -29,7 +31,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        JsonResource::withoutWrapping();
         Model::unguard();
         $this->configureDefaults();
 
@@ -38,6 +39,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Lookup::observe(LookupObserver::class);
+        // Category::observe(CategoryObserver::class);
     }
 
     /**

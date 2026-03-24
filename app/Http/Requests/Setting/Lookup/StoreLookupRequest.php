@@ -4,6 +4,7 @@ namespace App\Http\Requests\Setting\Lookup;
 
 use App\Enums\LookupType;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class StoreLookupRequest extends FormRequest
@@ -14,6 +15,19 @@ class StoreLookupRequest extends FormRequest
     public function authorize(): bool
     {
         return $this->user()->can('lookups.manage', $this->route('lookup'));
+    }
+
+    public function prepareForValidation()
+    {
+        $this->merge([
+            'slug' => Str::slug($this->input('slug') ?? $this->input('display_name')),
+        ]);
+
+        if ($this->input('namespace') !== LookupType::Colors->value) {
+            $metadata = $this->input('metadata', []);
+            unset($metadata['hex_code']);
+            $this->merge(['metadata' => $metadata]);
+        }
     }
 
     /**
@@ -40,8 +54,10 @@ class StoreLookupRequest extends FormRequest
                 Rule::requiredIf($this->input('namespace') === LookupType::Colors->value),
                 'nullable', 'string', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/',
             ],
-            'metadata.meta_title' => ['nullable', 'string', 'max:255'],
-            'metadata.meta_description' => ['nullable', 'string', 'max:500'],
+            'metadata.title' => ['nullable', 'string', 'max:255'],
+            'metadata.description' => ['nullable', 'string', 'max:500'],
+            'metadata.canonical' => ['nullable', 'string'],
+            'metadata.robots' => ['nullable', 'string'],
         ];
     }
 

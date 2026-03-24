@@ -5,7 +5,6 @@ namespace App\Actions\Setting;
 use App\Models\Setting\Lookup;
 use App\Services\Field\FileUploadService;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Str;
 
 class UpsertLookupAction
 {
@@ -14,10 +13,6 @@ class UpsertLookupAction
      */
     public function execute(array $data, ?Lookup $lookup = null): Lookup
     {
-        if (isset($data['slug'])) {
-            $data['slug'] = Str::slug($data['slug']);
-        }
-
         if (isset($data['image_path']) && $data['image_path'] instanceof UploadedFile) {
             $service = app(FileUploadService::class);
 
@@ -31,16 +26,6 @@ class UpsertLookupAction
             unset($data['image_path']);
         }
 
-        if ($lookup && ! isset($data['metadata'])) {
-            $data['metadata'] = $lookup->metadata;
-        }
-
-        if ($lookup) {
-            $lookup->update($data);
-
-            return $lookup;
-        }
-
-        return Lookup::create($data);
+        return Lookup::updateOrCreate(['id' => $lookup?->id], $data);
     }
 }
