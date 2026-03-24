@@ -2,6 +2,7 @@
 import {
     Pagination,
     PaginationContent,
+    PaginationEllipsis,
     PaginationFirst,
     PaginationItem,
     PaginationLast,
@@ -39,20 +40,13 @@ function onPageSizeChange(value: string) {
     <div class="flex items-center justify-between px-2">
         <!-- 1. Left side: Rows per page selection -->
         <div class="flex items-center space-x-2">
-            <p class="text-sm font-medium">Số hàng mỗi trang</p>
-            <Select
-                :model-value="`${pageSize}`"
-                @update:model-value="onPageSizeChange!"
-            >
+            <p class="hidden sm:block text-sm font-medium">Số hàng mỗi trang</p>
+            <Select :model-value="`${pageSize}`" @update:model-value="onPageSizeChange!">
                 <SelectTrigger class="h-8 w-[70px]">
                     <SelectValue :placeholder="`${pageSize}`" />
                 </SelectTrigger>
                 <SelectContent side="top">
-                    <SelectItem
-                        v-for="size in [10, 15, 20, 25]"
-                        :key="size"
-                        :value="`${size}`"
-                    >
+                    <SelectItem v-for="size in [10, 15, 20, 25]" :key="size" :value="`${size}`">
                         {{ size }}
                     </SelectItem>
                 </SelectContent>
@@ -60,34 +54,27 @@ function onPageSizeChange(value: string) {
         </div>
 
         <!-- 2. Middle: Page Info -->
-        <div
-            class="flex w-[100px] items-center justify-center text-sm font-medium"
-        >
+        <div class="flex w-[100px] items-center justify-center text-sm font-medium">
             Trang {{ currentPage }} / {{ lastPage }}
         </div>
 
         <!-- 3. Right side: Navigation -->
         <div class="flex items-center space-x-2">
-            <Pagination
-                :total="total"
-                :sibling-count="3"
-                :items-per-page="pageSize"
-                :default-page="currentPage"
-                @update:page="onPageChange"
-            >
-                <PaginationContent>
+            <Pagination v-slot="{ page }" show-edges :sibling-count="1" :total="total" :items-per-page="pageSize" :default-page="currentPage"
+                @update:page="onPageChange">
+                <PaginationContent v-slot="{ items }">
                     <PaginationFirst />
                     <PaginationPrevious />
 
                     <!-- Optional: Show specific page numbers for large datasets -->
-                    <template v-for="index in lastPage" :key="index">
-                        <PaginationItem
-                            :value="index"
-                            :is-active="index === currentPage"
-                        >
-                            {{ index }}
+                    <template v-for="(item, index) in items" :key="index">
+                        <PaginationItem v-if="item.type === 'page'" :value="item.value"
+                            :is-active="item.value === page">
+                            {{ item.value }}
                         </PaginationItem>
+                        <PaginationEllipsis v-else :key="item.type" :index="index" />
                     </template>
+
 
                     <PaginationNext />
                     <PaginationLast />

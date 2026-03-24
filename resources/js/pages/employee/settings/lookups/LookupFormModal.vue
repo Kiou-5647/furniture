@@ -16,10 +16,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import InputError from '@/components/InputError.vue';
-import type { Lookup} from '@/types/lookup';
-import { store, update } from '@/routes/employee/lookups';
+import type { Lookup } from '@/types/lookup';
+import { store, update } from '@/routes/employee/settings/lookups';
 import { ImageIcon, X, Loader2, Globe } from 'lucide-vue-next';
 import { slugify } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const props = defineProps<{
     open: boolean;
@@ -39,12 +40,12 @@ const form = useForm({
     image_path: null as File | null,
     metadata: {
         hex_code: '',
-        meta_title: '',
-        meta_description: '',
+        title: '',
+        description: '',
+        canonical: '',
+        robots: '',
     },
 });
-
-console.info(form.is_active);
 
 const fileInput = useTemplateRef<HTMLInputElement>('fileInput');
 
@@ -64,9 +65,11 @@ watch(
                 form.is_active = props.lookup.is_active;
                 form.image_path = null;
                 form.metadata = {
+                    title: props.lookup.metadata?.title ?? '',
+                    description: props.lookup.metadata?.description ?? '',
+                    canonical: props.lookup.metadata?.canonical,
+                    robots: props.lookup.metadata?.robots,
                     hex_code: props.lookup.metadata?.hex_code ?? '',
-                    meta_title: props.lookup.metadata?.meta_title ?? '',
-                    meta_description: props.lookup.metadata?.meta_description ?? '',
                 };
             } else {
                 form.reset();
@@ -78,21 +81,12 @@ watch(
 );
 
 watch(() => form.display_name, (newName) => {
-    if (!props.lookup) {
-        form.slug = slugify(newName);
-
-        if (!form.metadata.meta_title) {
-            form.metadata.meta_title = newName;
-        }
-    }
+    form.slug = slugify(newName);
+    form.metadata.title = newName.substring(0, 254);
 });
 
 watch(() => form.description, (newDesc) => {
-    if (!props.lookup) {
-        if (!form.metadata.meta_description) {
-            form.metadata.meta_description = newDesc.substring(0, 160);
-        }
-    }
+    form.metadata.description = newDesc.substring(0, 499);
 });
 
 const previewUrl = computed(() => {
@@ -217,17 +211,40 @@ const placeholders = computed(() => {
                         </AccordionTrigger>
                         <AccordionContent class="pb-4 space-y-4">
                             <div class="grid gap-2">
-                                <Label for="meta_title">Tiêu đề SEO (Thẻ Title)</Label>
-                                <Input id="meta_title" v-model="form.metadata.meta_title"
+                                <Label for="title">Tiêu đề SEO (Thẻ Title)</Label>
+                                <Input id="title" v-model="form.metadata.title"
                                     placeholder="Mặc định lấy Tên hiển thị" />
                                 <p class="text-[10px] text-muted-foreground">Tiêu đề hiện trên tab trình duyệt và kết
                                     quả Google.</p>
                             </div>
                             <div class="grid gap-2">
-                                <Label for="meta_description">Mô tả SEO (Meta Description)</Label>
-                                <Textarea id="meta_description" v-model="form.metadata.meta_description"
+                                <Label for="description">Mô tả SEO (Meta Description)</Label>
+                                <Textarea id="description" v-model="form.metadata.description"
                                     placeholder="Nhập mô tả tóm tắt cho Google..." class="h-20 resize-none" />
                                 <p class="text-[10px] text-muted-foreground">Khuyên dùng: Dưới 160 ký tự.</p>
+                            </div>
+                            <div class="grid gap-2 pt-2">
+                                <Label>Đường dẫn Canonical (Tùy chọn)</Label>
+                                <Input v-model="form.metadata.canonical"
+                                    placeholder="https://yourdomain.com/danh-muc/..." />
+                                <p class="text-[10px] text-muted-foreground italic">Để trống để tự động lấy link
+                                    website.</p>
+                            </div>
+
+                            <div class="grid gap-2">
+                                <Label>Cấu hình Robots</Label>
+                                <Select v-model="form.metadata.robots">
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="index, follow" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="index, follow">Index, Follow (Mặc định)</SelectItem>
+                                        <SelectItem value="noindex, follow">Noindex, Follow (Ẩn khỏi Google)
+                                        </SelectItem>
+                                        <SelectItem value="noindex, nofollow">Noindex, Nofollow (Chặn hoàn toàn)
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </AccordionContent>
                     </AccordionItem>
@@ -239,8 +256,7 @@ const placeholders = computed(() => {
                         <Label class="text-base">Kích hoạt mục này</Label>
                         <p class="text-xs text-muted-foreground">Nếu tắt, mục này sẽ không xuất hiện trên website.</p>
                     </div>
-                    <Switch id="is_active" v-model="form.is_active" @update:model-value="form.is_active = $event"
-                        @click="console.info(form.is_active)" />
+                    <Switch id="is_active" v-model="form.is_active" @update:model-value="form.is_active = $event" />
                 </div>
 
                 <DialogFooter>

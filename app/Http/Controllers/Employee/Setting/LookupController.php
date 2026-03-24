@@ -23,9 +23,11 @@ class LookupController
     {
         $filter = LookupFilterData::fromRequest($request, $namespace);
 
-        return Inertia::render('employee/lookups/Index', [
+        return Inertia::render('employee/settings/lookups/Index', [
             'namespaces' => $this->service->getNamespaces(),
-            'lookups' => Inertia::defer(fn () => EmployeeLookupResource::collection($this->service->getByNamespace($filter))),
+            'lookups' => Inertia::defer(fn () => EmployeeLookupResource::collection(
+                $this->service->getByNamespace($filter)
+            )),
             'filters' => $filter,
         ]);
     }

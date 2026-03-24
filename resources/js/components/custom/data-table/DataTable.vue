@@ -109,7 +109,7 @@ function handleHeaderClick(header: any) {
                                     maxWidth: `${cell.column.getSize()}px`,
                                 }"
                                 :class="[
-                                    'p-3',
+                                    'p-3 overflow-hidden',
                                     cell.column.columnDef.meta?.align ===
                                     'center'
                                         ? 'text-center'

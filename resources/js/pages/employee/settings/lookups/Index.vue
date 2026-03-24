@@ -10,7 +10,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { getColumns } from './columns';
-import { index } from '@/routes/employee/lookups';
+import { index } from '@/routes/employee/settings/lookups';
 import { capitalize, debounce } from 'lodash';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Heading from '@/components/Heading.vue';
@@ -28,7 +28,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { destroy } from '@/routes/employee/lookups';
+import { destroy } from '@/routes/employee/settings/lookups';
 import {
     Dialog,
     DialogContent,
@@ -151,14 +151,14 @@ function handleSort(column: string) {
     const { namespace, ...restFilters } = props.filters;
     const direction = props.filters.order_direction === 'asc' ? 'desc' : 'asc';
 
-    const query = {
+    const rawQuery = {
         ...restFilters,
         order_by: column,
         order_direction: direction,
         page: 1,
     };
 
-    router.get(index(namespace).url, cleanQuery(query), {
+    router.get(index(namespace).url, cleanQuery(rawQuery), {
         preserveState: true,
     });
 }
@@ -243,6 +243,7 @@ function handlePreviewImage(url: string) {
     previewImageUrl.value = url;
 }
 </script>
+
 <template>
 
     <Head title="Tra cứu" />
@@ -279,8 +280,8 @@ function handlePreviewImage(url: string) {
                 <div class="col-span-1 space-y-4 lg:col-span-9">
                     <DataTableGroup v-model:search="search" :is-actually-loading="isActuallyLoading"
                         :columns="activeColumns" :data="lookups?.data ?? []" :has-active-filters="hasActiveFilters"
-                        :total="lookups?.total ?? 0" :page-size="lookups?.per_page ?? 15"
-                        :current-page="lookups?.current_page ?? 1" :last-page="lookups?.last_page ?? 1"
+                        :total="lookups?.meta.total ?? 0" :page-size="lookups?.meta.per_page ?? 15"
+                        :current-page="lookups?.meta.current_page ?? 1" :last-page="lookups?.meta.last_page ?? 1"
                         :order-by="filters.order_by" :order-direction="filters.order_direction" @reset="resetFilters"
                         @sort="handleSort" @update:page="handlePageChange" @update:pageSize="handlePageSizeChange">
                         <template #filters>
