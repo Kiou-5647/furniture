@@ -1,37 +1,41 @@
 <template>
     <div class="space-y-2">
-        <div class="grid grid-cols-1 lg:grid-cols-12 items-center justify-between">
-            <div class="col-span-1 lg:col-span-4 flex gap-4 mt-2 lg:mt-0" >
+        <!-- Toolbar: Search + Filters + Actions -->
+        <div class="grid grid-cols-1 sm:grid-cols-12 items-center justify-between gap-2">
+            <div class="col-span-1 sm:col-span-8 flex gap-2 justify-between mt-2 sm:mt-0">
                 <DataTableSearchBar :search="search" @update:search="emit('update:search', $event)" />
 
+                <!-- Mobile: Sheet for filters -->
                 <Sheet>
                     <SheetTrigger as-child>
-                        <Button variant="outline" size="icon" class="lg:hidden shrink-0">
+                        <Button variant="outline" size="icon" class="shrink-0 sm:hidden">
                             <ListFilter class="h-4 w-4" />
                         </Button>
                     </SheetTrigger>
                     <SheetContent side="right" class="w-[300px] sm:w-[400px]">
-                        <SheetHeader >
-                            <SheetTitle>Bộ lọc nâng cao</SheetTitle>
+                        <SheetHeader>
+                            <SheetTitle>Bộ lọc</SheetTitle>
+                            <SheetDescription>Chọn các bộ lọc để áp dụng cho bảng dữ liệu.</SheetDescription>
                         </SheetHeader>
-                        <div class="grid px-6 gap-4 py-6">
+                        <div class="grid px-4 gap-4 py-4">
                             <slot name="filters" />
                         </div>
                     </SheetContent>
                 </Sheet>
             </div>
-            <div class="col-span-1 lg:col-span-8 flex gap-4 ml-auto mt-2 lg:mt-0">
-                <DataTableClearFilter :has-active-filters="hasActiveFilters" @reset="emit('reset')" />
 
+            <div class="col-span-1 sm:col-span-4 flex gap-2 justify-between sm:justify-end">
+                <DataTableClearFilter :has-active-filters="hasActiveFilters" @reset="emit('reset')" />
                 <DataTableVisibility :table="table" />
             </div>
-
-
         </div>
-        <div class="hidden lg:flex items-center justify-between gap-4">
+
+        <!-- Desktop: Inline filters -->
+        <div class="hidden sm:flex items-center justify-start gap-3 flex-wrap">
             <slot name="filters" />
         </div>
 
+        <!-- Table with loading state -->
         <Transition name="fade" mode="out-in">
             <div v-if="isActuallyLoading" class="space-y-4">
                 <Skeleton v-for="i in 5" :key="i" class="h-8 w-full" />
@@ -62,7 +66,7 @@ import DataTableVisibility from './DataTableVisibility.vue';
 import DataTablePagination from './DataTablePagination.vue';
 import DataTableClearFilter from './DataTableClearFilter.vue';
 import { ListFilter } from 'lucide-vue-next';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 
 const props = defineProps<{
