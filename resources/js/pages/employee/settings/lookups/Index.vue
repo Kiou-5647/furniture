@@ -17,7 +17,13 @@ import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Eye, EyeOff, Plus } from 'lucide-vue-next';
-import LookupFormModal from './LookupFormModal.vue';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -29,16 +35,16 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { destroy } from '@/routes/employee/settings/lookups';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogTitle,
-} from '@/components/ui/dialog';
-import { VisuallyHidden } from 'reka-ui';
 import DataTableGroup from '@/components/custom/data-table/DataTableGroup.vue';
 import { cleanQuery } from '@/lib/utils';
 import DataTableFacetedFilter from '@/components/custom/data-table/DataTableFacetedFilter.vue';
+import { createLazyComponent } from '@/composables/createLazyComponent';
+import LookupDetailsDialog from './LookupDetailsDialog.vue';
+import ImagePreviewDialog from '@/components/custom/ImagePreviewDialog.vue';
+import DataTableSingleFilter from '@/components/custom/data-table/DataTableSingleFilter.vue';
+
+// Lazy-load modal (NO Suspense - safe for production)
+const LookupFormModal = createLazyComponent(() => import('./LookupFormModal.vue'));
 
 const props = defineProps<{
     namespaces: LookupNamespace[];
@@ -52,10 +58,12 @@ const activeColumns = computed(() =>
         props.filters.namespace!,
         handleEdit,
         confirmDelete,
+        handleViewDetails,
         handlePreviewImage,
     ),
 );
 const showFormModal = ref(false);
+const showDetailsDialog = ref(false);
 const showDeleteDialog = ref(false);
 const selectedLookup = ref<Lookup | null>(null);
 const previewImageUrl = ref<string | null>(null);
@@ -70,23 +78,21 @@ const hasActiveFilters = computed(() => {
     );
 });
 
-const selectedStatuses = ref<boolean[]>(
-    props.filters.is_active === undefined || props.filters.is_active === null
-        ? []
-        : [props.filters.is_active],
-);
+const selectedStatus = ref(props.filters.is_active ?? undefined);
 
 const statusOptions = [
     { label: 'Đang hiện', value: true, icon: Eye },
     { label: 'Đang ẩn', value: false, icon: EyeOff },
 ];
+
+const selectedNamespace = ref<LookupNamespace | null>(
+    props.namespaces.find(n => n.namespace === props.filters.namespace) || null
+);
 const updateSearch = debounce(() => {
     const { namespace, ...restFilters } = props.filters;
 
-    let isActiveValue: boolean | undefined = undefined;
-    if (selectedStatuses.value.length === 1) {
-        isActiveValue = selectedStatuses.value[0];
-    }
+    const isActiveValue = selectedStatus.value;
+
     const rawQuery = {
         ...restFilters,
         search: search.value,
@@ -116,7 +122,7 @@ watch(search, (newValue) => {
     updateSearch();
 });
 
-watch(selectedStatuses, () => {
+watch(selectedStatus, () => {
     updateSearch();
 });
 
@@ -145,6 +151,15 @@ watch(
         }
     },
     { immediate: true },
+);
+
+// Update selected namespace when filters or namespaces change
+watch(
+    () => [props.filters.namespace, props.namespaces],
+    () => {
+        selectedNamespace.value = props.namespaces.find(n => n.namespace === props.filters.namespace) || null;
+    },
+    { immediate: true }
 );
 
 function handleSort(column: string) {
@@ -179,6 +194,11 @@ function handleCreate() {
     showFormModal.value = true;
 }
 
+function handleViewDetails(lookup: Lookup) {
+    selectedLookup.value = lookup;
+    showDetailsDialog.value = true;
+}
+
 function handleEdit(lookup: Lookup) {
     selectedLookup.value = lookup;
     showFormModal.value = true;
@@ -203,10 +223,7 @@ function performDelete() {
 function handlePageChange(page: number) {
     const { namespace, ...restFilters } = props.filters;
 
-    let isActiveValue: boolean | undefined = undefined;
-    if (selectedStatuses.value.length === 1) {
-        isActiveValue = selectedStatuses.value[0];
-    }
+    const isActiveValue = selectedStatus.value;
 
     const rawQuery = {
         ...restFilters,
@@ -223,10 +240,7 @@ function handlePageChange(page: number) {
 function handlePageSizeChange(per_page: number) {
     const { namespace, ...restFilters } = props.filters;
 
-    let isActiveValue: boolean | undefined = undefined;
-    if (selectedStatuses.value.length === 1) {
-        isActiveValue = selectedStatuses.value[0];
-    }
+    const isActiveValue = selectedStatus.value;
 
     const rawQuery = {
         ...restFilters,
@@ -256,19 +270,20 @@ function handlePreviewImage(url: string) {
                 </Button>
             </div>
 
-            <div class="grid grid-cols-1 items-start lg:grid-cols-12 lg:gap-3">
-                <Card class="col-span-1 lg:col-span-3">
+            <div class="grid grid-cols-1 items-start sm:grid-cols-12 sm:gap-3">
+                <!-- Desktop: Card Sidebar -->
+                <Card class="hidden space-y-2 sm:block col-span-1 sm:col-span-4 md:col-span-3 xl:col-span-2">
                     <CardHeader>
                         <CardTitle class="text-lg font-medium">Danh mục</CardTitle>
                     </CardHeader>
                     <CardContent class="grid gap-1">
                         <Link v-for="item in namespaces" :key="item.namespace" :href="index(item.namespace).url" :class="[
-                            'group flex items-center justify-between rounded-md px-3 py-2 transition-all duration-200',
+                            'group flex items-center justify-between rounded-md px-1 py-2 transition-all duration-200',
                             filters.namespace === item.namespace
                                 ? 'bg-primary/10 text-primary shadow-sm'
                                 : 'text-muted-foreground hover:bg-muted',
                         ]" preserve-state preserve-scroll>
-                            <span :class="[capitalize, 'font-medium']">
+                            <span class="font-medium text-sm">
                                 {{ item.label }}</span>
                             <Badge variant="secondary" class="transition-colors group-hover:bg-background">
                                 {{ item.count }}
@@ -277,7 +292,36 @@ function handlePreviewImage(url: string) {
                     </CardContent>
                 </Card>
 
-                <div class="col-span-1 space-y-4 lg:col-span-9">
+                <div class="sm:hidden">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger as-child>
+                            <Button variant="outline" class="w-full justify-between">
+                                <span class="font-medium">
+                                    Danh mục: {{ selectedNamespace?.label || 'Chọn danh mục' }}
+                                </span>
+                                <Badge variant="secondary">
+                                    {{ selectedNamespace?.count || 0 }}
+                                </Badge>
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent class="w-[300px]">
+                            <DropdownMenuItem v-for="item in namespaces" :key="item.namespace" as-child>
+                                <Link :href="index(item.namespace).url"
+                                    class="w-full min-h-12 flex items-center justify-between cursor-pointer"
+                                    preserve-state preserve-scroll>
+                                    <span :class="[capitalize, 'font-medium']">
+                                        {{ item.label }}
+                                    </span>
+                                    <Badge variant="secondary">
+                                        {{ item.count }}
+                                    </Badge>
+                                </Link>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+
+                <div class="col-span-1 space-y-4 sm:col-span-8 md:col-span-9 xl:col-span-10">
                     <DataTableGroup v-model:search="search" :is-actually-loading="isActuallyLoading"
                         :columns="activeColumns" :data="lookups?.data ?? []" :has-active-filters="hasActiveFilters"
                         :total="lookups?.meta.total ?? 0" :page-size="lookups?.meta.per_page ?? 15"
@@ -285,15 +329,32 @@ function handlePreviewImage(url: string) {
                         :order-by="filters.order_by" :order-direction="filters.order_direction" @reset="resetFilters"
                         @sort="handleSort" @update:page="handlePageChange" @update:pageSize="handlePageSizeChange">
                         <template #filters>
-                            <DataTableFacetedFilter title="Trạng thái" v-model="selectedStatuses"
-                                :options="statusOptions" />
+                            <DataTableSingleFilter title="Trạng thái" v-model="selectedStatus"
+                                :options="statusOptions" :searchable="false" />
                         </template>
                     </DataTableGroup>
                 </div>
             </div>
         </div>
-        <LookupFormModal :open="showFormModal" :namespace="filters.namespace!" :display_namespace="label"
-            :lookup="selectedLookup" @close="showFormModal = false" />
+
+        <!-- Lazy-loaded modal (handles loading state internally - NO Suspense) -->
+        <LookupFormModal v-if="showFormModal" :open="showFormModal" :namespace="filters.namespace!"
+            :display_namespace="label" :lookup="selectedLookup" @close="showFormModal = false" />
+
+        <!-- Lookup Details Dialog -->
+        <LookupDetailsDialog v-if="showDetailsDialog" :open="showDetailsDialog" :lookup="selectedLookup"
+            @close="showDetailsDialog = false" @edit="handleEdit" @preview-image="handlePreviewImage">
+            <template #footer>
+                <div class="flex justify-end gap-2 pt-4 border-t">
+                    <Button variant="outline" @click="showDetailsDialog = false">
+                        Đóng
+                    </Button>
+                    <Button @click="handleEdit(selectedLookup!)">
+                        Chỉnh sửa
+                    </Button>
+                </div>
+            </template>
+        </LookupDetailsDialog>
 
         <AlertDialog :open="showDeleteDialog" @update:open="showDeleteDialog = $event">
             <AlertDialogContent>
@@ -313,17 +374,10 @@ function handlePreviewImage(url: string) {
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
-        <Dialog :open="!!previewImageUrl" @update:open="previewImageUrl = null">
-            <DialogContent class="w-[90vw] h-[90vh] border-none bg-transparent p-0 shadow-none sm:rounded-none">
-                <VisuallyHidden>
-                    <DialogTitle />
-                    <DialogDescription />
-                </VisuallyHidden>
-                <div class="relative flex items-center justify-center">
-                    <img :src="previewImageUrl!" class="h-auto w-auto rounded-lg shadow-2xl" />
-                </div>
-            </DialogContent>
-        </Dialog>
+
+        <!-- Universal Image Preview Dialog -->
+        <ImagePreviewDialog :open="!!previewImageUrl" :src="previewImageUrl"
+            @update:open="previewImageUrl = $event ? previewImageUrl : null" @close="previewImageUrl = null" />
     </AppLayout>
 </template>
 

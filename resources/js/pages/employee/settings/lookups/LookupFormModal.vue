@@ -53,32 +53,58 @@ watch(() => form.display_name, (newName) => {
     form.slug = slugify(newName);
 });
 
+// Watch for lookup changes and populate form
 watch(
-    () => props.open,
-    (isOpen) => {
-        if (isOpen) {
-            if (props.lookup) {
-                form.namespace = props.lookup.namespace;
-                form.slug = props.lookup.slug;
-                form.display_name = props.lookup.display_name;
-                form.description = props.lookup.description ?? '';
-                form.is_active = props.lookup.is_active;
-                form.image_path = null;
-                form.metadata = {
-                    title: props.lookup.metadata?.title ?? '',
-                    description: props.lookup.metadata?.description ?? '',
-                    canonical: props.lookup.metadata?.canonical,
-                    robots: props.lookup.metadata?.robots,
-                    hex_code: props.lookup.metadata?.hex_code ?? '',
-                };
-            } else {
-                form.reset();
-                form.namespace = props.namespace;
-                form.is_active = true;
-            }
+    () => props.lookup,
+    (newLookup) => {
+        if (newLookup && props.open) {
+            form.namespace = newLookup.namespace;
+            form.slug = newLookup.slug;
+            form.display_name = newLookup.display_name;
+            form.description = newLookup.description ?? '';
+            form.is_active = newLookup.is_active;
+            form.image_path = null;
+            form.metadata = {
+                title: newLookup.metadata?.title ?? '',
+                description: newLookup.metadata?.description ?? '',
+                canonical: newLookup.metadata?.canonical ?? '',
+                robots: newLookup.metadata?.robots ?? '',
+                hex_code: newLookup.metadata?.hex_code ?? '',
+            };
+        } else if (!newLookup && props.open) {
+            // Create mode
+            form.reset();
+            form.namespace = props.namespace;
+            form.is_active = true;
         }
-    }
+    },
+    { immediate: true }
 );
+
+//watch(
+//    () => props.open,
+//    (isOpen) => {
+//        if (isOpen && props.lookup) {
+//            form.namespace = props.lookup.namespace;
+//            form.slug = props.lookup.slug;
+//            form.display_name = props.lookup.display_name;
+//            form.description = props.lookup.description ?? '';
+//            form.is_active = props.lookup.is_active;
+//            form.image_path = null;
+//            form.metadata = {
+//                title: props.lookup.metadata?.title ?? '',
+//                description: props.lookup.metadata?.description ?? '',
+//                canonical: props.lookup.metadata?.canonical ?? '',
+//                robots: props.lookup.metadata?.robots ?? '',
+//                hex_code: props.lookup.metadata?.hex_code ?? '',
+//            };
+//        } else if (isOpen && !props.lookup) {
+//            form.reset();
+//            form.namespace = props.namespace;
+//            form.is_active = true;
+//        }
+//    }
+//);
 
 watch(() => form.display_name, (newName) => {
     form.slug = slugify(newName);
