@@ -1,0 +1,315 @@
+<script setup lang="ts">
+import type { BreadcrumbItem } from '@/types';
+import type { Category, CategoryFilterData, CategoryPagination } from '@/types/category';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { computed, ref, watch } from 'vue';
+import { getColumns } from './columns';
+import { index, destroy } from '@/routes/employee/products/categories';
+import { capitalize, debounce } from 'lodash';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import Heading from '@/components/Heading.vue';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Plus, LayoutGrid, Package, Sparkles, Lamp } from 'lucide-vue-next';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import DataTableGroup from '@/components/custom/data-table/DataTableGroup.vue';
+import { cleanQuery } from '@/lib/utils';
+import DataTableFacetedFilter from '@/components/custom/data-table/DataTableFacetedFilter.vue';
+import { createLazyComponent } from '@/composables/createLazyComponent';
+import ImagePreviewDialog from '@/components/custom/ImagePreviewDialog.vue';
+import CategoryDetailsDialog from './CategoryDetailsDialog.vue';
+import DataTableSingleFilter from '@/components/custom/data-table/DataTableSingleFilter.vue';
+
+// Lazy-load modal (NO Suspense - safe for production)
+const CategoryFormModal = createLazyComponent(() => import('./CategoryFormModal.vue'));
+
+const props = defineProps<{
+    categoryGroups: any[];
+    roomOptions: any[];
+    categories?: CategoryPagination;
+    filters: CategoryFilterData;
+    currentGroup?: any;
+}>();
+
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Sản phẩm', href: '#' },
+    { title: 'Danh mục', href: index().url }
+];
+
+// Column Logic
+const activeColumns = computed(() =>
+    getColumns(handleEdit, confirmDelete, handleViewDetails, handlePreviewImage, !props.currentGroup)
+);
+
+// State
+const showFormModal = ref(false);
+const showDetailsDialog = ref(false);
+const showDeleteDialog = ref(false);
+const selectedCategory = ref<Category | null>(null);
+const previewImageUrl = ref<string | null>(null);
+const isActuallyLoading = ref(true);
+const search = ref(props.filters.search ?? '');
+const hasActiveFilters = computed(() => {
+    return (
+        !!props.filters.product_type ||
+        !!props.filters.search ||
+        !!props.filters.order_by ||
+        (props.filters.is_active !== undefined &&
+            props.filters.is_active !== null)
+    );
+});
+
+const selectedGroup = ref(
+    props.categoryGroups.find(n => n.group_id === props.currentGroup)
+)
+
+// Faceted Filter: Product Types
+const selectedType = ref(
+    props.filters.product_type ?? null
+);
+
+const typeOptions = [
+    { label: 'Nội thất', value: 'noi-that', icon: LayoutGrid },
+    { label: 'Phụ kiện', value: 'phu-kien', icon: Package },
+    { label: 'Trang trí', value: 'trang-tri', icon: Sparkles },
+    { label: 'Thắp sáng', value: 'thap-sang', icon: Lamp },
+];
+
+// Filtering Logic (Debounced)
+const updateSearch = debounce(() => {
+    const { group_id, ...restFilters } = props.filters;
+
+    const rawQuery = {
+        ...restFilters,
+        search: search.value,
+        product_type: selectedType.value ?? undefined,
+        page: 1,
+    };
+
+    const groupSlug = props.currentGroup?.slug;
+    router.get(index(groupSlug).url, cleanQuery(rawQuery), {
+        preserveState: true,
+        replace: true,
+    });
+}, 500);
+
+// Watchers
+watch(search, (val) => val !== (props.filters.search ?? '') && updateSearch());
+watch(selectedType, () => updateSearch());
+
+watch(() => props.categories, (newData) => {
+    if (newData) {
+        setTimeout(() => isActuallyLoading.value = false, 200);
+    }
+}, { immediate: true });
+
+// Actions
+function handleSort(column: string) {
+    const direction = props.filters.order_direction === 'asc' ? 'desc' : 'asc';
+    router.get(index(props.currentGroup?.slug).url, cleanQuery({
+        ...props.filters,
+        order_by: column,
+        order_direction: direction,
+        page: 1
+    }), { preserveState: true });
+}
+
+function handlePageChange(page: number) {
+    router.get(index(props.currentGroup?.slug).url, cleanQuery({ ...props.filters, page }), {
+        preserveState: true,
+        preserveScroll: true
+    });
+}
+
+function resetFilters() {
+    router.get(index(props.currentGroup?.slug).url, {}, { preserveState: false });
+}
+
+function handleCreate() {
+    selectedCategory.value = null;
+    showFormModal.value = true;
+}
+
+function handleViewDetails(category: Category) {
+    selectedCategory.value = category;
+    showDetailsDialog.value = true;
+}
+
+function handleEdit(category: Category) {
+    selectedCategory.value = category;
+    showFormModal.value = true;
+}
+
+function confirmDelete(category: Category) {
+    selectedCategory.value = category;
+    showDeleteDialog.value = true;
+}
+
+function performDelete() {
+    if (!selectedCategory.value) return;
+    router.delete(destroy(selectedCategory.value.id).url, {
+        onSuccess: () => {
+            showDeleteDialog.value = false;
+            selectedCategory.value = null;
+        }
+    });
+}
+
+function handlePreviewImage(url: string) {
+    previewImageUrl.value = url;
+}
+</script>
+
+<template>
+    <Head title="Danh mục sản phẩm" />
+    <AppLayout :breadcrumbs="breadcrumbs">
+        <div class="space-y-4 p-4">
+            <div class="flex items-center justify-between">
+                <Heading :title="currentGroup ? `Danh mục: ${currentGroup.display_name}` : 'Tất cả danh mục'"
+                    description="Quản lý cấu trúc phân loại sản phẩm và Landing Pages" />
+                <Button @click="handleCreate">
+                    <Plus class="mr-2 h-4 w-4" /> Thêm danh mục
+                </Button>
+            </div>
+
+            <div class="grid grid-cols-1 items-start sm:grid-cols-12 sm:gap-3">
+                <Card class="hidden sm:block col-span-1 sm:col-span-4 md:col-span-3 xl:col-span-2">
+                    <CardHeader>
+                        <CardTitle class="text-lg font-medium text-primary">Nhóm danh mục</CardTitle>
+                    </CardHeader>
+                    <CardContent class="grid gap-1">
+                        <Link :href="index().url" :class="[
+                            'group flex items-center justify-between rounded-md px-3 py-2 transition-all',
+                            !currentGroup ? 'bg-primary/10 text-primary shadow-sm' : 'text-muted-foreground hover:bg-muted'
+                        ]">
+                            <span class="font-medium text-sm">Tất cả</span>
+                        </Link>
+
+                        <Link v-for="group in categoryGroups" :key="group.id" :href="index(group.slug).url" :class="[
+                            'group flex items-center justify-between rounded-md px-3 py-2 transition-all',
+                            currentGroup?.id === group.id ? 'bg-primary/10 text-primary shadow-sm' : 'text-muted-foreground hover:bg-muted'
+                        ]">
+                            <span class="font-medium text-sm">{{ group.label }}</span>
+                            <Badge variant="secondary" class="text-[10px]">{{ group.count }}</Badge>
+                        </Link>
+                    </CardContent>
+                </Card>
+
+                <div class="sm:hidden">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger as-child>
+                            <Button variant="outline" class="w-full justify-between">
+                                <span class="font-medium">
+                                    Nhóm danh mục: {{ selectedGroup?.display_name || 'Tất cả' }}
+                                </span>
+                                <Badge variant="secondary">
+                                    {{ selectedGroup?.count || 0 }}
+                                </Badge>
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent class="w-[300px]">
+                            <DropdownMenuItem v-for="group in categoryGroups" :key="group.id" as-child>
+                                <Link :href="index(group.slug).url" class="w-full min-h-12 flex items-center justify-between cursor-pointer" preserve-state preserve-scroll>
+                                    <span :class="[capitalize, 'font-medium']">
+                                        {{ group.label }}
+                                    </span>
+                                    <Badge variant="secondary">
+                                        {{ group.count }}
+                                    </Badge>
+                                </Link>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+
+                <!-- MAIN TABLE -->
+                <div class="col-span-1 space-y-4 sm:col-span-8 md:col-span-9 xl:col-span-10">
+                    <DataTableGroup v-model:search="search" :is-actually-loading="isActuallyLoading"
+                        :columns="activeColumns" :data="categories?.data ?? []" :has-active-filters="hasActiveFilters"
+                        :total="categories?.meta.total ?? 0" :page-size="categories?.meta.per_page ?? 15"
+                        :current-page="categories?.meta.current_page ?? 1" :last-page="categories?.meta.last_page ?? 1"
+                        :order-by="filters.order_by" :order-direction="filters.order_direction" @reset="resetFilters"
+                        @sort="handleSort" @update:page="handlePageChange">
+                        <template #filters>
+                            <DataTableSingleFilter title="Loại sản phẩm" v-model="selectedType"
+                                :options="typeOptions" />
+                        </template>
+                    </DataTableGroup>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modals & Dialogs -->
+        <!-- Lazy-loaded modal (handles loading state internally - NO Suspense) -->
+        <CategoryFormModal v-if="showFormModal" :open="showFormModal" :category-groups="categoryGroups"
+            :room-options="roomOptions" :category="selectedCategory" @close="showFormModal = false" />
+
+        <!-- Category Details Dialog -->
+        <CategoryDetailsDialog v-if="showDetailsDialog" :open="showDetailsDialog" :category="selectedCategory"
+            @close="showDetailsDialog = false" @edit="handleEdit" @preview-image="handlePreviewImage">
+            <template #footer>
+                <div class="flex justify-end gap-2 pt-4 border-t">
+                    <Button variant="outline" @click="showDetailsDialog = false">
+                        Đóng
+                    </Button>
+                    <Button @click="handleEdit(selectedCategory!)">
+                        Chỉnh sửa
+                    </Button>
+                </div>
+            </template>
+        </CategoryDetailsDialog>
+
+        <AlertDialog :open="showDeleteDialog" @update:open="showDeleteDialog = $event">
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Xác nhận xóa danh mục</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Bạn có chắc chắn muốn xóa danh mục "{{ selectedCategory?.display_name }}"?
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel @click="selectedCategory = null">Hủy</AlertDialogCancel>
+                    <AlertDialogAction @click="performDelete" class="bg-destructive hover:bg-destructive/90 text-white">
+                        Xóa
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+
+        <!-- Universal Image Preview Dialog -->
+        <ImagePreviewDialog
+            :open="!!previewImageUrl"
+            :src="previewImageUrl"
+            @update:open="previewImageUrl = $event ? previewImageUrl : null"
+            @close="previewImageUrl = null"
+        />
+    </AppLayout>
+</template>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.1s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+}
+</style>

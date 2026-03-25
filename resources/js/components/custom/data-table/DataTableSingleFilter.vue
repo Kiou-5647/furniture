@@ -22,69 +22,51 @@ import { cn } from '@/lib/utils';
 
 interface FilterOption {
     label: string;
-    value: string | boolean | number;
+    value: string | boolean | number | null;
     icon?: Component;
 }
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
     title?: string;
     options: FilterOption[];
-    modelValue: any[];
-}>();
+    modelValue: any;
+    searchable?: boolean;
+}>(), {
+    searchable: true,
+});
 
 const emit = defineEmits(['update:modelValue']);
 
-function toggleOption(value: any) {
-    const newSelected = [...props.modelValue];
-    const index = newSelected.indexOf(value);
-    if (index > -1) {
-        newSelected.splice(index, 1);
-    } else {
-        newSelected.push(value);
-    }
-    emit('update:modelValue', newSelected);
+function selectOption(option: FilterOption) {
+    emit('update:modelValue', option.value === props.modelValue ? null : option.value);
 }
 </script>
 
 <template>
     <Popover>
         <PopoverTrigger as-child>
-            <Button variant="outline" size="sm" class="h-8 border-dashed lg:w-auto">
+            <Button variant="outline" size="sm" class="h-8 border-dashed">
                 <PlusCircle class="mr-2 h-4 w-4" />
                 {{ title }}
-                <template v-if="modelValue.length > 0">
+                <template v-if="modelValue !== null && modelValue !== undefined">
                     <Separator orientation="vertical" class="mx-2 h-4" />
-                    <Badge variant="secondary" class="rounded-sm px-1 font-normal lg:hidden">
-                        {{ modelValue.length }}
+                    <Badge variant="secondary" class="rounded-sm px-1 font-normal">
+                        {{options.find(o => o.value === modelValue)?.label}}
                     </Badge>
-                    <div class="hidden space-x-1 lg:flex">
-                        <Badge v-if="modelValue.length > 2" variant="secondary" class="rounded-sm px-1 font-normal">
-                            {{ modelValue.length }} đã chọn
-                        </Badge>
-                        <template v-else>
-                            <Badge v-for="val in modelValue.filter(v => options.some(opt => opt.value === v))"
-                                :key="String(val)" variant="secondary" class="rounded-sm px-1 font-normal">
-                                {{
-                                    options.find((opt) => opt.value === val)
-                                        ?.label
-                                }}
-                            </Badge>
-                        </template>
-                    </div>
                 </template>
             </Button>
         </PopoverTrigger>
-        <PopoverContent class="w-full p-0" align="start">
+        <PopoverContent class="w-[200px] p-0" align="start">
             <Command>
-                <CommandInput :placeholder="title" />
+                <CommandInput v-if="searchable" :placeholder="title" />
                 <CommandList>
                     <CommandEmpty>Không tìm thấy kết quả.</CommandEmpty>
                     <CommandGroup>
                         <CommandItem v-for="option in options" :key="String(option.value)" :value="option"
-                            @select="toggleOption(option.value)" class="min-h-12">
+                            @select="selectOption(option)" class="min-h-12">
                             <div :class="cn(
                                 'mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary',
-                                modelValue.includes(option.value)
+                                modelValue === option.value
                                     ? 'bg-primary text-primary-foreground'
                                     : 'opacity-50 [&_svg]:invisible',
                             )
@@ -96,11 +78,11 @@ function toggleOption(value: any) {
                             <span>{{ option.label }}</span>
                         </CommandItem>
                     </CommandGroup>
-                    <template v-if="modelValue.filter(v => options.some(opt => opt.value === v)).length > 0">
+                    <template v-if="modelValue !== null && modelValue !== undefined">
                         <CommandSeparator />
                         <CommandGroup>
-                            <CommandItem :value="{ label: 'Xóa bộ lọc' }" class="justify-center text-center"
-                                @select="emit('update:modelValue', [])">
+                            <CommandItem value="clear" class="justify-center text-center"
+                                @select="emit('update:modelValue', null)">
                                 Xóa bộ lọc
                             </CommandItem>
                         </CommandGroup>

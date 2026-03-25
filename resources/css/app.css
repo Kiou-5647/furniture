@@ -8,6 +8,30 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Hide browser's default scrollbar globally - use shadcn-vue ScrollArea instead */
+* {
+    scrollbar-width: thin; /* Firefox - thin scrollbar */
+    scrollbar-color: var(--border) transparent; /* Firefox - colored thumb */
+}
+
+*::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+    background: transparent; /* Chrome/Safari - transparent track */
+}
+
+*::-webkit-scrollbar-thumb {
+    background: var(--border); /* Chrome/Safari - themed thumb */
+    border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: var(--muted-foreground); /* Chrome/Safari - hover state */
+}
+
 @theme inline {
     --font-sans:
         'Be Vietnam Pro', ui-sans-serif, system-ui, sans-serif,
