@@ -11,11 +11,12 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { CheckCircle2, CircleDashed, MoreHorizontal, Pencil, Trash2 } from 'lucide-vue-next';
+import { CheckCircle2, CircleDashed, Eye, MoreHorizontal, Pencil, Trash2 } from 'lucide-vue-next';
 
 export const baseColumns = (
     onEdit: (lookup: Lookup) => void,
     onDelete: (lookup: Lookup) => void,
+    onViewDetails: (lookup: Lookup) => void,
 ): ColumnDef<Lookup>[] => [
         {
             id: 'display_name',
@@ -76,15 +77,6 @@ export const baseColumns = (
             cell: ({ row }) => h('span', { class: 'text-muted-foreground tabular-nums' }, row.getValue('created_at')),
         },
         {
-            id: 'updated_at',
-            accessorKey: 'updated_at',
-            header: 'Ngày sửa đổi',
-            size: 180,
-            enableSorting: true,
-            meta: { align: 'center' },
-            cell: ({ row }) => h('span', { class: 'text-muted-foreground tabular-nums' }, row.getValue('updated_at')),
-        },
-        {
             id: 'actions',
             header: 'Thao tác',
             size: 80,
@@ -103,8 +95,13 @@ export const baseColumns = (
                                     h(MoreHorizontal, { class: 'h-4 w-4' }),
                                 ),
                             ),
-                            h(DropdownMenuContent, { align: 'end', class: 'w-[160px]' }, () => [
+                            h(DropdownMenuContent, { align: 'end', class: 'w-[180px]' }, () => [
                                 h(DropdownMenuLabel, {}, () => 'Quản lý'),
+                                h(
+                                    DropdownMenuItem,
+                                    { onClick: () => onViewDetails(lookup) },
+                                    () => [h(Eye, { class: 'mr-2 h-4 w-4' }), 'Xem chi tiết'],
+                                ),
                                 h(DropdownMenuSeparator),
                                 h(
                                     DropdownMenuItem,
@@ -162,7 +159,7 @@ const imageColumn = (onPreviewImage: (url: string) => void): ColumnDef<Lookup>[]
     {
         accessorKey: 'image_path',
         header: 'Hình ảnh',
-        size: 80,
+        size: 100,
         enableSorting: false,
         meta: { align: 'center' },
         cell: ({ row }) => {
@@ -183,7 +180,7 @@ const imageColumn = (onPreviewImage: (url: string) => void): ColumnDef<Lookup>[]
                 );
             }
 
-            return h('div', { class: 'min-w-8 min-h-8 max-w-16 max-h-16 rounded-md bg-muted flex items-center justify-center border text-[10px] text-muted-foreground' }, 'Không ảnh');
+            return h('div', { class: 'w-24 h-12 rounded-md bg-muted flex items-center justify-center border text-[10px] text-muted-foreground' }, 'Không ảnh');
         }
     }
 ]
@@ -192,9 +189,10 @@ export function getColumns(
     namespace: string,
     onEdit: (lookup: Lookup) => void,
     onDelete: (lookup: Lookup) => void,
+    onViewDetails: (lookup: Lookup) => void,
     onPreviewImage: (url: string) => void
 ): ColumnDef<Lookup>[] {
-    const base = baseColumns(onEdit, onDelete);
+    const base = baseColumns(onEdit, onDelete, onViewDetails);
 
     if (namespace === 'mau-sac') {
         return [...imageColumn(onPreviewImage), ...colorColumn, ...base];

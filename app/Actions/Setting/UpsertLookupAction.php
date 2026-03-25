@@ -21,11 +21,17 @@ class UpsertLookupAction
             }
 
             $filenamePrefix = $data['slug'] ?? ($lookup ? $lookup->slug : 'lookup');
-            $data['image_path'] = $service->upload($data['image_path'], 'lookups', $filenamePrefix);
-        } else {
+            $data['image_path'] = $service->upload($data['image_path'], 'lookups', $data['slug']);
+        } elseif (! isset($data['image_path']) || $data['image_path'] === null) {
             unset($data['image_path']);
         }
 
-        return Lookup::updateOrCreate(['id' => $lookup?->id], $data);
+        if ($lookup && $lookup->id) {
+            $lookup->update($data);
+        } else {
+            $lookup = Lookup::create($data);
+        }
+
+        return $lookup;
     }
 }
