@@ -46,16 +46,20 @@ class PermissionSeeder extends Seeder
             ['name' => 'lookups.view', 'description' => 'View lookups'],
             ['name' => 'lookups.manage', 'description' => 'Manage lookups'],
 
+            // Categories
+            ['name' => 'categories.view', 'description' => 'View categories'],
+            ['name' => 'categories.manage', 'description' => 'Manage categories'],
+
+            // Collections
+            ['name' => 'collections.view', 'description' => 'View collections'],
+            ['name' => 'collections.manage', 'description' => 'Manage collections'],
+
             // Products
             ['name' => 'products.view', 'description' => 'View products'],
             ['name' => 'products.create', 'description' => 'Create products'],
             ['name' => 'products.update', 'description' => 'Update products'],
             ['name' => 'products.delete', 'description' => 'Delete products'],
             ['name' => 'products.publish', 'description' => 'Publish/unpublish products'],
-
-            // Categories
-            ['name' => 'categories.view', 'description' => 'View categories'],
-            ['name' => 'categories.manage', 'description' => 'Manage categories'],
 
             // Orders
             ['name' => 'orders.view', 'description' => 'View orders'],

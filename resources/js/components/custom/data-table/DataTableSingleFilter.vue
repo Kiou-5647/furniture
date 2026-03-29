@@ -31,8 +31,10 @@ const props = withDefaults(defineProps<{
     options: FilterOption[];
     modelValue: any;
     searchable?: boolean;
+    icon?: 'start' | 'end' | 'none';
 }>(), {
     searchable: true,
+    icon: 'none'
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -48,7 +50,7 @@ function selectOption(option: FilterOption) {
             <Button variant="outline" size="sm" class="h-8 border-dashed">
                 <PlusCircle class="mr-2 h-4 w-4" />
                 {{ title }}
-                <template v-if="modelValue !== null && modelValue !== undefined">
+                <template v-if="modelValue !== null && modelValue !== undefined ">
                     <Separator orientation="vertical" class="mx-2 h-4" />
                     <Badge variant="secondary" class="rounded-sm px-1 font-normal">
                         {{options.find(o => o.value === modelValue)?.label}}
@@ -63,7 +65,7 @@ function selectOption(option: FilterOption) {
                     <CommandEmpty>Không tìm thấy kết quả.</CommandEmpty>
                     <CommandGroup>
                         <CommandItem v-for="option in options" :key="String(option.value)" :value="option"
-                            @select="selectOption(option)" class="min-h-12">
+                            @select="selectOption(option)" class="min-h-12 w-full items-center justify-normal pr-4">
                             <div :class="cn(
                                 'mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary',
                                 modelValue === option.value
@@ -73,9 +75,11 @@ function selectOption(option: FilterOption) {
                                 ">
                                 <Check class="h-4 w-4" />
                             </div>
-                            <component :is="option.icon" v-if="option.icon"
+                            <component :is="option.icon" v-if="option.icon && icon == 'start'"
                                 class="mr-2 h-4 w-4 text-muted-foreground" />
                             <span>{{ option.label }}</span>
+                            <component :is="option.icon" v-if="option.icon && icon == 'end'"
+                                class="ml-auto h-4 w-4 text-muted-foreground" />
                         </CommandItem>
                     </CommandGroup>
                     <template v-if="modelValue !== null && modelValue !== undefined">
