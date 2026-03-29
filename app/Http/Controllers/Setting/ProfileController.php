@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Account;
+namespace App\Http\Controllers\Setting;
 
 use App\Http\Requests\Account\ProfileDeleteRequest;
 use App\Http\Requests\Account\ProfileUpdateRequest;
