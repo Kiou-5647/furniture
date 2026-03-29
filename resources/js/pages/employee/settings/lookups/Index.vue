@@ -36,7 +36,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { destroy } from '@/routes/employee/settings/lookups';
 import DataTableGroup from '@/components/custom/data-table/DataTableGroup.vue';
-import { cleanQuery } from '@/lib/utils';
+import { cleanQuery, setCookie } from '@/lib/utils';
 import DataTableFacetedFilter from '@/components/custom/data-table/DataTableFacetedFilter.vue';
 import { createLazyComponent } from '@/composables/createLazyComponent';
 import LookupDetailsDialog from './LookupDetailsDialog.vue';
@@ -238,14 +238,15 @@ function handlePageChange(page: number) {
 }
 
 function handlePageSizeChange(per_page: number) {
-    const { namespace, ...restFilters } = props.filters;
+    setCookie('per_page', per_page);
+
+    const { namespace, per_page: _, ...restFilters } = props.filters;
 
     const isActiveValue = selectedStatus.value;
 
     const rawQuery = {
         ...restFilters,
         is_active: isActiveValue,
-        per_page,
         page: 1,
     };
     router.get(index(namespace).url, cleanQuery(rawQuery), {
@@ -329,8 +330,8 @@ function handlePreviewImage(url: string) {
                         :order-by="filters.order_by" :order-direction="filters.order_direction" @reset="resetFilters"
                         @sort="handleSort" @update:page="handlePageChange" @update:pageSize="handlePageSizeChange">
                         <template #filters>
-                            <DataTableSingleFilter title="Trạng thái" v-model="selectedStatus"
-                                :options="statusOptions" :searchable="false" />
+                            <DataTableSingleFilter title="Trạng thái" v-model="selectedStatus" :options="statusOptions"
+                                :searchable="false" />
                         </template>
                     </DataTableGroup>
                 </div>

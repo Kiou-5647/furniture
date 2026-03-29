@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, LayoutGrid, Package, Sparkles, Lamp } from 'lucide-vue-next';
+import { Plus, LayoutGrid, Package, Sparkles, Lamp, CheckCircle2, CircleDashed } from 'lucide-vue-next';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -29,7 +29,7 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import DataTableGroup from '@/components/custom/data-table/DataTableGroup.vue';
-import { cleanQuery } from '@/lib/utils';
+import { cleanQuery, setCookie } from '@/lib/utils';
 import DataTableFacetedFilter from '@/components/custom/data-table/DataTableFacetedFilter.vue';
 import { createLazyComponent } from '@/composables/createLazyComponent';
 import ImagePreviewDialog from '@/components/custom/ImagePreviewDialog.vue';
@@ -91,6 +91,13 @@ const typeOptions = [
     { label: 'Thắp sáng', value: 'thap-sang', icon: Lamp },
 ];
 
+const statusOptions = [
+    { label: 'Đang hiện', value: 'true', icon: CheckCircle2 },
+    { label: 'Đang ẩn', value: 'false', icon: CircleDashed },
+];
+
+const selectedStatus = ref(props.filters.is_active ?? undefined);
+
 // Filtering Logic (Debounced)
 const updateSearch = debounce(() => {
     const { group_id, ...restFilters } = props.filters;
@@ -99,6 +106,7 @@ const updateSearch = debounce(() => {
         ...restFilters,
         search: search.value,
         product_type: selectedType.value ?? undefined,
+        is_active: selectedStatus.value ?? undefined,
         page: 1,
     };
 
@@ -134,6 +142,20 @@ function handlePageChange(page: number) {
     router.get(index(props.currentGroup?.slug).url, cleanQuery({ ...props.filters, page }), {
         preserveState: true,
         preserveScroll: true
+    });
+}
+
+function handlePageSizeChange(per_page: number) {
+    setCookie('per_page', per_page);
+
+    const { per_page: _, ...restFilters } = props.filters;
+
+    router.get(index(props.currentGroup?.slug).url, cleanQuery({
+        ...restFilters,
+        page: 1,
+    }), {
+        preserveState: true,
+        preserveScroll: true,
     });
 }
 
@@ -177,6 +199,7 @@ function handlePreviewImage(url: string) {
 </script>
 
 <template>
+
     <Head title="Danh mục sản phẩm" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-4 p-4">
@@ -225,7 +248,9 @@ function handlePreviewImage(url: string) {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent class="w-[300px]">
                             <DropdownMenuItem v-for="group in categoryGroups" :key="group.id" as-child>
-                                <Link :href="index(group.slug).url" class="w-full min-h-12 flex items-center justify-between cursor-pointer" preserve-state preserve-scroll>
+                                <Link :href="index(group.slug).url"
+                                    class="w-full min-h-12 flex items-center justify-between cursor-pointer"
+                                    preserve-state preserve-scroll>
                                     <span :class="[capitalize, 'font-medium']">
                                         {{ group.label }}
                                     </span>
@@ -245,7 +270,7 @@ function handlePreviewImage(url: string) {
                         :total="categories?.meta.total ?? 0" :page-size="categories?.meta.per_page ?? 15"
                         :current-page="categories?.meta.current_page ?? 1" :last-page="categories?.meta.last_page ?? 1"
                         :order-by="filters.order_by" :order-direction="filters.order_direction" @reset="resetFilters"
-                        @sort="handleSort" @update:page="handlePageChange">
+                        @sort="handleSort" @update:page="handlePageChange" @update:page-size="handlePageSizeChange">
                         <template #filters>
                             <DataTableSingleFilter title="Loại sản phẩm" v-model="selectedType"
                                 :options="typeOptions" />
@@ -293,12 +318,8 @@ function handlePreviewImage(url: string) {
         </AlertDialog>
 
         <!-- Universal Image Preview Dialog -->
-        <ImagePreviewDialog
-            :open="!!previewImageUrl"
-            :src="previewImageUrl"
-            @update:open="previewImageUrl = $event ? previewImageUrl : null"
-            @close="previewImageUrl = null"
-        />
+        <ImagePreviewDialog :open="!!previewImageUrl" :src="previewImageUrl"
+            @update:open="previewImageUrl = $event ? previewImageUrl : null" @close="previewImageUrl = null" />
     </AppLayout>
 </template>
 

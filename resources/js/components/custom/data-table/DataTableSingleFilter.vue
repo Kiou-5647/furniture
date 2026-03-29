@@ -31,10 +31,10 @@ const props = withDefaults(defineProps<{
     options: FilterOption[];
     modelValue: any;
     searchable?: boolean;
-    icon?: 'start' | 'end' | 'none';
+    icon_location?: 'start' | 'end' | 'none';
 }>(), {
     searchable: true,
-    icon: 'none'
+    icon_location: 'none'
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -75,10 +75,10 @@ function selectOption(option: FilterOption) {
                                 ">
                                 <Check class="h-4 w-4" />
                             </div>
-                            <component :is="option.icon" v-if="option.icon && icon == 'start'"
+                            <component :is="option.icon" v-if="option.icon && icon_location == 'start'"
                                 class="mr-2 h-4 w-4 text-muted-foreground" />
                             <span>{{ option.label }}</span>
-                            <component :is="option.icon" v-if="option.icon && icon == 'end'"
+                            <component :is="option.icon" v-if="option.icon && icon_location == 'end'"
                                 class="ml-auto h-4 w-4 text-muted-foreground" />
                         </CommandItem>
                     </CommandGroup>

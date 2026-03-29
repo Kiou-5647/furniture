@@ -16,6 +16,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { ref, watch } from 'vue';
 
 interface Props {
     total: number;
@@ -27,11 +28,18 @@ interface Props {
 const props = defineProps<Props>();
 const emit = defineEmits(['update:page', 'update:pageSize']);
 
+const selectedPageSize = ref(String(props.pageSize || 15));
+
+watch(() => props.pageSize, (newVal) => {
+    selectedPageSize.value = String(newVal);
+}, { immediate: true });
+
 function onPageChange(page: number) {
     emit('update:page', page);
 }
 
 function onPageSizeChange(value: string) {
+    selectedPageSize.value = value;
     emit('update:pageSize', parseInt(value));
 }
 </script>
@@ -41,9 +49,9 @@ function onPageSizeChange(value: string) {
         <!-- 1. Left side: Rows per page selection -->
         <div class="flex items-center space-x-2">
             <p class="hidden sm:block text-sm font-medium">Số hàng mỗi trang</p>
-            <Select :model-value="`${pageSize}`" @update:model-value="onPageSizeChange!">
+            <Select :model-value="selectedPageSize" @update:model-value="onPageSizeChange!">
                 <SelectTrigger class="h-8 w-[70px]">
-                    <SelectValue :placeholder="`${pageSize}`" />
+                    <SelectValue :placeholder="selectedPageSize" />
                 </SelectTrigger>
                 <SelectContent side="top">
                     <SelectItem v-for="size in [10, 15, 20, 25]" :key="size" :value="`${size}`">
