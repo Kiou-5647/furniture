@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Employee\EmployeeDashboardController;
 use App\Http\Controllers\Employee\Product\CategoryController;
+use App\Http\Controllers\Employee\Product\CollectionController;
 use App\Http\Controllers\Employee\Setting\LookupController;
 use Illuminate\Support\Facades\Route;
 
@@ -60,6 +61,27 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
                     Route::get('/', [CategoryController::class, 'trash'])->name('index');
                     Route::post('/{id}/restore', [CategoryController::class, 'restore'])->name('restore');
                     Route::delete('/{id}/force', [CategoryController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
+                });
+            });
+        });
+
+        Route::prefix('bo-suu-tap')->name('collections.')->group(function () {
+            // View Group
+            Route::middleware(['can:collections.view'])->group(function () {
+                Route::get('/', [CollectionController::class, 'index'])->name('index');
+            });
+
+            // Manage Group
+            Route::middleware(['can:collections.manage'])->group(function () {
+                Route::post('/', [CollectionController::class, 'store'])->name('store');
+                Route::put('/{collection}', [CollectionController::class, 'update'])->name('update');
+                Route::delete('/{collection}', [CollectionController::class, 'destroy'])->name('destroy');
+
+                // Soft Delete / Trash Sub-group
+                Route::prefix('thung-rac')->name('trash.')->group(function () {
+                    Route::get('/', [CollectionController::class, 'trash'])->name('index');
+                    Route::post('/{id}/restore', [CollectionController::class, 'restore'])->name('restore');
+                    Route::delete('/{id}/force', [CollectionController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
                 });
             });
         });

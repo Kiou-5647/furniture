@@ -40,12 +40,36 @@ export function slugify(str: string): string {
         .replace(/-+/g, '-');
 }
 
+export function getCookie(name: string): string | null {
+    if (typeof document === 'undefined') return null;
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop()?.split(';').shift() ?? null;
+    return null;
+}
+
+export function setCookie(name: string, value: string | number, days: number = 30) {
+    if (typeof document === 'undefined') return;
+    const maxAge = days * 24 * 60 * 60;
+    document.cookie = `${name}=${value}; path=/; max-age=${maxAge}; SameSite=Lax`;
+}
+
 export function cleanQuery(query: Record<string, any>) {
     return Object.fromEntries(
-        Object.entries(query).filter(([_, value]) =>
-            value !== undefined &&
-            value !== null &&
-            value !== ''
-        )
+        Object.entries(query).filter(([key, value]) => {
+            if (value === undefined ||
+                value === null ||
+                value === '' ||
+                (key === 'per_page' && value === getCookie('per_page'))
+               ) {
+                return false;
+            }
+
+            if (key === 'page' && Number(value) === 1) {
+                return false;
+            }
+
+            return true;
+        })
     );
 }

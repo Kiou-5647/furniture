@@ -23,6 +23,11 @@ CREATE INDEX idx_categories_product_type ON categories (product_type);
 
 CREATE INDEX idx_categories_display_name_trgm ON categories USING GIN (display_name gin_trgm_ops);
 
+CREATE INDEX idx_categories_active ON categories (is_active)
+WHERE
+    is_active = true
+    AND deleted_at IS NULL;
+
 CREATE INDEX idx_categories_deleted ON categories (deleted_at)
 WHERE
     deleted_at IS NOT NULL;

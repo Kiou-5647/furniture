@@ -26,11 +26,16 @@ interface FilterOption {
     icon?: Component;
 }
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
     title?: string;
     options: FilterOption[];
     modelValue: any[];
-}>();
+    searchable?: boolean;
+    icon_location?: 'start' | 'end' | 'none';
+}>(), {
+    searchable: true,
+    icon_location: 'none'
+});
 
 const emit = defineEmits(['update:modelValue']);
 
@@ -76,7 +81,7 @@ function toggleOption(value: any) {
         </PopoverTrigger>
         <PopoverContent class="w-full p-0" align="start">
             <Command>
-                <CommandInput :placeholder="title" />
+                <CommandInput v-if="searchable" :placeholder="title" />
                 <CommandList>
                     <CommandEmpty>Không tìm thấy kết quả.</CommandEmpty>
                     <CommandGroup>
@@ -91,9 +96,11 @@ function toggleOption(value: any) {
                                 ">
                                 <Check class="h-4 w-4" />
                             </div>
-                            <component :is="option.icon" v-if="option.icon"
+                            <component :is="option.icon" v-if="option.icon && icon_location == 'start'"
                                 class="mr-2 h-4 w-4 text-muted-foreground" />
                             <span>{{ option.label }}</span>
+                            <component :is="option.icon" v-if="option.icon && icon_location == 'end'"
+                                class="ml-auto h-4 w-4 text-muted-foreground" />
                         </CommandItem>
                     </CommandGroup>
                     <template v-if="modelValue.filter(v => options.some(opt => opt.value === v)).length > 0">
