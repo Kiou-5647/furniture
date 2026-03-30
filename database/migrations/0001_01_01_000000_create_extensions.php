@@ -10,12 +10,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        $sql = file_get_contents(database_path('schemas/00_create_extensions.sql'));
-        foreach (array_filter(array_map('trim', explode(';', $sql))) as $statement) {
-            if (! empty($statement)) {
-                DB::statement($statement);
-            }
-        }
+        DB::statement('CREATE EXTENSION IF NOT EXISTS pgcrypto CASCADE');
+        DB::statement('CREATE EXTENSION IF NOT EXISTS "uuid-ossp" CASCADE');
+        DB::statement('CREATE EXTENSION IF NOT EXISTS pg_trgm CASCADE');
+        DB::statement('CREATE EXTENSION IF NOT EXISTS btree_gist CASCADE');
+        DB::statement('CREATE EXTENSION IF NOT EXISTS vector CASCADE');
     }
 
     /**

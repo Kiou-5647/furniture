@@ -28,91 +28,55 @@ class PermissionSeeder extends Seeder
     protected function getPermissions(): array
     {
         return [
-            // Users & Auth
+            // Users & Access
             ['name' => 'users.view', 'description' => 'View users list'],
             ['name' => 'users.create', 'description' => 'Create new users'],
             ['name' => 'users.update', 'description' => 'Update user information'],
             ['name' => 'users.delete', 'description' => 'Delete users'],
+            ['name' => 'users.manage', 'description' => 'Full user management (all-in-one)'],
 
-            // Roles & Permissions
             ['name' => 'roles.view', 'description' => 'View roles'],
-            ['name' => 'roles.create', 'description' => 'Create roles'],
-            ['name' => 'roles.update', 'description' => 'Update roles'],
-            ['name' => 'roles.delete', 'description' => 'Delete roles'],
+            ['name' => 'roles.manage', 'description' => 'Manage roles'],
             ['name' => 'permissions.view', 'description' => 'View permissions'],
-            ['name' => 'permissions.assign', 'description' => 'Assign permissions'],
+            ['name' => 'permissions.assign', 'description' => 'Assign permissions to roles'],
 
-            // Lookups
+            // System Settings
             ['name' => 'lookups.view', 'description' => 'View lookups'],
             ['name' => 'lookups.manage', 'description' => 'Manage lookups'],
 
-            // Categories
-            ['name' => 'categories.view', 'description' => 'View categories'],
-            ['name' => 'categories.manage', 'description' => 'Manage categories'],
+            ['name' => 'settings.view', 'description' => 'View system settings'],
+            ['name' => 'settings.manage', 'description' => 'Configure global system settings'],
 
-            // Collections
-            ['name' => 'collections.view', 'description' => 'View collections'],
-            ['name' => 'collections.manage', 'description' => 'Manage collections'],
+            ['name' => 'horizon.view', 'description' => 'Access infrastructure queue dashboard'],
 
-            // Products
-            ['name' => 'products.view', 'description' => 'View products'],
-            ['name' => 'products.create', 'description' => 'Create products'],
-            ['name' => 'products.update', 'description' => 'Update products'],
-            ['name' => 'products.delete', 'description' => 'Delete products'],
+            // Core: Products & Taxonomies
+            ['name' => 'products.view', 'description' => 'View product details'],
+            ['name' => 'products.create', 'description' => 'Create new products'],
+            ['name' => 'products.update', 'description' => 'Edit existing products'],
+            ['name' => 'products.delete', 'description' => 'Remove products'],
+            ['name' => 'products.manage', 'description' => 'Manage all products'],
             ['name' => 'products.publish', 'description' => 'Publish/unpublish products'],
 
-            // Orders
-            ['name' => 'orders.view', 'description' => 'View orders'],
-            ['name' => 'orders.create', 'description' => 'Create orders'],
-            ['name' => 'orders.update', 'description' => 'Update orders'],
-            ['name' => 'orders.cancel', 'description' => 'Cancel orders'],
-            ['name' => 'orders.refund', 'description' => 'Process refunds'],
+            ['name' => 'categories.view', 'description' => 'View product categories'],
+            ['name' => 'categories.manage', 'description' => 'Manage category hierarchy'],
 
-            // Inventory
-            ['name' => 'inventory.view', 'description' => 'View inventory'],
-            ['name' => 'inventory.update', 'description' => 'Update inventory'],
-            ['name' => 'inventory.transfer', 'description' => 'Transfer inventory'],
-            ['name' => 'inventory.adjust', 'description' => 'Adjust inventory'],
+            ['name' => 'collections.view', 'description' => 'View product collections'],
+            ['name' => 'collections.manage', 'description' => 'Manage curated collections'],
 
-            // Customers
-            ['name' => 'customers.view', 'description' => 'View customers'],
-            ['name' => 'customers.update', 'description' => 'Update customer info'],
+            // Entities: Customers, Vendors, Employees
+            ['name' => 'customers.view', 'description' => 'View customer profiles'],
+            ['name' => 'customers.update', 'description' => 'Update customer information'],
             ['name' => 'customers.delete', 'description' => 'Delete customers'],
 
-            // Vendors
-            ['name' => 'vendors.view', 'description' => 'View vendors'],
-            ['name' => 'vendors.create', 'description' => 'Create vendors'],
-            ['name' => 'vendors.update', 'description' => 'Update vendors'],
+            ['name' => 'vendors.view', 'description' => 'View vendor profiles'],
+            ['name' => 'vendors.create', 'description' => 'Create new vendors'],
+            ['name' => 'vendors.update', 'description' => 'Update vendor info'],
             ['name' => 'vendors.delete', 'description' => 'Delete vendors'],
-            ['name' => 'vendors.verify', 'description' => 'Verify vendors'],
+            ['name' => 'vendors.manage', 'description' => 'Manage vendors'],
+            ['name' => 'vendors.verify', 'description' => 'Verify vendor status'],
 
-            // Services
-            ['name' => 'services.view', 'description' => 'View services'],
-            ['name' => 'services.create', 'description' => 'Create services'],
-            ['name' => 'services.update', 'description' => 'Update services'],
-            ['name' => 'services.delete', 'description' => 'Delete services'],
-
-            // Bookings
-            ['name' => 'bookings.view', 'description' => 'View bookings'],
-            ['name' => 'bookings.update', 'description' => 'Update bookings'],
-            ['name' => 'bookings.cancel', 'description' => 'Cancel bookings'],
-
-            // Shipping
-            ['name' => 'shipping.view', 'description' => 'View shipping'],
-            ['name' => 'shipping.update', 'description' => 'Update shipping'],
-            ['name' => 'shipping.configure', 'description' => 'Configure shipping'],
-
-            // Reports
-            ['name' => 'reports.view', 'description' => 'View reports'],
-            ['name' => 'reports.export', 'description' => 'Export reports'],
-
-            // Settings
-            ['name' => 'settings.view', 'description' => 'View settings'],
-            ['name' => 'settings.update', 'description' => 'Update settings'],
-
-            // Content
-            ['name' => 'content.view', 'description' => 'View content'],
-            ['name' => 'content.manage', 'description' => 'Manage content'],
+            ['name' => 'employees.view', 'description' => 'View employee list'],
+            ['name' => 'employees.manage', 'description' => 'Manage employee profiles and departments'],
         ];
     }
 
@@ -121,67 +85,37 @@ class PermissionSeeder extends Seeder
         $rolesPermissions = [
             'super_admin' => null,
             'admin' => [
-                'users.view', 'users.update',
-                'roles.view', 'permissions.view',
-                'products.view', 'products.create', 'products.update', 'products.delete', 'products.publish',
-                'categories.view', 'categories.manage',
-                'orders.view', 'orders.create', 'orders.update', 'orders.cancel', 'orders.refund',
-                'inventory.view', 'inventory.update', 'inventory.transfer', 'inventory.adjust',
-                'customers.view', 'customers.update',
-                'vendors.view', 'vendors.create', 'vendors.update', 'vendors.delete', 'vendors.verify',
-                'services.view', 'services.create', 'services.update', 'services.delete',
-                'bookings.view', 'bookings.update', 'bookings.cancel',
-                'shipping.view', 'shipping.update', 'shipping.configure',
-                'reports.view', 'reports.export',
-                'settings.view', 'settings.update',
-                'content.view', 'content.manage',
+                'users.manage',
+                'roles.manage',
+                'permissions.view',
+                'permissions.assign',
+                'products.manage',
+                'categories.manage',
+                'collections.manage',
+                'customers.view', 'customers.update', 'customers.delete',
+                'vendors.manage', // Future implementation of vendors.manage
+                'employees.manage',
+                'settings.manage',
+                'lookups.manage',
+                'horizon.view',
             ],
-
-            'warehouse_manager' => [
-                'inventory.view', 'inventory.update', 'inventory.transfer', 'inventory.adjust',
-                'orders.view',
-                'shipping.view', 'shipping.update',
+            'head_of_production' => [
+                'products.manage',
+                'categories.manage',
+                'collections.manage',
+                'vendors.view', 'vendors.verify',
             ],
-
             'content_manager' => [
                 'products.view', 'products.create', 'products.update', 'products.publish',
-                'categories.view', 'categories.manage',
-                'services.view', 'services.create', 'services.update', 'services.delete',
-                'content.view', 'content.manage',
+                'categories.view', 'collections.view',
             ],
-
-            'designer' => [
-                'services.view', 'services.create', 'services.update',
-                'bookings.view', 'bookings.update',
-            ],
-
-            'support' => [
-                'orders.view', 'orders.update',
-                'customers.view', 'customers.update',
-                'products.view',
-            ],
-
-            'vip' => [
-                'products.view',
-                'orders.view', 'orders.create',
-                'services.view', 'services.create',
-                'bookings.view',
-            ],
-
-            'wholesale' => [
-                'products.view',
-                'orders.view', 'orders.create',
-            ],
-
             'vendor_owner' => [
                 'vendors.view', 'vendors.update',
-                'products.view', 'products.create', 'products.update',
-                'orders.view', 'orders.update',
+                'products.view', 'products.create', 'products.update', // No delete
             ],
-
-            'vendor_user' => [
-                'products.view', 'products.create', 'products.update',
-                'orders.view',
+            'support' => [
+                'customers.view', 'customers.update',
+                'products.view',
             ],
         ];
 
