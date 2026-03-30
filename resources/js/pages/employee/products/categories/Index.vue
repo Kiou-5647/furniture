@@ -18,16 +18,6 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import DataTableGroup from '@/components/custom/data-table/DataTableGroup.vue';
 import { cleanQuery, setCookie } from '@/lib/utils';
 import DataTableFacetedFilter from '@/components/custom/data-table/DataTableFacetedFilter.vue';
@@ -35,6 +25,7 @@ import { createLazyComponent } from '@/composables/createLazyComponent';
 import ImagePreviewDialog from '@/components/custom/ImagePreviewDialog.vue';
 import CategoryDetailsDialog from './CategoryDetailsDialog.vue';
 import DataTableSingleFilter from '@/components/custom/data-table/DataTableSingleFilter.vue';
+import DeleteConfirmation from '@/components/custom/DeleteConfirmation.vue';
 
 // Lazy-load modal (NO Suspense - safe for production)
 const CategoryFormModal = createLazyComponent(() => import('./CategoryFormModal.vue'));
@@ -48,7 +39,6 @@ const props = defineProps<{
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Sản phẩm', href: '#' },
     { title: 'Danh mục', href: index().url }
 ];
 
@@ -212,7 +202,7 @@ function handlePreviewImage(url: string) {
             </div>
 
             <div class="grid grid-cols-1 items-start sm:grid-cols-12 sm:gap-3">
-                <Card class="hidden sm:block col-span-1 sm:col-span-4 md:col-span-3 xl:col-span-2">
+                <Card class="hidden space-y-2 sm:block col-span-1 sm:col-span-4 md:col-span-3 xl:col-span-2">
                     <CardHeader>
                         <CardTitle class="text-lg font-medium text-primary">Nhóm danh mục</CardTitle>
                     </CardHeader>
@@ -270,7 +260,8 @@ function handlePreviewImage(url: string) {
                         :total="categories?.meta.total ?? 0" :page-size="categories?.meta.per_page ?? 15"
                         :current-page="categories?.meta.current_page ?? 1" :last-page="categories?.meta.last_page ?? 1"
                         :order-by="filters.order_by" :order-direction="filters.order_direction" @reset="resetFilters"
-                        @sort="handleSort" @update:page="handlePageChange" @update:page-size="handlePageSizeChange">
+                        @sort="handleSort" @row-click="handleViewDetails" @update:page="handlePageChange"
+                        @update:page-size="handlePageSizeChange">
                         <template #filters>
                             <DataTableSingleFilter title="Loại sản phẩm" v-model="selectedType"
                                 :options="typeOptions" />
@@ -287,35 +278,12 @@ function handlePreviewImage(url: string) {
 
         <!-- Category Details Dialog -->
         <CategoryDetailsDialog v-if="showDetailsDialog" :open="showDetailsDialog" :category="selectedCategory"
-            @close="showDetailsDialog = false" @edit="handleEdit" @preview-image="handlePreviewImage">
-            <template #footer>
-                <div class="flex justify-end gap-2 pt-4 border-t">
-                    <Button variant="outline" @click="showDetailsDialog = false">
-                        Đóng
-                    </Button>
-                    <Button @click="handleEdit(selectedCategory!)">
-                        Chỉnh sửa
-                    </Button>
-                </div>
-            </template>
-        </CategoryDetailsDialog>
+            @close="showDetailsDialog = false" @edit="handleEdit" @delete="confirmDelete"
+            @preview-image="handlePreviewImage" />
 
-        <AlertDialog :open="showDeleteDialog" @update:open="showDeleteDialog = $event">
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Xác nhận xóa danh mục</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        Bạn có chắc chắn muốn xóa danh mục "{{ selectedCategory?.display_name }}"?
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel @click="selectedCategory = null">Hủy</AlertDialogCancel>
-                    <AlertDialogAction @click="performDelete" class="bg-destructive hover:bg-destructive/90 text-white">
-                        Xóa
-                    </AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
+        <DeleteConfirmation v-model:open="showDeleteDialog" title="Xác nhận xóa danh mục"
+            :item-name="selectedCategory?.display_name"
+            description="Bạn có chắc chắn muốn xóa danh mục &quot;{name}&quot;?" @confirm="performDelete" />
 
         <!-- Universal Image Preview Dialog -->
         <ImagePreviewDialog :open="!!previewImageUrl" :src="previewImageUrl"

@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
-import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-vue-next';
+import { Link, usePage } from '@inertiajs/vue3';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
-import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
 import {
     Sidebar,
@@ -16,27 +14,12 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
+import DynamicNavMain from './DynamicNavMain.vue';
+import { computed } from 'vue';
 
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Bảng điều khiển',
-        href: dashboard(),
-        icon: LayoutGrid,
-    },
-];
+const page = usePage();
+const menu = computed(() => (page.props.menu as NavItem[]) || []);
 
-const footerNavItems: NavItem[] = [
-    //{
-    //    title: 'Kho lưu trữ',
-    //    href: 'https://github.com/laravel/vue-starter-kit',
-    //    icon: FolderGit2,
-    //},
-    //{
-    //    title: 'Tài liệu',
-    //    href: 'https://laravel.com/docs/starter-kits#vue',
-    //    icon: BookOpen,
-    //},
-];
 </script>
 
 <template>
@@ -54,13 +37,13 @@ const footerNavItems: NavItem[] = [
         </SidebarHeader>
 
         <SidebarContent>
-            <NavMain :items="mainNavItems" />
+            <DynamicNavMain :items="menu" />
         </SidebarContent>
 
         <SidebarFooter>
-            <NavFooter :items="footerNavItems" />
             <NavUser />
         </SidebarFooter>
     </Sidebar>
     <slot />
 </template>
+e>

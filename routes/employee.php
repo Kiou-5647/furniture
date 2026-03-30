@@ -12,7 +12,7 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
      */
     Route::get('/dashboard', [EmployeeDashboardController::class, 'index'])->name('dashboard');
 
-    Route::prefix('tuy-chinh')->name('settings.')->group(function () {
+    Route::prefix('cau-hinh')->name('settings.')->group(function () {
         /**
          * Lookups routes
          */

@@ -29,7 +29,7 @@ export const baseColumns = (
         {
             id: 'slug',
             accessorKey: 'slug',
-            header: 'Slug',
+            header: 'Đường dẫn',
             size: 150,
             enableSorting: true,
             meta: { align: 'center' },
@@ -53,6 +53,13 @@ export const baseColumns = (
             ),
         },
         {
+            id: 'description',
+            accessorKey: 'description',
+            header: 'Mô tả',
+            size: 300,
+            enableSorting: false
+        },
+        {
             id: 'is_active',
             accessorKey: 'is_active',
             header: 'Trạng thái',
@@ -74,13 +81,13 @@ export const baseColumns = (
             }
         },
         {
-            id: 'created_at',
-            accessorKey: 'created_at',
-            header: 'Ngày tạo',
+            id: 'updated_at',
+            accessorKey: 'updated_at',
+            header: 'Ngày cập nhật',
             size: 180,
             enableSorting: true,
             meta: { align: 'center' },
-            cell: ({ row }) => h('span', { class: 'text-muted-foreground tabular-nums' }, row.getValue('created_at')),
+            cell: ({ row }) => h('span', { class: 'text-muted-foreground tabular-nums' }, row.getValue('updated_at')),
         },
         {
             id: 'actions',
@@ -97,7 +104,7 @@ export const baseColumns = (
                     {
                         default: () => [
                             h(DropdownMenuTrigger, { asChild: true }, () =>
-                                h(Button, { variant: 'ghost', class: 'h-8 w-8 p-0' }, () =>
+                                h(Button, { variant: 'ghost', class: 'h-8 w-8 p-0 hover:bg-white dark:hover:bg-black' }, () =>
                                     h(MoreHorizontal, { class: 'h-4 w-4' }),
                                 ),
                             ),

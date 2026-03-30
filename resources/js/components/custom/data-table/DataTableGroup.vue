@@ -42,7 +42,7 @@
             </div>
             <div v-else class="space-y-4">
                 <DataTable :table="table" :order-by="order_by" :order-direction="order_direction"
-                    @sort="emit('sort', $event)" />
+                    @sort="emit('sort', $event)" @row-click="emit('row-click', $event)" />
                 <DataTablePagination :total="total" :page-size="pageSize" :current-page="currentPage"
                     :last-page="lastPage" @update:page="emit('update:page', $event)"
                     @update:pageSize="emit('update:pageSize', $event)" />
@@ -90,6 +90,7 @@ const emit = defineEmits([
     'update:search',
     'reset',
     'sort',
+    'row-click',
     'update:page',
     'update:pageSize',
 ]);

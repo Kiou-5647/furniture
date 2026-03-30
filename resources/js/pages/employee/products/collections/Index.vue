@@ -10,21 +10,12 @@ import { debounce } from 'lodash';
 import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import { Plus, Star, StarOff, CheckCircle2, CircleDashed } from 'lucide-vue-next';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import DataTableGroup from '@/components/custom/data-table/DataTableGroup.vue';
 import { cleanQuery, setCookie } from '@/lib/utils';
 import { createLazyComponent } from '@/composables/createLazyComponent';
 import ImagePreviewDialog from '@/components/custom/ImagePreviewDialog.vue';
 import DataTableSingleFilter from '@/components/custom/data-table/DataTableSingleFilter.vue';
+import DeleteConfirmation from '@/components/custom/DeleteConfirmation.vue';
 
 // Lazy-load modal
 const CollectionFormModal = createLazyComponent(() => import('./CollectionFormModal.vue'));
@@ -36,7 +27,6 @@ const props = defineProps<{
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Sản phẩm', href: '#' },
     { title: 'Bộ sưu tập', href: index().url }
 ];
 
@@ -198,7 +188,8 @@ function handlePreviewImage(url: string) {
                         :current-page="collections?.meta.current_page ?? 1"
                         :last-page="collections?.meta.last_page ?? 1" :order-by="filters.order_by"
                         :order-direction="filters.order_direction" @reset="resetFilters" @sort="handleSort"
-                        @update:page="handlePageChange" @update:page-size="handlePageSizeChange">
+                        @row-click="handleViewDetails" @update:page="handlePageChange"
+                        @update:page-size="handlePageSizeChange">
                         <template #filters>
                             <DataTableSingleFilter title="Trạng thái" v-model="selectedStatus" :options="statusOptions"
                                 :searchable="false" icon_location="end" />
@@ -215,24 +206,12 @@ function handlePreviewImage(url: string) {
             @close="showFormModal = false" />
 
         <CollectionDetailsDialog v-if="showDetailsDialog" :open="showDetailsDialog" :collection="selectedCollection"
-            @close="showDetailsDialog = false" @edit="handleEdit" @preview-image="handlePreviewImage" />
+            @close="showDetailsDialog = false" @edit="handleEdit" @delete="confirmDelete"
+            @preview-image="handlePreviewImage" />
 
-        <AlertDialog :open="showDeleteDialog" @update:open="showDeleteDialog = $event">
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Xác nhận xóa bộ sưu tập</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        Bạn có chắc chắn muốn xóa bộ sưu tập "{{ selectedCollection?.display_name }}"?
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel @click="selectedCollection = null">Hủy</AlertDialogCancel>
-                    <AlertDialogAction @click="performDelete" class="bg-destructive hover:bg-destructive/90 text-white">
-                        Xóa
-                    </AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
+        <DeleteConfirmation v-model:open="showDeleteDialog" title="Xác nhận xóa bộ sưu tập"
+            :item-name="selectedCollection?.display_name"
+            description="Bạn có chắc chắn muốn xóa bộ sưu tập &quot;{name}&quot;?" @confirm="performDelete" />
 
         <ImagePreviewDialog :open="!!previewImageUrl" :src="previewImageUrl"
             @update:open="previewImageUrl = $event ? previewImageUrl : null" @close="previewImageUrl = null" />

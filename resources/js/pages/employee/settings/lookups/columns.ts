@@ -22,14 +22,14 @@ export const baseColumns = (
             id: 'display_name',
             accessorKey: 'display_name',
             header: 'Tên hiển thị',
-            size: 500,
+            size: 250,
             enableSorting: true,
-            enableHiding: false
+            enableHiding: false,
         },
         {
             id: 'slug',
             accessorKey: 'slug',
-            header: 'Slug',
+            header: 'Đường dẫn',
             size: 150,
             enableSorting: true,
             meta: { align: 'center' },
@@ -42,9 +42,10 @@ export const baseColumns = (
         {
             id: 'description',
             accessorKey: 'description',
-            header: 'Description',
-            size: 300,
-            enableSorting: false
+            header: 'Mô tả',
+            size: 250,
+            enableSorting: false,
+            cell: ({ row }) => h('p', { class: 'truncate' }, row.getValue('description')),
         },
         {
             id: 'is_active',
@@ -68,13 +69,13 @@ export const baseColumns = (
             }
         },
         {
-            id: 'created_at',
-            accessorKey: 'created_at',
-            header: 'Ngày tạo',
-            size: 180,
+            id: 'updated_at',
+            accessorKey: 'updated_at',
+            header: 'Ngày cập nhật',
+            size: 165,
             enableSorting: true,
             meta: { align: 'center' },
-            cell: ({ row }) => h('span', { class: 'text-muted-foreground tabular-nums' }, row.getValue('created_at')),
+            cell: ({ row }) => h('span', { class: 'text-muted-foreground tabular-nums' }, row.getValue('updated_at')),
         },
         {
             id: 'actions',
@@ -91,7 +92,7 @@ export const baseColumns = (
                     {
                         default: () => [
                             h(DropdownMenuTrigger, { asChild: true }, () =>
-                                h(Button, { variant: 'ghost', class: 'h-8 w-8 p-0' }, () =>
+                                h(Button, { variant: 'ghost', class: 'h-8 w-8 p-0 hover:bg-white dark:hover:bg-black' }, () =>
                                     h(MoreHorizontal, { class: 'h-4 w-4' }),
                                 ),
                             ),

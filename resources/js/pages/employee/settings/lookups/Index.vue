@@ -24,16 +24,6 @@ import {
     DropdownMenuLabel,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { destroy } from '@/routes/employee/settings/lookups';
 import DataTableGroup from '@/components/custom/data-table/DataTableGroup.vue';
 import { cleanQuery, setCookie } from '@/lib/utils';
@@ -42,6 +32,7 @@ import { createLazyComponent } from '@/composables/createLazyComponent';
 import LookupDetailsDialog from './LookupDetailsDialog.vue';
 import ImagePreviewDialog from '@/components/custom/ImagePreviewDialog.vue';
 import DataTableSingleFilter from '@/components/custom/data-table/DataTableSingleFilter.vue';
+import DeleteConfirmation from '@/components/custom/DeleteConfirmation.vue';
 
 // Lazy-load modal (NO Suspense - safe for production)
 const LookupFormModal = createLazyComponent(() => import('./LookupFormModal.vue'));
@@ -328,7 +319,8 @@ function handlePreviewImage(url: string) {
                         :total="lookups?.meta.total ?? 0" :page-size="lookups?.meta.per_page ?? 15"
                         :current-page="lookups?.meta.current_page ?? 1" :last-page="lookups?.meta.last_page ?? 1"
                         :order-by="filters.order_by" :order-direction="filters.order_direction" @reset="resetFilters"
-                        @sort="handleSort" @update:page="handlePageChange" @update:pageSize="handlePageSizeChange">
+                        @sort="handleSort" @row-click="handleViewDetails" @update:page="handlePageChange"
+                        @update:pageSize="handlePageSizeChange">
                         <template #filters>
                             <DataTableSingleFilter title="Trạng thái" v-model="selectedStatus" :options="statusOptions"
                                 :searchable="false" />
@@ -344,37 +336,13 @@ function handlePreviewImage(url: string) {
 
         <!-- Lookup Details Dialog -->
         <LookupDetailsDialog v-if="showDetailsDialog" :open="showDetailsDialog" :lookup="selectedLookup"
-            @close="showDetailsDialog = false" @edit="handleEdit" @preview-image="handlePreviewImage">
-            <template #footer>
-                <div class="flex justify-end gap-2 pt-4 border-t">
-                    <Button variant="outline" @click="showDetailsDialog = false">
-                        Đóng
-                    </Button>
-                    <Button @click="handleEdit(selectedLookup!)">
-                        Chỉnh sửa
-                    </Button>
-                </div>
-            </template>
-        </LookupDetailsDialog>
+            @close="showDetailsDialog = false" @edit="handleEdit" @delete="confirmDelete"
+            @preview-image="handlePreviewImage" />
 
-        <AlertDialog :open="showDeleteDialog" @update:open="showDeleteDialog = $event">
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Xác nhận xóa</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        Bạn có chắc chắn muốn xóa tra cứu "{{
-                            selectedLookup?.display_name
-                        }}"? Hành động này không thể hoàn tác.
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel @click="selectedLookup = null">Hủy</AlertDialogCancel>
-                    <AlertDialogAction @click="performDelete" class="bg-destructive hover:bg-destructive/90">
-                        Xóa
-                    </AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
+        <DeleteConfirmation v-model:open="showDeleteDialog" title="Xác nhận xóa"
+            :item-name="selectedLookup?.display_name"
+            description="Bạn có chắc chắn muốn xóa tra cứu &quot;{name}&quot;? Hành động này không thể hoàn tác."
+            @confirm="performDelete" />
 
         <!-- Universal Image Preview Dialog -->
         <ImagePreviewDialog :open="!!previewImageUrl" :src="previewImageUrl"
