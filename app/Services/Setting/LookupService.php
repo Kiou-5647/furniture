@@ -8,24 +8,27 @@ use App\Enums\LookupType;
 use App\Models\Setting\Lookup;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 
 class LookupService
 {
     public function getNamespaces(): Collection
     {
-        $databaseCounts = Lookup::query()
-            ->select('namespace')
-            ->selectRaw('COUNT(*) AS count')
-            ->groupBy('namespace')
-            ->pluck('count', 'namespace')
-            ->toArray();
+        return Cache::remember('services.lookup.namespaces', now()->addHours(24), function () {
+            $databaseCounts = Lookup::query()
+                ->select('namespace')
+                ->selectRaw('COUNT(*) AS count')
+                ->groupBy('namespace')
+                ->pluck('count', 'namespace')
+                ->toArray();
 
-        return collect(LookupType::cases())->map(function (LookupType $type) use ($databaseCounts) {
-            return [
-                'namespace' => $type->value,
-                'label' => $type->label(),
-                'count' => $databaseCounts[$type->value] ?? 0,
-            ];
+            return collect(LookupType::cases())->map(function (LookupType $type) use ($databaseCounts) {
+                return [
+                    'namespace' => $type->value,
+                    'label' => $type->label(),
+                    'count' => $databaseCounts[$type->value] ?? 0,
+                ];
+            });
         });
     }
 
@@ -46,5 +49,10 @@ class LookupService
             ->when($filter->search, fn ($q) => $q->search($filter->search))
             ->orderBy($filter->order_by ?? 'deleted_at', $filter->order_direction ?? 'desc')
             ->paginate($filter->per_page ?? 15);
+    }
+
+    public static function clearCache(): void
+    {
+        Cache::forget('services.lookup.namespaces');
     }
 }

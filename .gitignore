@@ -30,7 +30,6 @@ yarn-error.log
 .agents
 .docs/
 .ignore
-/tests
 opencode.json
 AGENTS.md
 GEMINI.md
@@ -39,3 +38,4 @@ QWEN.md
 .opencode
 .gemini
 .qwen
+/_ide_helper*.php

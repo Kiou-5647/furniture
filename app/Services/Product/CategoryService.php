@@ -8,31 +8,36 @@ use App\Models\Product\Category;
 use App\Models\Setting\Lookup;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 
 class CategoryService
 {
     public function getCategoryGroups(): Collection
     {
-        $counts = Category::query()
-            ->select('group_id')
-            ->selectRaw('COUNT(*) AS count')
-            ->groupBy('group_id')
-            ->pluck('count', 'group_id');
+        return Cache::remember('services.category.groups', now()->addHours(24), function () {
+            $counts = Category::query()
+                ->select('group_id')
+                ->selectRaw('COUNT(*) AS count')
+                ->groupBy('group_id')
+                ->pluck('count', 'group_id');
 
-        return Lookup::query()
-            ->byNamespace(LookupType::CategoryGroup)
-            ->get()
-            ->map(fn (Lookup $group) => [
-                'id' => $group->id,
-                'slug' => $group->slug,
-                'label' => $group->display_name,
-                'count' => $counts[$group->id] ?? 0,
-            ]);
+            return Lookup::query()
+                ->byNamespace(LookupType::CategoryGroup)
+                ->get()
+                ->map(fn (Lookup $group) => [
+                    'id' => $group->id,
+                    'slug' => $group->slug,
+                    'label' => $group->display_name,
+                    'count' => $counts[$group->id] ?? 0,
+                ]);
+        });
     }
 
     public function getRoomOptions(): Collection
     {
-        return Lookup::query()->byNamespace(LookupType::Rooms)->get();
+        return Cache::remember('services.category.rooms', now()->addHours(24), function () {
+            return Lookup::query()->byNamespace(LookupType::Rooms)->get();
+        });
     }
 
     public function getFiltered(CategoryFilterData $filter): LengthAwarePaginator
@@ -56,5 +61,11 @@ class CategoryService
             ->when($filter->search, fn ($q) => $q->search($filter->search))
             ->orderBy($filter->order_by ?? 'deleted_at', $filter->order_direction ?? 'desc')
             ->paginate($filter->per_page ?? 15);
+    }
+
+    public static function clearCache(): void
+    {
+        Cache::forget('services.category.groups');
+        Cache::forget('services.category.rooms');
     }
 }

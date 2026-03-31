@@ -32,7 +32,10 @@ export function getColumns(
                     h('img', {
                         src: item.image_thumb_url,
                         class: 'w-16 h-10 rounded-md object-cover border shadow-sm cursor-zoom-in hover:scale-105 transition-all',
-                        onClick: () => onPreviewImage(item.image_url!)
+                        onClick: (event: MouseEvent) => {
+                            event.stopPropagation();
+                            onPreviewImage(item.image_url!);
+                        }
                     })
                 );
             }

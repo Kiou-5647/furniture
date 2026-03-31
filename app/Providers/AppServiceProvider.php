@@ -3,6 +3,10 @@
 namespace App\Providers;
 
 use App\Models\Auth\User;
+use App\Models\Product\Category;
+use App\Models\Setting\Lookup;
+use App\Services\Product\CategoryService;
+use App\Services\Setting\LookupService;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Date;
@@ -32,6 +36,16 @@ class AppServiceProvider extends ServiceProvider
         Gate::before(function (User $user, string $ability) {
             return $user->hasRole('super_admin') ? true : null;
         });
+
+        $this->registerServiceCacheInvalidation();
+    }
+
+    protected function registerServiceCacheInvalidation(): void
+    {
+        Lookup::saved(fn () => LookupService::clearCache());
+        Lookup::deleted(fn () => LookupService::clearCache());
+        Category::saved(fn () => CategoryService::clearCache());
+        Category::deleted(fn () => CategoryService::clearCache());
     }
 
     /**
