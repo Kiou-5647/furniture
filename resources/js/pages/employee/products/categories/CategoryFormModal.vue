@@ -40,14 +40,14 @@ const props = defineProps<{
 const emit = defineEmits(['close']);
 
 const form = useForm({
-    group_id: null as number | null,
-    room_ids: [] as number[],
+    group_id: null as string | null,
+    room_ids: [] as string[],
     product_type: 'noi-that' as ProductType,
     slug: '',
     display_name: '',
     description: '',
     is_active: true,
-    image_path: null as File | null,
+    image: null as File | null,
     metadata: {
         title: '',
         description: '',
@@ -77,7 +77,7 @@ watch(
             form.display_name = newCategory.display_name;
             form.description = newCategory.description ?? '';
             form.is_active = newCategory.is_active;
-            form.image_path = null;
+            form.image = null;
             form.metadata = {
                 title: newCategory.metadata?.title ?? '',
                 description: newCategory.metadata?.description ?? '',
@@ -102,20 +102,20 @@ watch(() => form.description, (newDesc) => {
 });
 
 const previewUrl = computed(() => {
-    if (form.image_path) return URL.createObjectURL(form.image_path);
-    return props.category?.image_path ?? null;
+    if (form.image) return URL.createObjectURL(form.image);
+    return props.category?.image_url ?? null;
 });
 
 function onFileSelect(event: Event) {
     const target = event.target as HTMLInputElement;
     if (target.files?.length) {
-        form.image_path = target.files[0];
+        form.image = target.files[0];
     }
 }
 
 function submit() {
     if (props.category) {
-        form.put(update(props.category.id).url, {
+        form.put(update(props.category).url, {
             onSuccess: () => closeModal(),
         });
     } else {
@@ -144,7 +144,7 @@ const placeholders = computed(() => {
 
 <template>
     <Dialog :open="open" @update:open="(val) => !val && closeModal()">
-        <DialogContent class="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogContent class="sm:max-w-150 max-h-[90vh] overflow-y-auto">
             <DialogHeader>
                 <DialogTitle>{{ category ? 'Chỉnh sửa' : 'Thêm' }} danh mục</DialogTitle>
                 <DialogDescription>
@@ -156,7 +156,7 @@ const placeholders = computed(() => {
                 <div class="grid grid-cols-2 gap-8">
                     <div class="grid gap-2">
                         <Label>Nhóm danh mục <span class="text-destructive">*</span></Label>
-                        <Select v-model="form.group_id" @update:model-value="(val) => form.group_id = Number(val)">
+                        <Select v-model="form.group_id" @update:model-value="(val) => form.group_id = String(val)">
                             <SelectTrigger class="w-auto">
                                 <SelectValue placeholder="Chọn nhóm..." />
                             </SelectTrigger>
@@ -205,7 +205,8 @@ const placeholders = computed(() => {
 
                     <div class="grid gap-2">
                         <Label for="slug">Slug</Label>
-                        <Input id="slug" v-model="form.slug" :placeholder="`VD: ${placeholders.slug}`" :disabled="!!category" />
+                        <Input id="slug" v-model="form.slug" :placeholder="`VD: ${placeholders.slug}`"
+                            :disabled="!!category" />
                         <InputError :message="form.errors.slug" />
                     </div>
 
@@ -224,13 +225,14 @@ const placeholders = computed(() => {
                             class="relative w-32 h-20 rounded-lg border bg-muted flex items-center justify-center overflow-hidden">
                             <img v-if="previewUrl" :src="previewUrl" class="w-full h-full object-cover" />
                             <ImageIcon v-else class="w-8 h-8 text-muted-foreground/30" />
-                            <button v-if="form.image_path" @click="form.image_path = null" type="button"
+                            <button v-if="form.image" @click="form.image = null" type="button"
                                 class="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1 opacity-0 hover:opacity-100 transition-opacity">
                                 <X class="w-3 h-3" />
                             </button>
                         </div>
                         <div class="flex-1 space-y-1">
-                            <input type="file" ref="fileInput" class="hidden" @change="onFileSelect" accept="image/*" />
+                            <input type="file" id="image" ref="fileInput" class="hidden" @change="onFileSelect"
+                                accept="image/*" />
                             <Button type="button" variant="outline" size="sm" @click="fileInput?.click()">Thay đổi
                                 ảnh</Button>
                             <p class="text-[10px] text-muted-foreground leading-tight">Khuyên dùng tỷ lệ 3:1 cho banner
@@ -262,7 +264,7 @@ const placeholders = computed(() => {
                                 <p class="text-[10px] text-muted-foreground">Khuyên dùng: Dưới 160 ký tự.</p>
                             </div>
                             <div class="grid gap-2 pt-2">
-                                <Label>Đường dẫn Canonical (Tùy chọn)</Label>
+                                <Label>Khóa Canonical (Tùy chọn)</Label>
                                 <Input v-model="form.metadata.canonical"
                                     placeholder="https://yourdomain.com/danh-muc/..." />
                                 <p class="text-[10px] text-muted-foreground italic">Để trống để tự động lấy link
@@ -298,7 +300,7 @@ const placeholders = computed(() => {
 
                 <DialogFooter>
                     <Button type="button" variant="ghost" @click="closeModal">Hủy</Button>
-                    <Button type="submit" :disabled="form.processing" class="min-w-[120px]">
+                    <Button type="submit" :disabled="form.processing" class="min-w-30">
                         <Loader2 v-if="form.processing" class="mr-2 h-4 w-4 animate-spin" />
                         {{ category ? 'Lưu thay đổi' : 'Tạo danh mục' }}
                     </Button>

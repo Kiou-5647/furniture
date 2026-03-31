@@ -3,10 +3,6 @@
 namespace App\Providers;
 
 use App\Models\Auth\User;
-use App\Models\Product\Category;
-use App\Models\Setting\Lookup;
-use App\Observers\Product\CategoryObserver;
-use App\Observers\Setting\LookupObserver;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Date;
@@ -36,9 +32,6 @@ class AppServiceProvider extends ServiceProvider
         Gate::before(function (User $user, string $ability) {
             return $user->hasRole('super_admin') ? true : null;
         });
-
-        Lookup::observe(LookupObserver::class);
-        Category::observe(CategoryObserver::class);
     }
 
     /**
@@ -52,14 +45,15 @@ class AppServiceProvider extends ServiceProvider
             app()->isProduction(),
         );
 
-        Password::defaults(fn (): ?Password => app()->isProduction()
-            ? Password::min(12)
-                ->mixedCase()
-                ->letters()
-                ->numbers()
-                ->symbols()
-                ->uncompromised()
-            : null,
+        Password::defaults(
+            fn (): ?Password => app()->isProduction()
+                ? Password::min(12)
+                    ->mixedCase()
+                    ->letters()
+                    ->numbers()
+                    ->symbols()
+                    ->uncompromised()
+                : null,
         );
     }
 }

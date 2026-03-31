@@ -37,8 +37,8 @@ const props = defineProps<{
 const emit = defineEmits(['close', 'edit', 'delete', 'preview-image']);
 
 function handlePreviewImage() {
-    if (props.category?.image_path) {
-        emit('preview-image', props.category.image_path);
+    if (props.category?.image_url) {
+        emit('preview-image', props.category.image_url);
     }
 }
 
@@ -65,7 +65,7 @@ function getProductTypeLabel(type: string): string {
 
 <template>
     <Dialog :open="open" @update:open="(val) => !val && emit('close')">
-        <DialogContent class="max-w-[95vw] sm:max-w-[700px] max-h-[90vh] overflow-y-auto overflow-x-hidden p-4 sm:p-6">
+        <DialogContent class="max-w-[95vw] sm:max-w-175 max-h-[90vh] overflow-y-auto overflow-x-hidden p-4 sm:p-6">
             <DialogHeader>
                 <div class="flex items-start justify-between">
                     <div class="space-y-1 w-full text-left min-w-0">
@@ -78,7 +78,8 @@ function getProductTypeLabel(type: string): string {
                     </Button>
                 </div>
                 <div class="flex items-start justify-start sm:justify-center min-w-0">
-                    <DialogDescription class="text-sm sm:text-base uppercase font-bold wrap-break-word text-left sm:text-center">
+                    <DialogDescription
+                        class="text-sm sm:text-base uppercase font-bold wrap-break-word text-left sm:text-center">
                         {{ category?.group?.display_name || 'Không nhóm' }}
                     </DialogDescription>
                 </div>
@@ -90,11 +91,13 @@ function getProductTypeLabel(type: string): string {
                     <div class="flex-1 space-y-2 w-full min-w-0">
                         <div class="flex items-start gap-2">
                             <Tag class="h-4 w-4 text-muted-foreground shrink-0 mt-1" />
-                            <h3 class="text-lg font-semibold wrap-break-word">Tên danh mục: {{ category.display_name }}</h3>
+                            <h3 class="text-lg font-semibold wrap-break-word">Tên danh mục: {{ category.display_name }}
+                            </h3>
                         </div>
                         <div class="flex items-start gap-2">
                             <Hash class="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-1" />
-                            <code class="text-sm bg-muted px-2 py-0.5 rounded break-all whitespace-pre-wrap flex-1 min-w-0">Đường dẫn: {{ category.slug }}</code>
+                            <code
+                                class="text-sm bg-muted px-2 py-0.5 rounded break-all whitespace-pre-wrap flex-1 min-w-0">Khóa: {{ category.slug }}</code>
                         </div>
                         <div class="flex items-center gap-2">
                             <component :is="getProductTypeIcon(category.product_type)"
@@ -121,20 +124,21 @@ function getProductTypeLabel(type: string): string {
                         <span>Phòng phù hợp:</span>
                     </div>
                     <div class="flex flex-wrap gap-2">
-                        <Badge v-for="room in category.rooms" :key="room.id" variant="secondary" class="wrap-break-word">
+                        <Badge v-for="room in category.rooms" :key="room.id" variant="secondary"
+                            class="wrap-break-word">
                             {{ room.display_name }}
                         </Badge>
                     </div>
                 </div>
 
                 <!-- Image Section -->
-                <div v-if="category.image_path" class="space-y-2 min-w-0">
+                <div v-if="category.image_url" class="space-y-2 min-w-0">
                     <div class="flex items-center gap-2 text-sm font-medium">
                         <ImageIcon class="h-4 w-4 text-muted-foreground shrink-0" />
                         <span>Hình ảnh</span>
                     </div>
                     <div class="relative rounded-lg overflow-hidden border bg-muted">
-                        <img :src="category.image_path" :alt="category.display_name"
+                        <img :src="category.image_url" :alt="category.display_name"
                             class="w-full h-48 sm:h-64 object-cover cursor-zoom-in hover:scale-105 transition-transform"
                             @click="handlePreviewImage" />
                         <Button variant="secondary" size="sm" class="absolute bottom-2 right-2"
@@ -154,7 +158,8 @@ function getProductTypeLabel(type: string): string {
 
                     <div class="grid gap-3 min-w-0">
                         <!-- SEO Title -->
-                        <div v-if="category.metadata?.title" class="flex items-start gap-3 p-3 rounded-lg bg-muted/50 min-w-0">
+                        <div v-if="category.metadata?.title"
+                            class="flex items-start gap-3 p-3 rounded-lg bg-muted/50 min-w-0">
                             <Globe class="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                             <div class="flex-1 space-y-1 min-w-0">
                                 <p class="text-xs font-medium text-muted-foreground">Tiêu đề SEO</p>
@@ -178,16 +183,19 @@ function getProductTypeLabel(type: string): string {
                             <LinkIcon class="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                             <div class="flex-1 space-y-1 min-w-0">
                                 <p class="text-xs font-medium text-muted-foreground">Canonical URL</p>
-                                <code class="text-xs break-all text-blue-600 block whitespace-pre-wrap">{{ category.metadata.canonical }}</code>
+                                <code
+                                    class="text-xs break-all text-blue-600 block whitespace-pre-wrap">{{ category.metadata.canonical }}</code>
                             </div>
                         </div>
 
                         <!-- Robots -->
-                        <div v-if="category.metadata?.robots" class="flex items-start gap-3 p-3 rounded-lg bg-muted/50 min-w-0">
+                        <div v-if="category.metadata?.robots"
+                            class="flex items-start gap-3 p-3 rounded-lg bg-muted/50 min-w-0">
                             <Info class="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                             <div class="flex-1 space-y-1 min-w-0">
                                 <p class="text-xs font-medium text-muted-foreground">Robots</p>
-                                <Badge variant="outline" class="truncate max-w-full block text-center">{{ category.metadata.robots }}</Badge>
+                                <Badge variant="outline" class="truncate max-w-full block text-center">{{
+                                    category.metadata.robots }}</Badge>
                             </div>
                         </div>
 
@@ -233,12 +241,13 @@ function getProductTypeLabel(type: string): string {
                         Đóng
                     </Button>
                     <div class="flex gap-2 w-full sm:w-auto order-2 sm:order-3">
-                        <Button @click="emit('delete', category)" class="flex-1 sm:flex-none text-white bg-destructive hover:bg-destructive/90">
+                        <Button @click="emit('delete', category)"
+                            class="flex-1 sm:flex-none text-white bg-destructive hover:bg-destructive/90">
                             <Trash2 class="h-4 w-4 mr-1" />
                             Xóa
                         </Button>
                         <Button @click="emit('edit', category)" class="flex-1 sm:flex-none">
-                            <PenIcon class="h-4 w-4 mr-1"/>
+                            <PenIcon class="h-4 w-4 mr-1" />
                             Chỉnh sửa
                         </Button>
                     </div>

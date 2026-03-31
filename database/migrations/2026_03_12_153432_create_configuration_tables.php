@@ -13,7 +13,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('settings', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('namespace', 50);
             $table->string('key', 100);
             $table->jsonb('value')->nullable();
@@ -27,7 +27,7 @@ return new class extends Migration
         DB::statement('CREATE INDEX idx_settings_system ON settings(is_system) WHERE is_system = true');
 
         Schema::create('positions', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('name')->unique();
             $table->string('code', 50)->unique();
             $table->text('description')->nullable();
@@ -36,12 +36,11 @@ return new class extends Migration
         });
 
         Schema::create('lookups', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('namespace', 64)->nullable();
             $table->string('slug', 64);
             $table->string('display_name');
             $table->text('description')->nullable();
-            $table->string('image_path')->nullable();
             $table->boolean('is_active')->default(true);
             $table->jsonb('metadata')->default('{}');
             $table->timestamps();

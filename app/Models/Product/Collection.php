@@ -3,10 +3,15 @@
 namespace App\Models\Product;
 
 use App\Builders\Product\CollectionBuilder;
-use Database\Factories\Product\CollectionFactory;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * @method static CollectionBuilder|Collection query()
@@ -14,10 +19,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static CollectionBuilder|Collection active()
  * @method static CollectionBuilder|Collection featured()
  */
-class Collection extends Model
+class Collection extends Model implements HasMedia
 {
-    /** @use HasFactory<CollectionFactory> */
-    use HasFactory, SoftDeletes;
+    use HasFactory, HasUuids, InteractsWithMedia, LogsActivity, SoftDeletes;
 
     protected $table = 'collections';
 
@@ -33,5 +37,31 @@ class Collection extends Model
     public function newEloquentBuilder($query): CollectionBuilder
     {
         return new CollectionBuilder($query);
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('image')->singleFile();
+        $this->addMediaCollection('banner')->singleFile();
+    }
+
+    public function registerMediaConversions(?Media $media = null): void
+    {
+        $this->addMediaConversion('thumb')
+            ->width(400)
+            ->height(300)
+            ->sharpen(10);
+
+        $this->addMediaConversion('webp')
+            ->format('webp')
+            ->width(1200);
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['display_name', 'slug', 'is_active'])
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges();
     }
 }

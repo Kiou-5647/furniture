@@ -39,20 +39,20 @@ function handleRowClick(row: any, event: MouseEvent) {
         <slot name="toolbar" :table="table" />
         <!-- Table Container -->
         <div class="rounded-md border bg-card">
-            <Table class="w-full">
+            <Table class="w-full table-fixed">
                 <TableHeader>
                     <TableRow v-for="headerGroup in table.getHeaderGroups()" :key="headerGroup.id">
                         <TableHead v-for="header in headerGroup.headers" :key="header.id" :style="{
-                            maxWidth: `${header.column.getSize()}px`,
+                            width: `${header.column.getSize()}px`,
                         }" :class="[
-                                'h-11 px-4 font-bold transition-colors',
-                                header.column.columnDef.meta?.align === 'center'
-                                    ? 'text-center'
-                                    : 'text-left',
-                                header.column.getCanSort()
-                                    ? 'cursor-pointer hover:bg-muted/50 hover:text-foreground'
-                                    : '',
-                            ]" @click="handleHeaderClick(header)">
+                            'h-11 px-4 font-bold transition-colors',
+                            header.column.columnDef.meta?.align === 'center'
+                                ? 'text-center'
+                                : 'text-left',
+                            header.column.getCanSort()
+                                ? 'cursor-pointer hover:bg-muted/50 hover:text-foreground'
+                                : '',
+                        ]" @click="handleHeaderClick(header)">
                             <div :class="[
                                 'flex items-center gap-2',
                                 header.column.columnDef.meta?.align ===
@@ -86,14 +86,14 @@ function handleRowClick(row: any, event: MouseEvent) {
                             class="cursor-pointer transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
                             @click="handleRowClick(row, $event)">
                             <TableCell v-for="cell in row.getVisibleCells()" :key="cell.id" :style="{
-                                maxWidth: `${cell.column.getSize()}px`,
+                                width: `${cell.column.getSize()}px`,
                             }" :class="[
-                                    'p-3 overflow-hidden',
-                                    cell.column.columnDef.meta?.align ===
-                                        'center'
-                                        ? 'text-center'
-                                        : 'text-left',
-                                ]">
+                                'p-3 overflow-hidden',
+                                cell.column.columnDef.meta?.align ===
+                                    'center'
+                                    ? 'text-center'
+                                    : 'text-left',
+                            ]">
                                 <div :class="[
                                     'flex w-full items-center',
                                     cell.column.columnDef.meta?.align ===

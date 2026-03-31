@@ -48,9 +48,9 @@ function onPageSizeChange(value: string) {
     <div class="flex items-center justify-between px-2">
         <!-- 1. Left side: Rows per page selection -->
         <div class="flex items-center space-x-2">
-            <p class="hidden sm:block text-sm font-medium">Số hàng mỗi trang</p>
+            <p class="hidden lg:block text-sm font-medium">Số hàng mỗi trang</p>
             <Select :model-value="selectedPageSize" @update:model-value="onPageSizeChange!">
-                <SelectTrigger class="h-8 w-[70px]">
+                <SelectTrigger class="h-8 w-17.5">
                     <SelectValue :placeholder="selectedPageSize" />
                 </SelectTrigger>
                 <SelectContent side="top">
@@ -62,14 +62,14 @@ function onPageSizeChange(value: string) {
         </div>
 
         <!-- 2. Middle: Page Info -->
-        <div class="flex w-[100px] items-center justify-center text-sm font-medium">
+        <div class="flex w-25 items-center justify-center text-sm font-medium">
             Trang {{ currentPage }} / {{ lastPage }}
         </div>
 
         <!-- 3. Right side: Navigation -->
         <div class="flex items-center space-x-2">
-            <Pagination v-slot="{ page }" show-edges :sibling-count="1" :total="total" :items-per-page="pageSize" :default-page="currentPage"
-                @update:page="onPageChange">
+            <Pagination v-slot="{ page }" show-edges :sibling-count="1" :total="total" :items-per-page="pageSize"
+                :default-page="currentPage" @update:page="onPageChange">
                 <PaginationContent v-slot="{ items }">
                     <PaginationFirst />
                     <PaginationPrevious />

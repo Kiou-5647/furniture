@@ -18,7 +18,8 @@ class PublicLookupResource extends JsonResource
             'slug' => $this->slug,
             'display_name' => $this->display_name,
             'description' => $this->description,
-            'image_path' => $this->image_path,
+            'image_url' => $this->getFirstMediaUrl('image'),
+            'image_thumb_url' => $this->getFirstMediaUrl('image', 'thumb'),
             'hex_code' => $this->when(isset($this->metadata['hex_code']) && $this->metadata['hex_code'], $this->metadata['hex_code']),
 
             'meta' => [

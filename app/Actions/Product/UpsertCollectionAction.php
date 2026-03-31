@@ -3,27 +3,29 @@
 namespace App\Actions\Product;
 
 use App\Models\Product\Collection;
-use App\Services\Field\FileUploadService;
 use Illuminate\Http\UploadedFile;
 
 class UpsertCollectionAction
 {
     public function execute(array $data, ?Collection $collection = null): Collection
     {
-        if (isset($data['image_path']) && $data['image_path'] instanceof UploadedFile) {
-            $service = app(FileUploadService::class);
-            if ($collection?->image_path) {
-                $service->delete($collection->image_path);
-            }
-            $data['image_path'] = $service->upload($data['image_path'], 'collections', $data['slug']);
-        } elseif (! isset($data['image_path']) || $data['image_path'] === null) {
-            unset($data['image_path']);
-        }
-
+        // 1. Extract the uploaded file (if any) and remove it from the data array
+        $imageFile = $data['image'] ?? null;
+        $bannerFile = $data['banner'] ?? null;
+        unset($data['image'], $data['banner'], $data['image_path']);
+        // 2. Create or Update the model
         if ($collection && $collection->id) {
             $collection->update($data);
         } else {
             $collection = Collection::create($data);
+        }
+        // 3. Attach the Media!
+        if ($imageFile instanceof UploadedFile) {
+            $collection->addMedia($imageFile)->toMediaCollection('image');
+        }
+
+        if ($bannerFile instanceof UploadedFile) {
+            $collection->addMedia($bannerFile)->toMediaCollection('banner');
         }
 
         return $collection;

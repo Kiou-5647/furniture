@@ -5,9 +5,15 @@ namespace App\Models\Product;
 use App\Builders\Product\CategoryBuilder;
 use App\Enums\ProductType;
 use App\Models\Setting\Lookup;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * @method static CategoryBuilder|Category query()
@@ -15,9 +21,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static CategoryBuilder|Category byProductType(ProductType $type)
  * @method static CategoryBuilder|Category search(string $search)
  */
-class Category extends Model
+class Category extends Model implements HasMedia
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, HasUuids, InteractsWithMedia, LogsActivity, SoftDeletes;
 
     protected $table = 'categories';
 
@@ -43,5 +49,30 @@ class Category extends Model
     public function newEloquentBuilder($query): CategoryBuilder
     {
         return new CategoryBuilder($query);
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('image')->singleFile();
+    }
+
+    public function registerMediaConversions(?Media $media = null): void
+    {
+        $this->addMediaConversion('thumb')
+            ->width(300)
+            ->height(300)
+            ->sharpen(10);
+        $this->addMediaConversion('webp')
+            ->format('webp')
+            ->width(800);
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['group_id', 'product_type', 'display_name', 'slug', 'description', 'is_active', 'metadata'])
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges()
+            ->setDescriptionForEvent(fn (string $eventName) => "Category {$eventName}");
     }
 }

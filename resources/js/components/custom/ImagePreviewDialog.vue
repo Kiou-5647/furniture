@@ -4,6 +4,7 @@ import {
     DialogContent,
     DialogHeader,
     DialogDescription,
+    DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { X, ZoomIn, ZoomOut, Maximize2 } from 'lucide-vue-next';
@@ -56,7 +57,7 @@ function handleWheel(event: WheelEvent) {
         <DialogContent
             class="w-[90vw] h-[90vh] max-w-[95vw] max-h-[95vh] border-none bg-black/95 p-0 shadow-2xl overflow-hidden z-9999">
             <VisuallyHidden>
-                <DialogHeader />
+                <DialogTitle />
                 <DialogDescription />
             </VisuallyHidden>
             <!-- Close button -->

@@ -26,7 +26,20 @@ class LookupController
         return Inertia::render('employee/settings/lookups/Index', [
             'namespaces' => $this->service->getNamespaces(),
             'lookups' => Inertia::defer(fn () => EmployeeLookupResource::collection(
-                $this->service->getByNamespace($filter)
+                $this->service->getFiltered($filter)
+            )),
+            'filters' => $filter,
+        ]);
+    }
+
+    public function trash(Request $request, ?string $namespace = LookupType::Rooms->value): Response
+    {
+        $filter = LookupFilterData::fromRequest($request, $namespace);
+
+        return Inertia::render('employee/settings/lookups/Trash', [
+            'namespaces' => $this->service->getNamespaces(),
+            'lookups' => Inertia::defer(fn () => EmployeeLookupResource::collection(
+                $this->service->getTrashedFiltered($filter)
             )),
             'filters' => $filter,
         ]);
@@ -56,6 +69,17 @@ class LookupController
         $lookup->delete();
 
         return back()->with('success', 'Đã xóa tra cứu.');
+    }
+
+    public function restore(Lookup $lookup)
+    {
+        if (! Auth::user()->can('lookups.manage')) {
+            return back()->with('error', 'Không đủ quyền hạn để khôi phục tra cứu!');
+        }
+
+        $lookup->restore();
+
+        return back()->with('success', 'Đã khôi phục tra cứu.');
     }
 
     public function forceDestroy(Lookup $lookup)

@@ -4,18 +4,24 @@ namespace App\Models\Setting;
 
 use App\Builders\Setting\LookupBuilder;
 use App\Enums\LookupType;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * @method static LookupBuilder|Lookup query()
  * @method static LookupBuilder|Lookup byNamespace(LookupType $type)
  * @method static LookupBuilder|Lookup search(string $search)
  */
-class Lookup extends Model
+class Lookup extends Model implements HasMedia
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, HasUuids, InteractsWithMedia, LogsActivity, SoftDeletes;
 
     protected $table = 'lookups';
 
@@ -31,5 +37,30 @@ class Lookup extends Model
     public function newEloquentBuilder($query): LookupBuilder
     {
         return new LookupBuilder($query);
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('image')->singleFile();
+    }
+
+    public function registerMediaConversions(?Media $media = null): void
+    {
+        $this->addMediaConversion('thumb')
+            ->width(300)
+            ->height(300)
+            ->sharpen(10);
+        $this->addMediaConversion('webp')
+            ->format('webp')
+            ->width(800);
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['display_name', 'slug', 'description', 'is_active', 'namespace', 'metadata'])
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges()
+            ->setDescriptionForEvent(fn (string $eventName) => "Lookup {$eventName}");
     }
 }

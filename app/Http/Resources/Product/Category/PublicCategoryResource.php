@@ -21,7 +21,8 @@ class PublicCategoryResource extends JsonResource
             'display_name' => $this->display_name,
             'slug' => $this->slug,
             'description' => $this->description,
-            'image_path' => $this->image_path,
+            'image_url' => $this->getFirstMediaUrl('image'),
+            'image_thumb_url' => $this->getFirstMediaUrl('image', 'thumb'),
 
             'meta' => [
                 'title' => $this->metadata['meta_title'] ?? $this->display_name,

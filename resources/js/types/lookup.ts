@@ -1,11 +1,12 @@
 export interface Lookup {
-    id: number;
+    id: string;
     namespace: string;
     namespace_label: string;
     slug: string;
     display_name: string;
     description: string | null;
-    image_path: string | null;
+    image_url?: string;
+    image_thumb_url?: string;
     is_active: boolean;
     metadata: Record<string, any> | null;
     created_at: string;

@@ -50,7 +50,7 @@ function selectOption(option: FilterOption) {
             <Button variant="outline" size="sm" class="h-8 border-dashed">
                 <PlusCircle class="mr-2 h-4 w-4" />
                 {{ title }}
-                <template v-if="modelValue !== null && modelValue !== undefined ">
+                <template v-if="modelValue !== null && modelValue !== undefined">
                     <Separator orientation="vertical" class="mx-2 h-4" />
                     <Badge variant="secondary" class="rounded-sm px-1 font-normal">
                         {{options.find(o => o.value === modelValue)?.label}}
@@ -58,7 +58,7 @@ function selectOption(option: FilterOption) {
                 </template>
             </Button>
         </PopoverTrigger>
-        <PopoverContent class="w-[200px] p-0" align="start">
+        <PopoverContent class="w-50 p-0" align="start">
             <Command>
                 <CommandInput v-if="searchable" :placeholder="title" />
                 <CommandList>

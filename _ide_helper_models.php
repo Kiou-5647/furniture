@@ -76,8 +76,8 @@ namespace App\Models\Auth{
  * @property string $name
  * @property string $email
  * @property string $password
- * @property bool|null $is_active
- * @property bool|null $is_verified
+ * @property bool $is_active
+ * @property bool $is_verified
  * @property \Carbon\CarbonImmutable|null $email_verified_at
  * @property string|null $last_login_ip
  * @property \Carbon\CarbonImmutable|null $last_login_at
@@ -88,6 +88,8 @@ namespace App\Models\Auth{
  * @property \Carbon\CarbonImmutable|null $created_at
  * @property \Carbon\CarbonImmutable|null $updated_at
  * @property \Carbon\CarbonImmutable|null $deleted_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Activitylog\Models\Activity> $activitiesAsSubject
+ * @property-read int|null $activities_as_subject_count
  * @property-read \App\Models\Customer\Customer|null $customer
  * @property-read \App\Models\Employee\Employee|null $employee
  * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int, \Illuminate\Notifications\DatabaseNotification> $notifications
@@ -135,19 +137,21 @@ namespace App\Models\Customer{
  * @property string $user_id
  * @property string|null $full_name
  * @property string|null $phone
- * @property string|null $avatar_path
- * @property numeric|null $total_spent
- * @property int|null $loyalty_points
+ * @property numeric $total_spent
+ * @property int $loyalty_points
  * @property \Carbon\CarbonImmutable|null $created_at
  * @property \Carbon\CarbonImmutable|null $updated_at
  * @property string|null $deleted_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Activitylog\Models\Activity> $activitiesAsSubject
+ * @property-read int|null $activities_as_subject_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Customer\CustomerAddress> $addresses
  * @property-read int|null $addresses_count
+ * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, \Spatie\MediaLibrary\MediaCollections\Models\Media> $media
+ * @property-read int|null $media_count
  * @property-read \App\Models\Auth\User $user
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer whereAvatarPath($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer whereFullName($value)
@@ -158,30 +162,34 @@ namespace App\Models\Customer{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer whereUserId($value)
  */
-	class Customer extends \Eloquent {}
+	class Customer extends \Eloquent implements \Spatie\MediaLibrary\HasMedia {}
 }
 
 namespace App\Models\Customer{
 /**
  * @property string $id
- * @property string|null $customer_id
- * @property string|null $type
+ * @property string $customer_id
+ * @property string $type
  * @property string|null $delivery_instructions
  * @property string|null $province_code
  * @property string|null $ward_code
  * @property string|null $province_name
  * @property string|null $ward_name
  * @property array<array-key, mixed> $address_data
- * @property bool|null $is_default
+ * @property bool $is_default
  * @property \Carbon\CarbonImmutable|null $created_at
  * @property \Carbon\CarbonImmutable|null $updated_at
- * @property-read \App\Models\Customer\Customer|null $customer
+ * @property string|null $deleted_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Activitylog\Models\Activity> $activitiesAsSubject
+ * @property-read int|null $activities_as_subject_count
+ * @property-read \App\Models\Customer\Customer $customer
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomerAddress newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomerAddress newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomerAddress query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomerAddress whereAddressData($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomerAddress whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomerAddress whereCustomerId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomerAddress whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomerAddress whereDeliveryInstructions($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomerAddress whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomerAddress whereIsDefault($value)
@@ -202,10 +210,12 @@ namespace App\Models\Employee{
  * @property string $name
  * @property string $code
  * @property string|null $description
- * @property bool|null $is_active
+ * @property bool $is_active
  * @property \Carbon\CarbonImmutable|null $created_at
  * @property \Carbon\CarbonImmutable|null $updated_at
  * @property string|null $deleted_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Activitylog\Models\Activity> $activitiesAsSubject
+ * @property-read int|null $activities_as_subject_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Employee\Employee> $employees
  * @property-read int|null $employees_count
  * @property-read \App\Models\Employee\Employee|null $manager
@@ -232,18 +242,20 @@ namespace App\Models\Employee{
  * @property string|null $department_id
  * @property string $full_name
  * @property string|null $phone
- * @property string|null $avatar_path
  * @property \Carbon\CarbonImmutable|null $hire_date
  * @property \Carbon\CarbonImmutable|null $termination_date
  * @property \Carbon\CarbonImmutable|null $created_at
  * @property \Carbon\CarbonImmutable|null $updated_at
  * @property string|null $deleted_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Activitylog\Models\Activity> $activitiesAsSubject
+ * @property-read int|null $activities_as_subject_count
  * @property-read \App\Models\Employee\Department|null $department
+ * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, \Spatie\MediaLibrary\MediaCollections\Models\Media> $media
+ * @property-read int|null $media_count
  * @property-read \App\Models\Auth\User $user
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Employee newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Employee newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Employee query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Employee whereAvatarPath($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Employee whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Employee whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Employee whereDepartmentId($value)
@@ -255,39 +267,128 @@ namespace App\Models\Employee{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Employee whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Employee whereUserId($value)
  */
-	class Employee extends \Eloquent {}
+	class Employee extends \Eloquent implements \Spatie\MediaLibrary\HasMedia {}
+}
+
+namespace App\Models\Product{
+/**
+ * @method static CategoryBuilder|Category query()
+ * @method static CategoryBuilder|Category byCategoryGroup(Lookup $group)
+ * @method static CategoryBuilder|Category byProductType(ProductType $type)
+ * @method static CategoryBuilder|Category search(string $search)
+ * @property string $id
+ * @property string|null $group_id
+ * @property \App\Enums\ProductType|null $product_type
+ * @property string $display_name
+ * @property string $slug
+ * @property string|null $description
+ * @property bool $is_active
+ * @property array<array-key, mixed> $metadata
+ * @property \Carbon\CarbonImmutable|null $created_at
+ * @property \Carbon\CarbonImmutable|null $updated_at
+ * @property \Carbon\CarbonImmutable|null $deleted_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Activitylog\Models\Activity> $activitiesAsSubject
+ * @property-read int|null $activities_as_subject_count
+ * @property-read \App\Models\Setting\Lookup|null $group
+ * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, \Spatie\MediaLibrary\MediaCollections\Models\Media> $media
+ * @property-read int|null $media_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Setting\Lookup> $rooms
+ * @property-read int|null $rooms_count
+ * @method static \App\Builders\Product\CategoryBuilder<static>|Category newModelQuery()
+ * @method static \App\Builders\Product\CategoryBuilder<static>|Category newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Category onlyTrashed()
+ * @method static \App\Builders\Product\CategoryBuilder<static>|Category whereCreatedAt($value)
+ * @method static \App\Builders\Product\CategoryBuilder<static>|Category whereDeletedAt($value)
+ * @method static \App\Builders\Product\CategoryBuilder<static>|Category whereDescription($value)
+ * @method static \App\Builders\Product\CategoryBuilder<static>|Category whereDisplayName($value)
+ * @method static \App\Builders\Product\CategoryBuilder<static>|Category whereGroupId($value)
+ * @method static \App\Builders\Product\CategoryBuilder<static>|Category whereId($value)
+ * @method static \App\Builders\Product\CategoryBuilder<static>|Category whereIsActive($value)
+ * @method static \App\Builders\Product\CategoryBuilder<static>|Category whereMetadata($value)
+ * @method static \App\Builders\Product\CategoryBuilder<static>|Category whereProductType($value)
+ * @method static \App\Builders\Product\CategoryBuilder<static>|Category whereSlug($value)
+ * @method static \App\Builders\Product\CategoryBuilder<static>|Category whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Category withTrashed(bool $withTrashed = true)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Category withoutTrashed()
+ */
+	class Category extends \Eloquent implements \Spatie\MediaLibrary\HasMedia {}
+}
+
+namespace App\Models\Product{
+/**
+ * @method static CollectionBuilder|Collection query()
+ * @method static CollectionBuilder|Collection search(string $search)
+ * @method static CollectionBuilder|Collection active()
+ * @method static CollectionBuilder|Collection featured()
+ * @property string $id
+ * @property string $display_name
+ * @property string $slug
+ * @property bool $is_active
+ * @property bool $is_featured
+ * @property string|null $description
+ * @property array<array-key, mixed> $metadata
+ * @property \Carbon\CarbonImmutable|null $created_at
+ * @property \Carbon\CarbonImmutable|null $updated_at
+ * @property \Carbon\CarbonImmutable|null $deleted_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Activitylog\Models\Activity> $activitiesAsSubject
+ * @property-read int|null $activities_as_subject_count
+ * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, \Spatie\MediaLibrary\MediaCollections\Models\Media> $media
+ * @property-read int|null $media_count
+ * @method static \App\Builders\Product\CollectionBuilder<static>|Collection newModelQuery()
+ * @method static \App\Builders\Product\CollectionBuilder<static>|Collection newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Collection onlyTrashed()
+ * @method static \App\Builders\Product\CollectionBuilder<static>|Collection whereCreatedAt($value)
+ * @method static \App\Builders\Product\CollectionBuilder<static>|Collection whereDeletedAt($value)
+ * @method static \App\Builders\Product\CollectionBuilder<static>|Collection whereDescription($value)
+ * @method static \App\Builders\Product\CollectionBuilder<static>|Collection whereDisplayName($value)
+ * @method static \App\Builders\Product\CollectionBuilder<static>|Collection whereId($value)
+ * @method static \App\Builders\Product\CollectionBuilder<static>|Collection whereIsActive($value)
+ * @method static \App\Builders\Product\CollectionBuilder<static>|Collection whereIsFeatured($value)
+ * @method static \App\Builders\Product\CollectionBuilder<static>|Collection whereMetadata($value)
+ * @method static \App\Builders\Product\CollectionBuilder<static>|Collection whereSlug($value)
+ * @method static \App\Builders\Product\CollectionBuilder<static>|Collection whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Collection withTrashed(bool $withTrashed = true)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Collection withoutTrashed()
+ */
+	class Collection extends \Eloquent implements \Spatie\MediaLibrary\HasMedia {}
 }
 
 namespace App\Models\Setting{
 /**
- * @property int $id
- * @property string $namespace
- * @property string|null $key
+ * @method static LookupBuilder|Lookup query()
+ * @method static LookupBuilder|Lookup byNamespace(LookupType $type)
+ * @method static LookupBuilder|Lookup search(string $search)
+ * @property string $id
+ * @property \App\Enums\LookupType|null $namespace
+ * @property string $slug
  * @property string $display_name
- * @property mixed|null $metadata
- * @property bool|null $is_active
- * @property bool|null $is_system
+ * @property string|null $description
+ * @property bool $is_active
+ * @property array<array-key, mixed> $metadata
  * @property \Carbon\CarbonImmutable|null $created_at
  * @property \Carbon\CarbonImmutable|null $updated_at
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Lookup active()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Lookup byNamespace(string $namespace)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Lookup custom()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Lookup newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Lookup newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Lookup ordered()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Lookup query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Lookup search(string $search)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Lookup whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Lookup whereDisplayName($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Lookup whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Lookup whereIsActive($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Lookup whereIsSystem($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Lookup whereKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Lookup whereMetadata($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Lookup whereNamespace($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Lookup whereUpdatedAt($value)
+ * @property \Carbon\CarbonImmutable|null $deleted_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Activitylog\Models\Activity> $activitiesAsSubject
+ * @property-read int|null $activities_as_subject_count
+ * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, \Spatie\MediaLibrary\MediaCollections\Models\Media> $media
+ * @property-read int|null $media_count
+ * @method static \App\Builders\Setting\LookupBuilder<static>|Lookup newModelQuery()
+ * @method static \App\Builders\Setting\LookupBuilder<static>|Lookup newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Lookup onlyTrashed()
+ * @method static \App\Builders\Setting\LookupBuilder<static>|Lookup whereCreatedAt($value)
+ * @method static \App\Builders\Setting\LookupBuilder<static>|Lookup whereDeletedAt($value)
+ * @method static \App\Builders\Setting\LookupBuilder<static>|Lookup whereDescription($value)
+ * @method static \App\Builders\Setting\LookupBuilder<static>|Lookup whereDisplayName($value)
+ * @method static \App\Builders\Setting\LookupBuilder<static>|Lookup whereId($value)
+ * @method static \App\Builders\Setting\LookupBuilder<static>|Lookup whereIsActive($value)
+ * @method static \App\Builders\Setting\LookupBuilder<static>|Lookup whereMetadata($value)
+ * @method static \App\Builders\Setting\LookupBuilder<static>|Lookup whereNamespace($value)
+ * @method static \App\Builders\Setting\LookupBuilder<static>|Lookup whereSlug($value)
+ * @method static \App\Builders\Setting\LookupBuilder<static>|Lookup whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Lookup withTrashed(bool $withTrashed = true)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Lookup withoutTrashed()
  */
-	class Lookup extends \Eloquent {}
+	class Lookup extends \Eloquent implements \Spatie\MediaLibrary\HasMedia {}
 }
 
 namespace App\Models\Vendor{
@@ -302,25 +403,26 @@ namespace App\Models\Vendor{
  * @property string|null $website
  * @property string|null $webhook_url
  * @property string|null $address
- * @property string|null $notes
  * @property string|null $bank_name
  * @property string|null $bank_account_number
  * @property string|null $bank_account_holder
  * @property array<array-key, mixed>|null $api_credentials
- * @property array<array-key, mixed>|null $shipping_regions
- * @property array<array-key, mixed>|null $tags
- * @property int|null $payment_terms_days
- * @property int|null $lead_time_days
- * @property numeric|null $minimum_order_amount
+ * @property array<array-key, mixed> $shipping_regions
+ * @property array<array-key, mixed> $tags
+ * @property int $payment_terms_days
+ * @property int $lead_time_days
+ * @property numeric $minimum_order_amount
  * @property numeric|null $rating
- * @property int|null $total_orders
- * @property numeric|null $total_revenue
- * @property bool|null $is_active
- * @property bool|null $is_preferred
+ * @property int $total_orders
+ * @property numeric $total_revenue
+ * @property bool $is_active
+ * @property bool $is_preferred
  * @property \Carbon\CarbonImmutable|null $verified_at
  * @property \Carbon\CarbonImmutable|null $created_at
  * @property \Carbon\CarbonImmutable|null $updated_at
  * @property string|null $deleted_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Activitylog\Models\Activity> $activitiesAsSubject
+ * @property-read int|null $activities_as_subject_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Vendor\VendorUser> $vendorUsers
  * @property-read int|null $vendor_users_count
  * @property-read \App\Models\Employee\Employee|null $verifiedBy
@@ -343,7 +445,6 @@ namespace App\Models\Vendor{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Vendor whereLeadTimeDays($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Vendor whereMinimumOrderAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Vendor whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Vendor whereNotes($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Vendor wherePaymentTermsDays($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Vendor wherePhone($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Vendor whereRating($value)
@@ -364,19 +465,21 @@ namespace App\Models\Vendor{
 /**
  * @property string $id
  * @property string $user_id
- * @property string|null $vendor_id
+ * @property string $vendor_id
  * @property string|null $full_name
  * @property string|null $phone
- * @property string|null $avatar_path
  * @property \Carbon\CarbonImmutable|null $created_at
  * @property \Carbon\CarbonImmutable|null $updated_at
  * @property string|null $deleted_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Activitylog\Models\Activity> $activitiesAsSubject
+ * @property-read int|null $activities_as_subject_count
+ * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, \Spatie\MediaLibrary\MediaCollections\Models\Media> $media
+ * @property-read int|null $media_count
  * @property-read \App\Models\Auth\User $user
- * @property-read \App\Models\Vendor\Vendor|null $vendor
+ * @property-read \App\Models\Vendor\Vendor $vendor
  * @method static \Illuminate\Database\Eloquent\Builder<static>|VendorUser newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|VendorUser newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|VendorUser query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|VendorUser whereAvatarPath($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|VendorUser whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|VendorUser whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|VendorUser whereFullName($value)
@@ -386,6 +489,6 @@ namespace App\Models\Vendor{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|VendorUser whereUserId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|VendorUser whereVendorId($value)
  */
-	class VendorUser extends \Eloquent {}
+	class VendorUser extends \Eloquent implements \Spatie\MediaLibrary\HasMedia {}
 }
 

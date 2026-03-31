@@ -16,12 +16,15 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
-    /** @use HasFactory<UserFactory> */
-    use HasFactory, HasRoles, HasUuids, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
+    use HasFactory, HasRoles, HasUuids, LogsActivity, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
+
+    protected $table = 'users';
 
     public $incrementing = false;
 
@@ -94,5 +97,26 @@ class User extends Authenticatable implements MustVerifyEmail
             'id',
             'vendor_id'
         );
+    }
+
+    public function getAvatarUrlAttribute(): ?string
+    {
+        $profile = match ($this->type->value) {
+            'employee' => $this->employee,
+            'customer' => $this->customer,
+            'vendor' => $this->vendorUser,
+            default => null,
+        };
+
+        return $profile?->getFirstMediaUrl('avatar', 'thumb') ?: null;
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['name', 'email', 'type', 'is_active', 'is_verified', 'last_login_at'])
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges()
+            ->setDescriptionForEvent(fn (string $eventName) => "User account {$eventName}");
     }
 }

@@ -37,7 +37,7 @@ const form = useForm({
     display_name: '',
     description: '',
     is_active: true,
-    image_path: null as File | null,
+    image: null as File | null,
     metadata: {
         hex_code: '',
         title: '',
@@ -63,7 +63,7 @@ watch(
             form.display_name = newLookup.display_name;
             form.description = newLookup.description ?? '';
             form.is_active = newLookup.is_active;
-            form.image_path = null;
+            form.image = null;
             form.metadata = {
                 title: newLookup.metadata?.title ?? '',
                 description: newLookup.metadata?.description ?? '',
@@ -81,31 +81,6 @@ watch(
     { immediate: true }
 );
 
-//watch(
-//    () => props.open,
-//    (isOpen) => {
-//        if (isOpen && props.lookup) {
-//            form.namespace = props.lookup.namespace;
-//            form.slug = props.lookup.slug;
-//            form.display_name = props.lookup.display_name;
-//            form.description = props.lookup.description ?? '';
-//            form.is_active = props.lookup.is_active;
-//            form.image_path = null;
-//            form.metadata = {
-//                title: props.lookup.metadata?.title ?? '',
-//                description: props.lookup.metadata?.description ?? '',
-//                canonical: props.lookup.metadata?.canonical ?? '',
-//                robots: props.lookup.metadata?.robots ?? '',
-//                hex_code: props.lookup.metadata?.hex_code ?? '',
-//            };
-//        } else if (isOpen && !props.lookup) {
-//            form.reset();
-//            form.namespace = props.namespace;
-//            form.is_active = true;
-//        }
-//    }
-//);
-
 watch(() => form.display_name, (newName) => {
     form.slug = slugify(newName);
     form.metadata.title = newName.substring(0, 254);
@@ -116,14 +91,14 @@ watch(() => form.description, (newDesc) => {
 });
 
 const previewUrl = computed(() => {
-    if (form.image_path) return URL.createObjectURL(form.image_path);
-    return props.lookup?.image_path ?? null;
+    if (form.image) return URL.createObjectURL(form.image);
+    return props.lookup?.image_url ?? null;
 });
 
 function onFileSelect(event: Event) {
     const target = event.target as HTMLInputElement;
     if (target.files?.length) {
-        form.image_path = target.files[0];
+        form.image = target.files[0];
     }
 }
 
@@ -157,7 +132,7 @@ const placeholders = computed(() => {
 
 <template>
     <Dialog :open="open" @update:open="(val) => !val && closeModal()">
-        <DialogContent class="sm:max-w-[550px] max-h-[95vh] overflow-y-auto">
+        <DialogContent class="sm:max-w-137.5 max-h-[95vh] overflow-y-auto">
             <DialogHeader>
                 <DialogTitle>{{ lookup ? 'Chỉnh sửa' : 'Thêm' }} {{ display_namespace }}</DialogTitle>
                 <DialogDescription>
@@ -176,7 +151,7 @@ const placeholders = computed(() => {
                     </div>
 
                     <div class="grid gap-2">
-                        <Label for="slug">Đường dẫn (Slug)</Label>
+                        <Label for="slug">Khóa (Slug)</Label>
                         <Input id="slug" v-model="form.slug" :placeholder="`VD: ${placeholders.slug}`" />
                         <InputError :message="form.errors.slug" />
                     </div>
@@ -209,13 +184,13 @@ const placeholders = computed(() => {
                                 class="relative w-24 h-24 rounded-lg border bg-muted flex items-center justify-center overflow-hidden group">
                                 <img v-if="previewUrl" :src="previewUrl" class="w-full h-full object-cover" />
                                 <ImageIcon v-else class="w-10 h-10 text-muted-foreground/30" />
-                                <button v-if="form.image_path" @click="form.image_path = null" type="button"
+                                <button v-if="form.image" @click="form.image = null" type="button"
                                     class="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1 opacity-0 group-hover:opacity-100">
                                     <X class="w-3 h-3" />
                                 </button>
                             </div>
                             <div class="flex-1 space-y-2">
-                                <input type="file" id="image_path" ref="fileInput" class="hidden" @change="onFileSelect"
+                                <input type="file" id="image" ref="fileInput" class="hidden" @change="onFileSelect"
                                     accept="image/*" />
                                 <Button type="button" variant="outline" size="sm" @click="fileInput?.click()">Chọn
                                     ảnh</Button>
@@ -250,7 +225,7 @@ const placeholders = computed(() => {
                                 <p class="text-[10px] text-muted-foreground">Khuyên dùng: Dưới 160 ký tự.</p>
                             </div>
                             <div class="grid gap-2 pt-2">
-                                <Label>Đường dẫn Canonical (Tùy chọn)</Label>
+                                <Label>Khóa Canonical (Tùy chọn)</Label>
                                 <Input v-model="form.metadata.canonical"
                                     placeholder="https://yourdomain.com/danh-muc/..." />
                                 <p class="text-[10px] text-muted-foreground italic">Để trống để tự động lấy link
@@ -287,7 +262,7 @@ const placeholders = computed(() => {
 
                 <DialogFooter>
                     <Button type="button" variant="ghost" @click="closeModal">Hủy</Button>
-                    <Button type="submit" :disabled="form.processing" class="min-w-[120px]">
+                    <Button type="submit" :disabled="form.processing" class="min-w-30">
                         <Loader2 v-if="form.processing" class="mr-2 h-4 w-4 animate-spin" />
                         {{ lookup ? 'Lưu thay đổi' : 'Tạo mục mới' }}
                     </Button>

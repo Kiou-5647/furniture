@@ -21,13 +21,11 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuLabel,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { destroy } from '@/routes/employee/settings/lookups';
 import DataTableGroup from '@/components/custom/data-table/DataTableGroup.vue';
 import { cleanQuery, setCookie } from '@/lib/utils';
-import DataTableFacetedFilter from '@/components/custom/data-table/DataTableFacetedFilter.vue';
 import { createLazyComponent } from '@/composables/createLazyComponent';
 import LookupDetailsDialog from './LookupDetailsDialog.vue';
 import ImagePreviewDialog from '@/components/custom/ImagePreviewDialog.vue';
@@ -203,7 +201,7 @@ function confirmDelete(lookup: Lookup) {
 function performDelete() {
     if (!selectedLookup.value) return;
 
-    router.delete(destroy(selectedLookup.value.id).url, {
+    router.delete(destroy(selectedLookup.value).url, {
         onSuccess: () => {
             showDeleteDialog.value = false;
             selectedLookup.value = null;
@@ -296,7 +294,7 @@ function handlePreviewImage(url: string) {
                                 </Badge>
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent class="w-[300px]">
+                        <DropdownMenuContent class="w-75">
                             <DropdownMenuItem v-for="item in namespaces" :key="item.namespace" as-child>
                                 <Link :href="index(item.namespace).url"
                                     class="w-full min-h-12 flex items-center justify-between cursor-pointer"

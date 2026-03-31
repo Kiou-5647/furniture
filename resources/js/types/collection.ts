@@ -1,9 +1,12 @@
 export interface Collection {
-    id: number;
+    id: string;
     display_name: string;
     slug: string;
     description: string | null;
-    image_path: string | null;
+    image_url?: string;
+    image_thumb_url?: string;
+    banner_url?: string;
+    banner_thumb_url?: string;
     is_active: boolean;
     is_featured: boolean;
     metadata: Record<string, any> | null;

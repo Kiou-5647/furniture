@@ -41,7 +41,8 @@ const form = useForm({
     description: '',
     is_active: true,
     is_featured: false,
-    image_path: null as File | null,
+    image: null as File | null,
+    banner: null as File | null,
     metadata: {
         title: '',
         description: '',
@@ -50,7 +51,8 @@ const form = useForm({
     },
 });
 
-const fileInput = useTemplateRef<HTMLInputElement>('fileInput');
+const imageInput = useTemplateRef<HTMLInputElement>('imageInput');
+const bannerInput = useTemplateRef<HTMLInputElement>('bannerInput');
 
 // Watch for collection changes and populate form
 watch(
@@ -62,7 +64,8 @@ watch(
             form.description = newCollection.description ?? '';
             form.is_active = newCollection.is_active;
             form.is_featured = newCollection.is_featured;
-            form.image_path = null;
+            form.image = null;
+            form.banner = null;
             form.metadata = {
                 title: newCollection.metadata?.title ?? '',
                 description: newCollection.metadata?.description ?? '',
@@ -91,25 +94,36 @@ watch(() => form.description, (newDesc) => {
     }
 });
 
-const previewUrl = computed(() => {
-    if (form.image_path) return URL.createObjectURL(form.image_path);
-    return props.collection?.image_path ?? null;
+const imagePreviewUrl = computed(() => {
+    if (form.image) return URL.createObjectURL(form.image);
+    return props.collection?.image_url ?? null;
 });
 
-function onFileSelect(event: Event) {
+const bannerPreviewUrl = computed(() => {
+    if (form.banner) return URL.createObjectURL(form.banner);
+    return props.collection?.banner_url ?? null;
+});
+
+function onImageSelect(event: Event) {
     const target = event.target as HTMLInputElement;
     if (target.files?.length) {
-        form.image_path = target.files[0];
+        form.image = target.files[0];
+    }
+}
+
+function onBannerSelect(event: Event) {
+    const target = event.target as HTMLInputElement;
+    if (target.files?.length) {
+        form.banner = target.files[0];
     }
 }
 
 function submit() {
     if (props.collection) {
-        // Use post for multipart/form-data with _method=PUT
         form.transform((data) => ({
             ...data,
             _method: 'PUT',
-        })).post(update(props.collection.id).url, {
+        })).post(update(props.collection).url, {
             onSuccess: () => closeModal(),
         });
     } else {
@@ -128,7 +142,7 @@ function closeModal() {
 
 <template>
     <Dialog :open="open" @update:open="(val) => !val && closeModal()">
-        <DialogContent class="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogContent class="sm:max-w-150 max-h-[90vh] overflow-y-auto">
             <DialogHeader>
                 <DialogTitle>{{ collection ? 'Chỉnh sửa' : 'Thêm' }} bộ sưu tập</DialogTitle>
                 <DialogDescription>
@@ -160,25 +174,60 @@ function closeModal() {
                     </div>
                 </div>
 
-                <div class="grid gap-2 border-t pt-6">
-                    <Label>Hình ảnh đại diện</Label>
-                    <div class="flex items-center gap-4">
-                        <div
-                            class="relative w-32 h-20 rounded-lg border bg-muted flex items-center justify-center overflow-hidden">
-                            <img v-if="previewUrl" :src="previewUrl" class="w-full h-full object-cover" />
-                            <ImageIcon v-else class="w-8 h-8 text-muted-foreground/30" />
-                            <button v-if="form.image_path" @click="form.image_path = null" type="button"
-                                class="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1 opacity-0 hover:opacity-100 transition-opacity">
-                                <X class="w-3 h-3" />
-                            </button>
+                <!-- Images Section -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 border-t pt-6">
+                    <!-- Thumbnail Image -->
+                    <div class="grid gap-2">
+                        <Label>Hình ảnh đại diện</Label>
+                        <div class="flex items-center gap-4">
+                            <div
+                                class="relative w-24 h-24 rounded-lg border bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                                <img v-if="imagePreviewUrl" :src="imagePreviewUrl" class="w-full h-full object-cover" />
+                                <ImageIcon v-else class="w-8 h-8 text-muted-foreground/30" />
+                                <button v-if="form.image" @click="form.image = null" type="button"
+                                    class="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1 opacity-0 hover:opacity-100 transition-opacity">
+                                    <X class="w-3 h-3" />
+                                </button>
+                            </div>
+                            <div class="flex-1 space-y-2">
+                                <input type="file" id="image" ref="imageInput" class="hidden" @change="onImageSelect"
+                                    accept="image/*" />
+                                <Button type="button" variant="outline" size="sm" class="w-full"
+                                    @click="imageInput?.click()">
+                                    {{ form.image || collection?.image_url ? 'Thay đổi' : 'Chọn ảnh' }}
+                                </Button>
+                                <p class="text-[10px] text-muted-foreground leading-tight text-center">Tỉ lệ 1:1 hoặc
+                                    4:3</p>
+                            </div>
                         </div>
-                        <div class="flex-1 space-y-1">
-                            <input type="file" ref="fileInput" class="hidden" @change="onFileSelect" accept="image/*" />
-                            <Button type="button" variant="outline" size="sm" @click="fileInput?.click()">Thay đổi
-                                ảnh</Button>
-                            <p class="text-[10px] text-muted-foreground leading-tight">Khuyên dùng tỷ lệ 16:9 hoặc 3:1
-                                cho banner.</p>
+                        <InputError :message="form.errors.image" />
+                    </div>
+
+                    <!-- Banner Image -->
+                    <div class="grid gap-2">
+                        <Label>Banner bộ sưu tập</Label>
+                        <div class="flex items-center gap-4">
+                            <div
+                                class="relative w-32 h-20 rounded-lg border bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                                <img v-if="bannerPreviewUrl" :src="bannerPreviewUrl" class="w-full h-full object-cover" />
+                                <ImageIcon v-else class="w-8 h-8 text-muted-foreground/30" />
+                                <button v-if="form.banner" @click="form.banner = null" type="button"
+                                    class="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1 opacity-0 hover:opacity-100 transition-opacity">
+                                    <X class="w-3 h-3" />
+                                </button>
+                            </div>
+                            <div class="flex-1 space-y-2">
+                                <input type="file" id="banner" ref="bannerInput" class="hidden" @change="onBannerSelect"
+                                    accept="image/*" />
+                                <Button type="button" variant="outline" size="sm" class="w-full"
+                                    @click="bannerInput?.click()">
+                                    {{ form.banner || collection?.banner_url ? 'Thay đổi' : 'Chọn ảnh' }}
+                                </Button>
+                                <p class="text-[10px] text-muted-foreground leading-tight text-center">Tỉ lệ 16:9 hoặc
+                                    3:1</p>
+                            </div>
                         </div>
+                        <InputError :message="form.errors.banner" />
                     </div>
                 </div>
 
@@ -228,7 +277,7 @@ function closeModal() {
                                 <p class="text-[10px] text-muted-foreground">Khuyên dùng: Dưới 160 ký tự.</p>
                             </div>
                             <div class="grid gap-2 pt-2">
-                                <Label>Đường dẫn Canonical (Tùy chọn)</Label>
+                                <Label>Khóa Canonical (Tùy chọn)</Label>
                                 <Input v-model="form.metadata.canonical"
                                     placeholder="https://yourdomain.com/bo-suu-tap/..." />
                             </div>
@@ -254,7 +303,7 @@ function closeModal() {
 
                 <DialogFooter>
                     <Button type="button" variant="ghost" @click="closeModal">Hủy</Button>
-                    <Button type="submit" :disabled="form.processing" class="min-w-[120px]">
+                    <Button type="submit" :disabled="form.processing" class="min-w-30">
                         <Loader2 v-if="form.processing" class="mr-2 h-4 w-4 animate-spin" />
                         {{ collection ? 'Lưu thay đổi' : 'Tạo bộ sưu tập' }}
                     </Button>

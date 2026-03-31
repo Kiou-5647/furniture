@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Setting;
 
 use App\Http\Requests\Account\ProfileDeleteRequest;
 use App\Http\Requests\Account\ProfileUpdateRequest;
+use App\Models\Auth\User;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -45,6 +46,7 @@ class ProfileController
      */
     public function destroy(ProfileDeleteRequest $request): RedirectResponse
     {
+        /** @var User $user */
         $user = $request->user();
 
         Auth::logout();

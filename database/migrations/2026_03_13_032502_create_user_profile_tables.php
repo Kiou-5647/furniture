@@ -32,7 +32,6 @@ return new class extends Migration
             $table->foreignIdFor(Department::class, 'department_id')->nullable()->constrained()->onDelete('set null');
             $table->string('full_name');
             $table->string('phone', 20)->nullable();
-            $table->string('avatar_path', 500)->nullable();
             $table->date('hire_date')->nullable();
             $table->date('termination_date')->nullable();
             $table->timestamps();
@@ -45,7 +44,6 @@ return new class extends Migration
             $table->foreignIdFor(User::class, 'user_id')->unique()->constrained()->onDelete('cascade');
             $table->string('full_name')->nullable();
             $table->string('phone', 20)->nullable();
-            $table->string('avatar_path', 500)->nullable();
             $table->decimal('total_spent', 15, 2)->default(0);
             $table->integer('loyalty_points')->default(0);
             $table->timestamps();
@@ -111,7 +109,6 @@ return new class extends Migration
             $table->foreignIdFor(Vendor::class, 'vendor_id')->constrained()->onDelete('cascade');
             $table->string('full_name')->nullable();
             $table->string('phone', 20)->nullable();
-            $table->string('avatar_path', 500)->nullable();
             $table->timestamps();
             $table->softDeletes();
             $table->unique(['user_id', 'vendor_id']);

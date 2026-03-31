@@ -31,16 +31,17 @@ const props = defineProps<{
 
 const emit = defineEmits(['close', 'edit', 'delete', 'preview-image']);
 
-function handlePreviewImage() {
-    if (props.collection?.image_path) {
-        emit('preview-image', props.collection.image_path);
+function handlePreviewImage(url?: string | null) {
+    const targetUrl = url ?? props.collection?.image_url;
+    if (targetUrl) {
+        emit('preview-image', targetUrl);
     }
 }
 </script>
 
 <template>
     <Dialog :open="open" @update:open="(val) => !val && emit('close')">
-        <DialogContent class="max-w-[95vw] sm:max-w-[700px] max-h-[90vh] overflow-y-auto overflow-x-hidden p-4 sm:p-6">
+        <DialogContent class="max-w-[95vw] sm:max-w-175 max-h-[90vh] overflow-y-auto overflow-x-hidden p-4 sm:p-6">
             <DialogHeader>
                 <div class="flex items-start justify-between">
                     <div class="space-y-1 w-full text-left min-w-0">
@@ -53,7 +54,8 @@ function handlePreviewImage() {
                     </Button>
                 </div>
                 <div class="flex items-start justify-start sm:justify-center min-w-0">
-                    <DialogDescription class="text-sm sm:text-base uppercase font-bold wrap-break-word text-left sm:text-center">
+                    <DialogDescription
+                        class="text-sm sm:text-base uppercase font-bold wrap-break-word text-left sm:text-center">
                         Thông tin chi tiết bộ sưu tập
                     </DialogDescription>
                 </div>
@@ -65,7 +67,8 @@ function handlePreviewImage() {
                     <div class="flex-1 space-y-2 w-full min-w-0">
                         <div class="flex flex-wrap items-center gap-2">
                             <Tag class="h-4 w-4 text-muted-foreground shrink-0 mt-1" />
-                            <h3 class="text-lg font-semibold wrap-break-word">Tên bộ sưu tập: {{ collection.display_name }}</h3>
+                            <h3 class="text-lg font-semibold wrap-break-word">Tên bộ sưu tập: {{ collection.display_name
+                                }}</h3>
                             <Badge v-if="collection.is_featured" variant="outline"
                                 class="bg-yellow-50 text-yellow-700 border-yellow-200 gap-1 py-0 px-2">
                                 <Star class="h-3 w-3 fill-yellow-500 text-yellow-500" />
@@ -74,7 +77,8 @@ function handlePreviewImage() {
                         </div>
                         <div class="flex items-center gap-2">
                             <Hash class="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-1" />
-                            <code class="text-sm bg-muted px-2 py-0.5 rounded break-all whitespace-pre-wrap flex-1 min-w-0">Đường dẫn: {{ collection.slug }}</code>
+                            <code
+                                class="text-sm bg-muted px-2 py-0.5 rounded break-all whitespace-pre-wrap flex-1 min-w-0">Khóa: {{ collection.slug }}</code>
                         </div>
                         <div v-if="collection.description" class="text-sm text-muted-foreground space-y-1 min-w-0">
                             <p class="font-medium text-foreground">Mô tả:</p>
@@ -86,21 +90,44 @@ function handlePreviewImage() {
                     </Badge>
                 </div>
 
-                <!-- Image Section -->
-                <div v-if="collection.image_path" class="space-y-2 min-w-0">
-                    <div class="flex items-center gap-2 text-sm font-medium">
-                        <ImageIcon class="h-4 w-4 text-muted-foreground shrink-0" />
-                        <span>Hình ảnh đại diện</span>
+                <!-- Images Section -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 min-w-0">
+                    <!-- Main Image -->
+                    <div v-if="collection.image_url" class="space-y-2">
+                        <div class="flex items-center gap-2 text-sm font-medium">
+                            <ImageIcon class="h-4 w-4 text-muted-foreground shrink-0" />
+                            <span>Hình ảnh đại diện</span>
+                        </div>
+                        <div
+                            class="relative rounded-lg overflow-hidden border bg-muted aspect-square sm:aspect-auto sm:h-48">
+                            <img :src="collection.image_url" :alt="collection.display_name"
+                                class="w-full h-full object-cover cursor-zoom-in hover:scale-105 transition-transform"
+                                @click="handlePreviewImage(collection.image_url)" />
+                            <Button variant="secondary" size="sm" class="absolute bottom-2 right-2 h-7 px-2 text-[10px]"
+                                @click="handlePreviewImage(collection.image_url)">
+                                <ImageIcon class="h-3 w-3 mr-1 shrink-0" />
+                                Phóng to
+                            </Button>
+                        </div>
                     </div>
-                    <div class="relative rounded-lg overflow-hidden border bg-muted">
-                        <img :src="collection.image_path" :alt="collection.display_name"
-                            class="w-full h-48 sm:h-64 object-cover cursor-zoom-in hover:scale-105 transition-transform"
-                            @click="handlePreviewImage" />
-                        <Button variant="secondary" size="sm" class="absolute bottom-2 right-2"
-                            @click="handlePreviewImage">
-                            <ImageIcon class="h-4 w-4 mr-1 shrink-0" />
-                            Phóng to
-                        </Button>
+
+                    <!-- Banner Image -->
+                    <div v-if="collection.banner_url" class="space-y-2">
+                        <div class="flex items-center gap-2 text-sm font-medium">
+                            <ImageIcon class="h-4 w-4 text-muted-foreground shrink-0" />
+                            <span>Banner bộ sưu tập</span>
+                        </div>
+                        <div
+                            class="relative rounded-lg overflow-hidden border bg-muted aspect-video sm:aspect-auto sm:h-48">
+                            <img :src="collection.banner_url" :alt="collection.display_name"
+                                class="w-full h-full object-cover cursor-zoom-in hover:scale-105 transition-transform"
+                                @click="handlePreviewImage(collection.banner_url)" />
+                            <Button variant="secondary" size="sm" class="absolute bottom-2 right-2 h-7 px-2 text-[10px]"
+                                @click="handlePreviewImage(collection.banner_url)">
+                                <ImageIcon class="h-3 w-3 mr-1 shrink-0" />
+                                Phóng to
+                            </Button>
+                        </div>
                     </div>
                 </div>
 
@@ -128,7 +155,8 @@ function handlePreviewImage() {
                             <FileText class="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                             <div class="flex-1 space-y-1 min-w-0">
                                 <p class="text-xs font-medium text-muted-foreground">Mô tả SEO</p>
-                                <p class="text-sm line-clamp-3 wrap-break-word">{{ collection.metadata.description }}</p>
+                                <p class="text-sm line-clamp-3 wrap-break-word">{{ collection.metadata.description }}
+                                </p>
                             </div>
                         </div>
 
@@ -138,7 +166,8 @@ function handlePreviewImage() {
                             <LinkIcon class="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                             <div class="flex-1 space-y-1 min-w-0">
                                 <p class="text-xs font-medium text-muted-foreground">Canonical URL</p>
-                                <code class="text-xs break-all text-blue-600 block whitespace-pre-wrap">{{ collection.metadata.canonical }}</code>
+                                <code
+                                    class="text-xs break-all text-blue-600 block whitespace-pre-wrap">{{ collection.metadata.canonical }}</code>
                             </div>
                         </div>
 
@@ -148,7 +177,8 @@ function handlePreviewImage() {
                             <Info class="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                             <div class="flex-1 space-y-1 min-w-0">
                                 <p class="text-xs font-medium text-muted-foreground">Robots</p>
-                                <Badge variant="outline" class="truncate max-w-full block text-center">{{ collection.metadata.robots }}</Badge>
+                                <Badge variant="outline" class="truncate max-w-full block text-center">{{
+                                    collection.metadata.robots }}</Badge>
                             </div>
                         </div>
 
@@ -194,7 +224,8 @@ function handlePreviewImage() {
                         Đóng
                     </Button>
                     <div class="flex gap-2 w-full sm:w-auto order-2 sm:order-3">
-                        <Button @click="emit('delete', collection)" class="flex-1 sm:flex-none text-white bg-destructive hover:bg-destructive/90">
+                        <Button @click="emit('delete', collection)"
+                            class="flex-1 sm:flex-none text-white bg-destructive hover:bg-destructive/90">
                             <Trash2 class="h-4 w-4 mr-1" />
                             Xóa
                         </Button>

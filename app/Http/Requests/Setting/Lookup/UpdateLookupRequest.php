@@ -43,7 +43,9 @@ class UpdateLookupRequest extends FormRequest
         return [
             'namespace' => ['required', Rule::enum(LookupType::class)],
             'slug' => [
-                'required', 'string', 'max:64',
+                'required',
+                'string',
+                'max:64',
                 Rule::unique('lookups')
                     ->ignore($lookup->id)
                     ->whereNull('deleted_at')
@@ -52,11 +54,13 @@ class UpdateLookupRequest extends FormRequest
             'display_name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'is_active' => ['boolean'],
-            'image_path' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'metadata' => ['nullable', 'array'],
             'metadata.hex_code' => [
                 Rule::requiredIf($namespace === LookupType::Colors->value),
-                'nullable', 'string', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/',
+                'nullable',
+                'string',
+                'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/',
             ],
             'metadata.title' => ['nullable', 'string', 'max:255'],
             'metadata.description' => ['nullable', 'string', 'max:500'],
@@ -72,7 +76,9 @@ class UpdateLookupRequest extends FormRequest
             'slug.unique' => 'Khóa này đã tồn tại trong danh mục.',
             'metadata.hex_code.required' => 'Vui lòng cung cấp mã màu HEX.',
             'metadata.hex_code.regex' => 'Định dạng mã màu không hợp lệ (VD: #FFFFFF).',
-            'image_path.image' => 'Hình ảnh không hợp lệ.',
+            'image.image' => 'Hình ảnh không hợp lệ.',
+            'image.mimes' => 'Hình ảnh phải có định dạng: jpg, jpeg, png, hoặc webp.',
+            'image.max' => 'Dung lượng hình ảnh không được vượt quá 2MB.',
         ];
     }
 }

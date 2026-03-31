@@ -3,7 +3,6 @@
 namespace App\Actions\Setting;
 
 use App\Models\Setting\Lookup;
-use App\Services\Field\FileUploadService;
 use Illuminate\Http\UploadedFile;
 
 class UpsertLookupAction
@@ -13,23 +12,18 @@ class UpsertLookupAction
      */
     public function execute(array $data, ?Lookup $lookup = null): Lookup
     {
-        if (isset($data['image_path']) && $data['image_path'] instanceof UploadedFile) {
-            $service = app(FileUploadService::class);
-
-            if ($lookup && $lookup->image_path) {
-                $service->delete($lookup->image_path);
-            }
-
-            $filenamePrefix = $data['slug'] ?? ($lookup ? $lookup->slug : 'lookup');
-            $data['image_path'] = $service->upload($data['image_path'], 'lookups', $data['slug']);
-        } elseif (! isset($data['image_path']) || $data['image_path'] === null) {
-            unset($data['image_path']);
-        }
-
+        // 1. Extract the uploaded file (if any)
+        $imageFile = $data['image'] ?? null;
+        unset($data['image'], $data['image_path']);
+        // 2. Create or Update the model
         if ($lookup && $lookup->id) {
             $lookup->update($data);
         } else {
             $lookup = Lookup::create($data);
+        }
+        // 3. Attach the Media!
+        if ($imageFile instanceof UploadedFile) {
+            $lookup->addMedia($imageFile)->toMediaCollection('image');
         }
 
         return $lookup;

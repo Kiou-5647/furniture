@@ -20,14 +20,12 @@ import {
 } from '@/components/ui/dropdown-menu';
 import DataTableGroup from '@/components/custom/data-table/DataTableGroup.vue';
 import { cleanQuery, setCookie } from '@/lib/utils';
-import DataTableFacetedFilter from '@/components/custom/data-table/DataTableFacetedFilter.vue';
 import { createLazyComponent } from '@/composables/createLazyComponent';
 import ImagePreviewDialog from '@/components/custom/ImagePreviewDialog.vue';
 import CategoryDetailsDialog from './CategoryDetailsDialog.vue';
 import DataTableSingleFilter from '@/components/custom/data-table/DataTableSingleFilter.vue';
 import DeleteConfirmation from '@/components/custom/DeleteConfirmation.vue';
 
-// Lazy-load modal (NO Suspense - safe for production)
 const CategoryFormModal = createLazyComponent(() => import('./CategoryFormModal.vue'));
 
 const props = defineProps<{
@@ -175,7 +173,7 @@ function confirmDelete(category: Category) {
 
 function performDelete() {
     if (!selectedCategory.value) return;
-    router.delete(destroy(selectedCategory.value.id).url, {
+    router.delete(destroy(selectedCategory.value).url, {
         onSuccess: () => {
             showDeleteDialog.value = false;
             selectedCategory.value = null;
@@ -236,7 +234,7 @@ function handlePreviewImage(url: string) {
                                 </Badge>
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent class="w-[300px]">
+                        <DropdownMenuContent class="w-75">
                             <DropdownMenuItem v-for="group in categoryGroups" :key="group.id" as-child>
                                 <Link :href="index(group.slug).url"
                                     class="w-full min-h-12 flex items-center justify-between cursor-pointer"
@@ -263,8 +261,10 @@ function handlePreviewImage(url: string) {
                         @sort="handleSort" @row-click="handleViewDetails" @update:page="handlePageChange"
                         @update:page-size="handlePageSizeChange">
                         <template #filters>
-                            <DataTableSingleFilter title="Loại sản phẩm" v-model="selectedType"
-                                :options="typeOptions" />
+                            <DataTableSingleFilter title="Trạng thái" v-model="selectedStatus" :options="statusOptions"
+                                icon_location="end" />
+                            <DataTableSingleFilter title="Loại sản phẩm" v-model="selectedType" :options="typeOptions"
+                                icon_location="end" />
                         </template>
                     </DataTableGroup>
                 </div>

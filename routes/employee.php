@@ -3,6 +3,7 @@
 use App\Http\Controllers\Employee\EmployeeDashboardController;
 use App\Http\Controllers\Employee\Product\CategoryController;
 use App\Http\Controllers\Employee\Product\CollectionController;
+use App\Http\Controllers\Employee\Setting\ActivityLogController;
 use App\Http\Controllers\Employee\Setting\LookupController;
 use Illuminate\Support\Facades\Route;
 
@@ -11,6 +12,9 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
      * Dashboard route
      */
     Route::get('/dashboard', [EmployeeDashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('/nhat-ky-hoat-dong', [ActivityLogController::class, 'index'])
+        ->name('activities.index');
 
     Route::prefix('cau-hinh')->name('settings.')->group(function () {
         /**
@@ -32,8 +36,8 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
                 // Soft Delete / Trash Sub-group
                 Route::prefix('thung-rac')->name('trash.')->group(function () {
                     Route::get('/', [LookupController::class, 'trash'])->name('index');
-                    Route::post('/{id}/restore', [LookupController::class, 'restore'])->name('restore');
-                    Route::delete('/{id}/force', [LookupController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
+                    Route::post('/{lookup}/restore', [LookupController::class, 'restore'])->name('restore')->withTrashed();
+                    Route::delete('/{lookup}/force', [LookupController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
                 });
             });
         });
@@ -59,8 +63,8 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
                 // Soft Delete / Trash Sub-group
                 Route::prefix('thung-rac')->name('trash.')->group(function () {
                     Route::get('/', [CategoryController::class, 'trash'])->name('index');
-                    Route::post('/{id}/restore', [CategoryController::class, 'restore'])->name('restore');
-                    Route::delete('/{id}/force', [CategoryController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
+                    Route::post('/{category}/restore', [CategoryController::class, 'restore'])->name('restore')->withTrashed();
+                    Route::delete('/{category}/force', [CategoryController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
                 });
             });
         });
@@ -80,8 +84,8 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
                 // Soft Delete / Trash Sub-group
                 Route::prefix('thung-rac')->name('trash.')->group(function () {
                     Route::get('/', [CollectionController::class, 'trash'])->name('index');
-                    Route::post('/{id}/restore', [CollectionController::class, 'restore'])->name('restore');
-                    Route::delete('/{id}/force', [CollectionController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
+                    Route::post('/{collection}/restore', [CollectionController::class, 'restore'])->name('restore')->withTrashed();
+                    Route::delete('/{collection}/force', [CollectionController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
                 });
             });
         });

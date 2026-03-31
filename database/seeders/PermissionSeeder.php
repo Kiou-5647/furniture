@@ -37,8 +37,12 @@ class PermissionSeeder extends Seeder
 
             ['name' => 'roles.view', 'description' => 'View roles'],
             ['name' => 'roles.manage', 'description' => 'Manage roles'],
+
             ['name' => 'permissions.view', 'description' => 'View permissions'],
             ['name' => 'permissions.assign', 'description' => 'Assign permissions to roles'],
+
+            ['name' => 'activities.view', 'description' => 'View activity logs'],
+            ['name' => 'activities.manage', 'description' => 'Manage activity logs'],
 
             // System Settings
             ['name' => 'lookups.view', 'description' => 'View lookups'],
@@ -92,7 +96,9 @@ class PermissionSeeder extends Seeder
                 'products.manage',
                 'categories.manage',
                 'collections.manage',
-                'customers.view', 'customers.update', 'customers.delete',
+                'customers.view',
+                'customers.update',
+                'customers.delete',
                 'vendors.manage', // Future implementation of vendors.manage
                 'employees.manage',
                 'settings.manage',
@@ -103,18 +109,27 @@ class PermissionSeeder extends Seeder
                 'products.manage',
                 'categories.manage',
                 'collections.manage',
-                'vendors.view', 'vendors.verify',
+                'vendors.view',
+                'vendors.verify',
             ],
             'content_manager' => [
-                'products.view', 'products.create', 'products.update', 'products.publish',
-                'categories.view', 'collections.view',
+                'products.view',
+                'products.create',
+                'products.update',
+                'products.publish',
+                'categories.view',
+                'collections.view',
             ],
             'vendor_owner' => [
-                'vendors.view', 'vendors.update',
-                'products.view', 'products.create', 'products.update', // No delete
+                'vendors.view',
+                'vendors.update',
+                'products.view',
+                'products.create',
+                'products.update', // No delete
             ],
             'support' => [
-                'customers.view', 'customers.update',
+                'customers.view',
+                'customers.update',
                 'products.view',
             ],
         ];

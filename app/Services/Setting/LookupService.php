@@ -29,13 +29,22 @@ class LookupService
         });
     }
 
-    public function getByNamespace(LookupFilterData $filter): LengthAwarePaginator
+    public function getFiltered(LookupFilterData $filter): LengthAwarePaginator
     {
         return Lookup::query()
             ->when($filter->namespace, fn (LookupBuilder $q) => $q->byNamespace($filter->namespace))
             ->when($filter->search, fn (LookupBuilder $q) => $q->search($filter->search))
             ->when(! is_null($filter->is_active), fn ($q) => $q->where('is_active', $filter->is_active))
             ->orderBy($filter->order_by ?? 'slug', $filter->order_direction ?? 'asc')
+            ->paginate($filter->per_page ?? 15);
+    }
+
+    public function getTrashedFiltered(LookupFilterData $filter): LengthAwarePaginator
+    {
+        return Lookup::onlyTrashed()
+            ->when($filter->namespace, fn ($q) => $q->byNamespace($filter->namespace))
+            ->when($filter->search, fn ($q) => $q->search($filter->search))
+            ->orderBy($filter->order_by ?? 'deleted_at', $filter->order_direction ?? 'desc')
             ->paginate($filter->per_page ?? 15);
     }
 }

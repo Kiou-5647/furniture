@@ -13,13 +13,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('categories', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('group_id')->nullable()->constrained('lookups')->onDelete('restrict');
+            $table->uuid('id')->primary();
+            $table->foreignUuid('group_id')->nullable()->constrained('lookups')->onDelete('restrict');
             $table->string('product_type', 20)->nullable();
             $table->string('display_name');
             $table->string('slug', 64);
             $table->text('description')->nullable();
-            $table->string('image_path', 255)->nullable();
             $table->boolean('is_active')->default(true);
             $table->jsonb('metadata')->default('{}');
             $table->timestamps();
@@ -31,8 +30,8 @@ return new class extends Migration
         DB::statement('CREATE INDEX idx_categories_deleted ON categories (deleted_at) WHERE deleted_at IS NOT NULL');
 
         Schema::create('category_room', function (Blueprint $table) {
-            $table->foreignId('category_id')->constrained()->onDelete('cascade');
-            $table->foreignId('room_id')->constrained('lookups')->onDelete('cascade');
+            $table->foreignUuid('category_id')->constrained()->onDelete('cascade');
+            $table->foreignUuid('room_id')->constrained('lookups')->onDelete('cascade');
             $table->primary(['category_id', 'room_id']);
         });
     }

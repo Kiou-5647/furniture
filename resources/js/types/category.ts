@@ -3,11 +3,11 @@ import type { ProductType } from ".";
 
 
 export interface Category {
-    id: number;
-    group_id: number;
+    id: string;
+    group_id: string;
     group?: Lookup;
 
-    room_ids: number[];
+    room_ids: string[];
     rooms?: Lookup[];
 
     product_type: ProductType;
@@ -16,7 +16,8 @@ export interface Category {
     display_name: string;
     slug: string;
     description: string | null;
-    image_path: string | null;
+    image_url?: string;
+    image_thumb_url?: string;
 
     is_active: boolean;
     metadata: Record<string, any> | null;
@@ -62,7 +63,7 @@ export interface CategoryPagination {
 }
 
 export interface CategoryFilterData {
-    group_id?: number | null;
+    group_id?: string | null;
     product_type?: ProductType | null;
     search?: string;
     is_active?: boolean | null;

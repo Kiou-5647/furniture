@@ -23,29 +23,29 @@ class LookupSeeder extends Seeder
         $groups = [
             // Seating - Ghế ngồi
             ['slug' => 'ghe-ngoi', 'display_name' => 'Ghế ngồi', 'namespace' => 'nhom-danh-muc', 'description' => 'Các loại ghế ngồi trong nhà'],
-            
+
             // Tables - Bàn
             ['slug' => 'ban', 'display_name' => 'Bàn', 'namespace' => 'nhom-danh-muc', 'description' => 'Các loại bàn trong nhà'],
-            
+
             // Storage - Lưu trữ
             ['slug' => 'luu-tru', 'display_name' => 'Lưu trữ', 'namespace' => 'nhom-danh-muc', 'description' => 'Tủ, kệ, ngăn lưu trữ'],
-            
+
             // Sleeping - Ngủ nghỉ
             ['slug' => 'ngu-nghi', 'display_name' => 'Ngủ nghỉ', 'namespace' => 'nhom-danh-muc', 'description' => 'Giường, đệm, gối'],
-            
+
             // Lighting - Chiếu sáng
             ['slug' => 'chieu-sang', 'display_name' => 'Chiếu sáng', 'namespace' => 'nhom-danh-muc', 'description' => 'Đèn và thiết bị chiếu sáng'],
-            
+
             // Decoration - Trang trí
             ['slug' => 'trang-tri', 'display_name' => 'Trang trí', 'namespace' => 'nhom-danh-muc', 'description' => 'Đồ trang trí nội thất'],
-            
+
             // Textiles - Dệt may
             ['slug' => 'det-may', 'display_name' => 'Dệt may', 'namespace' => 'nhom-danh-muc', 'description' => 'Rèm, thảm, vải'],
-            
+
             // Outdoor - Ngoài trời
             ['slug' => 'ngoai-troi', 'display_name' => 'Ngoài trời', 'namespace' => 'nhom-danh-muc', 'description' => 'Nội thất sân vườn, ngoài trời'],
         ];
-        
+
         foreach ($groups as $group) {
             Lookup::updateOrCreate(
                 ['namespace' => $group['namespace'], 'slug' => $group['slug']],

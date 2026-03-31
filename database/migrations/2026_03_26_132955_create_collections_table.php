@@ -13,10 +13,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('collections', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('display_name', 255);
             $table->string('slug', 64);
-            $table->string('image_path', 500)->nullable();
             $table->boolean('is_active')->default(true);
             $table->boolean('is_featured')->default(false);
             $table->text('description')->nullable();

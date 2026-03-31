@@ -155,7 +155,7 @@ function confirmDelete(collection: Collection) {
 
 function performDelete() {
     if (!selectedCollection.value) return;
-    router.delete(destroy(selectedCollection.value.id).url, {
+    router.delete(destroy(selectedCollection.value).url, {
         onSuccess: () => {
             showDeleteDialog.value = false;
             selectedCollection.value = null;

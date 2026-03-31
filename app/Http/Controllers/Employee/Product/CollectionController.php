@@ -36,10 +36,7 @@ class CollectionController
 
         return Inertia::render('employee/products/collections/Trash', [
             'collections' => Inertia::defer(fn () => EmployeeCollectionResource::collection(
-                Collection::onlyTrashed()
-                    ->when($filter->search, fn ($q) => $q->search($filter->search))
-                    ->orderBy($filter->order_by ?? 'deleted_at', $filter->order_direction ?? 'desc')
-                    ->paginate($filter->per_page ?? 15)
+                $this->service->getTrashedFiltered($filter)
             )),
             'filters' => $filter,
         ]);
@@ -69,25 +66,23 @@ class CollectionController
         return back()->with('success', 'Đã xóa bộ sưu tập.');
     }
 
-    public function restore(int $id)
+    public function restore(Collection $collection)
     {
         if (! Auth::user()->can('collections.manage')) {
             return back()->with('error', 'Không đủ quyền hạn!');
         }
 
-        $collection = Collection::onlyTrashed()->findOrFail($id);
         $collection->restore();
 
         return back()->with('success', 'Đã khôi phục bộ sưu tập.');
     }
 
-    public function forceDestroy(int $id)
+    public function forceDestroy(Collection $collection)
     {
         if (! Auth::user()->can('collections.manage')) {
             return back()->with('error', 'Không đủ quyền hạn!');
         }
 
-        $collection = Collection::withTrashed()->findOrFail($id);
         $collection->forceDelete();
 
         return back()->with('success', 'Đã xóa vĩnh viễn bộ sưu tập.');

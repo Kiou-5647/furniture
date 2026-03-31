@@ -17,4 +17,12 @@ class CollectionService
             ->orderBy($filter->order_by ?? 'display_name', $filter->order_direction ?? 'asc')
             ->paginate($filter->per_page ?? 15);
     }
+
+    public function getTrashedFiltered(CollectionFilterData $filter): LengthAwarePaginator
+    {
+        return Collection::onlyTrashed()
+            ->when($filter->search, fn ($q) => $q->search($filter->search))
+            ->orderBy($filter->order_by ?? 'deleted_at', $filter->order_direction ?? 'desc')
+            ->paginate($filter->per_page ?? 15);
+    }
 }

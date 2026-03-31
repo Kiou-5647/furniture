@@ -35,6 +35,22 @@ class CategoryController
         ]);
     }
 
+    public function trash(Request $request, ?string $groupSlug = null): Response
+    {
+        $group = $groupSlug ? Lookup::where('slug', $groupSlug)->first() : null;
+        $filter = CategoryFilterData::fromRequest($request, $group?->id);
+
+        return Inertia::render('employee/products/categories/Trash', [
+            'categoryGroups' => $this->service->getCategoryGroups(),
+            'roomOptions' => $this->service->getRoomOptions(),
+            'categories' => Inertia::defer(fn () => EmployeeCategoryResource::collection(
+                $this->service->getTrashedFiltered($filter)
+            )),
+            'filters' => $filter,
+            'currentGroup' => $group,
+        ]);
+    }
+
     public function store(StoreCategoryRequest $request, UpsertCategoryAction $action)
     {
         $action->execute($request->validated());
@@ -49,6 +65,17 @@ class CategoryController
         return back()->with('success', 'Đã cập nhật danh mục.');
     }
 
+    public function restore(Category $category)
+    {
+        if (! Auth::user()->can('categories.manage')) {
+            return back()->with('error', 'Không đủ quyền hạn!');
+        }
+
+        $category->restore();
+
+        return back()->with('success', 'Đã khôi phục danh mục.');
+    }
+
     public function destroy(Category $category)
     {
         if (! Auth::user()->can('categories.manage')) {
@@ -59,13 +86,13 @@ class CategoryController
         return back()->with('success', 'Đã xóa danh mục.');
     }
 
-    public function forceDestroy(Lookup $lookup)
+    public function forceDestroy(Category $category)
     {
         if (! Auth::user()->can('categories.manage')) {
             return back()->with('error', 'Không đủ quyền hạn để xóa danh mục!');
         }
 
-        $lookup->forceDelete();
+        $category->forceDelete();
 
         return back()->with('success', 'Đã xóa vĩnh viễn danh mục.');
     }

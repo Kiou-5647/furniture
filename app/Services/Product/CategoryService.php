@@ -46,4 +46,15 @@ class CategoryService
             ->orderBy($filter->order_by ?? 'display_name', $filter->order_direction ?? 'asc')
             ->paginate($filter->per_page ?? 15);
     }
+
+    public function getTrashedFiltered(CategoryFilterData $filter): LengthAwarePaginator
+    {
+        return Category::onlyTrashed()
+            ->with(['group', 'rooms'])
+            ->when($filter->group_id, fn ($q) => $q->where('group_id', $filter->group_id))
+            ->when($filter->product_type, fn ($q) => $q->byProductType($filter->product_type))
+            ->when($filter->search, fn ($q) => $q->search($filter->search))
+            ->orderBy($filter->order_by ?? 'deleted_at', $filter->order_direction ?? 'desc')
+            ->paginate($filter->per_page ?? 15);
+    }
 }
