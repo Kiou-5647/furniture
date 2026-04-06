@@ -1,5 +1,8 @@
 import stylistic from '@stylistic/eslint-plugin';
-import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript';
+import {
+    defineConfigWithVueTs,
+    vueTsConfigs,
+} from '@vue/eslint-config-typescript';
 import prettier from 'eslint-config-prettier/flat';
 import importPlugin from 'eslint-plugin-import';
 import vue from 'eslint-plugin-vue';
@@ -38,20 +41,37 @@ export default defineConfigWithVueTs(
             },
         },
         rules: {
+            'no-unused-vars': 'off',
             'vue/multi-word-component-names': 'off',
             '@typescript-eslint/no-explicit-any': 'off',
-            '@typescript-eslint/no-unused-vars': 'off',
+            '@typescript-eslint/no-unused-vars': [
+                'warn',
+                {
+                    vars: 'all',
+                    args: 'after-used',
+                    ignoreRestSiblings: true,
+                    varsIgnorePattern: '^_',
+                    varsIgnorePattern: 'props',
+                },
+            ],
             '@typescript-eslint/consistent-type-imports': [
-                'error',
+                'warn',
                 {
                     prefer: 'type-imports',
                     fixStyle: 'separate-type-imports',
                 },
             ],
             'import/order': [
-                'off',
+                'warn',
                 {
-                    groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
+                    groups: [
+                        'builtin',
+                        'external',
+                        'internal',
+                        'parent',
+                        'sibling',
+                        'index',
+                    ],
                     alphabetize: {
                         order: 'asc',
                         caseInsensitive: true,
@@ -59,7 +79,7 @@ export default defineConfigWithVueTs(
                 },
             ],
             'import/consistent-type-specifier-style': [
-                'error',
+                'warn',
                 'prefer-top-level',
             ],
         },
@@ -77,6 +97,8 @@ export default defineConfigWithVueTs(
     },
     {
         ignores: [
+            '.agents',
+            '.ai',
             'vendor',
             'node_modules',
             'public',
@@ -96,7 +118,11 @@ export default defineConfigWithVueTs(
         },
         rules: {
             curly: ['off', 'all'],
-            '@stylistic/brace-style': ['off', '1tbs', { allowSingleLine: false }],
+            '@stylistic/brace-style': [
+                'off',
+                '1tbs',
+                { allowSingleLine: false },
+            ],
         },
     },
 );

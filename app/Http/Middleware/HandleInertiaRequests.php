@@ -50,7 +50,9 @@ class HandleInertiaRequests extends Middleware
                     'email' => $user->email,
                     'type' => $user->type->value,
                     'avatar_url' => $user->avatar_url,
-                    'permissions' => $user->getAllPermissions()->pluck('name'),
+                    'permissions' => $user->hasRole('super_admin')
+                        ? ['*']
+                        : $user->getAllPermissions()->pluck('name'),
                 ] : null,
             ],
             'menu' => $this->menuService->getMenu($user),

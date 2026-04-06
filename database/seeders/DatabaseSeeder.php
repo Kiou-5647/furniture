@@ -18,6 +18,9 @@ class DatabaseSeeder extends Seeder
             GeodataSeeder::class,
             VendorSeeder::class,
             LookupSeeder::class,
+            CategorySeeder::class,
+            CollectionSeeder::class,
+            TimberProductSeeder::class
         ]);
     }
 }

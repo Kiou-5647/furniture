@@ -3,8 +3,10 @@
 use App\Http\Controllers\Employee\EmployeeDashboardController;
 use App\Http\Controllers\Employee\Product\CategoryController;
 use App\Http\Controllers\Employee\Product\CollectionController;
+use App\Http\Controllers\Employee\Product\ProductController;
 use App\Http\Controllers\Employee\Setting\ActivityLogController;
 use App\Http\Controllers\Employee\Setting\LookupController;
+use App\Http\Controllers\Employee\Setting\LookupNamespaceController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien')->name('employee.')->group(function () {
@@ -17,6 +19,21 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
         ->name('activities.index');
 
     Route::prefix('cau-hinh')->name('settings.')->group(function () {
+        /**
+         * Lookup Namespaces routes
+         */
+        Route::prefix('danh-muc-tra-cuu')->name('lookupNamespaces.')->group(function () {
+            Route::middleware(['can:lookups.view'])->group(function () {
+                Route::get('/', [LookupNamespaceController::class, 'index'])->name('index');
+            });
+
+            Route::middleware(['can:lookups.manage'])->group(function () {
+                Route::post('/', [LookupNamespaceController::class, 'store'])->name('store');
+                Route::put('/{lookupNamespace}', [LookupNamespaceController::class, 'update'])->name('update');
+                Route::delete('/{lookupNamespace}', [LookupNamespaceController::class, 'destroy'])->name('destroy');
+            });
+        });
+
         /**
          * Lookups routes
          */
@@ -86,6 +103,27 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
                     Route::get('/', [CollectionController::class, 'trash'])->name('index');
                     Route::post('/{collection}/restore', [CollectionController::class, 'restore'])->name('restore')->withTrashed();
                     Route::delete('/{collection}/force', [CollectionController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
+                });
+            });
+        });
+
+        Route::prefix('san-pham')->name('items.')->group(function () {
+            // View Group
+            Route::middleware(['can:products.view'])->group(function () {
+                Route::get('/', [ProductController::class, 'index'])->name('index');
+            });
+
+            // Manage Group
+            Route::middleware(['can:products.manage'])->group(function () {
+                Route::post('/', [ProductController::class, 'store'])->name('store');
+                Route::put('/{product}', [ProductController::class, 'update'])->name('update');
+                Route::delete('/{product}', [ProductController::class, 'destroy'])->name('destroy');
+
+                // Soft Delete / Trash Sub-group
+                Route::prefix('thung-rac')->name('trash.')->group(function () {
+                    Route::get('/', [ProductController::class, 'trash'])->name('index');
+                    Route::post('/{product}/restore', [ProductController::class, 'restore'])->name('restore')->withTrashed();
+                    Route::delete('/{product}/force', [ProductController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
                 });
             });
         });

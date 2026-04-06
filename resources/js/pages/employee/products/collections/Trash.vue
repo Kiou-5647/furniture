@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import type { BreadcrumbItem } from '@/types';
-import type { CollectionFilterData, CollectionPagination } from '@/types/collection';
-import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
+import { ArrowLeft, Trash2 } from '@lucide/vue';
 import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Trash2 } from 'lucide-vue-next';
+import AppLayout from '@/layouts/AppLayout.vue';
 import { index } from '@/routes/employee/products/collections';
+import type { BreadcrumbItem } from '@/types';
+import type { CollectionFilterData, CollectionPagination } from '@/types/collection';
 
 defineProps<{
     collections?: CollectionPagination;
@@ -39,7 +39,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                 </div>
                 <h3 class="text-lg font-semibold">Tính năng đang phát triển</h3>
                 <p class="text-sm text-muted-foreground mt-2 max-w-md text-center">
-                    Giao diện quản lý thùng rác cho bộ sưu tập hiện đang được hoàn thiện. 
+                    Giao diện quản lý thùng rác cho bộ sưu tập hiện đang được hoàn thiện.
                     Bạn có thể quay lại danh sách chính để tiếp tục làm việc.
                 </p>
                 <Button class="mt-6" variant="secondary" as-child>

@@ -16,8 +16,9 @@ class EmployeeLookupResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'namespace' => $this->namespace->value,
-            'namespace_label' => $this->namespace->label(),
+            'namespace_id' => $this->namespace_id,
+            'namespace' => $this->namespace?->slug,
+            'namespace_label' => $this->namespace?->display_name,
 
             'display_name' => $this->display_name,
             'slug' => $this->slug,

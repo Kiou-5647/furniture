@@ -2,14 +2,22 @@
 
 namespace App\Builders\Setting;
 
-use App\Enums\LookupType;
 use Illuminate\Database\Eloquent\Builder;
 
 class LookupBuilder extends Builder
 {
-    public function byNamespace(LookupType $type): self
+    public function byNamespace(string $namespaceSlug): self
     {
-        return $this->where('namespace', $type->value);
+        if ($namespaceSlug === '_null') {
+            return $this->whereNull('namespace_id');
+        }
+
+        return $this->whereHas('namespace', fn ($q) => $q->where('slug', $namespaceSlug));
+    }
+
+    public function byNamespaceId(string $namespaceId): self
+    {
+        return $this->where('namespace_id', $namespaceId);
     }
 
     public function search(string $search): self

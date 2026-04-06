@@ -32,6 +32,7 @@ class Category extends Model implements HasMedia
         return [
             'product_type' => ProductType::class,
             'metadata' => 'array',
+            'filterable_specs' => 'array',
             'is_active' => 'boolean',
         ];
     }
@@ -41,9 +42,9 @@ class Category extends Model implements HasMedia
         return $this->belongsTo(Lookup::class, 'group_id');
     }
 
-    public function rooms()
+    public function room()
     {
-        return $this->belongsToMany(Lookup::class, 'category_room', 'category_id', 'room_id');
+        return $this->belongsTo(Lookup::class, 'room_id');
     }
 
     public function newEloquentBuilder($query): CategoryBuilder

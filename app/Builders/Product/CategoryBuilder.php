@@ -2,16 +2,17 @@
 
 namespace App\Builders\Product;
 
-use App\Enums\LookupType;
 use App\Enums\ProductType;
 use App\Models\Setting\Lookup;
+use App\Models\Setting\LookupNamespace;
 use Illuminate\Database\Eloquent\Builder;
 
 class CategoryBuilder extends Builder
 {
     public function byCategoryGroup(Lookup $group): self
     {
-        if ($group->namespace !== LookupType::CategoryGroup) {
+        $ns = LookupNamespace::where('slug', 'nhom-danh-muc')->first();
+        if (! $ns || $group->namespace_id !== $ns->id) {
             return $this;
         }
 

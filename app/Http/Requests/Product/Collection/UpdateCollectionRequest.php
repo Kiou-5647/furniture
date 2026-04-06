@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Product\Collection;
 
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -49,10 +48,6 @@ class UpdateCollectionRequest extends FormRequest
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'banner' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'metadata' => ['nullable', 'array'],
-            'metadata.title' => ['nullable', 'string', 'max:255'],
-            'metadata.description' => ['nullable', 'string', 'max:500'],
-            'metadata.canonical' => ['nullable', 'string'],
-            'metadata.robots' => ['nullable', 'string'],
         ];
     }
 
@@ -73,9 +68,6 @@ class UpdateCollectionRequest extends FormRequest
             'banner.image' => 'Tệp tải lên phải là hình ảnh.',
             'banner.mimes' => 'Hình ảnh phải có định dạng: jpg, jpeg, png, hoặc webp.',
             'banner.max' => 'Dung lượng hình ảnh không được vượt quá 2MB.',
-
-            'metadata.title.max' => 'Tiêu đề SEO không được vượt quá 255 ký tự.',
-            'metadata.description.max' => 'Mô tả SEO không được vượt quá 500 ký tự.',
         ];
     }
 }

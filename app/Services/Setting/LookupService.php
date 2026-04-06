@@ -4,8 +4,8 @@ namespace App\Services\Setting;
 
 use App\Builders\Setting\LookupBuilder;
 use App\Data\Setting\LookupFilterData;
-use App\Enums\LookupType;
 use App\Models\Setting\Lookup;
+use App\Models\Setting\LookupNamespace;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -15,26 +15,62 @@ class LookupService
     public function getNamespaces(): Collection
     {
         return Cache::remember('services.lookup.namespaces', now()->addHours(24), function () {
-            $databaseCounts = Lookup::query()
-                ->select('namespace')
+            $counts = Lookup::query()
+                ->select('namespace_id')
                 ->selectRaw('COUNT(*) AS count')
-                ->groupBy('namespace')
-                ->pluck('count', 'namespace')
+                ->whereNotNull('namespace_id')
+                ->groupBy('namespace_id')
+                ->pluck('count', 'namespace_id')
                 ->toArray();
 
-            return collect(LookupType::cases())->map(function (LookupType $type) use ($databaseCounts) {
-                return [
-                    'namespace' => $type->value,
-                    'label' => $type->label(),
-                    'count' => $databaseCounts[$type->value] ?? 0,
-                ];
-            });
+            $nullCount = Lookup::query()
+                ->whereNull('namespace_id')
+                ->count();
+
+            $namespaces = LookupNamespace::query()
+                ->orderBy('is_system', 'desc')
+                ->orderBy('created_at', 'asc')
+                ->get()
+                ->map(function ($ns) use ($counts) {
+                    return [
+                        'id' => $ns->id,
+                        'slug' => $ns->slug,
+                        'label' => $ns->display_name,
+                        'for_variants' => $ns->for_variants,
+                        'is_system' => $ns->is_system,
+                        'count' => $counts[$ns->id] ?? 0,
+                    ];
+                })->values();
+
+            $totalCount = Lookup::query()->count();
+
+            $namespaces->prepend([
+                'id' => null,
+                'slug' => '_all',
+                'label' => 'Tất cả tra cứu',
+                'for_variants' => false,
+                'is_system' => false,
+                'count' => $totalCount,
+            ]);
+
+            if ($nullCount > 0) {
+                $namespaces->prepend([
+                    'id' => null,
+                    'slug' => '_null',
+                    'label' => 'Không có danh mục',
+                    'for_variants' => false,
+                    'count' => $nullCount,
+                ]);
+            }
+
+            return $namespaces;
         });
     }
 
     public function getFiltered(LookupFilterData $filter): LengthAwarePaginator
     {
         return Lookup::query()
+            ->with('namespace')
             ->when($filter->namespace, fn (LookupBuilder $q) => $q->byNamespace($filter->namespace))
             ->when($filter->search, fn (LookupBuilder $q) => $q->search($filter->search))
             ->when(! is_null($filter->is_active), fn ($q) => $q->where('is_active', $filter->is_active))
@@ -45,14 +81,32 @@ class LookupService
     public function getTrashedFiltered(LookupFilterData $filter): LengthAwarePaginator
     {
         return Lookup::onlyTrashed()
+            ->with('namespace')
             ->when($filter->namespace, fn ($q) => $q->byNamespace($filter->namespace))
             ->when($filter->search, fn ($q) => $q->search($filter->search))
             ->orderBy($filter->order_by ?? 'deleted_at', $filter->order_direction ?? 'desc')
             ->paginate($filter->per_page ?? 15);
     }
 
+    public function getFilterableNamespaces(): Collection
+    {
+        return Cache::remember('services.lookup.filterable_namespaces', now()->addHours(24), function () {
+            return LookupNamespace::query()
+                ->where('is_filterable', true)
+                ->where('is_active', true)
+                ->orderBy('display_name')
+                ->get(['id', 'slug', 'display_name'])
+                ->map(fn ($ns) => [
+                    'id' => $ns->id,
+                    'slug' => $ns->slug,
+                    'label' => $ns->display_name,
+                ])->values();
+        });
+    }
+
     public static function clearCache(): void
     {
         Cache::forget('services.lookup.namespaces');
+        Cache::forget('services.lookup.filterable_namespaces');
     }
 }

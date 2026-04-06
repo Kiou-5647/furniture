@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Check, PlusCircle } from '@lucide/vue';
+import { computed, ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,8 +19,6 @@ import {
 } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import { Check, PlusCircle } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
 
 interface Option {
     label: string;

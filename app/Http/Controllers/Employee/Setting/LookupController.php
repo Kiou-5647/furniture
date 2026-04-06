@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Employee\Setting;
 
 use App\Actions\Setting\UpsertLookupAction;
 use App\Data\Setting\LookupFilterData;
-use App\Enums\LookupType;
 use App\Http\Requests\Setting\Lookup\StoreLookupRequest;
 use App\Http\Requests\Setting\Lookup\UpdateLookupRequest;
 use App\Http\Resources\Setting\Lookup\EmployeeLookupResource;
@@ -19,7 +18,7 @@ class LookupController
 {
     public function __construct(private LookupService $service) {}
 
-    public function index(Request $request, ?string $namespace = LookupType::Rooms->value): Response
+    public function index(Request $request, ?string $namespace = null): Response
     {
         $filter = LookupFilterData::fromRequest($request, $namespace);
 
@@ -32,7 +31,7 @@ class LookupController
         ]);
     }
 
-    public function trash(Request $request, ?string $namespace = LookupType::Rooms->value): Response
+    public function trash(Request $request, ?string $namespace = null): Response
     {
         $filter = LookupFilterData::fromRequest($request, $namespace);
 

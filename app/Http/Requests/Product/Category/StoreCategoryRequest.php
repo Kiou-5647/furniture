@@ -34,8 +34,7 @@ class StoreCategoryRequest extends FormRequest
         return [
             'group_id' => ['required', 'exists:lookups,id'],
             'product_type' => ['required', Rule::enum(ProductType::class)],
-            'room_ids' => ['nullable', 'array'],
-            'room_ids.*' => ['exists:lookups,id'],
+            'room_id' => ['nullable', 'exists:lookups,id'],
             'display_name' => ['required', 'string', 'max:255'],
             'slug' => [
                 'required',
@@ -47,10 +46,6 @@ class StoreCategoryRequest extends FormRequest
             'is_active' => ['boolean'],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'metadata' => ['nullable', 'array'],
-            'metadata.title' => ['nullable', 'string', 'max:255'],
-            'metadata.description' => ['nullable', 'string', 'max:500'],
-            'metadata.canonical' => ['nullable', 'string'],
-            'metadata.robots' => ['nullable', 'string'],
         ];
     }
 
@@ -73,9 +68,6 @@ class StoreCategoryRequest extends FormRequest
             'image.image' => 'Tệp tải lên phải là hình ảnh.',
             'image.mimes' => 'Hình ảnh phải có định dạng: jpg, jpeg, png, hoặc webp.',
             'image.max' => 'Dung lượng hình ảnh không được vượt quá 2MB.',
-
-            'metadata.title.max' => 'Tiêu đề SEO không được vượt quá 255 ký tự.',
-            'metadata.description.max' => 'Mô tả SEO không được vượt quá 500 ký tự.',
         ];
     }
 }

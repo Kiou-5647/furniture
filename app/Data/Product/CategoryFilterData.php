@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 class CategoryFilterData
 {
     public function __construct(
-        public readonly ?int $group_id,
+        public readonly ?string $group_id,
         public readonly ?ProductType $product_type,
         public readonly ?string $search,
         public readonly ?bool $is_active,
@@ -17,12 +17,12 @@ class CategoryFilterData
         public readonly ?int $per_page
     ) {}
 
-    public static function fromRequest(Request $request, ?int $groupId): self
+    public static function fromRequest(Request $request, ?string $groupId): self
     {
         $perPage = (int) $request->query('per_page', $request->cookie('per_page', 15));
 
         return new self(
-            group_id: $groupId ?? ($request->has('group_id') ? (int) $request->query('group_id') : null),
+            group_id: $groupId ?? ($request->has('group_id') ? $request->query('group_id') : null),
             product_type: ProductType::tryFrom($request->query('product_type')),
             search: $request->query('search'),
             is_active: $request->has('is_active') ? $request->boolean('is_active') : null,

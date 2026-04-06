@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { Check, PlusCircle } from '@lucide/vue';
 import type { Component } from 'vue';
-import { Check, PlusCircle } from 'lucide-vue-next';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {

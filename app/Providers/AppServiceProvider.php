@@ -3,10 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Auth\User;
-use App\Models\Product\Category;
-use App\Models\Setting\Lookup;
-use App\Services\Product\CategoryService;
-use App\Services\Setting\LookupService;
+use App\Services\Cache\CacheInvalidator;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Date;
@@ -17,17 +14,11 @@ use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
         Model::unguard();
@@ -37,20 +28,9 @@ class AppServiceProvider extends ServiceProvider
             return $user->hasRole('super_admin') ? true : null;
         });
 
-        $this->registerServiceCacheInvalidation();
+        CacheInvalidator::register();
     }
 
-    protected function registerServiceCacheInvalidation(): void
-    {
-        Lookup::saved(fn () => LookupService::clearCache());
-        Lookup::deleted(fn () => LookupService::clearCache());
-        Category::saved(fn () => CategoryService::clearCache());
-        Category::deleted(fn () => CategoryService::clearCache());
-    }
-
-    /**
-     * Configure default behaviors for production-ready applications.
-     */
     protected function configureDefaults(): void
     {
         Date::use(CarbonImmutable::class);

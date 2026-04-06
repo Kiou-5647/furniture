@@ -22,6 +22,8 @@
 </template>
 
 <script setup lang="ts">
+import { ChevronDown } from '@lucide/vue';
+import type { Table } from '@tanstack/vue-table';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -29,8 +31,6 @@ import {
     DropdownMenuContent,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ChevronDown } from 'lucide-vue-next';
-import type { Table } from '@tanstack/vue-table';
 
 defineProps<{
     table: Table<any>;

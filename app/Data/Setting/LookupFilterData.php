@@ -2,7 +2,7 @@
 
 namespace App\Data\Setting;
 
-use App\Enums\LookupType;
+use App\Models\Setting\LookupNamespace;
 use Illuminate\Http\Request;
 
 class LookupFilterData
@@ -11,7 +11,7 @@ class LookupFilterData
      * Create a new class instance.
      */
     public function __construct(
-        public readonly ?LookupType $namespace,
+        public readonly ?string $namespace,
         public readonly ?string $search,
         public readonly ?bool $is_active,
         public readonly ?string $order_by,
@@ -24,7 +24,17 @@ class LookupFilterData
         $perPage = (int) $request->query('per_page', $request->cookie('per_page', 15));
 
         $nsValue = $pathNamespace ?? $request->query('namespace');
-        $namespace = LookupType::tryFrom($nsValue) ?? LookupType::Rooms;
+
+        if ($nsValue === '_null') {
+            $namespace = '_null';
+        } elseif ($nsValue === '_all') {
+            $namespace = null;
+        } elseif ($nsValue) {
+            $ns = LookupNamespace::where('slug', $nsValue)->first();
+            $namespace = $ns?->slug;
+        } else {
+            $namespace = null;
+        }
 
         return new self(
             namespace: $namespace,

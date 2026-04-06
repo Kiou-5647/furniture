@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { Head, router, Link } from '@inertiajs/vue3';
-import { LogOut, AlertCircle } from 'lucide-vue-next';
-import { Button } from '@/components/ui/button';
+import { LogOut, AlertCircle } from '@lucide/vue';
 import {
     Alert,
     AlertDescription,
     AlertTitle,
 } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import AuthLayout from '@/layouts/AuthLayout.vue';
 import { logout } from '@/routes';
 

@@ -2,7 +2,7 @@
     <div class="space-y-2">
         <!-- Toolbar: Search + Filters + Actions -->
         <div class="grid grid-cols-1 sm:grid-cols-12 items-center justify-between gap-2">
-            <div class="col-span-1 sm:col-span-8 flex gap-2 justify-between mt-2 sm:mt-0">
+            <div class="col-span-1 sm:col-span-7 flex gap-2 justify-between mt-2 sm:mt-0">
                 <DataTableSearchBar :search="search" @update:search="emit('update:search', $event)" />
 
                 <!-- Mobile: Sheet for filters -->
@@ -24,7 +24,7 @@
                 </Sheet>
             </div>
 
-            <div class="col-span-1 sm:col-span-4 flex gap-2 justify-between sm:justify-end">
+            <div class="col-span-1 sm:col-span-5 flex gap-2 justify-between sm:justify-end">
                 <DataTableClearFilter :has-active-filters="hasActiveFilters" @reset="emit('reset')" />
                 <DataTableVisibility :table="table" />
             </div>
@@ -52,7 +52,7 @@
 </template>
 
 <script setup lang="ts">
-import { Skeleton } from '@/components/ui/skeleton';
+import { ListFilter } from '@lucide/vue';
 import { getCoreRowModel, useVueTable } from '@tanstack/vue-table';
 import type {
     ColumnDef,
@@ -60,14 +60,14 @@ import type {
     VisibilityState,
 } from '@tanstack/vue-table';
 import { computed, ref } from 'vue';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Skeleton } from '@/components/ui/skeleton';
 import DataTable from './DataTable.vue';
+import DataTableClearFilter from './DataTableClearFilter.vue';
+import DataTablePagination from './DataTablePagination.vue';
 import DataTableSearchBar from './DataTableSearchBar.vue';
 import DataTableVisibility from './DataTableVisibility.vue';
-import DataTablePagination from './DataTablePagination.vue';
-import DataTableClearFilter from './DataTableClearFilter.vue';
-import { ListFilter } from 'lucide-vue-next';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
 
 const props = defineProps<{
     columns: ColumnDef<any, any>[];

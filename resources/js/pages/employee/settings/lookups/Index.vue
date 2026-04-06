@@ -1,4 +1,28 @@
 <script setup lang="ts">
+import { Head, Link, router } from '@inertiajs/vue3';
+import { Eye, EyeOff, Plus, Settings2 } from '@lucide/vue';
+import { capitalize, debounce } from 'lodash';
+import { computed, ref, watch } from 'vue';
+import DataTableGroup from '@/components/custom/data-table/DataTableGroup.vue';
+import DataTableSingleFilter from '@/components/custom/data-table/DataTableSingleFilter.vue';
+import DeleteConfirmation from '@/components/custom/DeleteConfirmation.vue';
+import ImagePreviewDialog from '@/components/custom/ImagePreviewDialog.vue';
+import Heading from '@/components/Heading.vue';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { createLazyComponent } from '@/composables/createLazyComponent';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { cleanQuery, setCookie } from '@/lib/utils';
+import { index as namespacesIndex } from '@/routes/employee/settings/lookupNamespaces';
+import { index } from '@/routes/employee/settings/lookups';
+import { destroy } from '@/routes/employee/settings/lookups';
 import type {
     BreadcrumbItem,
     Lookup,
@@ -6,34 +30,12 @@ import type {
     LookupNamespace,
     LookupPagination,
 } from '@/types';
-import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
-import { getColumns } from './columns';
-import { index } from '@/routes/employee/settings/lookups';
-import { capitalize, debounce } from 'lodash';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import Heading from '@/components/Heading.vue';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Eye, EyeOff, Plus } from 'lucide-vue-next';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { destroy } from '@/routes/employee/settings/lookups';
-import DataTableGroup from '@/components/custom/data-table/DataTableGroup.vue';
-import { cleanQuery, setCookie } from '@/lib/utils';
-import { createLazyComponent } from '@/composables/createLazyComponent';
-import LookupDetailsDialog from './LookupDetailsDialog.vue';
-import ImagePreviewDialog from '@/components/custom/ImagePreviewDialog.vue';
-import DataTableSingleFilter from '@/components/custom/data-table/DataTableSingleFilter.vue';
-import DeleteConfirmation from '@/components/custom/DeleteConfirmation.vue';
+import { getColumns } from './types/columns';
 
 // Lazy-load modal (NO Suspense - safe for production)
-const LookupFormModal = createLazyComponent(() => import('./LookupFormModal.vue'));
+const LookupFormModal = createLazyComponent(
+    () => import('./components/LookupFormModal.vue'),
+);
 
 const props = defineProps<{
     namespaces: LookupNamespace[];
@@ -47,12 +49,10 @@ const activeColumns = computed(() =>
         props.filters.namespace!,
         handleEdit,
         confirmDelete,
-        handleViewDetails,
         handlePreviewImage,
     ),
 );
 const showFormModal = ref(false);
-const showDetailsDialog = ref(false);
 const showDeleteDialog = ref(false);
 const selectedLookup = ref<Lookup | null>(null);
 const previewImageUrl = ref<string | null>(null);
@@ -75,8 +75,11 @@ const statusOptions = [
 ];
 
 const selectedNamespace = ref<LookupNamespace | null>(
-    props.namespaces.find(n => n.namespace === props.filters.namespace) || null
+    props.namespaces.find((n) => n.slug === props.filters.namespace) ||
+        props.namespaces.find((n) => n.slug === '_all') ||
+        null,
 );
+
 const updateSearch = debounce(() => {
     const { namespace, ...restFilters } = props.filters;
 
@@ -89,20 +92,26 @@ const updateSearch = debounce(() => {
         page: 1,
     };
 
-    router.get(index(namespace), cleanQuery(rawQuery), {
+    router.get(index(namespace ?? undefined), cleanQuery(rawQuery), {
         preserveState: true,
         replace: true,
     });
 }, 500);
 
 const namespaceMap = computed(() => {
-    return props.namespaces.reduce((acc, item) => {
-        acc[item.namespace] = item.label;
-        return acc;
-    }, {} as Record<string, string>)
-})
+    return props.namespaces.reduce(
+        (acc, item) => {
+            acc[item.slug] = item.label;
+            return acc;
+        },
+        {} as Record<string, string>,
+    );
+});
 
-const label = computed(() => namespaceMap.value[props.filters.namespace] ?? 'Không xác định');
+const label = computed(() => {
+    const ns = props.filters.namespace;
+    return (ns && namespaceMap.value[ns]) ?? 'Không xác định';
+});
 
 let loadingTimeout: any = null;
 
@@ -146,9 +155,11 @@ watch(
 watch(
     () => [props.filters.namespace, props.namespaces],
     () => {
-        selectedNamespace.value = props.namespaces.find(n => n.namespace === props.filters.namespace) || null;
+        selectedNamespace.value =
+            props.namespaces.find((n) => n.slug === props.filters.namespace) ||
+            null;
     },
-    { immediate: true }
+    { immediate: true },
 );
 
 function handleSort(column: string) {
@@ -162,7 +173,7 @@ function handleSort(column: string) {
         page: 1,
     };
 
-    router.get(index(namespace).url, cleanQuery(rawQuery), {
+    router.get(index(namespace ?? undefined).url, cleanQuery(rawQuery), {
         preserveState: true,
     });
 }
@@ -170,8 +181,9 @@ function handleSort(column: string) {
 function resetFilters() {
     updateSearch.cancel();
 
+    const ns = props.filters.namespace;
     router.get(
-        index(props.filters.namespace),
+        index(ns ?? undefined),
         {},
         {
             preserveState: false,
@@ -181,11 +193,6 @@ function resetFilters() {
 function handleCreate() {
     selectedLookup.value = null;
     showFormModal.value = true;
-}
-
-function handleViewDetails(lookup: Lookup) {
-    selectedLookup.value = lookup;
-    showDetailsDialog.value = true;
 }
 
 function handleEdit(lookup: Lookup) {
@@ -220,7 +227,7 @@ function handlePageChange(page: number) {
         page,
     };
 
-    router.get(index(namespace).url, cleanQuery(rawQuery), {
+    router.get(index(namespace ?? undefined).url, cleanQuery(rawQuery), {
         preserveState: true,
         preserveScroll: true,
     });
@@ -238,7 +245,7 @@ function handlePageSizeChange(per_page: number) {
         is_active: isActiveValue,
         page: 1,
     };
-    router.get(index(namespace).url, cleanQuery(rawQuery), {
+    router.get(index(namespace ?? undefined).url, cleanQuery(rawQuery), {
         preserveState: true,
         preserveScroll: true,
     });
@@ -249,33 +256,65 @@ function handlePreviewImage(url: string) {
 </script>
 
 <template>
-
     <Head title="Tra cứu" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-4 p-4">
-            <div class="flex items-center justify-between">
-                <Heading title="Quản lý tra cứu" description="Định nghĩa các kiểu dữ liệu và giá trị cho hệ thống" />
-                <Button @click="handleCreate">
-                    <Plus class="mr-2 h-4 w-4" /> Thêm Tra cứu
-                </Button>
+            <div class="space-y-2 md:flex md:items-center md:justify-between">
+                <Heading
+                    title="Quản lý tra cứu"
+                    description="Định nghĩa các kiểu dữ liệu và giá trị cho hệ thống"
+                />
+                <div class="flex items-center gap-2 justify-end">
+                    <Button
+                        variant="outline"
+                        @click="router.visit(namespacesIndex().url)"
+                    >
+                        <Settings2 class="mr-2 h-4 w-4" /> Quản lý danh mục
+                    </Button>
+                    <Button @click="handleCreate">
+                        <Plus class="mr-2 h-4 w-4" /> Thêm Tra cứu
+                    </Button>
+                </div>
             </div>
 
             <div class="grid grid-cols-1 items-start sm:grid-cols-12 sm:gap-3">
                 <!-- Desktop: Card Sidebar -->
-                <Card class="hidden space-y-2 sm:block col-span-1 sm:col-span-4 md:col-span-3 xl:col-span-2">
+                <Card
+                    class="col-span-1 hidden space-y-2 sm:col-span-5 sm:block md:col-span-4 lg:col-span-3 xl:col-span-2"
+                >
                     <CardHeader>
-                        <CardTitle class="text-lg font-medium">Danh mục</CardTitle>
+                        <CardTitle class="text-lg font-medium"
+                            >Danh mục</CardTitle
+                        >
                     </CardHeader>
                     <CardContent class="grid gap-1">
-                        <Link v-for="item in namespaces" :key="item.namespace" :href="index(item.namespace).url" :class="[
-                            'group flex items-center justify-between rounded-md px-1 py-2 transition-all duration-200',
-                            filters.namespace === item.namespace
-                                ? 'bg-primary/10 text-primary shadow-sm'
-                                : 'text-muted-foreground hover:bg-muted',
-                        ]" preserve-state preserve-scroll>
-                            <span class="font-medium text-sm">
-                                {{ item.label }}</span>
-                            <Badge variant="secondary" class="transition-colors group-hover:bg-background">
+                        <Link
+                            v-for="item in namespaces"
+                            :key="item.slug"
+                            :href="
+                                item.slug === '_all'
+                                    ? index().url
+                                    : index(item.slug).url
+                            "
+                            :class="[
+                                'group flex items-center justify-between rounded-md px-1 py-2 transition-all duration-200',
+                                (item.slug === '_all' && !filters.namespace) ||
+                                filters.namespace === item.slug
+                                    ? 'bg-primary/10 text-primary shadow-sm'
+                                    : 'text-muted-foreground hover:bg-muted',
+                            ]"
+                            preserve-state
+                            preserve-scroll
+                        >
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-sm font-medium">
+                                    {{ item.label }}</span
+                                >
+                            </div>
+                            <Badge
+                                variant="secondary"
+                                class="transition-colors group-hover:bg-background"
+                            >
                                 {{ item.count }}
                             </Badge>
                         </Link>
@@ -285,9 +324,16 @@ function handlePreviewImage(url: string) {
                 <div class="sm:hidden">
                     <DropdownMenu>
                         <DropdownMenuTrigger as-child>
-                            <Button variant="outline" class="w-full justify-between">
+                            <Button
+                                variant="outline"
+                                class="w-full justify-between"
+                            >
                                 <span class="font-medium">
-                                    Danh mục: {{ selectedNamespace?.label || 'Chọn danh mục' }}
+                                    Danh mục:
+                                    {{
+                                        selectedNamespace?.label ||
+                                        'Chọn danh mục'
+                                    }}
                                 </span>
                                 <Badge variant="secondary">
                                     {{ selectedNamespace?.count || 0 }}
@@ -295,10 +341,21 @@ function handlePreviewImage(url: string) {
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent class="w-75">
-                            <DropdownMenuItem v-for="item in namespaces" :key="item.namespace" as-child>
-                                <Link :href="index(item.namespace).url"
-                                    class="w-full min-h-12 flex items-center justify-between cursor-pointer"
-                                    preserve-state preserve-scroll>
+                            <DropdownMenuItem
+                                v-for="item in namespaces"
+                                :key="item.slug"
+                                as-child
+                            >
+                                <Link
+                                    :href="
+                                        item.slug === '_all'
+                                            ? index().url
+                                            : index(item.slug).url
+                                    "
+                                    class="flex min-h-12 w-full cursor-pointer items-center justify-between"
+                                    preserve-state
+                                    preserve-scroll
+                                >
                                     <span :class="[capitalize, 'font-medium']">
                                         {{ item.label }}
                                     </span>
@@ -311,17 +368,34 @@ function handlePreviewImage(url: string) {
                     </DropdownMenu>
                 </div>
 
-                <div class="col-span-1 space-y-4 sm:col-span-8 md:col-span-9 xl:col-span-10">
-                    <DataTableGroup v-model:search="search" :is-actually-loading="isActuallyLoading"
-                        :columns="activeColumns" :data="lookups?.data ?? []" :has-active-filters="hasActiveFilters"
-                        :total="lookups?.meta.total ?? 0" :page-size="lookups?.meta.per_page ?? 15"
-                        :current-page="lookups?.meta.current_page ?? 1" :last-page="lookups?.meta.last_page ?? 1"
-                        :order-by="filters.order_by" :order-direction="filters.order_direction" @reset="resetFilters"
-                        @sort="handleSort" @row-click="handleViewDetails" @update:page="handlePageChange"
-                        @update:pageSize="handlePageSizeChange">
+                <div
+                    class="col-span-1 space-y-4 sm:col-span-7 md:col-span-8 lg:col-span-9 xl:col-span-10"
+                >
+                    <DataTableGroup
+                        v-model:search="search"
+                        :is-actually-loading="isActuallyLoading"
+                        :columns="activeColumns"
+                        :data="lookups?.data ?? []"
+                        :has-active-filters="hasActiveFilters"
+                        :total="lookups?.meta.total ?? 0"
+                        :page-size="lookups?.meta.per_page ?? 15"
+                        :current-page="lookups?.meta.current_page ?? 1"
+                        :last-page="lookups?.meta.last_page ?? 1"
+                        :order-by="filters.order_by"
+                        :order-direction="filters.order_direction"
+                        @reset="resetFilters"
+                        @sort="handleSort"
+                        @row-click="handleEdit"
+                        @update:page="handlePageChange"
+                        @update:pageSize="handlePageSizeChange"
+                    >
                         <template #filters>
-                            <DataTableSingleFilter title="Trạng thái" v-model="selectedStatus" :options="statusOptions"
-                                :searchable="false" />
+                            <DataTableSingleFilter
+                                title="Trạng thái"
+                                v-model="selectedStatus"
+                                :options="statusOptions"
+                                :searchable="false"
+                            />
                         </template>
                     </DataTableGroup>
                 </div>
@@ -329,22 +403,32 @@ function handlePreviewImage(url: string) {
         </div>
 
         <!-- Lazy-loaded modal (handles loading state internally - NO Suspense) -->
-        <LookupFormModal v-if="showFormModal" :open="showFormModal" :namespace="filters.namespace!"
-            :display_namespace="label" :lookup="selectedLookup" @close="showFormModal = false" />
+        <LookupFormModal
+            v-if="showFormModal"
+            :open="showFormModal"
+            :namespace_id="selectedNamespace?.id ?? ''"
+            :display_namespace="label"
+            :lookup="selectedLookup"
+            :namespaces="namespaces"
+            @close="showFormModal = false"
+            @delete="confirmDelete"
+        />
 
-        <!-- Lookup Details Dialog -->
-        <LookupDetailsDialog v-if="showDetailsDialog" :open="showDetailsDialog" :lookup="selectedLookup"
-            @close="showDetailsDialog = false" @edit="handleEdit" @delete="confirmDelete"
-            @preview-image="handlePreviewImage" />
-
-        <DeleteConfirmation v-model:open="showDeleteDialog" title="Xác nhận xóa"
+        <DeleteConfirmation
+            v-model:open="showDeleteDialog"
+            title="Xác nhận xóa"
             :item-name="selectedLookup?.display_name"
-            description="Bạn có chắc chắn muốn xóa tra cứu &quot;{name}&quot;? Hành động này không thể hoàn tác."
-            @confirm="performDelete" />
+            description='Bạn có chắc chắn muốn xóa tra cứu "{name}"? Hành động này không thể hoàn tác.'
+            @confirm="performDelete"
+        />
 
         <!-- Universal Image Preview Dialog -->
-        <ImagePreviewDialog :open="!!previewImageUrl" :src="previewImageUrl"
-            @update:open="previewImageUrl = $event ? previewImageUrl : null" @close="previewImageUrl = null" />
+        <ImagePreviewDialog
+            :open="!!previewImageUrl"
+            :src="previewImageUrl"
+            @update:open="previewImageUrl = $event ? previewImageUrl : null"
+            @close="previewImageUrl = null"
+        />
     </AppLayout>
 </template>
 

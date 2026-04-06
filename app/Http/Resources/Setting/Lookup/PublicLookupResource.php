@@ -21,13 +21,6 @@ class PublicLookupResource extends JsonResource
             'image_url' => $this->getFirstMediaUrl('image'),
             'image_thumb_url' => $this->getFirstMediaUrl('image', 'thumb'),
             'hex_code' => $this->when(isset($this->metadata['hex_code']) && $this->metadata['hex_code'], $this->metadata['hex_code']),
-
-            'meta' => [
-                'title' => $this->metadata['meta_title'] ?? $this->display_name,
-                'description' => $this->metadata['meta_description'] ?? $this->description,
-                'canonical' => $this->metadata['canonical'] ?? url('/danh-muc/'.$this->slug),
-                'robots' => $this->metadata['robots'] ?? 'index, follow',
-            ],
         ];
     }
 }

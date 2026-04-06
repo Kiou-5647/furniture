@@ -7,7 +7,7 @@
 
 </template>
 <script setup lang="ts">
-import { X } from 'lucide-vue-next';
+import { X } from '@lucide/vue';
 import { Button } from '@/components/ui/button';
 
 const props = defineProps<{

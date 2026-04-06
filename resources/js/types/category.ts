@@ -1,14 +1,13 @@
-import type { Lookup } from "./lookup";
-import type { ProductType } from ".";
-
+import type { Lookup } from './lookup';
+import type { ProductType } from '.';
 
 export interface Category {
     id: string;
     group_id: string;
     group?: Lookup;
 
-    room_ids: string[];
-    rooms?: Lookup[];
+    room_id: string | null;
+    room?: Lookup;
 
     product_type: ProductType;
     product_type_label: string;
@@ -46,19 +45,19 @@ export interface PublicCategory {
 export interface CategoryPagination {
     data: Category[];
     meta: {
-        current_page: number,
-        from: number,
-        last_page: number,
-        path: string,
-        per_page: number,
-        to: number,
-        total: number
+        current_page: number;
+        from: number;
+        last_page: number;
+        path: string;
+        per_page: number;
+        to: number;
+        total: number;
     };
     links: {
-        first: string,
-        last: string,
-        prev: string,
-        next: string
+        first: string;
+        last: string;
+        prev: string;
+        next: string;
     };
 }
 

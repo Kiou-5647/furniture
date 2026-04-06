@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { ArrowUpDown, ArrowUp, ArrowDown } from '@lucide/vue';
+import { FlexRender } from '@tanstack/vue-table';
+import type { Table as VueTable } from '@tanstack/vue-table';
 import {
     Table,
     TableBody,
@@ -7,9 +10,6 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { FlexRender } from '@tanstack/vue-table';
-import type { Table as VueTable } from '@tanstack/vue-table';
-import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-vue-next';
 
 const props = defineProps<{
     table: VueTable<any>;
@@ -48,17 +48,16 @@ function handleRowClick(row: any, event: MouseEvent) {
                             'h-11 px-4 font-bold transition-colors',
                             header.column.columnDef.meta?.align === 'center'
                                 ? 'text-center'
-                                : 'text-left',
+                                : header.column.columnDef.meta?.align === 'right' ? 'text-right' : 'text-left',
                             header.column.getCanSort()
                                 ? 'cursor-pointer hover:bg-muted/50 hover:text-foreground'
                                 : '',
                         ]" @click="handleHeaderClick(header)">
                             <div :class="[
                                 'flex items-center gap-2',
-                                header.column.columnDef.meta?.align ===
-                                    'center'
+                                header.column.columnDef.meta?.align === 'center'
                                     ? 'justify-center'
-                                    : 'justify-start',
+                                    : header.column.columnDef.meta?.align === 'right' ? 'justify-end' : 'justify-start',
                             ]">
                                 <FlexRender v-if="!header.isPlaceholder" :render="header.column.columnDef.header"
                                     :props="header.getContext()" />
@@ -89,17 +88,15 @@ function handleRowClick(row: any, event: MouseEvent) {
                                 width: `${cell.column.getSize()}px`,
                             }" :class="[
                                 'p-3 overflow-hidden',
-                                cell.column.columnDef.meta?.align ===
-                                    'center'
+                                cell.column.columnDef.meta?.align === 'center'
                                     ? 'text-center'
-                                    : 'text-left',
+                                    : cell.column.columnDef.meta?.align === 'right' ? 'text-right' : 'text-left',
                             ]">
                                 <div :class="[
                                     'flex w-full items-center',
-                                    cell.column.columnDef.meta?.align ===
-                                        'center'
+                                    cell.column.columnDef.meta?.align === 'center'
                                         ? 'justify-center'
-                                        : 'justify-start',
+                                        : cell.column.columnDef.meta?.align === 'right' ? 'justify-end' : 'justify-start',
                                 ]">
                                     <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
                                 </div>

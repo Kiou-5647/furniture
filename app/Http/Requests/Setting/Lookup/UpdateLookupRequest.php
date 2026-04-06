@@ -2,16 +2,13 @@
 
 namespace App\Http\Requests\Setting\Lookup;
 
-use App\Enums\LookupType;
+use App\Models\Setting\LookupNamespace;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class UpdateLookupRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return $this->user()->can('lookups.manage');
@@ -19,29 +16,30 @@ class UpdateLookupRequest extends FormRequest
 
     public function prepareForValidation()
     {
+        $namespaceId = $this->input('namespace_id');
+        $finalNamespaceId = $namespaceId === '_null' ? null : $namespaceId;
+
         $this->merge([
             'slug' => Str::slug($this->input('slug') ?? $this->input('display_name')),
+            'namespace_id' => $finalNamespaceId,
         ]);
 
-        if ($this->input('namespace') !== LookupType::Colors->value) {
+        $namespace = LookupNamespace::find($finalNamespaceId);
+        if (! $namespace || $namespace->slug !== 'mau-sac') {
             $metadata = $this->input('metadata', []);
             unset($metadata['hex_code']);
             $this->merge(['metadata' => $metadata]);
         }
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         $lookup = $this->route('lookup');
-        $namespace = $this->input('namespace');
+        $namespaceId = $this->input('namespace_id');
+        $finalNamespaceId = $namespaceId === '_null' ? null : $namespaceId;
 
         return [
-            'namespace' => ['required', Rule::enum(LookupType::class)],
+            'namespace_id' => ['nullable', 'string'],
             'slug' => [
                 'required',
                 'string',
@@ -49,7 +47,7 @@ class UpdateLookupRequest extends FormRequest
                 Rule::unique('lookups')
                     ->ignore($lookup->id)
                     ->whereNull('deleted_at')
-                    ->where(fn ($q) => $q->where('namespace', $namespace)),
+                    ->where(fn ($q) => $q->where('namespace_id', $finalNamespaceId)),
             ],
             'display_name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
@@ -57,25 +55,20 @@ class UpdateLookupRequest extends FormRequest
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'metadata' => ['nullable', 'array'],
             'metadata.hex_code' => [
-                Rule::requiredIf($namespace === LookupType::Colors->value),
                 'nullable',
                 'string',
                 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/',
             ],
-            'metadata.title' => ['nullable', 'string', 'max:255'],
-            'metadata.description' => ['nullable', 'string', 'max:500'],
-            'metadata.canonical' => ['nullable', 'string'],
-            'metadata.robots' => ['nullable', 'string'],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'namespace.enum' => 'Danh mục đã chọn không tồn tại.',
+            'namespace_id.required' => 'Vui lòng chọn danh mục.',
+            'namespace_id.uuid' => 'Danh mục không hợp lệ.',
+            'namespace_id.exists' => 'Danh mục đã chọn không tồn tại.',
             'slug.unique' => 'Khóa này đã tồn tại trong danh mục.',
-            'metadata.hex_code.required' => 'Vui lòng cung cấp mã màu HEX.',
-            'metadata.hex_code.regex' => 'Định dạng mã màu không hợp lệ (VD: #FFFFFF).',
             'image.image' => 'Hình ảnh không hợp lệ.',
             'image.mimes' => 'Hình ảnh phải có định dạng: jpg, jpeg, png, hoặc webp.',
             'image.max' => 'Dung lượng hình ảnh không được vượt quá 2MB.',

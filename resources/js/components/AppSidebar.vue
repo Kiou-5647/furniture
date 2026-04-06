@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavUser from '@/components/NavUser.vue';
@@ -15,7 +16,6 @@ import {
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 import DynamicNavMain from './DynamicNavMain.vue';
-import { computed } from 'vue';
 
 const page = usePage();
 const menu = computed(() => (page.props.menu as NavItem[]) || []);
@@ -41,6 +41,7 @@ const menu = computed(() => (page.props.menu as NavItem[]) || []);
         </SidebarContent>
 
         <SidebarFooter>
+            <NavFooter :items="[]"/>
             <NavUser />
         </SidebarFooter>
     </Sidebar>

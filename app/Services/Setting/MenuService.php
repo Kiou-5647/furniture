@@ -37,6 +37,14 @@ class MenuService
         if ($user->canAny(['categories.view', 'collections.view'])) {
             $productItems = [];
 
+            if ($user->can('products.view')) {
+                $productItems[] = [
+                    'title' => 'Danh sách sản phẩm',
+                    'href' => route('employee.products.items.index'),
+                    'isActive' => Route::is('employee.products.items.*'),
+                ];
+            }
+
             if ($user->can('categories.view')) {
                 $productItems[] = [
                     'title' => 'Danh mục',

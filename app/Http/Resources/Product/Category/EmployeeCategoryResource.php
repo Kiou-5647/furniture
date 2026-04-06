@@ -23,8 +23,8 @@ class EmployeeCategoryResource extends JsonResource
             'product_type' => $this->product_type->value,
             'product_type_label' => $this->product_type->label(),
 
-            'room_ids' => $this->rooms->pluck('id')->toArray(),
-            'rooms' => EmployeeLookupResource::collection($this->whenLoaded('rooms')),
+            'room_id' => $this->room_id,
+            'room' => new EmployeeLookupResource($this->whenLoaded('room')),
 
             'display_name' => $this->display_name,
             'slug' => $this->slug,

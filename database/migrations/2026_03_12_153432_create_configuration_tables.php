@@ -35,9 +35,26 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        Schema::create('lookup_namespaces', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->string('slug', 64)->unique();
+            $table->string('display_name', 255);
+            $table->text('description')->nullable();
+            $table->boolean('for_variants')->default(false);
+            $table->boolean('is_filterable')->default(false);
+            $table->boolean('is_active')->default(true);
+            $table->boolean('is_system')->default(false);
+            $table->timestamps();
+        });
+        DB::statement('CREATE INDEX idx_lookup_namespaces_slug ON lookup_namespaces (slug)');
+        DB::statement('CREATE INDEX idx_lookup_namespaces_trgm ON lookup_namespaces USING GIN (display_name gin_trgm_ops)');
+        DB::statement('CREATE INDEX idx_lookup_namespaces_variants ON lookup_namespaces (for_variants) WHERE for_variants = true');
+        DB::statement('CREATE INDEX idx_lookup_namespaces_active ON lookup_namespaces (is_active) WHERE is_active = true');
+        DB::statement('CREATE INDEX idx_lookup_namespaces_system ON lookup_namespaces (is_system) WHERE is_system = true');
+
         Schema::create('lookups', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('namespace', 64)->nullable();
+            $table->foreignUuid('namespace_id')->nullable()->constrained('lookup_namespaces')->nullOnDelete();
             $table->string('slug', 64);
             $table->string('display_name');
             $table->text('description')->nullable();
@@ -46,9 +63,9 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            $table->index('namespace');
+            $table->index('namespace_id');
         });
-        DB::statement('CREATE UNIQUE INDEX unq_lookups_slug_active ON lookups (namespace, slug) WHERE deleted_at IS NULL');
+        DB::statement('CREATE UNIQUE INDEX unq_lookups_slug_active ON lookups (namespace_id, slug) WHERE deleted_at IS NULL');
         DB::statement('CREATE INDEX idx_lookups_trgm ON lookups USING GIN (display_name gin_trgm_ops)');
         DB::statement('CREATE INDEX idx_lookups_deleted ON lookups(deleted_at) WHERE deleted_at IS NOT NULL');
 
@@ -66,6 +83,7 @@ return new class extends Migration
     {
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('lookups');
+        Schema::dropIfExists('lookup_namespaces');
         Schema::dropIfExists('positions');
         Schema::dropIfExists('settings');
     }

@@ -4,31 +4,32 @@ namespace App\Actions\Product;
 
 use App\Models\Product\Category;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 
 class UpsertCategoryAction
 {
     public function execute(array $data, ?Category $category = null): Category
     {
-        $roomIds = $data['room_ids'] ?? [];
-        unset($data['room_ids']);
-
         $imageFile = $data['image'] ?? null;
         unset($data['image']);
 
-        if ($category && $category->id) {
-            $category->update($data);
-        } else {
-            $category = Category::create($data);
-        }
+        DB::beginTransaction();
 
-        if (! empty($roomIds)) {
-            $category->rooms()->sync($roomIds);
-        } else {
-            $category->rooms()->detach();
-        }
+        try {
+            if ($category && $category->id) {
+                $category->update($data);
+            } else {
+                $category = Category::create($data);
+            }
 
-        if ($imageFile instanceof UploadedFile) {
-            $category->addMedia($imageFile)->toMediaCollection('image');
+            if ($imageFile instanceof UploadedFile) {
+                $category->addMedia($imageFile)->toMediaCollection('image');
+            }
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            throw $e;
         }
 
         return $category;
