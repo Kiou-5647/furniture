@@ -3,10 +3,14 @@
 namespace App\Models\Employee;
 
 use App\Models\Auth\User;
+use App\Models\Inventory\Location;
+use App\Models\Inventory\StockMovement;
+use App\Models\Inventory\StockTransfer;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 use Spatie\MediaLibrary\HasMedia;
@@ -33,6 +37,26 @@ class Employee extends Model implements HasMedia
     public function department(): BelongsTo
     {
         return $this->belongsTo(Department::class);
+    }
+
+    public function managedLocations(): HasMany
+    {
+        return $this->hasMany(Location::class, 'manager_id');
+    }
+
+    public function stockMovements(): HasMany
+    {
+        return $this->hasMany(StockMovement::class, 'performed_by');
+    }
+
+    public function requestedTransfers(): HasMany
+    {
+        return $this->hasMany(StockTransfer::class, 'requested_by');
+    }
+
+    public function receivedTransfers(): HasMany
+    {
+        return $this->hasMany(StockTransfer::class, 'received_by');
     }
 
     public function registerMediaCollections(): void

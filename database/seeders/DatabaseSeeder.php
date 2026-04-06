@@ -20,7 +20,8 @@ class DatabaseSeeder extends Seeder
             LookupSeeder::class,
             CategorySeeder::class,
             CollectionSeeder::class,
-            TimberProductSeeder::class
+            DefaultLocationSeeder::class,
+            TimberProductSeeder::class,
         ]);
     }
 }

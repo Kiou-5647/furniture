@@ -4,18 +4,17 @@ namespace App\Models\Product;
 
 use App\Builders\Product\ProductBuilder;
 use App\Enums\ProductStatus;
+use App\Models\Inventory\Inventory;
 use App\Models\Vendor\Vendor;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
-use Spatie\MediaLibrary\HasMedia;
-use Spatie\MediaLibrary\InteractsWithMedia;
-use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * @method static ProductBuilder|Product query()
@@ -29,36 +28,11 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @method static ProductBuilder|Product newArrivals()
  * @method static ProductBuilder|Product dropship()
  */
-class Product extends Model implements HasMedia
+class Product extends Model
 {
-    use HasFactory, HasUuids, InteractsWithMedia, LogsActivity, SoftDeletes;
+    use HasFactory, HasUuids, LogsActivity, SoftDeletes;
 
     protected $table = 'products';
-
-    protected $attributes = [
-        'features' => '[]',
-        'specifications' => '{}',
-        'option_groups' => '[]',
-        'filterable_options' => '{}',
-        'care_instructions' => '[]',
-        'assembly_info' => '{}',
-    ];
-
-    protected static function booted(): void
-    {
-        static::deleting(function (Product $product) {
-            $product->variants()->delete();
-        });
-
-        static::restoring(function (Product $product) {
-            $product->variants()->restore();
-        });
-
-        static::forceDeleting(function (Product $product) {
-            $product->variants()->forceDelete();
-            $product->clearMediaCollection('images');
-        });
-    }
 
     protected function casts(): array
     {
@@ -91,29 +65,13 @@ class Product extends Model implements HasMedia
         return new ProductBuilder($query);
     }
 
-    public function registerMediaCollections(): void
-    {
-        // No product-level images; images are managed at variant level
-    }
-
-    public function registerMediaConversions(?Media $media = null): void
-    {
-        $this->addMediaConversion('thumb')
-            ->width(400)
-            ->height(400)
-            ->sharpen(10);
-        $this->addMediaConversion('webp')
-            ->format('webp')
-            ->width(1200);
-    }
-
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
             ->logOnly(['name', 'status', 'vendor_id', 'category_id', 'collection_id', 'average_rating', 'review_count', 'is_featured'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
-            ->setDescriptionForEvent(fn(string $eventName) => "Product {$eventName}");
+            ->setDescriptionForEvent(fn (string $eventName) => "Product {$eventName}");
     }
 
     public function vendor(): BelongsTo
@@ -134,6 +92,30 @@ class Product extends Model implements HasMedia
     public function variants(): HasMany
     {
         return $this->hasMany(ProductVariant::class);
+    }
+
+    public function totalInventory(): HasManyThrough
+    {
+        return $this->hasManyThrough(Inventory::class, ProductVariant::class);
+    }
+
+    public function getTotalStock(): int
+    {
+        return $this->totalInventory()->sum('quantity_on_hand');
+    }
+
+    public function getAvailableStock(): int
+    {
+        return $this->totalInventory()->sum('quantity_available');
+    }
+
+    public function isInStock(): bool
+    {
+        if ($this->is_dropship || $this->is_custom_made) {
+            return $this->status === ProductStatus::Published;
+        }
+
+        return $this->getAvailableStock() > 0;
     }
 
     public function requiresAssembly(): bool

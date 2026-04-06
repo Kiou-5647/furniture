@@ -38,8 +38,7 @@ class ProductBuilder extends Builder
     public function search(string $search): self
     {
         return $this->where(function ($query) use ($search) {
-            $query->where('name', 'ilike', "%{$search}%")
-                ->orWhere('slug', 'ilike', "%{$search}%");
+            $query->where('name', 'ilike', "%{$search}%");
         });
     }
 

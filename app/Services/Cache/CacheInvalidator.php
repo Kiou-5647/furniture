@@ -4,92 +4,76 @@ namespace App\Services\Cache;
 
 use App\Models\Product\Category;
 use App\Models\Product\Collection;
-use App\Models\Product\Product as ProductCollection;
 use App\Models\Setting\Lookup;
 use App\Models\Setting\LookupNamespace;
 use App\Models\Vendor\Vendor;
-use App\Services\Product\CategoryService;
-use App\Services\Product\ProductService;
-use App\Services\Setting\LookupService;
-use Illuminate\Support\Facades\Cache;
 
 class CacheInvalidator
 {
+    public function __construct(
+        private CacheService $cache,
+    ) {}
+
     public static function register(): void
     {
-        static::lookupEvents();
-        static::lookupNamespaceEvents();
-        static::categoryEvents();
-        static::collectionsEvents();
-        static::vendorEvents();
-        static::productEvents();
+        $invalidator = app(self::class);
+
+        Lookup::observe(fn () => $invalidator->onLookupChanged());
+        LookupNamespace::observe(fn () => $invalidator->onLookupNamespaceChanged());
+        Category::observe(fn () => $invalidator->onCategoryChanged());
+        Collection::observe(fn () => $invalidator->onCollectionChanged());
+        Vendor::observe(fn () => $invalidator->onVendorChanged());
     }
 
-    protected static function lookupEvents(): void
+    public function onLookupChanged(): void
     {
-        Lookup::saved(fn() => LookupService::clearCache());
-        Lookup::deleted(fn() => LookupService::clearCache());
-
-        Lookup::saved(fn() => Cache::forget('services.product.variant_options'));
-        Lookup::deleted(fn() => Cache::forget('services.product.variant_options'));
-        Lookup::saved(fn() => Cache::forget('services.product.feature_options'));
-        Lookup::deleted(fn() => Cache::forget('services.product.feature_options'));
-        Lookup::saved(fn() => Cache::forget('services.product.spec_namespaces'));
-        Lookup::deleted(fn() => Cache::forget('services.product.spec_namespaces'));
-        Lookup::saved(fn() => Cache::forget('services.product.spec_namespaces'));
-        Lookup::deleted(fn() => Cache::forget('services.product.spec_lookup_options'));
-        Lookup::saved(fn() => Cache::forget('services.product.all_spec_lookup_options'));
-        Lookup::deleted(fn() => Cache::forget('services.product.all_spec_lookup_options'));
+        $this->cache->flushLookups();
     }
 
-    protected static function lookupNamespaceEvents(): void
+    public function onLookupNamespaceChanged(?LookupNamespace $namespace = null): void
     {
-        LookupNamespace::saved(fn() => LookupService::clearCache());
-        LookupNamespace::deleted(fn() => LookupService::clearCache());
+        $this->cache->flushLookups();
 
-        LookupNamespace::saved(fn() => Cache::forget('services.product.variant_options'));
-        LookupNamespace::deleted(fn() => Cache::forget('services.product.variant_options'));
-        LookupNamespace::saved(fn() => Cache::forget('services.product.feature_options'));
-        LookupNamespace::deleted(fn() => Cache::forget('services.product.feature_options'));
-        LookupNamespace::saved(fn() => Cache::forget('services.product.spec_namespaces'));
-        LookupNamespace::deleted(fn() => Cache::forget('services.product.spec_namespaces'));
-        LookupNamespace::saved(fn() => Cache::forget('services.product.spec_namespaces'));
-        LookupNamespace::deleted(fn() => Cache::forget('services.product.spec_lookup_options'));
-        LookupNamespace::saved(fn() => Cache::forget('services.product.all_spec_lookup_options'));
-        LookupNamespace::deleted(fn() => Cache::forget('services.product.all_spec_lookup_options'));
-        LookupNamespace::saved(fn() => CategoryService::clearCache());
-        LookupNamespace::deleted(fn() => CategoryService::clearCache());
-        LookupNamespace::saved(fn() => ProductService::clearCache());
-        LookupNamespace::deleted(fn() => ProductService::clearCache());
+        if ($namespace === null) {
+            $this->cache->flushProducts();
+            $this->cache->flushCategories();
+
+            return;
+        }
+
+        if ($namespace->for_variants) {
+            $this->cache->flushVariantOptions();
+        }
+
+        if ($namespace->slug === 'tinh-nang') {
+            $this->cache->flushFeatureOptions();
+        }
+
+        if (! in_array($namespace->slug, ['tinh-nang', 'nhom-danh-muc'])) {
+            $this->cache->flushSpecNamespaces();
+        }
+
+        if ($namespace->slug === 'nhom-danh-muc') {
+            $this->cache->flushCategoryOptions();
+        }
+
+        if ($namespace->slug === 'phong') {
+            $this->cache->flushRoomOptions();
+        }
     }
 
-    protected static function categoryEvents(): void
+    public function onCategoryChanged(): void
     {
-        Category::saved(fn() => CategoryService::clearCache());
-        Category::deleted(fn() => CategoryService::clearCache());
-
-        Category::saved(fn() => Cache::forget('services.product.categories'));
-        Category::deleted(fn() => Cache::forget('services.product.categories'));
+        $this->cache->flushCategories();
     }
 
-    protected static function collectionsEvents(): void
+    public function onCollectionChanged(): void
     {
-        Collection::saved(fn() => Cache::forget('services.product.collections'));
-        Collection::deleted(fn() => Cache::forget('services.product.collections'));
+        $this->cache->flushCollectionOptions();
     }
 
-    protected static function vendorEvents(): void
+    public function onVendorChanged(): void
     {
-        Vendor::saved(fn() => Cache::forget('services.product.vendors'));
-        Vendor::deleted(fn() => Cache::forget('services.product.vendors'));
-    }
-
-    protected static function productEvents(): void
-    {
-        ProductCollection::saved(fn() => Cache::forget('services.product.collections'));
-        ProductCollection::deleted(fn() => Cache::forget('services.product.collections'));
-
-        Lookup::saved(fn() => ProductService::clearCache());
-        Lookup::deleted(fn() => ProductService::clearCache());
+        $this->cache->flushVendorOptions();
     }
 }

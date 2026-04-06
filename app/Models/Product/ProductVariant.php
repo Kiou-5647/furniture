@@ -2,12 +2,15 @@
 
 namespace App\Models\Product;
 
+use App\Models\Inventory\Inventory;
+use App\Models\Inventory\StockMovement;
+use App\Models\Inventory\StockValuation;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Str;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 use Spatie\Image\Enums\Fit;
@@ -20,48 +23,6 @@ class ProductVariant extends Model implements HasMedia
     use HasFactory, HasUuids, InteractsWithMedia, LogsActivity, SoftDeletes;
 
     protected $table = 'product_variants';
-
-    protected $attributes = [
-        'weight' => '{}',
-        'dimensions' => '{}',
-        'option_values' => '{}',
-        'features' => '[]',
-        'specifications' => '{}',
-        'care_instructions' => '[]',
-    ];
-
-    protected static function booted(): void
-    {
-        static::saving(function (self $variant) {
-            $product = $variant->product;
-            $productName = $product ? Str::title($product->name) : '';
-
-            if (filled($variant->title)) {
-                $title = trim($variant->title);
-                if ($productName && ! str_starts_with(strtolower($title), strtolower($productName))) {
-                    $title = $productName . ' ' . $title;
-                }
-                $variant->title = $title;
-                $variant->slug = Str::slug($variant->title);
-            } elseif ($productName) {
-                $optionLabels = collect($variant->option_values ?? [])
-                    ->map(fn($v) => Str::title($v))
-                    ->implode(' ');
-                $variant->title = $optionLabels
-                    ? $productName . ' ' . $optionLabels
-                    : $productName;
-                $variant->slug = Str::slug($variant->title);
-            }
-        });
-
-        static::forceDeleting(function (self $variant) {
-            $variant->clearMediaCollection('primary_image');
-            $variant->clearMediaCollection('hover_image');
-            $variant->clearMediaCollection('gallery');
-            $variant->clearMediaCollection('dimension_image');
-            $variant->clearMediaCollection('swatch_image');
-        });
-    }
 
     protected function casts(): array
     {
@@ -107,7 +68,7 @@ class ProductVariant extends Model implements HasMedia
             ->logOnly(['sku', 'title', 'slug', 'price', 'compared_at_price', 'build_cost', 'status'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
-            ->setDescriptionForEvent(fn(string $eventName) => "Product variant {$eventName}");
+            ->setDescriptionForEvent(fn (string $eventName) => "Product variant {$eventName}");
     }
 
     public function product(): BelongsTo
@@ -115,9 +76,47 @@ class ProductVariant extends Model implements HasMedia
         return $this->belongsTo(Product::class);
     }
 
+    public function inventories(): HasMany
+    {
+        return $this->hasMany(Inventory::class, 'variant_id');
+    }
+
+    public function stockMovements(): HasMany
+    {
+        return $this->hasMany(StockMovement::class, 'variant_id');
+    }
+
+    public function stockValuations(): HasMany
+    {
+        return $this->hasMany(StockValuation::class, 'variant_id');
+    }
+
+    public function getTotalStock(): int
+    {
+        return $this->inventories()->sum('quantity_on_hand');
+    }
+
+    public function getAvailableStock(): int
+    {
+        return $this->inventories()->sum('quantity_available');
+    }
+
     public function isInStock(): bool
     {
-        return $this->status === 'active';
+        if ($this->product && ($this->product->is_dropship || $this->product->is_custom_made)) {
+            return $this->status === 'active';
+        }
+
+        return $this->getAvailableStock() > 0;
+    }
+
+    public function getTotalValue(): string
+    {
+        $total = $this->stockValuations()
+            ->selectRaw('SUM(batch_cost * quantity_remaining) as total')
+            ->value('total');
+
+        return number_format((float) ($total ?? 0), 0, ',', '.');
     }
 
     public function getDisplayPrice(): string

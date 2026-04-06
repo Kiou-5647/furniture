@@ -6,47 +6,57 @@ use App\Data\Product\CategoryFilterData;
 use App\Models\Product\Category;
 use App\Models\Setting\Lookup;
 use App\Models\Setting\LookupNamespace;
+use App\Services\Cache\CacheService;
+use App\Support\CacheKeys;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 
 class CategoryService
 {
+    public function __construct(
+        private CacheService $cache,
+    ) {}
+
     public function getCategoryGroups(): Collection
     {
-        return Cache::remember('services.category.groups', now()->addHours(24), function () {
-            $counts = Category::query()
-                ->select('group_id')
-                ->selectRaw('COUNT(*) AS count')
-                ->groupBy('group_id')
-                ->pluck('count', 'group_id');
+        return Cache::remember(
+            CacheKeys::category('groups'),
+            CacheKeys::TTL,
+            fn () => $this->buildCategoryGroups()
+        );
+    }
 
-            $ns = LookupNamespace::where('slug', 'nhom-danh-muc')->first();
-            if (! $ns) {
-                return collect();
-            }
+    protected function buildCategoryGroups(): Collection
+    {
+        $counts = Category::query()
+            ->select('group_id')
+            ->selectRaw('COUNT(*) AS count')
+            ->groupBy('group_id')
+            ->pluck('count', 'group_id');
 
-            return $ns->activeLookups()
-                ->get()
-                ->map(fn (Lookup $group) => [
-                    'id' => $group->id,
-                    'slug' => $group->slug,
-                    'label' => $group->display_name,
-                    'count' => $counts[$group->id] ?? 0,
-                ]);
-        });
+        $ns = LookupNamespace::where('slug', 'nhom-danh-muc')->first();
+        if (! $ns) {
+            return collect();
+        }
+
+        return $ns->activeLookups()
+            ->get()
+            ->map(fn (Lookup $group) => [
+                'id' => $group->id,
+                'slug' => $group->slug,
+                'label' => $group->display_name,
+                'count' => $counts[$group->id] ?? 0,
+            ]);
     }
 
     public function getRoomOptions(): Collection
     {
-        return Cache::remember('services.category.rooms', now()->addHours(24), function () {
-            $ns = LookupNamespace::where('slug', 'phong')->first();
-            if (! $ns) {
-                return collect();
-            }
-
-            return $ns->activeLookups()->get();
-        });
+        return Cache::remember(
+            CacheKeys::category('rooms'),
+            CacheKeys::TTL,
+            fn () => LookupNamespace::where('slug', 'phong')->first()?->activeLookups()->get() ?? collect()
+        );
     }
 
     public function getFiltered(CategoryFilterData $filter): LengthAwarePaginator
@@ -74,40 +84,43 @@ class CategoryService
 
     public function getAvailableFilters(string $categorySlug): Collection
     {
-        return Cache::remember("services.category.available_filters.{$categorySlug}", now()->addHours(24), function () use ($categorySlug) {
-            $category = Category::where('slug', $categorySlug)->first();
-            if (! $category || empty($category->filterable_specs)) {
-                return collect();
-            }
-
-            $filterableSlugs = $category->filterable_specs ?? [];
-
-            $namespaces = LookupNamespace::query()
-                ->whereIn('slug', $filterableSlugs)
-                ->where('is_filterable', true)
-                ->where('is_active', true)
-                ->with(['activeLookups' => fn ($q) => $q->orderBy('display_name')])
-                ->get();
-
-            return $namespaces->map(function ($ns) {
-                return [
-                    'namespace' => $ns->slug,
-                    'label' => $ns->display_name,
-                    'options' => $ns->activeLookups->map(fn ($lookup) => [
-                        'slug' => $lookup->slug,
-                        'label' => $lookup->display_name,
-                        'metadata' => $lookup->metadata ?? [],
-                        'image_url' => $lookup->getFirstMediaUrl('image', 'webp') ?: null,
-                    ])->values(),
-                ];
-            })->values();
-        });
+        return Cache::remember(
+            CacheKeys::category("available_filters.{$categorySlug}"),
+            CacheKeys::TTL,
+            fn () => $this->buildAvailableFilters($categorySlug)
+        );
     }
 
-    public static function clearCache(): void
+    protected function buildAvailableFilters(string $categorySlug): Collection
     {
-        Cache::forget('services.category.groups');
-        Cache::forget('services.category.rooms');
-        Cache::forget('services.category.available_filters');
+        $category = Category::where('slug', $categorySlug)->first();
+        if (! $category || empty($category->filterable_specs)) {
+            return collect();
+        }
+
+        $filterableSlugs = $category->filterable_specs ?? [];
+
+        $namespaces = LookupNamespace::query()
+            ->whereIn('slug', $filterableSlugs)
+            ->where('is_filterable', true)
+            ->where('is_active', true)
+            ->with(['activeLookups' => fn ($q) => $q->orderBy('display_name')])
+            ->get();
+
+        return $namespaces->map(fn ($ns) => [
+            'namespace' => $ns->slug,
+            'label' => $ns->display_name,
+            'options' => $ns->activeLookups->map(fn ($lookup) => [
+                'slug' => $lookup->slug,
+                'label' => $lookup->display_name,
+                'metadata' => $lookup->metadata ?? [],
+                'image_url' => $lookup->getFirstMediaUrl('image', 'webp') ?: null,
+            ])->values(),
+        ])->values();
+    }
+
+    public function clearCache(): void
+    {
+        $this->cache->flushCategories();
     }
 }
