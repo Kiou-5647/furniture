@@ -48,24 +48,9 @@ class Location extends Model
         return $this->hasMany(Inventory::class);
     }
 
-    public function stockValuations(): HasMany
-    {
-        return $this->hasMany(StockValuation::class);
-    }
-
     public function stockMovements(): HasMany
     {
         return $this->hasMany(StockMovement::class);
-    }
-
-    public function outgoingTransfers(): HasMany
-    {
-        return $this->hasMany(StockTransfer::class, 'from_location_id');
-    }
-
-    public function incomingTransfers(): HasMany
-    {
-        return $this->hasMany(StockTransfer::class, 'to_location_id');
     }
 
     public function getFullAddress(): string
@@ -82,9 +67,9 @@ class Location extends Model
     public static function generateCode(string $type): string
     {
         $prefix = match ($type) {
-            'warehouse' => 'WH',
-            'retail' => 'RT',
-            'vendor' => 'VN',
+            LocationType::Warehouse->value => 'WH',
+            LocationType::Retail->value => 'RT',
+            LocationType::Vendor->value => 'VN',
             default => 'LOC',
         };
 

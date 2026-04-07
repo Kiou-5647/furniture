@@ -2,7 +2,6 @@
 import { useForm } from '@inertiajs/vue3';
 import { Loader2 } from '@lucide/vue';
 import { watch } from 'vue';
-import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -12,8 +11,13 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import {
+    Field,
+    FieldContent,
+    FieldError,
+    FieldLabel,
+} from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { slugify } from '@/lib/utils';
@@ -93,42 +97,45 @@ function closeModal() {
             </DialogHeader>
 
             <form @submit.prevent="submit" class="space-y-4 py-4">
-                <div class="grid gap-2">
-                    <Label for="display_name">
+                <Field>
+                    <FieldLabel>
                         Tên hiển thị
                         <span class="text-destructive">*</span>
-                    </Label>
-                    <Input
-                        id="display_name"
-                        v-model="form.display_name"
-                        placeholder="VD: Màu sắc"
-                        required
-                        :disabled="namespace?.is_system"
-                    />
-                    <InputError :message="form.errors.display_name" />
-                </div>
+                    </FieldLabel>
+                    <FieldContent>
+                        <Input
+                            v-model="form.display_name"
+                            placeholder="VD: Màu sắc"
+                            required
+                            :disabled="namespace?.is_system"
+                        />
+                        <FieldError :errors="[form.errors.display_name]" />
+                    </FieldContent>
+                </Field>
 
-                <div class="grid gap-2">
-                    <Label for="slug">Khóa (Slug)</Label>
-                    <Input
-                        id="slug"
-                        v-model="form.slug"
-                        placeholder="VD: mau-sac"
-                        :disabled="namespace?.is_system"
-                    />
-                    <InputError :message="form.errors.slug" />
-                </div>
+                <Field>
+                    <FieldLabel>Khóa (Slug)</FieldLabel>
+                    <FieldContent>
+                        <Input
+                            v-model="form.slug"
+                            placeholder="VD: mau-sac"
+                            :disabled="namespace?.is_system"
+                        />
+                        <FieldError :errors="[form.errors.slug]" />
+                    </FieldContent>
+                </Field>
 
-                <div class="grid gap-2">
-                    <Label for="description">Mô tả</Label>
-                    <Textarea
-                        id="description"
-                        v-model="form.description"
-                        placeholder="Mô tả ngắn gọn về danh mục này..."
-                        class="h-20 resize-none"
-                        :disabled="namespace?.is_system"
-                    />
-                </div>
+                <Field>
+                    <FieldLabel>Mô tả</FieldLabel>
+                    <FieldContent>
+                        <Textarea
+                            v-model="form.description"
+                            placeholder="Mô tả ngắn gọn về danh mục này..."
+                            class="h-20 resize-none"
+                            :disabled="namespace?.is_system"
+                        />
+                    </FieldContent>
+                </Field>
 
                 <div
                     class="flex items-center justify-between rounded-lg border p-4"

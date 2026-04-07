@@ -26,13 +26,15 @@ class StockMovement extends Model
             'quantity' => 'integer',
             'quantity_before' => 'integer',
             'quantity_after' => 'integer',
+            'cost_per_unit' => 'decimal:2',
+            'cost_per_unit_before' => 'decimal:2',
         ];
     }
 
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['type', 'quantity', 'quantity_before', 'quantity_after', 'notes'])
+            ->logOnly(['type', 'quantity', 'quantity_before', 'quantity_after', 'cost_per_unit', 'cost_per_unit_before', 'notes'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
             ->setDescriptionForEvent(fn (string $eventName) => "Stock movement {$eventName}");

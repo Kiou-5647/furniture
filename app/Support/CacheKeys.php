@@ -20,4 +20,9 @@ class CacheKeys
     {
         return "lookup.{$key}";
     }
+
+    public static function inventory(string $key): string
+    {
+        return "inventory.{$key}";
+    }
 }

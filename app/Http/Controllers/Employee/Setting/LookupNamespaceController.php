@@ -47,7 +47,7 @@ class LookupNamespaceController
         }
 
         return Inertia::render('employee/settings/lookup-namespaces/Index', [
-            'namespaces' => Inertia::defer(fn() => EmployeeLookupNamespaceResource::collection(
+            'namespaces' => Inertia::defer(fn () => EmployeeLookupNamespaceResource::collection(
                 $query->paginate($perPage)
             )),
             'filters' => [

@@ -4,7 +4,6 @@ import { Loader2, Star, Type, Hash } from '@lucide/vue';
 import { computed, watch } from 'vue';
 import ImageUploader from '@/components/custom/ImageUploader.vue';
 import StatusToggle from '@/components/custom/StatusToggle.vue';
-import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,8 +14,13 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import {
+    Field,
+    FieldContent,
+    FieldError,
+    FieldLabel,
+} from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { slugify } from '@/lib/utils';
 import { store, update } from '@/routes/employee/products/collections';
@@ -137,8 +141,8 @@ function closeModal() {
                     <!-- Left: Images (desktop only) -->
                     <div class="hidden space-y-4 sm:block">
                         <div class="space-y-2">
-                            <Label class="text-sm font-medium"
-                                >Ảnh đại diện</Label
+                            <FieldLabel class="text-sm font-medium"
+                                >Ảnh đại diện</FieldLabel
                             >
                             <ImageUploader
                                 v-model="form.image"
@@ -148,7 +152,9 @@ function closeModal() {
                         </div>
 
                         <div class="space-y-2">
-                            <Label class="text-sm font-medium">Banner</Label>
+                            <FieldLabel class="text-sm font-medium"
+                                >Banner</FieldLabel
+                            >
                             <ImageUploader
                                 v-model="form.banner"
                                 :preview-url="bannerPreviewUrl"
@@ -161,55 +167,59 @@ function closeModal() {
                     <div class="space-y-4">
                         <!-- Name + Slug -->
                         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            <div class="space-y-1.5">
-                                <Label
-                                    class="flex items-center gap-1.5 text-sm"
-                                >
+                            <Field>
+                                <FieldLabel>
                                     <Type
                                         class="h-3.5 w-3.5 shrink-0 text-muted-foreground"
                                     />
                                     Tên hiển thị
                                     <span class="text-destructive">*</span>
-                                </Label>
-                                <Input
-                                    v-model="form.display_name"
-                                    placeholder="VD: Bộ sưu tập mùa hè"
-                                    required
-                                />
-                                <InputError
-                                    :message="form.errors.display_name"
-                                />
-                            </div>
+                                </FieldLabel>
+                                <FieldContent>
+                                    <Input
+                                        v-model="form.display_name"
+                                        placeholder="VD: Bộ sưu tập mùa hè"
+                                        required
+                                    />
+                                    <FieldError
+                                        :errors="[form.errors.display_name]"
+                                    />
+                                </FieldContent>
+                            </Field>
 
-                            <div class="space-y-1.5">
-                                <Label
-                                    class="flex items-center gap-1.5 text-sm"
-                                >
+                            <Field>
+                                <FieldLabel>
                                     <Hash
                                         class="h-3.5 w-3.5 shrink-0 text-muted-foreground"
                                     />
                                     Slug
-                                </Label>
-                                <Input
-                                    v-model="form.slug"
-                                    placeholder="VD: bo-suu-tap-mua-he"
-                                    class="font-mono text-sm"
-                                />
-                                <InputError :message="form.errors.slug" />
-                            </div>
+                                </FieldLabel>
+                                <FieldContent>
+                                    <Input
+                                        v-model="form.slug"
+                                        placeholder="VD: bo-suu-tap-mua-he"
+                                        class="font-mono text-sm"
+                                    />
+                                    <FieldError :errors="[form.errors.slug]" />
+                                </FieldContent>
+                            </Field>
                         </div>
 
                         <!-- Description -->
-                        <div class="space-y-1.5">
-                            <Label class="text-sm">Mô tả</Label>
-                            <Textarea
-                                v-model="form.description"
-                                placeholder="Mô tả chủ đề, phong cách của bộ sưu tập..."
-                                class="min-h-[60px] resize-y text-sm"
-                                rows="2"
-                            />
-                            <InputError :message="form.errors.description" />
-                        </div>
+                        <Field>
+                            <FieldLabel>Mô tả</FieldLabel>
+                            <FieldContent>
+                                <Textarea
+                                    v-model="form.description"
+                                    placeholder="Mô tả chủ đề, phong cách của bộ sưu tập..."
+                                    class="min-h-[60px] resize-y text-sm"
+                                    rows="2"
+                                />
+                                <FieldError
+                                    :errors="[form.errors.description]"
+                                />
+                            </FieldContent>
+                        </Field>
 
                         <!-- Toggles: 2 items = even grid -->
                         <div class="grid grid-cols-2 gap-3">
@@ -229,8 +239,8 @@ function closeModal() {
                         <!-- Mobile: Images on top -->
                         <div class="mb-4 flex flex-col gap-3 sm:hidden">
                             <div class="space-y-1.5">
-                                <Label class="text-sm font-medium"
-                                    >Ảnh đại diện</Label
+                                <FieldLabel class="text-sm font-medium"
+                                    >Ảnh đại diện</FieldLabel
                                 >
                                 <ImageUploader
                                     v-model="form.image"
@@ -240,8 +250,8 @@ function closeModal() {
                                 />
                             </div>
                             <div class="space-y-1.5">
-                                <Label class="text-sm font-medium"
-                                    >Banner</Label
+                                <FieldLabel class="text-sm font-medium"
+                                    >Banner</FieldLabel
                                 >
                                 <ImageUploader
                                     v-model="form.banner"

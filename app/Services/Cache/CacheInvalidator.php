@@ -3,27 +3,13 @@
 namespace App\Services\Cache;
 
 use App\Models\Product\Category;
-use App\Models\Product\Collection;
-use App\Models\Setting\Lookup;
 use App\Models\Setting\LookupNamespace;
-use App\Models\Vendor\Vendor;
 
 class CacheInvalidator
 {
     public function __construct(
         private CacheService $cache,
     ) {}
-
-    public static function register(): void
-    {
-        $invalidator = app(self::class);
-
-        Lookup::observe(fn () => $invalidator->onLookupChanged());
-        LookupNamespace::observe(fn () => $invalidator->onLookupNamespaceChanged());
-        Category::observe(fn () => $invalidator->onCategoryChanged());
-        Collection::observe(fn () => $invalidator->onCollectionChanged());
-        Vendor::observe(fn () => $invalidator->onVendorChanged());
-    }
 
     public function onLookupChanged(): void
     {
@@ -62,9 +48,13 @@ class CacheInvalidator
         }
     }
 
-    public function onCategoryChanged(): void
+    public function onCategoryChanged(?Category $category = null): void
     {
         $this->cache->flushCategories();
+
+        if ($category !== null) {
+            $this->cache->flushCategoryFilters($category->slug);
+        }
     }
 
     public function onCollectionChanged(): void
@@ -75,5 +65,10 @@ class CacheInvalidator
     public function onVendorChanged(): void
     {
         $this->cache->flushVendorOptions();
+    }
+
+    public function onLocationChanged(): void
+    {
+        $this->cache->flushInventory();
     }
 }

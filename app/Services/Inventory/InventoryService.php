@@ -4,7 +4,6 @@ namespace App\Services\Inventory;
 
 use App\Models\Inventory\Inventory;
 use App\Models\Inventory\Location;
-use App\Models\Inventory\StockValuation;
 use App\Models\Product\ProductVariant;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -26,28 +25,19 @@ class InventoryService
                 'location_code' => $inv->location->code,
                 'location_name' => $inv->location->name,
                 'location_type' => $inv->location->type->value,
-                'quantity_on_hand' => $inv->quantity_on_hand,
-                'quantity_reserved' => $inv->quantity_reserved,
-                'quantity_available' => $inv->quantity_available,
-                'reorder_level' => $inv->reorder_level,
-                'is_low_stock' => $inv->isLowStock(),
-                'is_out_of_stock' => $inv->isOutOfStock(),
+                'quantity' => $inv->quantity,
             ])
             ->toArray();
 
-        $totalOnHand = array_sum(array_column($inventories, 'quantity_on_hand'));
-        $totalReserved = array_sum(array_column($inventories, 'quantity_reserved'));
-        $totalAvailable = array_sum(array_column($inventories, 'quantity_available'));
+        $totalQuantity = array_sum(array_column($inventories, 'quantity'));
 
         return [
             'variant_id' => $variant->id,
             'sku' => $variant->sku,
-            'title' => $variant->title,
+            'name' => $variant->name,
             'locations' => $inventories,
             'totals' => [
-                'quantity_on_hand' => $totalOnHand,
-                'quantity_reserved' => $totalReserved,
-                'quantity_available' => $totalAvailable,
+                'quantity' => $totalQuantity,
             ],
         ];
     }
@@ -67,20 +57,13 @@ class InventoryService
                 'inventory_id' => $inv->id,
                 'variant_id' => $inv->variant_id,
                 'sku' => $inv->variant->sku,
-                'title' => $inv->variant->title,
+                'name' => $inv->variant->name,
                 'product_name' => $inv->variant->product?->name,
-                'quantity_on_hand' => $inv->quantity_on_hand,
-                'quantity_reserved' => $inv->quantity_reserved,
-                'quantity_available' => $inv->quantity_available,
-                'reorder_level' => $inv->reorder_level,
-                'is_low_stock' => $inv->isLowStock(),
-                'is_out_of_stock' => $inv->isOutOfStock(),
+                'quantity' => $inv->quantity,
             ])
             ->toArray();
 
-        $totalOnHand = array_sum(array_column($inventories, 'quantity_on_hand'));
-        $totalReserved = array_sum(array_column($inventories, 'quantity_reserved'));
-        $totalAvailable = array_sum(array_column($inventories, 'quantity_available'));
+        $totalQuantity = array_sum(array_column($inventories, 'quantity'));
 
         return [
             'location_id' => $location->id,
@@ -88,27 +71,9 @@ class InventoryService
             'location_name' => $location->name,
             'variants' => $inventories,
             'totals' => [
-                'quantity_on_hand' => $totalOnHand,
-                'quantity_reserved' => $totalReserved,
-                'quantity_available' => $totalAvailable,
+                'quantity' => $totalQuantity,
             ],
         ];
-    }
-
-    /**
-     * Get low stock items (available <= reorder_level).
-     *
-     * @param  Location|null  $location  Optional location filter
-     * @return Collection Collection of low stock inventory items
-     */
-    public function getLowStockItems(?Location $location = null): Collection
-    {
-        return Inventory::query()
-            ->when($location, fn ($query) => $query->where('location_id', $location->id))
-            ->with(['variant.product', 'location'])
-            ->get()
-            ->filter(fn (Inventory $inv) => $inv->isLowStock())
-            ->sortBy('quantity_available');
     }
 
     /**
@@ -120,37 +85,28 @@ class InventoryService
     {
         return Inventory::query()
             ->with(['variant.product', 'location'])
+            ->where('quantity', '<=', 0)
             ->get()
-            ->filter(fn (Inventory $inv) => $inv->isOutOfStock())
-            ->sortBy('quantity_available');
+            ->sortBy('quantity');
     }
 
     /**
-     * Sync inventory available quantity.
-     *
-     * @param  Inventory  $inventory  The inventory to sync
-     */
-    public function syncAvailable(Inventory $inventory): void
-    {
-        $inventory->quantity_available = $inventory->quantity_on_hand - $inventory->quantity_reserved;
-        $inventory->save();
-    }
-
-    /**
-     * Calculate total FIFO value for a variant at a location.
+     * Calculate total value for a variant at a location using WAC.
      *
      * @param  ProductVariant  $variant  The product variant
      * @param  Location  $location  The location
-     * @return float Total FIFO value
+     * @return float Total value (cost_per_unit × quantity)
      */
-    public function calculateFIFOValue(ProductVariant $variant, Location $location): float
+    public function calculateWACValue(ProductVariant $variant, Location $location): float
     {
-        $total = StockValuation::where('variant_id', $variant->id)
+        $inventory = Inventory::where('variant_id', $variant->id)
             ->where('location_id', $location->id)
-            ->where('quantity_remaining', '>', 0)
-            ->selectRaw('SUM(batch_cost * quantity_remaining) as total')
-            ->value('total');
+            ->first();
 
-        return (float) ($total ?? 0);
+        if (! $inventory || $inventory->quantity <= 0) {
+            return 0.0;
+        }
+
+        return (float) $inventory->cost_per_unit * $inventory->quantity;
     }
 }

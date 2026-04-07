@@ -17,6 +17,8 @@ return new class extends Migration
             $table->integer('quantity');
             $table->unsignedInteger('quantity_before')->default(0);
             $table->unsignedInteger('quantity_after')->default(0);
+            $table->decimal('cost_per_unit', 15, 2)->nullable();
+            $table->decimal('cost_per_unit_before', 15, 2)->nullable();
             $table->string('reference_type')->nullable();
             $table->uuid('reference_id')->nullable();
             $table->text('notes')->nullable();

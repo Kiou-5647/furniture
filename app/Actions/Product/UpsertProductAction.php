@@ -2,19 +2,33 @@
 
 namespace App\Actions\Product;
 
+use App\Actions\Inventory\RecordStockMovementAction;
+use App\Enums\StockMovementType;
+use App\Models\Employee\Employee;
+use App\Models\Inventory\Inventory;
+use App\Models\Inventory\Location;
+use App\Models\Inventory\StockMovement;
 use App\Models\Product\Product;
+use App\Models\Product\ProductVariant;
 use App\Services\Product\ProductService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class UpsertProductAction
 {
-    public function __construct(private ProductService $productService) {}
+    public function __construct(
+        private ProductService $productService,
+        private RecordStockMovementAction $recordStockMovement,
+    ) {}
 
     public function execute(array $data, ?Product $product = null): Product
     {
         $variants = Arr::pull($data, 'variants', []);
+        $forceUpdatePrice = Arr::pull($data, '_force_update_price', false);
+        $user = Auth::guard('web')->user();
+        $performedBy = $user?->employee;
 
         DB::beginTransaction();
 
@@ -25,7 +39,7 @@ class UpsertProductAction
                 $product = Product::create($data);
             }
 
-            $this->syncVariants($product, $variants);
+            $this->syncVariants($product, $variants, $forceUpdatePrice, $performedBy);
 
             $this->productService->syncPriceRange($product->id);
             $this->productService->syncFilterableOptions($product->id);
@@ -39,13 +53,14 @@ class UpsertProductAction
         return $product;
     }
 
-    protected function syncVariants(Product $product, array $variants): void
+    protected function syncVariants(Product $product, array $variants, bool $forceUpdatePrice = false, ?Employee $performedBy = null): void
     {
         $existingIds = $product->variants()->pluck('id')->toArray();
         $submittedIds = [];
 
         foreach ($variants as $variantData) {
             $variantId = $variantData['id'] ?? null;
+            $stock = Arr::pull($variantData, 'stock', []);
             $primaryImageFile = Arr::pull($variantData, 'primary_image_file', null);
             $hoverImageFile = Arr::pull($variantData, 'hover_image_file', null);
             $galleryFiles = Arr::pull($variantData, 'gallery_files', []);
@@ -61,6 +76,8 @@ class UpsertProductAction
             }
 
             $submittedIds[] = $variant->id;
+
+            $this->syncVariantStock($variant, $stock, $forceUpdatePrice, $performedBy);
 
             if ($primaryImageFile instanceof UploadedFile) {
                 $variant->clearMediaCollection('primary_image');
@@ -101,5 +118,106 @@ class UpsertProductAction
         if (! empty($toDelete)) {
             $product->variants()->whereIn('id', $toDelete)->delete();
         }
+    }
+
+    protected function syncVariantStock(ProductVariant $variant, array $stockItems, bool $forceUpdatePrice = false, ?Employee $performedBy = null): void
+    {
+        $existingInventory = Inventory::where('variant_id', $variant->id)
+            ->get()
+            ->keyBy('location_id');
+
+        foreach ($stockItems as $stock) {
+            $locationId = $stock['location_id'] ?? null;
+            $newQuantity = (int) ($stock['quantity'] ?? 0);
+            $costPerUnit = $stock['cost_per_unit'] !== null && $stock['cost_per_unit'] !== ''
+                ? (float) $stock['cost_per_unit']
+                : null;
+
+            if (! $locationId) {
+                continue;
+            }
+
+            /** @var Location $location */
+            $location = Location::find($locationId);
+            if (! $location) {
+                continue;
+            }
+
+            $currentQuantity = $existingInventory->get($locationId)?->quantity ?? 0;
+            $quantityDiff = $newQuantity - $currentQuantity;
+
+            if ($quantityDiff === 0) {
+                if ($costPerUnit !== null && $existingInventory->has($locationId)) {
+                    $inventory = $existingInventory->get($locationId);
+                    $oldCost = $inventory->cost_per_unit;
+                    $inventory->cost_per_unit = $costPerUnit;
+                    $inventory->save();
+
+                    StockMovement::create([
+                        'variant_id' => $variant->id,
+                        'location_id' => $location->id,
+                        'type' => StockMovementType::Adjust,
+                        'quantity' => 0,
+                        'quantity_before' => $currentQuantity,
+                        'quantity_after' => $currentQuantity,
+                        'cost_per_unit_before' => $oldCost > 0 ? (float) $oldCost : null,
+                        'cost_per_unit' => $costPerUnit,
+                        'notes' => 'Cập nhật giá vốn',
+                        'performed_by' => $performedBy?->id,
+                    ]);
+
+                    if ($forceUpdatePrice) {
+                        $variant->refresh();
+                        $variant->updateQuietly(['price' => $this->calculatePrice($variant)]);
+                    }
+                }
+
+                continue;
+            }
+
+            if ($quantityDiff > 0) {
+                $this->recordStockMovement->handle(
+                    variant: $variant,
+                    location: $location,
+                    type: StockMovementType::Receive,
+                    quantity: $quantityDiff,
+                    notes: 'Cập nhật tồn kho',
+                    costPerUnit: $costPerUnit,
+                    forceUpdatePrice: $forceUpdatePrice,
+                    performedBy: $performedBy,
+                );
+            } else {
+                $this->recordStockMovement->handle(
+                    variant: $variant,
+                    location: $location,
+                    type: StockMovementType::Adjust,
+                    quantity: abs($quantityDiff),
+                    notes: 'Cập nhật tồn kho (giảm)',
+                    costPerUnit: null,
+                    forceUpdatePrice: $forceUpdatePrice,
+                    performedBy: $performedBy,
+                );
+            }
+        }
+    }
+
+    protected function calculatePrice(ProductVariant $variant): float
+    {
+        $margin = (float) ($variant->profit_margin_value ?? 0);
+        $cost = $variant->getAverageCostPerUnit();
+
+        if ($cost === null || $cost <= 0) {
+            return 0.0;
+        }
+
+        if ($margin <= 0) {
+            return $cost;
+        }
+
+        if ($variant->profit_margin_unit === 'percentage') {
+            return $cost * (1 + $margin / 100);
+        }
+
+        return $cost + $margin;
     }
 }

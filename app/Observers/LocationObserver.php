@@ -16,6 +16,5 @@ class LocationObserver
     public function deleting(Location $location): void
     {
         $location->inventories()->delete();
-        $location->stockValuations()->delete();
     }
 }

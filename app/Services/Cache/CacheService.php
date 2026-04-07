@@ -25,6 +25,7 @@ class CacheService
     {
         Cache::forget(CacheKeys::category('groups'));
         Cache::forget(CacheKeys::category('rooms'));
+        Cache::forget(CacheKeys::product('categories'));
     }
 
     public function flushLookups(): void
@@ -42,6 +43,11 @@ class CacheService
     {
         Cache::forget(CacheKeys::product('categories'));
         Cache::forget(CacheKeys::category('groups'));
+    }
+
+    public function flushInventory(): void
+    {
+        Cache::forget(CacheKeys::inventory('locations'));
     }
 
     public function flushCollectionOptions(): void

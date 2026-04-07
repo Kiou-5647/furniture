@@ -95,6 +95,7 @@ class StoreProductRequest extends FormRequest
             'collection_id' => ['nullable', 'exists:collections,id'],
             'status' => ['required', Rule::in(['draft', 'pending_review', 'published', 'hidden', 'archived'])],
             'name' => ['required', 'string', 'max:255'],
+            '_force_update_price' => ['nullable', 'boolean'],
             'features' => ['nullable', 'array'],
             'features.*.lookup_slug' => ['nullable', 'string'],
             'features.*.display_name' => ['required', 'string'],
@@ -129,8 +130,8 @@ class StoreProductRequest extends FormRequest
             'variants' => ['nullable', 'array'],
             'variants.*.sku' => ['required_with:variants', 'string', 'max:20', Rule::unique('product_variants', 'sku')],
             'variants.*.price' => ['required_with:variants', 'numeric', 'min:0'],
-            'variants.*.compared_at_price' => ['nullable', 'numeric', 'min:0'],
-            'variants.*.build_cost' => ['nullable', 'numeric', 'min:0'],
+            'variants.*.profit_margin_value' => ['nullable', 'numeric', 'min:0'],
+            'variants.*.profit_margin_unit' => ['nullable', Rule::in(['fixed', 'percentage'])],
             'variants.*.weight' => ['nullable', 'array'],
             'variants.*.weight.value' => ['required_with:variants.*.weight', 'numeric', 'min:0'],
             'variants.*.weight.unit' => ['required_with:variants.*.weight', Rule::in(['kg', 'lb'])],
@@ -151,7 +152,7 @@ class StoreProductRequest extends FormRequest
             'variants.*.care_instructions' => ['nullable', 'array'],
             'variants.*.care_instructions.*' => ['string'],
             'variants.*.status' => ['required_with:variants', Rule::in(['active', 'inactive'])],
-            'variants.*.title' => ['nullable', 'string', 'max:255'],
+            'variants.*.name' => ['nullable', 'string', 'max:255'],
             'variants.*.slug' => ['nullable', 'string', 'max:128'],
             'variants.*.description' => ['nullable', 'string'],
             'variants.*.primary_image_file' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
@@ -162,6 +163,10 @@ class StoreProductRequest extends FormRequest
             'variants.*.swatch_image_file' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'variants.*.removed_gallery_ids' => ['nullable', 'array'],
             'variants.*.removed_gallery_ids.*' => ['integer'],
+            'variants.*.stock' => ['nullable', 'array'],
+            'variants.*.stock.*.location_id' => ['required_with:variants.*.stock', 'uuid', 'exists:locations,id'],
+            'variants.*.stock.*.quantity' => ['required_with:variants.*.stock', 'integer', 'min:1'],
+            'variants.*.stock.*.cost_per_unit' => ['nullable', 'numeric', 'min:0'],
         ];
     }
 

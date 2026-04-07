@@ -26,64 +26,52 @@ export function getColumns(
     return [
         {
             accessorKey: 'display_name',
-            header: 'Tên hiển thị',
-            size: 250,
+            header: 'Danh mục',
+            size: 340,
+            enableSorting: true,
             enableHiding: false,
-        },
-        {
-            accessorKey: 'slug',
-            header: 'Khóa',
-            size: 150,
-            meta: { align: 'center' },
-            cell: ({ row }) =>
-                h(
-                    'code',
-                    {
-                        class: 'rounded bg-muted px-1.5 py-0.5 text-xs tabular-nums',
-                    },
-                    row.getValue('slug'),
-                ),
-        },
-        {
-            accessorKey: 'description',
-            header: 'Mô tả',
-            size: 300,
-            meta: { align: 'center' },
-            cell: ({ row }) =>
-                h(
-                    'p',
-                    {
-                        class: 'truncate text-xs text-muted-foreground tabular-nums',
-                    },
-                    row.original.description ?? '—',
-                ),
-        },
-        {
-            accessorKey: 'for_variants',
-            header: 'Biến thể',
-            size: 100,
-            meta: { align: 'center' },
             cell: ({ row }) => {
-                const isVariant = row.original.for_variants;
-                return h('div', { class: 'flex items-center justify-center' }, [
-                    isVariant
-                        ? h(
-                              Badge,
-                              { variant: 'secondary', class: 'text-xs' },
-                              () => 'Có',
-                          )
-                        : h(
-                              'span',
-                              { class: 'text-xs text-muted-foreground' },
-                              '—',
-                          ),
+                const item = row.original;
+                return h('div', { class: 'flex flex-col gap-0.5' }, [
+                    h('div', { class: 'flex items-center gap-2' }, [
+                        h('span', { class: 'font-medium' }, item.display_name),
+                        item.is_system
+                            ? h(
+                                  Badge,
+                                  {
+                                      variant: 'outline',
+                                      class: 'text-xs shrink-0',
+                                  },
+                                  () => 'Hệ thống',
+                              )
+                            : null,
+                        item.for_variants
+                            ? h(
+                                  Badge,
+                                  {
+                                      variant: 'secondary',
+                                      class: 'text-xs shrink-0',
+                                  },
+                                  () => 'Biến thể',
+                              )
+                            : null,
+                    ]),
+                    h(
+                        'code',
+                        {
+                            class: 'rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground tabular-nums w-fit',
+                        },
+                        item.slug,
+                    ),
                 ]);
             },
         },
         {
             accessorKey: 'is_active',
             header: 'Trạng thái',
-            size: 120,
+            size: 100,
+            enableSorting: false,
+            enableHiding: true,
             meta: { align: 'center' },
             cell: ({ row }) => {
                 const active = row.original.is_active;
@@ -108,41 +96,23 @@ export function getColumns(
         {
             accessorKey: 'updated_at',
             header: 'Cập nhật',
-            size: 160,
+            size: 140,
+            enableSorting: true,
+            enableHiding: true,
             meta: { align: 'center' },
             cell: ({ row }) =>
                 h(
                     'span',
                     { class: 'text-xs text-muted-foreground tabular-nums' },
-                    row.getValue('updated_at'),
+                    row.original.updated_at,
                 ),
-        },
-        {
-            accessorKey: 'is_system',
-            header: 'Hệ thống',
-            size: 100,
-            meta: { align: 'center' },
-            cell: ({ row }) => {
-                const isSystem = row.original.is_system;
-                return h('div', { class: 'flex items-center justify-center' }, [
-                    isSystem
-                        ? h(
-                              Badge,
-                              { variant: 'outline', class: 'text-xs' },
-                              () => 'Hệ thống',
-                          )
-                        : h(
-                              'span',
-                              { class: 'text-xs text-muted-foreground' },
-                              '—',
-                          ),
-                ]);
-            },
         },
         {
             id: 'actions',
             header: 'Thao tác',
             size: 80,
+            enableSorting: false,
+            enableHiding: false,
             meta: { align: 'center' },
             cell: ({ row }) => {
                 const item = row.original;

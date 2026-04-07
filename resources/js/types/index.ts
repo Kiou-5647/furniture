@@ -22,3 +22,4 @@ export type ProductStatus =
     | 'archived';
 export type VariantStatus = 'active' | 'inactive';
 export type AssemblyDifficulty = 'easy' | 'medium' | 'hard';
+export type LocationType = 'warehouse' | 'retail' | 'vendor';

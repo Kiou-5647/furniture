@@ -45,4 +45,15 @@ enum StockMovementType: string
     {
         return in_array($this, [self::Sell, self::TransferOut, self::Damage], true);
     }
+
+    public static function options(): array
+    {
+        return collect(self::cases())->map(fn ($case) => [
+            'value' => $case->value,
+            'label' => $case->label(),
+            'color' => $case->color(),
+            'isIncoming' => $case->isIncoming(),
+            'isOutgoing' => $case->isOutgoing(),
+        ])->toArray();
+    }
 }

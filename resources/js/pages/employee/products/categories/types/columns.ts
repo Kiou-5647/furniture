@@ -26,56 +26,72 @@ export function getColumns(
     showGroupColumn: boolean,
 ): ColumnDef<Category>[] {
     const columns: ColumnDef<Category>[] = [
-        // Cột Ảnh
-        {
-            id: 'image',
-            header: 'Hình ảnh',
-            size: 100,
-            meta: { align: 'center' },
-            cell: ({ row }) => {
-                const item = row.original;
-                if (!item.image_thumb_url)
-                    return h(
-                        'div',
-                        { class: 'text-[10px] text-muted-foreground italic' },
-                        'Không ảnh',
-                    );
-                return h(
-                    'div',
-                    { class: 'flex justify-center' },
-                    h('img', {
-                        src: item.image_thumb_url,
-                        class: 'w-16 h-10 rounded-md object-cover border shadow-sm cursor-zoom-in hover:scale-105 transition-all',
-                        onClick: (event: MouseEvent) => {
-                            event.stopPropagation();
-                            onPreviewImage(item.image_url!);
-                        },
-                    }),
-                );
-            },
-        },
-        // Cột Tên
         {
             accessorKey: 'display_name',
-            header: 'Tên danh mục',
-            size: 250,
+            header: 'Danh mục',
+            size: 320,
             enableSorting: true,
             enableHiding: false,
+            cell: ({ row }) => {
+                const item = row.original;
+                return h('div', { class: 'flex items-center gap-3' }, [
+                    item.image_thumb_url
+                        ? h('img', {
+                              src: item.image_thumb_url,
+                              class: 'w-12 h-8 rounded-md object-cover border shadow-sm cursor-zoom-in hover:scale-105 transition-all shrink-0',
+                              onClick: (event: MouseEvent) => {
+                                  event.stopPropagation();
+                                  onPreviewImage(item.image_url!);
+                              },
+                          })
+                        : h(
+                              'div',
+                              {
+                                  class: 'w-12 h-8 rounded-md border border-dashed flex items-center justify-center bg-muted/50 shrink-0',
+                              },
+                              [
+                                  h(
+                                      'span',
+                                      {
+                                          class: 'text-[8px] text-muted-foreground',
+                                      },
+                                      'N/A',
+                                  ),
+                              ],
+                          ),
+                    h('div', { class: 'min-w-0 flex-1' }, [
+                        h(
+                            'span',
+                            { class: 'font-medium truncate block' },
+                            item.display_name,
+                        ),
+                        h(
+                            'span',
+                            {
+                                class: 'text-xs text-muted-foreground tabular-nums truncate block',
+                            },
+                            item.slug,
+                        ),
+                    ]),
+                ]);
+            },
         },
     ];
 
-    // Cột Nhóm (Tùy chọn)
     if (showGroupColumn) {
         columns.push({
             id: 'group',
             header: 'Nhóm',
-            size: 150,
+            size: 120,
+            enableSorting: false,
+            enableHiding: true,
+            meta: { align: 'center' },
             cell: ({ row }) =>
                 h(
                     Badge,
                     {
                         variant: 'outline',
-                        class: 'bg-primary/5 border-primary/20 text-primary',
+                        class: 'bg-primary/5 border-primary/20 text-primary text-xs',
                     },
                     () => row.original.group?.display_name ?? 'N/A',
                 ),
@@ -86,45 +102,23 @@ export function getColumns(
         {
             accessorKey: 'product_type_label',
             header: 'Loại',
-            size: 120,
+            size: 100,
+            enableSorting: false,
+            enableHiding: true,
             meta: { align: 'center' },
             cell: ({ row }) =>
                 h(
                     Badge,
-                    { variant: 'secondary' },
+                    { variant: 'secondary', class: 'text-xs' },
                     () => row.original.product_type_label,
-                ),
-        },
-        {
-            accessorKey: 'slug',
-            header: 'Khóa',
-            size: 150,
-            meta: { align: 'center' },
-            cell: ({ row }) =>
-                h(
-                    'span',
-                    { class: 'text-xs text-muted-foreground tabular-nums' },
-                    row.original.slug,
-                ),
-        },
-        {
-            accessorKey: 'description',
-            header: 'Mô tả',
-            size: 300,
-            meta: { align: 'center' },
-            cell: ({ row }) =>
-                h(
-                    'p',
-                    {
-                        class: 'truncate text-xs text-muted-foreground tabular-nums',
-                    },
-                    row.getValue('description'),
                 ),
         },
         {
             accessorKey: 'is_active',
             header: 'Trạng thái',
-            size: 120,
+            size: 100,
+            enableSorting: false,
+            enableHiding: true,
             meta: { align: 'center' },
             cell: ({ row }) => {
                 const active = row.original.is_active;
@@ -146,11 +140,12 @@ export function getColumns(
                 );
             },
         },
-        // Cột Thời gian
         {
             accessorKey: 'updated_at',
             header: 'Cập nhật',
-            size: 160,
+            size: 140,
+            enableSorting: true,
+            enableHiding: true,
             meta: { align: 'center' },
             cell: ({ row }) =>
                 h(
@@ -159,11 +154,12 @@ export function getColumns(
                     row.original.updated_at,
                 ),
         },
-        // Cột Thao tác
         {
             id: 'actions',
             header: 'Thao tác',
             size: 80,
+            enableSorting: false,
+            enableHiding: false,
             meta: { align: 'center' },
             cell: ({ row }) => {
                 const item = row.original;

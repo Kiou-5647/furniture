@@ -1,6 +1,12 @@
 import type { ProductSpecifications, SpecItem } from './lookup';
 import type { AssemblyDifficulty, ProductStatus, VariantStatus } from '.';
 
+export interface VariantStock {
+    location_id: string;
+    quantity: number;
+    cost_per_unit: number | null;
+}
+
 export interface Product {
     id: string;
     vendor_id: string | null;
@@ -79,12 +85,12 @@ export interface ProductVariant {
     id: string;
     product_id: string;
     sku: string;
-    title: string | null;
+    name: string | null;
     slug: string | null;
     description: string | null;
     price: string | number;
-    compared_at_price: string | number | null;
-    build_cost: string | number | null;
+    profit_margin_value: string | number | null;
+    profit_margin_unit: 'fixed' | 'percentage';
     weight: Record<string, any>;
     dimensions: Record<string, any>;
     option_values: Record<string, any>;
@@ -104,6 +110,7 @@ export interface ProductVariant {
     swatch_image_thumb_url?: string | null;
     swatch_image_file?: File | null;
     removed_gallery_ids?: number[];
+    stock?: VariantStock[];
     created_at: string;
     updated_at: string;
 }

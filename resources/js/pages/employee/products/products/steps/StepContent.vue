@@ -14,8 +14,7 @@ import {
     ChevronRight,
     CalendarIcon,
 } from '@lucide/vue';
-import { computed, inject, ref } from 'vue';
-import InputError from '@/components/InputError.vue';
+import { computed, inject, ref, watch } from 'vue';
 import {
     Accordion,
     AccordionContent,
@@ -26,6 +25,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+    Field,
+    FieldContent,
+    FieldError,
+    FieldLabel,
+} from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -52,6 +57,19 @@ const ctx = inject<ProductFormContext>('productForm')!;
 const page = usePage();
 
 const activeAccordion = ref<string | undefined>(undefined);
+
+watch(
+    () => ctx.newArrivalMonths,
+    (months: number | null) => {
+        if (months && ctx.form.published_date) {
+            const pubDate = new Date(ctx.form.published_date);
+            pubDate.setMonth(pubDate.getMonth() + months);
+            ctx.form.new_arrival_until = pubDate.toISOString().split('T')[0];
+        } else if (months === null) {
+            ctx.form.new_arrival_until = '';
+        }
+    },
+);
 
 const props = defineProps<{
     vendorOptions: { id: string; label: string }[];
@@ -262,268 +280,328 @@ function setSpecGroupWithLabel(ns: string) {
             <Label class="text-lg font-semibold">Thông tin cơ bản</Label>
             <div class="grid grid-cols-2 gap-3 md:grid-cols-3">
                 <div class="col-span-2 flex flex-col gap-2">
-                    <Label for="name"
-                        >Tên sản phẩm
-                        <span class="text-destructive">*</span></Label
-                    >
-                    <Input
-                        id="name"
-                        v-model="ctx.form.name"
-                        placeholder="VD: Sofa Sven da thật"
-                        required
-                       
-                    />
-                    <InputError :message="ctx.form.errors.name" />
+                    <Field>
+                        <FieldLabel for="name"
+                            >Tên sản phẩm
+                            <span class="text-destructive">*</span></FieldLabel
+                        >
+                        <FieldContent>
+                            <Input
+                                id="name"
+                                v-model="ctx.form.name"
+                                placeholder="VD: Sofa Sven da thật"
+                                class="text-sm"
+                                required
+                            />
+                            <FieldError :errors="[ctx.form.errors.name]" />
+                        </FieldContent>
+                    </Field>
                 </div>
 
                 <div class="col-span-2 flex flex-col gap-2 md:col-span-1">
-                    <Label>Nhà cung cấp</Label>
-                    <Select v-model="ctx.form.vendor_id">
-                        <SelectTrigger class="w-full text-sm">
-                            <SelectValue placeholder="Chọn..." />
-                        </SelectTrigger>
-                        <SelectContent
-                            class="min-w-(--radix-select-trigger-width)"
-                        >
-                            <SelectItem :value="null">Không có</SelectItem>
-                            <SelectItem
-                                v-for="v in vendorOptions"
-                                :key="v.id"
-                                :value="v.id"
-                               
-                            >
-                                {{ v.label }}
-                            </SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <InputError :message="ctx.form.errors.vendor_id" />
+                    <Field>
+                        <FieldLabel>Nhà cung cấp</FieldLabel>
+                        <FieldContent>
+                            <Select v-model="ctx.form.vendor_id">
+                                <SelectTrigger class="w-full text-sm">
+                                    <SelectValue placeholder="Chọn..." />
+                                </SelectTrigger>
+                                <SelectContent
+                                    class="min-w-(--radix-select-trigger-width)"
+                                >
+                                    <SelectItem :value="null"
+                                        >Không có</SelectItem
+                                    >
+                                    <SelectItem
+                                        v-for="v in vendorOptions"
+                                        :key="v.id"
+                                        :value="v.id"
+                                    >
+                                        {{ v.label }}
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <FieldError :errors="[ctx.form.errors.vendor_id]" />
+                        </FieldContent>
+                    </Field>
                 </div>
             </div>
 
             <div class="grid grid-cols-2 gap-3 md:grid-cols-3">
                 <div class="flex flex-col gap-2">
-                    <Label
-                        >Danh mục<span class="text-destructive">*</span></Label
-                    >
-                    <Select v-model="ctx.form.category_id">
-                        <SelectTrigger class="w-full text-sm">
-                            <SelectValue placeholder="Chọn..." />
-                        </SelectTrigger>
-                        <SelectContent
-                            class="min-w-(--radix-select-trigger-width)"
+                    <Field>
+                        <FieldLabel
+                            >Danh mục<span class="text-destructive"
+                                >*</span
+                            ></FieldLabel
                         >
-                            <SelectItem
-                                v-for="c in categoryOptions"
-                                :key="c.id"
-                                :value="c.id"
-                               
-                            >
-                                {{ c.label }}
-                            </SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <InputError :message="ctx.form.errors.category_id" />
+                        <FieldContent>
+                            <Select v-model="ctx.form.category_id">
+                                <SelectTrigger class="w-full text-sm">
+                                    <SelectValue placeholder="Chọn..." />
+                                </SelectTrigger>
+                                <SelectContent
+                                    class="min-w-(--radix-select-trigger-width)"
+                                >
+                                    <SelectItem
+                                        v-for="c in categoryOptions"
+                                        :key="c.id"
+                                        :value="c.id"
+                                    >
+                                        {{ c.label }}
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <FieldError
+                                :errors="[ctx.form.errors.category_id]"
+                            />
+                        </FieldContent>
+                    </Field>
                 </div>
 
                 <div class="flex flex-col gap-2">
-                    <Label
-                        >Bộ sưu tập<span class="text-destructive"
-                            >*</span
-                        ></Label
-                    >
-                    <Select v-model="ctx.form.collection_id">
-                        <SelectTrigger class="w-full text-sm">
-                            <SelectValue placeholder="Chọn..." />
-                        </SelectTrigger>
-                        <SelectContent
-                            class="min-w-(--radix-select-trigger-width)"
+                    <Field>
+                        <FieldLabel
+                            >Bộ sưu tập<span class="text-destructive"
+                                >*</span
+                            ></FieldLabel
                         >
-                            <SelectItem
-                                v-for="c in collectionOptions"
-                                :key="c.id"
-                                :value="c.id"
-                               
-                            >
-                                {{ c.label }}
-                            </SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <InputError :message="ctx.form.errors.collection_id" />
+                        <FieldContent>
+                            <Select v-model="ctx.form.collection_id">
+                                <SelectTrigger class="w-full text-sm">
+                                    <SelectValue placeholder="Chọn..." />
+                                </SelectTrigger>
+                                <SelectContent
+                                    class="min-w-(--radix-select-trigger-width)"
+                                >
+                                    <SelectItem
+                                        v-for="c in collectionOptions"
+                                        :key="c.id"
+                                        :value="c.id"
+                                    >
+                                        {{ c.label }}
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <FieldError
+                                :errors="[ctx.form.errors.collection_id]"
+                            />
+                        </FieldContent>
+                    </Field>
                 </div>
                 <div class="flex flex-col gap-2">
-                    <Label
-                        >Trạng thái
-                        <span class="text-destructive">*</span></Label
-                    >
-                    <Select v-model="ctx.form.status">
-                        <SelectTrigger class="w-full text-sm">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent
-                            class="min-w-(--radix-select-trigger-width)"
+                    <Field>
+                        <FieldLabel
+                            >Trạng thái
+                            <span class="text-destructive">*</span></FieldLabel
                         >
-                            <SelectItem
-                                v-for="s in ctx.statusOptions"
-                                :key="s.value"
-                                :value="s.value"
-                               
-                            >
-                                {{ s.label }}
-                            </SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <InputError :message="ctx.form.errors.status" />
+                        <FieldContent>
+                            <Select v-model="ctx.form.status">
+                                <SelectTrigger class="w-full text-sm">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent
+                                    class="min-w-(--radix-select-trigger-width)"
+                                >
+                                    <SelectItem
+                                        v-for="s in ctx.statusOptions"
+                                        :key="s.value"
+                                        :value="s.value"
+                                    >
+                                        {{ s.label }}
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <FieldError :errors="[ctx.form.errors.status]" />
+                        </FieldContent>
+                    </Field>
                 </div>
                 <div class="flex flex-col gap-2">
-                    <Label>Bảo hành (tháng)</Label>
-                    <Input
-                        :model-value="ctx.form.warranty_months ?? undefined"
-                        @update:model-value="
-                            ctx.form.warranty_months = $event
-                                ? Number($event)
-                                : null
-                        "
-                        placeholder="12"
-                       
-                    />
-                    <InputError :message="ctx.form.errors.warranty_months" />
-                </div>
-                <div class="flex flex-col gap-2">
-                    <Label>Ngày xuất bản</Label>
-                    <Popover v-slot="{ close }">
-                        <PopoverTrigger as-child>
-                            <Button
-                                variant="outline"
-                                :class="
-                                    cn(
-                                        'w-full justify-start text-left font-normal',
-                                        !ctx.form.published_date &&
-                                            'text-muted-foreground',
-                                    )
-                                "
-                            >
-                                <CalendarIcon />
-                                {{ ctx.form.published_date ?? 'Chọn ngày' }}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent class="w-auto p-0" align="start">
-                            <Calendar
+                    <Field>
+                        <FieldLabel>Bảo hành (tháng)</FieldLabel>
+                        <FieldContent>
+                            <Input
                                 :model-value="
-                                    ctx.form.published_date
-                                        ? parseDate(ctx.form.published_date)
-                                        : undefined
+                                    ctx.form.warranty_months ?? undefined
                                 "
                                 @update:model-value="
-                                    (date) => {
-                                        ctx.form.published_date = date
-                                            ? date.toString()
-                                            : '';
-                                        close();
-                                    }
+                                    ctx.form.warranty_months = $event
+                                        ? Number($event)
+                                        : null
                                 "
-                                :default-placeholder="undefined"
-                                layout="month-and-year"
-                                initial-focus
+                                placeholder="12"
                             />
-                        </PopoverContent>
-                    </Popover>
+                            <FieldError
+                                :errors="[ctx.form.errors.warranty_months]"
+                            />
+                        </FieldContent>
+                    </Field>
+                </div>
+
+                <div class="col-span-2 flex flex-col gap-2 md:col-span-1">
+                    <Field>
+                        <FieldLabel>Ngày xuất bản</FieldLabel>
+                        <FieldContent>
+                            <Popover v-slot="{ close }">
+                                <PopoverTrigger as-child>
+                                    <Button
+                                        variant="outline"
+                                        :class="
+                                            cn(
+                                                'w-full justify-start text-left font-normal',
+                                                !ctx.form.published_date &&
+                                                    'text-muted-foreground',
+                                            )
+                                        "
+                                    >
+                                        <CalendarIcon />
+                                        {{
+                                            ctx.form.published_date ??
+                                            'Chọn ngày'
+                                        }}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent
+                                    class="w-auto p-0"
+                                    align="start"
+                                >
+                                    <Calendar
+                                        :model-value="
+                                            ctx.form.published_date
+                                                ? parseDate(
+                                                      ctx.form.published_date,
+                                                  )
+                                                : undefined
+                                        "
+                                        @update:model-value="
+                                            (date) => {
+                                                ctx.form.published_date = date
+                                                    ? date.toString()
+                                                    : '';
+                                                close();
+                                            }
+                                        "
+                                        :default-placeholder="undefined"
+                                        layout="month-and-year"
+                                        initial-focus
+                                    />
+                                </PopoverContent>
+                            </Popover>
+                        </FieldContent>
+                    </Field>
                 </div>
                 <div
                     v-if="ctx.form.status === 'published'"
                     class="col-span-2 flex flex-col gap-2 md:col-span-1"
                 >
-                    <Label>Thời gian hàng mới</Label>
-                    <template v-if="!product || !ctx.form.new_arrival_until">
-                        <div class="flex gap-2">
-                            <Select
-                                :model-value="
-                                    ctx.newArrivalMonths
-                                        ? String(ctx.newArrivalMonths)
-                                        : ''
-                                "
-                                @update:model-value="
-                                    ctx.newArrivalMonths = $event
-                                        ? Number($event)
-                                        : null
-                                "
-                            >
-                                <SelectTrigger class="flex w-full">
-                                    <SelectValue placeholder="Chọn..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="1"
-                                        >1 tháng</SelectItem
+                    <Field>
+                        <FieldLabel>Thời gian hàng mới</FieldLabel>
+                        <FieldContent>
+                            <!-- Show select + input when new_arrival_until is null -->
+                            <template v-if="!ctx.form.new_arrival_until">
+                                <div class="flex gap-2">
+                                    <Select
+                                        :model-value="
+                                            ctx.newArrivalMonths
+                                                ? String(ctx.newArrivalMonths)
+                                                : ''
+                                        "
+                                        @update:model-value="
+                                            ctx.newArrivalMonths = $event
+                                                ? Number($event)
+                                                : null
+                                        "
                                     >
-                                    <SelectItem value="2"
-                                        >2 tháng</SelectItem
+                                        <SelectTrigger class="flex w-full">
+                                            <SelectValue
+                                                placeholder="Chọn..."
+                                            />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="1"
+                                                >1 tháng</SelectItem
+                                            >
+                                            <SelectItem value="2"
+                                                >2 tháng</SelectItem
+                                            >
+                                            <SelectItem value="3"
+                                                >3 tháng</SelectItem
+                                            >
+                                            <SelectItem value="6"
+                                                >6 tháng</SelectItem
+                                            >
+                                            <SelectItem value="12"
+                                                >12 tháng</SelectItem
+                                            >
+                                        </SelectContent>
+                                    </Select>
+                                    <Input
+                                        :model-value="
+                                            ctx.newArrivalMonths ?? ''
+                                        "
+                                        @update:model-value="
+                                            ctx.newArrivalMonths = $event
+                                                ? Number($event)
+                                                : null
+                                        "
+                                        placeholder="Nhập"
+                                        class="w-20 text-sm"
+                                    />
+                                </div>
+                            </template>
+                            <!-- Always show calendar when new_arrival_until is set -->
+                            <template v-else>
+                                <Popover v-slot="{ close }">
+                                    <PopoverTrigger as-child>
+                                        <Button
+                                            variant="outline"
+                                            :class="
+                                                cn(
+                                                    'w-full justify-start text-left font-normal',
+                                                    !ctx.form
+                                                        .new_arrival_until &&
+                                                        'text-muted-foreground',
+                                                )
+                                            "
+                                        >
+                                            <CalendarIcon />
+                                            {{
+                                                ctx.form.new_arrival_until ??
+                                                'Chọn ngày kết thúc'
+                                            }}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent
+                                        class="w-auto p-0"
+                                        align="start"
                                     >
-                                    <SelectItem value="3"
-                                        >3 tháng</SelectItem
-                                    >
-                                    <SelectItem value="6"
-                                        >6 tháng</SelectItem
-                                    >
-                                    <SelectItem value="12"
-                                        >12 tháng</SelectItem
-                                    >
-                                </SelectContent>
-                            </Select>
-                            <Input
-                                :model-value="ctx.newArrivalMonths ?? ''"
-                                @update:model-value="
-                                    ctx.newArrivalMonths = $event
-                                        ? Number($event)
-                                        : null
-                                "
-                                placeholder="Nhập"
-                                class="w-20 text-sm"
-                            />
-                        </div>
-                    </template>
-                    <template v-else>
-                        <Popover v-slot="{ close }">
-                            <PopoverTrigger as-child>
-                                <Button
-                                    variant="outline"
-                                    :class="
-                                        cn(
-                                            'w-full justify-start text-left font-normal',
-                                            !ctx.form.new_arrival_until &&
-                                                'text-muted-foreground',
-                                        )
-                                    "
-                                >
-                                    <CalendarIcon />
-                                    {{
-                                        ctx.form.new_arrival_until ??
-                                        'Chọn ngày kết thúc'
-                                    }}
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent class="w-auto p-0" align="start">
-                                <Calendar
-                                    :model-value="
-                                        ctx.form.new_arrival_until
-                                            ? parseDate(
-                                                  ctx.form.new_arrival_until,
-                                              )
-                                            : undefined
-                                    "
-                                    @update:model-value="
-                                        (date) => {
-                                            ctx.form.new_arrival_until = date
-                                                ? date.toString()
-                                                : '';
-                                            close();
-                                        }
-                                    "
-                                    :default-placeholder="undefined"
-                                    layout="month-and-year"
-                                    initial-focus
-                                />
-                            </PopoverContent>
-                        </Popover>
-                    </template>
+                                        <Calendar
+                                            :model-value="
+                                                ctx.form.new_arrival_until
+                                                    ? parseDate(
+                                                          ctx.form
+                                                              .new_arrival_until,
+                                                      )
+                                                    : undefined
+                                            "
+                                            @update:model-value="
+                                                (date) => {
+                                                    ctx.form.new_arrival_until =
+                                                        date
+                                                            ? date.toString()
+                                                            : '';
+                                                    close();
+                                                }
+                                            "
+                                            :default-placeholder="undefined"
+                                            layout="month-and-year"
+                                            initial-focus
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                            </template>
+                        </FieldContent>
+                    </Field>
                 </div>
             </div>
 
@@ -553,7 +631,6 @@ function setSpecGroupWithLabel(ns: string) {
                 />
                 <Label
                     for="is_dropship"
-                   
                     :class="!ctx.form.vendor_id && 'text-muted-foreground'"
                     >Dropship
                     <span
@@ -569,9 +646,7 @@ function setSpecGroupWithLabel(ns: string) {
                     v-model="ctx.form.is_custom_made"
                     class="h-4 w-7"
                 />
-                <Label for="is_custom_made"
-                    >Sản phẩm đặt theo yêu cầu</Label
-                >
+                <Label for="is_custom_made">Sản phẩm đặt theo yêu cầu</Label>
             </div>
         </div>
 
@@ -595,7 +670,7 @@ function setSpecGroupWithLabel(ns: string) {
                             >Chọn từ tra cứu:</Label
                         >
                         <div
-                            class="grid max-h-60 grid-cols-2 gap-2 overflow-y-auto rounded-md border p-2 md:grid-cols-3"
+                            class="grid max-h-60 grid-cols-1 gap-2 overflow-y-auto rounded-md border p-2 sm:grid-cols-2 lg:grid-cols-3"
                         >
                             <label
                                 v-for="opt in ctx.featureOptions"
@@ -649,7 +724,6 @@ function setSpecGroupWithLabel(ns: string) {
                                     <Input
                                         v-model="feature.display_name"
                                         placeholder="Tên tính năng"
-                                       
                                     />
                                     <Button
                                         type="button"
@@ -695,7 +769,6 @@ function setSpecGroupWithLabel(ns: string) {
                                 <Input
                                     v-model="item.display_name"
                                     placeholder="Tên tính năng"
-                                   
                                 />
                                 <Button
                                     type="button"
@@ -717,7 +790,6 @@ function setSpecGroupWithLabel(ns: string) {
                             v-if="newFeatureItems.length > 0"
                             type="button"
                             size="sm"
-                           
                             @click="addFreeFeatureItems"
                         >
                             <Plus class="mr-1 h-4 w-4" /> Thêm vào danh sách
@@ -738,7 +810,6 @@ function setSpecGroupWithLabel(ns: string) {
                             type="button"
                             variant="outline"
                             size="sm"
-                           
                             @click="
                                 emit(
                                     'openLookupForm',
@@ -752,7 +823,6 @@ function setSpecGroupWithLabel(ns: string) {
                         <Button
                             type="button"
                             size="sm"
-                           
                             @click="openNewGroupForm()"
                         >
                             <Plus class="mr-1 h-4 w-4" /> Thêm nhóm
@@ -789,7 +859,6 @@ function setSpecGroupWithLabel(ns: string) {
                         <Input
                             v-model="ctx.specGroupName"
                             placeholder="Tên nhóm"
-                           
                         />
 
                         <!-- Namespace selector -->
@@ -808,7 +877,6 @@ function setSpecGroupWithLabel(ns: string) {
                                     v-for="ns in specNamespaces"
                                     :key="ns.namespace"
                                     :value="ns.namespace"
-                                   
                                 >
                                     {{ ns.label }}
                                 </SelectItem>
@@ -828,9 +896,7 @@ function setSpecGroupWithLabel(ns: string) {
                                 v-model="ctx.specGroupIsFilterable"
                                 class="h-4 w-7"
                             />
-                            <Label for="spec_filterable"
-                                >Cho phép lọc</Label
-                            >
+                            <Label for="spec_filterable">Cho phép lọc</Label>
                         </div>
 
                         <!-- Lookup value selection -->
@@ -967,7 +1033,6 @@ function setSpecGroupWithLabel(ns: string) {
                                     <Input
                                         v-model="item.display_name"
                                         placeholder="Giá trị"
-                                       
                                     />
                                     <Button
                                         type="button"
@@ -991,7 +1056,6 @@ function setSpecGroupWithLabel(ns: string) {
                         <div class="flex gap-2">
                             <Button
                                 size="sm"
-                               
                                 :disabled="!ctx.specGroupName.trim()"
                                 @click="
                                     ctx.addSpecGroup();
@@ -1009,7 +1073,6 @@ function setSpecGroupWithLabel(ns: string) {
                                 type="button"
                                 variant="outline"
                                 size="sm"
-                               
                                 @click="cancelEditGroup()"
                             >
                                 Hủy
@@ -1141,12 +1204,10 @@ function setSpecGroupWithLabel(ns: string) {
                             v-model="ctx.newCareInstruction"
                             placeholder="Thêm hướng dẫn..."
                             @keyup.enter="ctx.addCareInstruction"
-                           
                         />
                         <Button
                             type="button"
                             size="sm"
-                           
                             @click="ctx.addCareInstruction"
                         >
                             <Plus class="mr-1 h-4 w-4" /> Thêm
@@ -1162,22 +1223,22 @@ function setSpecGroupWithLabel(ns: string) {
                     </div>
                 </AccordionTrigger>
                 <AccordionContent class="space-y-3 pb-4">
-                    <div class="flex items-center gap-2">
+                    <Field orientation="horizontal">
                         <Switch
                             id="assembly_required"
                             v-model="ctx.form.assembly_info.required"
                             class="h-4 w-7"
                         />
-                        <Label for="assembly_required"
-                            >Yêu cầu lắp ráp</Label
+                        <FieldLabel for="assembly_required"
+                            >Yêu cầu lắp ráp</FieldLabel
                         >
-                    </div>
+                    </Field>
 
                     <template v-if="ctx.form.assembly_info.required">
                         <div class="grid grid-cols-2 gap-3">
-                            <div class="grid gap-1.5">
-                                <Label
-                                    >Thời gian ước tính (phút)</Label
+                            <Field>
+                                <FieldLabel
+                                    >Thời gian ước tính (phút)</FieldLabel
                                 >
                                 <Input
                                     :model-value="
@@ -1191,11 +1252,10 @@ function setSpecGroupWithLabel(ns: string) {
                                     type="number"
                                     min="1"
                                     placeholder="30"
-                                   
                                 />
-                            </div>
-                            <div class="grid gap-1.5">
-                                <Label>Giá lắp ráp</Label>
+                            </Field>
+                            <Field>
+                                <FieldLabel>Giá lắp ráp</FieldLabel>
                                 <Input
                                     :model-value="
                                         ctx.form.assembly_info.price ?? ''
@@ -1208,13 +1268,12 @@ function setSpecGroupWithLabel(ns: string) {
                                     type="number"
                                     min="0"
                                     placeholder="0"
-                                   
                                 />
-                            </div>
+                            </Field>
                         </div>
                         <div class="grid grid-cols-2 gap-3">
-                            <div class="grid gap-1.5">
-                                <Label>Mức độ khó</Label>
+                            <Field>
+                                <FieldLabel>Mức độ khó</FieldLabel>
                                 <Select
                                     v-model="
                                         ctx.form.assembly_info.difficulty_level
@@ -1228,28 +1287,24 @@ function setSpecGroupWithLabel(ns: string) {
                                             v-for="d in ctx.difficultyOptions"
                                             :key="d.value"
                                             :value="d.value"
-                                           
                                         >
                                             {{ d.label }}
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>
-                            </div>
-                            <div class="grid gap-1.5">
-                                <Label
-                                    >Link hướng dẫn (URL)</Label
-                                >
+                            </Field>
+                            <Field>
+                                <FieldLabel>Link hướng dẫn (URL)</FieldLabel>
                                 <Input
                                     v-model="
                                         ctx.form.assembly_info.instructions_url
                                     "
                                     placeholder="https://..."
-                                   
                                 />
-                            </div>
+                            </Field>
                         </div>
-                        <div class="grid gap-1.5">
-                            <Label>Thông tin thêm</Label>
+                        <Field>
+                            <FieldLabel>Thông tin thêm</FieldLabel>
                             <Textarea
                                 v-model="
                                     ctx.form.assembly_info
@@ -1258,7 +1313,7 @@ function setSpecGroupWithLabel(ns: string) {
                                 placeholder="Thông tin bổ sung về lắp ráp..."
                                 class="h-20 resize-none text-sm"
                             />
-                        </div>
+                        </Field>
                     </template>
                 </AccordionContent>
             </AccordionItem>

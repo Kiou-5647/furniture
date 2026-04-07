@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Employee\EmployeeDashboardController;
+use App\Http\Controllers\Employee\Inventory\LocationController;
 use App\Http\Controllers\Employee\Product\CategoryController;
 use App\Http\Controllers\Employee\Product\CollectionController;
 use App\Http\Controllers\Employee\Product\ProductController;
@@ -124,6 +125,33 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
                     Route::get('/', [ProductController::class, 'trash'])->name('index');
                     Route::post('/{product}/restore', [ProductController::class, 'restore'])->name('restore')->withTrashed();
                     Route::delete('/{product}/force', [ProductController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
+                });
+            });
+        });
+    });
+
+    /**
+     * Inventory routes
+     */
+    Route::prefix('kho-hang')->name('inventory.')->group(function () {
+        // Locations routes
+        Route::prefix('vi-tri')->name('locations.')->group(function () {
+            // View Group
+            Route::middleware(['can:inventory.view'])->group(function () {
+                Route::get('/', [LocationController::class, 'index'])->name('index');
+            });
+
+            // Manage Group
+            Route::middleware(['can:inventory.manage'])->group(function () {
+                Route::post('/', [LocationController::class, 'store'])->name('store');
+                Route::put('/{location}', [LocationController::class, 'update'])->name('update');
+                Route::delete('/{location}', [LocationController::class, 'destroy'])->name('destroy');
+
+                // Soft Delete / Trash Sub-group
+                Route::prefix('thung-rac')->name('trash.')->group(function () {
+                    Route::get('/', [LocationController::class, 'trash'])->name('index');
+                    Route::post('/{location}/restore', [LocationController::class, 'restore'])->name('restore')->withTrashed();
+                    Route::delete('/{location}/force', [LocationController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
                 });
             });
         });

@@ -4,14 +4,17 @@ namespace App\Providers;
 
 use App\Models\Auth\User;
 use App\Models\Inventory\Location;
-use App\Models\Inventory\StockTransfer;
+use App\Models\Product\Category;
+use App\Models\Product\Collection;
 use App\Models\Product\Product;
 use App\Models\Product\ProductVariant;
+use App\Models\Setting\Lookup;
+use App\Models\Setting\LookupNamespace;
+use App\Models\Vendor\Vendor;
+use App\Observers\CacheInvalidationObserver;
 use App\Observers\LocationObserver;
 use App\Observers\ProductObserver;
 use App\Observers\ProductVariantObserver;
-use App\Observers\StockTransferObserver;
-use App\Services\Cache\CacheInvalidator;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Date;
@@ -36,8 +39,6 @@ class AppServiceProvider extends ServiceProvider
         Gate::before(function (User $user, string $ability) {
             return $user->hasRole('super_admin') ? true : null;
         });
-
-        CacheInvalidator::register();
     }
 
     protected function configureDefaults(): void
@@ -62,9 +63,17 @@ class AppServiceProvider extends ServiceProvider
 
     protected function registerObservers(): void
     {
+        // Domain-specific observers
         Location::observe(LocationObserver::class);
         Product::observe(ProductObserver::class);
         ProductVariant::observe(ProductVariantObserver::class);
-        StockTransfer::observe(StockTransferObserver::class);
+
+        // Cache invalidation observer (handles created, updated, deleted, restored)
+        Lookup::observe(CacheInvalidationObserver::class);
+        LookupNamespace::observe(CacheInvalidationObserver::class);
+        Category::observe(CacheInvalidationObserver::class);
+        Collection::observe(CacheInvalidationObserver::class);
+        Vendor::observe(CacheInvalidationObserver::class);
+        Location::observe(CacheInvalidationObserver::class);
     }
 }

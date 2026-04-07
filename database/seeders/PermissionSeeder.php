@@ -81,6 +81,10 @@ class PermissionSeeder extends Seeder
 
             ['name' => 'employees.view', 'description' => 'View employee list'],
             ['name' => 'employees.manage', 'description' => 'Manage employee profiles and departments'],
+
+            // Inventory
+            ['name' => 'inventory.view', 'description' => 'View inventory and stock levels'],
+            ['name' => 'inventory.manage', 'description' => 'Manage inventory, locations, and stock transfers'],
         ];
     }
 
@@ -104,6 +108,7 @@ class PermissionSeeder extends Seeder
                 'settings.manage',
                 'lookups.manage',
                 'horizon.view',
+                'inventory.manage',
             ],
             'head_of_production' => [
                 'products.manage',
@@ -111,6 +116,7 @@ class PermissionSeeder extends Seeder
                 'collections.manage',
                 'vendors.view',
                 'vendors.verify',
+                'inventory.manage',
             ],
             'content_manager' => [
                 'products.view',

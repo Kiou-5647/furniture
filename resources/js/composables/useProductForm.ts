@@ -1,11 +1,17 @@
 import { useForm } from '@inertiajs/vue3';
-import { Package, Settings, Layers, } from '@lucide/vue';
+import { Package, Settings, Layers, Warehouse } from '@lucide/vue';
 import { computed, reactive, ref, watch } from 'vue';
 import type { Ref } from 'vue';
 import { store, update } from '@/routes/employee/products/items';
 import type { ProductStatus, SpecLookupOption, SpecItem } from '@/types';
 import type { ProductSpecifications } from '@/types/lookup';
 import type { Product, ProductVariant, OptionGroup } from '@/types/product';
+
+export interface VariantStock {
+    location_id: string;
+    quantity: number;
+    cost_per_unit: number | null;
+}
 
 export type LookupOptionItem = {
     id: string;
@@ -29,6 +35,7 @@ const steps = [
     { title: 'Thông tin', description: 'Cơ bản & Nội dung', icon: Package },
     { title: 'Tùy chọn', description: 'Nhóm thuộc tính', icon: Settings },
     { title: 'Biến thể', description: 'SKU & Giá', icon: Layers },
+    { title: 'Tồn kho', description: 'Số lượng & Vị trí', icon: Warehouse },
 ];
 
 const statusOptions: { label: string; value: ProductStatus }[] = [
@@ -74,6 +81,7 @@ export interface ProductFormContext {
     validationErrors: string[];
     isValid: boolean;
     submit: () => void;
+    handleFinalSubmit: () => void;
     closeModal: () => void;
     nextStep: () => void;
     prevStep: () => void;
@@ -115,6 +123,8 @@ export interface ProductFormContext {
     removeVariantDimensionImage: (variantIndex: number) => void;
     setVariantSwatchImage: (variantIndex: number, file: File | null) => void;
     removeVariantSwatchImage: (variantIndex: number) => void;
+    addStockEntry: (variantIndex: number) => void;
+    removeStockEntry: (variantIndex: number, locationId: string) => void;
 }
 
 export function useProductForm(
@@ -155,6 +165,7 @@ export function useProductForm(
         published_date: '',
         new_arrival_until: '',
         variants: [] as Partial<ProductVariant>[],
+        _force_update_price: false,
     });
 
     const currentStep = ref(1);
@@ -244,12 +255,12 @@ export function useProductForm(
                         id: v.id,
                         product_id: v.product_id,
                         sku: v.sku,
-                        title: v.title,
+                        name: v.name,
                         slug: v.slug,
                         description: v.description,
                         price: v.price,
-                        compared_at_price: v.compared_at_price,
-                        build_cost: v.build_cost,
+                        profit_margin_value: v.profit_margin_value ?? null,
+                        profit_margin_unit: v.profit_margin_unit ?? 'fixed',
                         weight: v.weight ?? {},
                         dimensions: v.dimensions ?? {},
                         option_values: normalizedOptionValues,
@@ -271,6 +282,7 @@ export function useProductForm(
                         dimension_image_file: null,
                         swatch_image_file: null,
                         removed_gallery_ids: [],
+                        stock: v.stock ?? [],
                         created_at: v.created_at,
                         updated_at: v.updated_at,
                     };
@@ -404,6 +416,11 @@ export function useProductForm(
         const hasVariants =
             form.variants.length > 0 &&
             form.variants.some((v) => v.price && v.sku);
+        const hasStock =
+            form.variants.length > 0 &&
+            form.variants.some(
+                (v) => v.stock && v.stock.length > 0 && v.stock[0].quantity > 0,
+            );
 
         return [
             step1Complete
@@ -417,6 +434,7 @@ export function useProductForm(
                 : hasOptionGroups
                   ? 'incomplete'
                   : 'untouched',
+            hasStock ? 'complete' : hasVariants ? 'incomplete' : 'untouched',
         ];
     });
 
@@ -475,12 +493,12 @@ export function useProductForm(
             }
             return {
                 sku: Math.random().toString(36).substring(2, 10).toUpperCase(),
-                title: null,
+                name: null,
                 slug: null,
                 description: null,
                 price: '',
-                compared_at_price: null,
-                build_cost: null,
+                profit_margin_value: null,
+                profit_margin_unit: 'fixed' as const,
                 weight: {},
                 dimensions: {},
                 option_values: optionValues,
@@ -493,6 +511,7 @@ export function useProductForm(
                 removed_gallery_ids: [],
                 dimension_image_file: null,
                 swatch_image_file: null,
+                stock: [],
             };
         });
         expandedVariants = new Set([0]);
@@ -511,12 +530,12 @@ export function useProductForm(
 
         form.variants.push({
             sku: Math.random().toString(36).substring(2, 10).toUpperCase(),
-            title: null,
+            name: null,
             slug: null,
             description: null,
             price: '',
-            compared_at_price: null,
-            build_cost: null,
+            profit_margin_value: null,
+            profit_margin_unit: 'fixed' as const,
             weight: {},
             dimensions: {},
             option_values: combo,
@@ -529,6 +548,7 @@ export function useProductForm(
             removed_gallery_ids: [],
             dimension_image_file: null,
             swatch_image_file: null,
+            stock: [],
         });
         expandedVariants = new Set([form.variants.length - 1]);
         newVariantCombo = {};
@@ -802,6 +822,28 @@ export function useProductForm(
         };
     }
 
+    function addStockEntry(variantIndex: number, locationId?: string) {
+        const variant = form.variants[variantIndex];
+        if (!variant) return;
+        if (!variant.stock) variant.stock = [];
+        if (locationId) {
+            variant.stock.push({
+                location_id: locationId,
+                quantity: 1,
+                cost_per_unit: null,
+            });
+        }
+    }
+
+    function removeStockEntry(variantIndex: number, locationId: string) {
+        const variant = form.variants[variantIndex];
+        if (!variant || !variant.stock) return;
+        const idx = variant.stock.findIndex(
+            (s) => s.location_id === locationId,
+        );
+        if (idx !== -1) variant.stock.splice(idx, 1);
+    }
+
     function setSpecGroupNamespace(ns: string, label?: string) {
         const actualNs = ns === '_null' ? '' : ns;
         specGroupNamespace.value = actualNs;
@@ -834,6 +876,10 @@ export function useProductForm(
         const url = product ? update(product).url : store().url;
         const method = product ? 'put' : 'post';
         form[method](url, { onSuccess: () => closeModal() });
+    }
+
+    function handleFinalSubmit() {
+        submit();
     }
 
     let expandedVariants = new Set<number>();
@@ -1000,6 +1046,7 @@ export function useProductForm(
             return isValid.value;
         },
         submit,
+        handleFinalSubmit,
         closeModal,
         nextStep,
         prevStep,
@@ -1035,5 +1082,7 @@ export function useProductForm(
         removeVariantDimensionImage,
         setVariantSwatchImage,
         removeVariantSwatchImage,
+        addStockEntry,
+        removeStockEntry,
     });
 }

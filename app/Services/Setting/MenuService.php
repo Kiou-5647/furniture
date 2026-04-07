@@ -34,7 +34,7 @@ class MenuService
         ];
 
         // Product Management Group
-        if ($user->canAny(['categories.view', 'collections.view'])) {
+        if ($user->canAny(['categories.view', 'collections.view', 'products.view'])) {
             $productItems = [];
 
             if ($user->can('products.view')) {
@@ -67,6 +67,27 @@ class MenuService
                 'icon' => 'Package',
                 'isActive' => Route::is('employee.products.*'),
                 'items' => $productItems,
+            ];
+        }
+
+        // Inventory Management Group
+        if ($user->can('inventory.view')) {
+            $inventoryItems = [];
+
+            if ($user->can('inventory.view')) {
+                $inventoryItems[] = [
+                    'title' => 'Vị trí kho hàng',
+                    'href' => route('employee.inventory.locations.index'),
+                    'isActive' => Route::is('employee.inventory.locations.*'),
+                ];
+            }
+
+            $menu[] = [
+                'title' => 'Kho hàng',
+                'href' => '#',
+                'icon' => 'Warehouse',
+                'isActive' => Route::is('employee.inventory.*'),
+                'items' => $inventoryItems,
             ];
         }
 

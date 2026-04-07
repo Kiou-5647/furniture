@@ -70,7 +70,7 @@ const hasActiveFilters = computed(() => {
 const selectedStatus = ref(props.filters.is_active ?? undefined);
 
 const statusOptions = [
-    { label: 'Đang hiện', value: true, icon: Eye },
+    { label: 'Đang hiển thị', value: true, icon: Eye },
     { label: 'Đang ẩn', value: false, icon: EyeOff },
 ];
 
@@ -394,6 +394,7 @@ function handlePreviewImage(url: string) {
                                 title="Trạng thái"
                                 v-model="selectedStatus"
                                 :options="statusOptions"
+                                icon_location="end"
                                 :searchable="false"
                             />
                         </template>

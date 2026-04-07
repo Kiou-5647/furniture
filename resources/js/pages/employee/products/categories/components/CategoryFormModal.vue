@@ -15,7 +15,6 @@ import {
 import { computed, watch } from 'vue';
 import ImageUploader from '@/components/custom/ImageUploader.vue';
 import StatusToggle from '@/components/custom/StatusToggle.vue';
-import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,8 +25,13 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import {
+    Field,
+    FieldContent,
+    FieldError,
+    FieldLabel,
+} from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
@@ -191,7 +195,9 @@ const selectedRoomLabel = computed(() => {
                 <div class="grid grid-cols-1 gap-6 sm:grid-cols-[180px_1fr]">
                     <!-- Left: Image (desktop only) -->
                     <div class="hidden space-y-3 sm:block">
-                        <Label class="text-sm font-medium">Hình ảnh</Label>
+                        <FieldLabel class="text-sm font-medium"
+                            >Hình ảnh</FieldLabel
+                        >
                         <ImageUploader
                             v-model="form.image"
                             :preview-url="previewUrl"
@@ -203,184 +209,195 @@ const selectedRoomLabel = computed(() => {
                     <div class="space-y-4">
                         <!-- Group + Type -->
                         <div class="grid grid-cols-2 gap-3">
-                            <div class="space-y-1.5">
-                                <Label
-                                    class="flex items-center gap-1.5 text-sm"
-                                >
+                            <Field>
+                                <FieldLabel>
                                     <Tag
                                         class="h-3.5 w-3.5 shrink-0 text-muted-foreground"
                                     />
                                     Nhóm danh mục
                                     <span class="text-destructive">*</span>
-                                </Label>
-                                <Select
-                                    v-model="form.group_id"
-                                    @update:model-value="
-                                        (val) => (form.group_id = String(val))
-                                    "
-                                >
-                                    <SelectTrigger class="w-full">
-                                        <SelectValue
-                                            :placeholder="
-                                                selectedGroupLabel ||
-                                                'Chọn nhóm...'
-                                            "
-                                        />
-                                    </SelectTrigger>
-                                    <SelectContent
-                                        position="popper"
-                                        :side-offset="4"
+                                </FieldLabel>
+                                <FieldContent>
+                                    <Select
+                                        v-model="form.group_id"
+                                        @update:model-value="
+                                            (val) =>
+                                                (form.group_id = String(val))
+                                        "
                                     >
-                                        <SelectItem
-                                            v-for="g in categoryGroups"
-                                            :key="g.id"
-                                            :value="g.id"
+                                        <SelectTrigger class="w-full">
+                                            <SelectValue
+                                                :placeholder="
+                                                    selectedGroupLabel ||
+                                                    'Chọn nhóm...'
+                                                "
+                                            />
+                                        </SelectTrigger>
+                                        <SelectContent
+                                            position="popper"
+                                            :side-offset="4"
                                         >
-                                            {{ g.label }}
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <InputError :message="form.errors.group_id" />
-                            </div>
+                                            <SelectItem
+                                                v-for="g in categoryGroups"
+                                                :key="g.id"
+                                                :value="g.id"
+                                            >
+                                                {{ g.label }}
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <FieldError
+                                        :errors="[form.errors.group_id]"
+                                    />
+                                </FieldContent>
+                            </Field>
 
-                            <div class="space-y-1.5">
-                                <Label
-                                    class="flex items-center gap-1.5 text-sm"
-                                >
+                            <Field>
+                                <FieldLabel>
                                     <LayoutGrid
                                         class="h-3.5 w-3.5 shrink-0 text-muted-foreground"
                                     />
                                     Loại sản phẩm
                                     <span class="text-destructive">*</span>
-                                </Label>
-                                <Select v-model="form.product_type">
-                                    <SelectTrigger class="w-full">
-                                        <SelectValue
-                                            placeholder="Chọn loại..."
-                                        />
-                                    </SelectTrigger>
-                                    <SelectContent
-                                        position="popper"
-                                        :side-offset="4"
-                                    >
-                                        <SelectItem
-                                            v-for="t in typeOptions"
-                                            :key="t.value"
-                                            :value="t.value"
+                                </FieldLabel>
+                                <FieldContent>
+                                    <Select v-model="form.product_type">
+                                        <SelectTrigger class="w-full">
+                                            <SelectValue
+                                                placeholder="Chọn loại..."
+                                            />
+                                        </SelectTrigger>
+                                        <SelectContent
+                                            position="popper"
+                                            :side-offset="4"
                                         >
-                                            <div
-                                                class="flex items-center gap-2"
+                                            <SelectItem
+                                                v-for="t in typeOptions"
+                                                :key="t.value"
+                                                :value="t.value"
                                             >
-                                                <component
-                                                    :is="t.icon"
-                                                    class="h-3.5 w-3.5 shrink-0 text-muted-foreground"
-                                                />
-                                                {{ t.label }}
-                                            </div>
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <InputError
-                                    :message="form.errors.product_type"
-                                />
-                            </div>
+                                                <div
+                                                    class="flex items-center gap-2"
+                                                >
+                                                    <component
+                                                        :is="t.icon"
+                                                        class="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                                                    />
+                                                    {{ t.label }}
+                                                </div>
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <FieldError
+                                        :errors="[form.errors.product_type]"
+                                    />
+                                </FieldContent>
+                            </Field>
                         </div>
 
                         <!-- Name + Slug -->
                         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            <div class="space-y-1.5">
-                                <Label
-                                    class="flex items-center gap-1.5 text-sm"
-                                >
+                            <Field>
+                                <FieldLabel>
                                     <Type
                                         class="h-3.5 w-3.5 shrink-0 text-muted-foreground"
                                     />
                                     Tên hiển thị
                                     <span class="text-destructive">*</span>
-                                </Label>
-                                <Input
-                                    v-model="form.display_name"
-                                    :placeholder="`VD: ${placeholders.name}`"
-                                    class="text-sm"
-                                    required
-                                />
-                                <InputError
-                                    :message="form.errors.display_name"
-                                />
-                            </div>
+                                </FieldLabel>
+                                <FieldContent>
+                                    <Input
+                                        v-model="form.display_name"
+                                        :placeholder="`VD: ${placeholders.name}`"
+                                        class="text-sm"
+                                        required
+                                    />
+                                    <FieldError
+                                        :errors="[form.errors.display_name]"
+                                    />
+                                </FieldContent>
+                            </Field>
 
-                            <div class="space-y-1.5">
-                                <Label
-                                    class="flex items-center gap-1.5 text-sm"
-                                >
+                            <Field>
+                                <FieldLabel>
                                     <Hash
                                         class="h-3.5 w-3.5 shrink-0 text-muted-foreground"
                                     />
                                     Slug
-                                </Label>
-                                <Input
-                                    v-model="form.slug"
-                                    :placeholder="`VD: ${placeholders.slug}`"
-                                    class="font-mono text-sm"
-                                />
-                                <InputError :message="form.errors.slug" />
-                            </div>
+                                </FieldLabel>
+                                <FieldContent>
+                                    <Input
+                                        v-model="form.slug"
+                                        :placeholder="`VD: ${placeholders.slug}`"
+                                        class="font-mono text-sm"
+                                    />
+                                    <FieldError :errors="[form.errors.slug]" />
+                                </FieldContent>
+                            </Field>
                         </div>
 
                         <!-- Room + Status -->
                         <div class="grid grid-cols-2 gap-3">
-                            <div class="space-y-1.5">
-                                <Label
-                                    class="flex items-center gap-1.5 text-sm"
-                                >
+                            <Field>
+                                <FieldLabel>
                                     <Home
                                         class="h-3.5 w-3.5 shrink-0 text-muted-foreground"
                                     />
                                     Phòng
-                                </Label>
-                                <Select v-model="form.room_id">
-                                    <SelectTrigger class="w-full">
-                                        <SelectValue
-                                            :placeholder="
-                                                selectedRoomLabel ||
-                                                'Chọn phòng...'
-                                            "
-                                        />
-                                    </SelectTrigger>
-                                    <SelectContent
-                                        position="popper"
-                                        :side-offset="4"
-                                    >
-                                        <SelectItem :value="null"
-                                            >Không có</SelectItem
+                                </FieldLabel>
+                                <FieldContent>
+                                    <Select v-model="form.room_id">
+                                        <SelectTrigger class="w-full">
+                                            <SelectValue
+                                                :placeholder="
+                                                    selectedRoomLabel ||
+                                                    'Chọn phòng...'
+                                                "
+                                            />
+                                        </SelectTrigger>
+                                        <SelectContent
+                                            position="popper"
+                                            :side-offset="4"
                                         >
-                                        <SelectItem
-                                            v-for="r in roomOptions"
-                                            :key="r.id"
-                                            :value="r.id"
-                                        >
-                                            {{ r.display_name }}
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <InputError :message="form.errors.room_id" />
-                            </div>
+                                            <SelectItem :value="null"
+                                                >Không có</SelectItem
+                                            >
+                                            <SelectItem
+                                                v-for="r in roomOptions"
+                                                :key="r.id"
+                                                :value="r.id"
+                                            >
+                                                {{ r.display_name }}
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <FieldError
+                                        :errors="[form.errors.room_id]"
+                                    />
+                                </FieldContent>
+                            </Field>
                         </div>
 
                         <!-- Description -->
-                        <div class="space-y-1.5">
-                            <Label class="text-sm">Mô tả</Label>
-                            <Textarea
-                                v-model="form.description"
-                                placeholder="Mô tả ngắn gọn về danh mục này..."
-                                class="min-h-[60px] resize-y text-sm"
-                                rows="2"
-                            />
-                            <InputError :message="form.errors.description" />
-                        </div>
+                        <Field>
+                            <FieldLabel>Mô tả</FieldLabel>
+                            <FieldContent>
+                                <Textarea
+                                    v-model="form.description"
+                                    placeholder="Mô tả ngắn gọn về danh mục này..."
+                                    class="min-h-[60px] resize-y text-sm"
+                                    rows="2"
+                                />
+                                <FieldError
+                                    :errors="[form.errors.description]"
+                                />
+                            </FieldContent>
+                        </Field>
 
                         <div class="mb-4 sm:hidden">
-                            <Label class="text-sm font-medium">Hình ảnh</Label>
+                            <FieldLabel class="text-sm font-medium"
+                                >Hình ảnh</FieldLabel
+                            >
                             <ImageUploader
                                 v-model="form.image"
                                 :preview-url="previewUrl"

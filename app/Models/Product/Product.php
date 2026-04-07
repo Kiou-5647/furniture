@@ -101,12 +101,12 @@ class Product extends Model
 
     public function getTotalStock(): int
     {
-        return $this->totalInventory()->sum('quantity_on_hand');
+        return $this->totalInventory()->sum('quantity');
     }
 
     public function getAvailableStock(): int
     {
-        return $this->totalInventory()->sum('quantity_available');
+        return $this->getTotalStock();
     }
 
     public function isInStock(): bool

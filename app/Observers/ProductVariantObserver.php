@@ -12,21 +12,21 @@ class ProductVariantObserver
         $product = $variant->product;
         $productName = $product ? Str::title($product->name) : '';
 
-        if (filled($variant->title)) {
-            $title = trim($variant->title);
-            if ($productName && ! str_starts_with(strtolower($title), strtolower($productName))) {
-                $title = $productName.' '.$title;
+        if (filled($variant->name)) {
+            $name = trim($variant->name);
+            if ($productName && ! str_starts_with(strtolower($name), strtolower($productName))) {
+                $name = $productName.' '.$name;
             }
-            $variant->title = $title;
-            $variant->slug = Str::slug($variant->title);
+            $variant->name = $name;
+            $variant->slug = Str::slug($variant->name);
         } elseif ($productName) {
             $optionLabels = collect($variant->option_values ?? [])
                 ->map(fn ($v) => Str::title($v))
                 ->implode(' ');
-            $variant->title = $optionLabels
+            $variant->name = $optionLabels
                 ? $productName.' '.$optionLabels
                 : $productName;
-            $variant->slug = Str::slug($variant->title);
+            $variant->slug = Str::slug($variant->name);
         }
     }
 

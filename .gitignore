@@ -38,4 +38,6 @@ QWEN.md
 .opencode
 .gemini
 .qwen
+.mindmodel
+thoughts
 /_ide_helper*.php

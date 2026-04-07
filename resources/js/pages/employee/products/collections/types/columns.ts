@@ -26,80 +26,68 @@ export function getColumns(
 ): ColumnDef<Collection>[] {
     return [
         {
-            id: 'image',
-            header: 'Hình ảnh',
-            size: 100,
-            meta: { align: 'center' },
+            accessorKey: 'display_name',
+            header: 'Bộ sưu tập',
+            size: 300,
+            enableSorting: true,
+            enableHiding: false,
             cell: ({ row }) => {
                 const item = row.original;
-                if (!item.image_thumb_url)
-                    return h(
-                        'div',
-                        { class: 'text-[10px] text-muted-foreground italic' },
-                        'Không ảnh',
-                    );
-                return h(
-                    'div',
-                    { class: 'flex justify-center' },
-                    h('img', {
-                        src: item.image_thumb_url,
-                        class: 'w-16 h-10 rounded-md object-cover border shadow-sm cursor-zoom-in hover:scale-105 transition-all',
-                        onClick: (event: MouseEvent) => {
-                            event.stopPropagation();
-                            onPreviewImage(item.image_url!);
-                        },
-                    }),
-                );
-            },
-        },
-        {
-            accessorKey: 'display_name',
-            header: 'Tên bộ sưu tập',
-            size: 250,
-            cell: ({ row }) =>
-                h('div', { class: 'flex items-center gap-2' }, [
-                    h(
-                        'span',
-                        { class: 'font-medium' },
-                        row.original.display_name,
-                    ),
-                    row.original.is_featured
-                        ? h(Star, {
-                              class: 'h-3 w-3 fill-yellow-400 text-yellow-400',
+                return h('div', { class: 'flex items-center gap-3' }, [
+                    item.image_thumb_url
+                        ? h('img', {
+                              src: item.image_thumb_url,
+                              class: 'w-12 h-8 rounded-md object-cover border shadow-sm cursor-zoom-in hover:scale-105 transition-all shrink-0',
+                              onClick: (event: MouseEvent) => {
+                                  event.stopPropagation();
+                                  onPreviewImage(item.image_url!);
+                              },
                           })
-                        : null,
-                ]),
-        },
-        {
-            accessorKey: 'slug',
-            header: 'Khóa',
-            size: 150,
-            meta: { align: 'center' },
-            cell: ({ row }) =>
-                h(
-                    'span',
-                    { class: 'text-xs text-muted-foreground tabular-nums' },
-                    row.getValue('slug'),
-                ),
-        },
-        {
-            accessorKey: 'description',
-            header: 'Mô tả',
-            size: 300,
-            meta: { align: 'center' },
-            cell: ({ row }) =>
-                h(
-                    'p',
-                    {
-                        class: 'truncate text-xs text-muted-foreground tabular-nums',
-                    },
-                    row.getValue('description'),
-                ),
+                        : h(
+                              'div',
+                              {
+                                  class: 'w-12 h-8 rounded-md border border-dashed flex items-center justify-center bg-muted/50 shrink-0',
+                              },
+                              [
+                                  h(
+                                      'span',
+                                      {
+                                          class: 'text-[8px] text-muted-foreground',
+                                      },
+                                      'N/A',
+                                  ),
+                              ],
+                          ),
+                    h('div', { class: 'min-w-0 flex-1' }, [
+                        h('div', { class: 'flex items-center gap-1.5' }, [
+                            h(
+                                'span',
+                                { class: 'font-medium truncate' },
+                                item.display_name,
+                            ),
+                            item.is_featured
+                                ? h(Star, {
+                                      class: 'h-3 w-3 fill-yellow-400 text-yellow-400 shrink-0',
+                                  })
+                                : null,
+                        ]),
+                        h(
+                            'span',
+                            {
+                                class: 'text-xs text-muted-foreground tabular-nums truncate block',
+                            },
+                            item.slug,
+                        ),
+                    ]),
+                ]);
+            },
         },
         {
             accessorKey: 'is_active',
             header: 'Trạng thái',
-            size: 120,
+            size: 100,
+            enableSorting: false,
+            enableHiding: true,
             meta: { align: 'center' },
             cell: ({ row }) => {
                 const active = row.original.is_active;
@@ -124,7 +112,9 @@ export function getColumns(
         {
             accessorKey: 'updated_at',
             header: 'Cập nhật',
-            size: 160,
+            size: 140,
+            enableSorting: true,
+            enableHiding: true,
             meta: { align: 'center' },
             cell: ({ row }) =>
                 h(
@@ -137,6 +127,8 @@ export function getColumns(
             id: 'actions',
             header: 'Thao tác',
             size: 80,
+            enableSorting: false,
+            enableHiding: false,
             meta: { align: 'center' },
             cell: ({ row }) => {
                 const item = row.original;

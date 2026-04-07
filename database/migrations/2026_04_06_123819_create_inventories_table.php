@@ -13,11 +13,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->uuid('variant_id');
             $table->uuid('location_id');
-            $table->unsignedInteger('quantity_on_hand')->default(0);
-            $table->unsignedInteger('quantity_reserved')->default(0);
-            $table->unsignedInteger('quantity_available')->default(0);
-            $table->unsignedInteger('reorder_level')->default(5);
-            $table->unsignedInteger('reorder_quantity')->default(10);
+            $table->unsignedInteger('quantity')->default(0);
             $table->decimal('cost_per_unit', 15, 2)->default(0);
             $table->timestamps();
             $table->softDeletes();
@@ -30,7 +26,6 @@ return new class extends Migration
 
         DB::statement('CREATE INDEX idx_inventories_variant_id ON inventories (variant_id);');
         DB::statement('CREATE INDEX idx_inventories_location_id ON inventories (location_id);');
-        DB::statement('CREATE INDEX idx_inventories_low_stock ON inventories (quantity_available, reorder_level) WHERE quantity_available <= reorder_level;');
     }
 
     public function down(): void

@@ -31,6 +31,7 @@ import type { SpecNamespace, SpecLookupOption } from '@/types';
 import type { Product } from '@/types/product';
 import StepContent from '../steps/StepContent.vue';
 import StepOptions from '../steps/StepOptions.vue';
+import StepStock from '../steps/StepStock.vue';
 import StepVariants from '../steps/StepVariants.vue';
 
 const LookupFormModal = createLazyComponent(
@@ -44,6 +45,13 @@ const props = defineProps<{
     vendorOptions: { id: string; label: string }[];
     categoryOptions: { id: string; label: string }[];
     collectionOptions: { id: string; label: string }[];
+    locationOptions: {
+        id: string;
+        code: string;
+        label: string;
+        type: string;
+        address: string;
+    }[];
     variantOptions: LookupOptionGroup[];
     featureOptions: LookupOptionItem[];
     specNamespaces: SpecNamespace[];
@@ -63,6 +71,8 @@ const ctx = useProductForm(
 );
 
 provide('productForm', ctx);
+
+const stockStepRef = ref<InstanceType<typeof StepStock> | null>(null);
 
 watch(
     () => props.variantOptions,
@@ -117,6 +127,16 @@ function handleOpenLookupForm(namespace: string) {
     showLookupForm.value = true;
 }
 
+function handleSubmit() {
+    console.info(ctx.form.variants)
+    if (stockStepRef.value?.checkPriceAndSubmit) {
+        stockStepRef.value.checkPriceAndSubmit();
+    } else {
+        ctx.form._force_update_price = false;
+        ctx.submit();
+    }
+}
+
 const lookupNamespaceId = computed(() => {
     const ns = props.lookupNamespaces.find(
         (n) => n.slug === lookupFormNamespace.value,
@@ -164,14 +184,111 @@ function handleLookupFormClosed() {
 
             <Separator class="mt-2" />
 
+            <!-- Mobile: Horizontal Stepper -->
+            <div class="border-b px-4 py-3 md:hidden">
+                <Stepper
+                    v-model="ctx.currentStep"
+                    class="flex w-full items-center justify-between"
+                    orientation="horizontal"
+                    :linear="false"
+                >
+                    <StepperItem
+                        v-for="(step, i) in ctx.steps"
+                        :key="i"
+                        v-slot="{ state }"
+                        class="relative flex flex-1 flex-col items-center gap-1.5"
+                        :step="i + 1"
+                    >
+                        <StepperSeparator
+                            v-if="i !== ctx.steps.length - 1"
+                            class="absolute top-3 left-[63%] block h-0.5 w-[80%] shrink-0 rounded-full bg-muted group-data-[state=completed]:bg-primary"
+                        />
+
+                        <StepperTrigger as-child>
+                            <Button
+                                :variant="
+                                    ctx.stepStates[i] === 'complete' ||
+                                    ctx.stepStates[i] === 'incomplete' ||
+                                    state === 'active'
+                                        ? 'default'
+                                        : 'secondary'
+                                "
+                                class="z-10 h-7 w-7 shrink-0 rounded-full transition-all duration-200"
+                                :class="{
+                                    'bg-green-600 text-white hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600':
+                                        ctx.stepStates[i] === 'complete' &&
+                                        state !== 'active',
+                                    'bg-amber-400 text-amber-900 hover:bg-amber-500 dark:bg-amber-600 dark:text-amber-100 dark:hover:bg-amber-500':
+                                        ctx.stepStates[i] === 'incomplete' &&
+                                        state !== 'active',
+                                    'ring-2 ring-ring ring-offset-2 ring-offset-background':
+                                        state === 'active',
+                                }"
+                            >
+                                <StepperIndicator class="h-3.5 w-3.5">
+                                    <CheckCircle2
+                                        v-if="ctx.stepStates[i] === 'complete'"
+                                        class="h-3 w-3"
+                                        :class="
+                                            ctx.stepStates[i] === 'complete' &&
+                                            state !== 'active'
+                                                ? 'text-white'
+                                                : ''
+                                        "
+                                    />
+                                    <component
+                                        v-else-if="
+                                            ctx.stepStates[i] === 'incomplete'
+                                        "
+                                        :is="step.icon"
+                                        class="h-3 w-3"
+                                        :class="
+                                            ctx.stepStates[i] ===
+                                                'incomplete' &&
+                                            state !== 'active'
+                                                ? 'text-amber-900 dark:text-amber-100'
+                                                : 'text-current'
+                                        "
+                                    />
+                                    <component
+                                        v-else
+                                        :is="step.icon"
+                                        class="h-3 w-3"
+                                        :class="
+                                            state === 'active'
+                                                ? 'text-foreground'
+                                                : 'text-muted-foreground'
+                                        "
+                                    />
+                                </StepperIndicator>
+                            </Button>
+                        </StepperTrigger>
+                        <StepperTitle
+                            class="text-[10px] leading-tight font-medium"
+                            :class="{
+                                'text-green-600 dark:text-green-500':
+                                    ctx.stepStates[i] === 'complete',
+                                'text-amber-600 dark:text-amber-500':
+                                    ctx.stepStates[i] === 'incomplete',
+                                'text-primary': state === 'active',
+                                'text-muted-foreground':
+                                    ctx.stepStates[i] === 'untouched',
+                            }"
+                        >
+                            {{ step.title }}
+                        </StepperTitle>
+                    </StepperItem>
+                </Stepper>
+            </div>
+
             <div class="flex flex-1 overflow-hidden">
-                <!-- Vertical Stepper Sidebar -->
+                <!-- Desktop: Vertical Stepper Sidebar -->
                 <div
-                    class="flex w-20 shrink-0 flex-col border-r px-2 py-4 md:w-40 md:px-4"
+                    class="hidden w-40 shrink-0 flex-col border-r px-4 py-4 md:flex"
                 >
                     <Stepper
                         v-model="ctx.currentStep"
-                        class="mx-auto flex w-full max-w-md flex-col justify-start gap-10"
+                        class="flex w-full flex-col justify-start gap-10"
                         orientation="vertical"
                         :linear="false"
                     >
@@ -179,33 +296,35 @@ function handleLookupFormClosed() {
                             v-for="(step, i) in ctx.steps"
                             :key="i"
                             v-slot="{ state }"
-                            class="relative flex w-full cursor-pointer flex-col items-center gap-2 md:flex-row md:items-center md:gap-6"
+                            class="relative flex w-full cursor-pointer flex-row items-center gap-6"
                             :step="i + 1"
                         >
                             <StepperSeparator
                                 v-if="i !== ctx.steps.length - 1"
-                                class="absolute top-[60px] block h-full w-0.5 shrink-0 rounded-full bg-muted group-data-[state=completed]:bg-primary md:top-[30px] md:left-[15px] md:h-[150%]"
+                                class="absolute top-[30px] left-[15px] block h-[150%] w-0.5 shrink-0 rounded-full bg-muted group-data-[state=completed]:bg-primary"
                             />
 
                             <StepperTrigger as-child>
                                 <Button
                                     :variant="
-                                        state === 'completed' ||
+                                        ctx.stepStates[i] === 'complete' ||
+                                        ctx.stepStates[i] === 'incomplete' ||
                                         state === 'active'
                                             ? 'default'
                                             : 'secondary'
                                     "
                                     class="z-10 h-8 w-8 shrink-0 rounded-full transition-all duration-200"
-                                    :class="[
-                                        state === 'active' &&
-                                            'ring-2 ring-ring ring-offset-2 ring-offset-background',
-                                        ctx.stepStates[i] === 'complete' &&
-                                            state !== 'active' &&
-                                            'bg-green-600 text-white hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600',
-                                        ctx.stepStates[i] === 'incomplete' &&
-                                            state !== 'active' &&
-                                            'bg-amber-400 text-amber-900 hover:bg-amber-500 dark:bg-amber-600 dark:text-amber-100 dark:hover:bg-amber-500',
-                                    ]"
+                                    :class="{
+                                        'bg-green-600 text-white hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600':
+                                            ctx.stepStates[i] === 'complete' &&
+                                            state !== 'active',
+                                        'bg-amber-400 text-amber-900 hover:bg-amber-500 dark:bg-amber-600 dark:text-amber-100 dark:hover:bg-amber-500':
+                                            ctx.stepStates[i] ===
+                                                'incomplete' &&
+                                            state !== 'active',
+                                        'ring-2 ring-ring ring-offset-2 ring-offset-background':
+                                            state === 'active',
+                                    }"
                                 >
                                     <StepperIndicator class="h-4 w-4">
                                         <CheckCircle2
@@ -213,26 +332,53 @@ function handleLookupFormClosed() {
                                                 ctx.stepStates[i] === 'complete'
                                             "
                                             class="h-3.5 w-3.5"
+                                            :class="
+                                                ctx.stepStates[i] ===
+                                                    'complete' &&
+                                                state !== 'active'
+                                                    ? 'text-white'
+                                                    : ''
+                                            "
+                                        />
+                                        <component
+                                            v-else-if="
+                                                ctx.stepStates[i] ===
+                                                'incomplete'
+                                            "
+                                            :is="step.icon"
+                                            class="h-3.5 w-3.5"
+                                            :class="
+                                                ctx.stepStates[i] ===
+                                                    'incomplete' &&
+                                                state !== 'active'
+                                                    ? 'text-amber-900 dark:text-amber-100'
+                                                    : 'text-current'
+                                            "
                                         />
                                         <component
                                             v-else
                                             :is="step.icon"
                                             class="h-3.5 w-3.5"
+                                            :class="
+                                                state === 'active'
+                                                    ? 'text-foreground'
+                                                    : 'text-muted-foreground'
+                                            "
                                         />
                                     </StepperIndicator>
                                 </Button>
                             </StepperTrigger>
                             <StepperTitle
-                                class="text-xs leading-tight font-semibold md:text-sm"
-                                :class="
-                                    state === 'active'
-                                        ? 'text-primary'
-                                        : ctx.stepStates[i] === 'complete'
-                                          ? 'text-green-600'
-                                          : ctx.stepStates[i] === 'incomplete'
-                                            ? 'text-amber-600'
-                                            : 'text-muted-foreground'
-                                "
+                                class="text-[10px] leading-tight font-medium"
+                                :class="{
+                                    'text-green-600 dark:text-green-500':
+                                        ctx.stepStates[i] === 'complete',
+                                    'text-amber-600 dark:text-amber-500':
+                                        ctx.stepStates[i] === 'incomplete',
+                                    'text-primary': state === 'active',
+                                    'text-muted-foreground':
+                                        ctx.stepStates[i] === 'untouched',
+                                }"
                             >
                                 {{ step.title }}
                             </StepperTitle>
@@ -263,6 +409,12 @@ function handleLookupFormClosed() {
                         <StepVariants
                             v-show="ctx.currentStep === 3"
                             :spec-namespaces="specNamespaces"
+                        />
+
+                        <StepStock
+                            v-show="ctx.currentStep === 4"
+                            :location-options="locationOptions"
+                            ref="stockStepRef"
                         />
                     </form>
                 </div>
@@ -310,7 +462,11 @@ function handleLookupFormClosed() {
                             </ul>
                         </AlertDescription>
                     </Alert>
-                    <Button v-if="ctx.isValid" size="sm" @click="ctx.submit()">
+                    <Button
+                        v-if="ctx.isValid"
+                        size="sm"
+                        @click="handleSubmit()"
+                    >
                         {{ product ? 'Cập nhật' : 'Tạo sản phẩm' }}
                     </Button>
                     <Button v-else size="sm" disabled>

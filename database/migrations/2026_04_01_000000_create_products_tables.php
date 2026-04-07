@@ -70,13 +70,13 @@ return new class extends Migration
             $table->string('sku', 20);
             $table->string('status', 20)->default('active');
 
-            $table->string('title')->nullable();
+            $table->string('name')->nullable();
             $table->string('slug', 128)->nullable();
             $table->text('description')->nullable();
 
             $table->decimal('price', 15, 2);
-            $table->decimal('compared_at_price', 15, 2)->nullable();
-            $table->decimal('build_cost', 15, 2)->nullable();
+            $table->decimal('profit_margin_value', 15, 2)->nullable();
+            $table->string('profit_margin_unit', 20)->default('fixed');
 
             $table->jsonb('weight')->default('{}');
             $table->jsonb('dimensions')->default('{}');

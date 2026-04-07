@@ -4,7 +4,6 @@ namespace App\Models\Product;
 
 use App\Models\Inventory\Inventory;
 use App\Models\Inventory\StockMovement;
-use App\Models\Inventory\StockValuation;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -28,8 +27,8 @@ class ProductVariant extends Model implements HasMedia
     {
         return [
             'price' => 'decimal:2',
-            'compared_at_price' => 'decimal:2',
-            'build_cost' => 'decimal:2',
+            'profit_margin_value' => 'decimal:2',
+            'profit_margin_unit' => 'string',
             'weight' => 'array',
             'dimensions' => 'array',
             'option_values' => 'array',
@@ -65,7 +64,7 @@ class ProductVariant extends Model implements HasMedia
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['sku', 'title', 'slug', 'price', 'compared_at_price', 'build_cost', 'status'])
+            ->logOnly(['sku', 'name', 'slug', 'price', 'profit_margin_value', 'profit_margin_unit', 'status'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
             ->setDescriptionForEvent(fn (string $eventName) => "Product variant {$eventName}");
@@ -86,19 +85,14 @@ class ProductVariant extends Model implements HasMedia
         return $this->hasMany(StockMovement::class, 'variant_id');
     }
 
-    public function stockValuations(): HasMany
-    {
-        return $this->hasMany(StockValuation::class, 'variant_id');
-    }
-
     public function getTotalStock(): int
     {
-        return $this->inventories()->sum('quantity_on_hand');
+        return $this->inventories()->sum('quantity');
     }
 
     public function getAvailableStock(): int
     {
-        return $this->inventories()->sum('quantity_available');
+        return $this->getTotalStock();
     }
 
     public function isInStock(): bool
@@ -112,8 +106,8 @@ class ProductVariant extends Model implements HasMedia
 
     public function getTotalValue(): string
     {
-        $total = $this->stockValuations()
-            ->selectRaw('SUM(batch_cost * quantity_remaining) as total')
+        $total = $this->inventories()
+            ->selectRaw('SUM(cost_per_unit * quantity) as total')
             ->value('total');
 
         return number_format((float) ($total ?? 0), 0, ',', '.');
@@ -124,18 +118,48 @@ class ProductVariant extends Model implements HasMedia
         return number_format((float) $this->price, 0, ',', '.');
     }
 
-    public function hasDiscount(): bool
+    public function getAverageCostPerUnit(): ?float
     {
-        return $this->compared_at_price !== null
-            && (float) $this->compared_at_price > (float) $this->price;
-    }
-
-    public function getDiscountAmount(): ?string
-    {
-        if (! $this->hasDiscount()) {
+        $totalQty = $this->inventories()->sum('quantity');
+        if ($totalQty === 0) {
             return null;
         }
 
-        return number_format((float) $this->compared_at_price - (float) $this->price, 0, ',', '.');
+        $totalValue = $this->inventories()
+            ->selectRaw('SUM(cost_per_unit * quantity) as total')
+            ->value('total');
+
+        return (float) $totalValue / $totalQty;
+    }
+
+    public function calculatePrice(): float
+    {
+        $cost = $this->getAverageCostPerUnit();
+        if ($cost === null || $cost <= 0) {
+            return 0.0;
+        }
+
+        $margin = (float) ($this->profit_margin_value ?? 0);
+        if ($margin <= 0) {
+            return $cost;
+        }
+
+        if ($this->profit_margin_unit === 'percentage') {
+            return $cost * (1 + $margin / 100);
+        }
+
+        return $cost + $margin;
+    }
+
+    public function isSellable(): bool
+    {
+        if ($this->is_dropship || $this->is_custom_made) {
+            return $this->status === 'active';
+        }
+
+        $hasStock = $this->getAvailableStock() > 0;
+        $hasCost = $this->getAverageCostPerUnit() !== null && $this->getAverageCostPerUnit() > 0;
+
+        return $hasStock && $hasCost;
     }
 }

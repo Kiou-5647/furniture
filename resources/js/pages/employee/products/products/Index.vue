@@ -7,6 +7,9 @@ import {
     CircleDashed,
     NotepadTextDashed,
     ClipboardClock,
+    Sparkles,
+    Star,
+    Truck,
 } from '@lucide/vue';
 import { debounce } from 'lodash';
 import { computed, ref, watch } from 'vue';
@@ -37,9 +40,11 @@ const ProductFormModal = createLazyComponent(
 );
 
 const props = defineProps<{
-    vendorOptions: any[];
-    categoryOptions: any[];
-    collectionOptions: any[];
+    statusOptions: { value: string; label: string; color: string }[];
+    vendorOptions: { id: string; label: string }[];
+    categoryOptions: { id: string; label: string }[];
+    collectionOptions: { id: string; label: string }[];
+    locationOptions: any[];
     variantOptions: any[];
     featureOptions: any[];
     specNamespaces: SpecNamespace[];
@@ -60,24 +65,92 @@ const showDeleteDialog = ref(false);
 const selectedProduct = ref<Product | null>(null);
 const isActuallyLoading = ref(true);
 const search = ref(props.filters.search ?? '');
+
+const selectedStatus = ref<ProductStatus | undefined>(
+    props.filters.status ?? undefined,
+);
+const selectedVendor = ref<string | undefined>(
+    props.filters.vendor_id ?? undefined,
+);
+const selectedCategory = ref<string | undefined>(
+    props.filters.category_id ?? undefined,
+);
+const selectedCollection = ref<string | undefined>(
+    props.filters.collection_id ?? undefined,
+);
+const selectedNewArrival = ref<boolean | undefined>(
+    props.filters.is_new_arrival ?? undefined,
+);
+const selectedFeatured = ref<boolean | undefined>(
+    props.filters.is_featured ?? undefined,
+);
+const selectedDropship = ref<boolean | undefined>(
+    props.filters.is_dropship ?? undefined,
+);
+
 const hasActiveFilters = computed(() => {
     return (
         !!props.filters.status ||
+        !!props.filters.vendor_id ||
+        !!props.filters.category_id ||
+        !!props.filters.collection_id ||
+        props.filters.is_new_arrival !== null ||
+        props.filters.is_featured !== null ||
+        props.filters.is_dropship !== null ||
         !!props.filters.search ||
         !!props.filters.order_by
     );
 });
 
-const selectedStatus = ref<ProductStatus | undefined>(
-    props.filters.status ?? undefined,
+const statusIconMap: Record<string, any> = {
+    published: CheckCircle2,
+    pending_review: ClipboardClock,
+    hidden: CircleDashed,
+    draft: NotepadTextDashed,
+    archived: Package,
+};
+
+const statusOptions = computed(() =>
+    props.statusOptions.map((s) => ({
+        ...s,
+        icon: statusIconMap[s.value] ?? Package,
+    })),
 );
 
-const statusOptions: { label: string; value: ProductStatus; icon: any }[] = [
-    { label: 'Đã xuất bản', value: 'published', icon: CheckCircle2 },
-    { label: 'Chờ duyệt', value: 'pending_review', icon: ClipboardClock },
-    { label: 'Đang ẩn', value: 'hidden', icon: CircleDashed },
-    { label: 'Bản nháp', value: 'draft', icon: NotepadTextDashed },
-    { label: 'Lưu trữ', value: 'archived', icon: Package },
+const vendorOptions = computed(() =>
+    props.vendorOptions.map((v) => ({
+        ...v,
+        value: v.id,
+    })),
+);
+
+const categoryOptions = computed(() =>
+    props.categoryOptions.map((c) => ({
+        ...c,
+        value: c.id,
+    })),
+);
+
+const collectionOptions = computed(() =>
+    props.collectionOptions.map((c) => ({
+        ...c,
+        value: c.id,
+    })),
+);
+
+const newArrivalOptions = [
+    { label: 'Mới', value: true, icon: Sparkles },
+    { label: 'Không', value: false },
+];
+
+const featuredOptions = [
+    { label: 'Nổi bật', value: true, icon: Star },
+    { label: 'Không', value: false },
+];
+
+const dropshipOptions = [
+    { label: 'Dropship', value: true, icon: Truck },
+    { label: 'Không', value: false },
 ];
 
 const updateSearch = debounce(() => {
@@ -85,6 +158,12 @@ const updateSearch = debounce(() => {
         ...props.filters,
         search: search.value,
         status: selectedStatus.value ?? undefined,
+        vendor_id: selectedVendor.value ?? undefined,
+        category_id: selectedCategory.value ?? undefined,
+        collection_id: selectedCollection.value ?? undefined,
+        is_new_arrival: selectedNewArrival.value ?? undefined,
+        is_featured: selectedFeatured.value ?? undefined,
+        is_dropship: selectedDropship.value ?? undefined,
         page: 1,
     };
 
@@ -96,6 +175,12 @@ const updateSearch = debounce(() => {
 
 watch(search, (val) => val !== (props.filters.search ?? '') && updateSearch());
 watch(selectedStatus, () => updateSearch());
+watch(selectedVendor, () => updateSearch());
+watch(selectedCategory, () => updateSearch());
+watch(selectedCollection, () => updateSearch());
+watch(selectedNewArrival, () => updateSearch());
+watch(selectedFeatured, () => updateSearch());
+watch(selectedDropship, () => updateSearch());
 
 watch(
     () => props.products,
@@ -201,10 +286,42 @@ function performDelete() {
             >
                 <template #filters>
                     <DataTableSingleFilter
+                        title="Nhà cung cấp"
+                        v-model="selectedVendor"
+                        :options="vendorOptions"
+                        :searchable="true"
+                    />
+                    <DataTableSingleFilter
+                        title="Danh mục"
+                        v-model="selectedCategory"
+                        :options="categoryOptions"
+                        :searchable="true"
+                    />
+                    <DataTableSingleFilter
+                        title="Bộ sưu tập"
+                        v-model="selectedCollection"
+                        :options="collectionOptions"
+                        :searchable="true"
+                    />
+                    <DataTableSingleFilter
+                        title="Mới"
+                        v-model="selectedNewArrival"
+                        :options="newArrivalOptions"
+                    />
+                    <DataTableSingleFilter
+                        title="Nổi bật"
+                        v-model="selectedFeatured"
+                        :options="featuredOptions"
+                    />
+                    <DataTableSingleFilter
+                        title="Dropship"
+                        v-model="selectedDropship"
+                        :options="dropshipOptions"
+                    />
+                    <DataTableSingleFilter
                         title="Trạng thái"
                         v-model="selectedStatus"
                         :options="statusOptions"
-                        icon_location="end"
                     />
                 </template>
             </DataTableGroup>
@@ -217,6 +334,7 @@ function performDelete() {
             :vendor-options="vendorOptions"
             :category-options="categoryOptions"
             :collection-options="collectionOptions"
+            :location-options="locationOptions"
             :variant-options="variantOptions"
             :feature-options="featureOptions"
             :spec-namespaces="specNamespaces"

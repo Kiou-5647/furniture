@@ -17,8 +17,8 @@ class EmployeeVariantResource extends JsonResource
             'slug' => $this->slug,
             'description' => $this->description,
             'price' => $this->price,
-            'compared_at_price' => $this->compared_at_price,
-            'build_cost' => $this->build_cost,
+            'profit_margin_value' => $this->profit_margin_value,
+            'profit_margin_unit' => $this->profit_margin_unit,
             'weight' => $this->weight ?? [],
             'dimensions' => $this->dimensions ?? [],
             'option_values' => $this->option_values ?? [],
@@ -36,6 +36,13 @@ class EmployeeVariantResource extends JsonResource
             'dimension_image_url' => $this->getFirstMediaUrl('dimension_image'),
             'swatch_image_url' => $this->getFirstMediaUrl('swatch_image'),
             'swatch_image_thumb_url' => $this->getFirstMediaUrl('swatch_image', 'swatch'),
+            'stock' => $this->whenLoaded('inventories', fn () => $this->inventories->map(fn ($inv) => [
+                'location_id' => $inv->location_id,
+                'quantity' => $inv->quantity,
+                'cost_per_unit' => $inv->quantity > 0 && $inv->cost_per_unit > 0
+                    ? (float) $inv->cost_per_unit
+                    : null,
+            ])->toArray()),
             'created_at' => $this->created_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
             'updated_at' => $this->updated_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
         ];

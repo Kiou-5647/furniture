@@ -3,6 +3,8 @@
 namespace App\Services\Product;
 
 use App\Data\Product\ProductFilterData;
+use App\Enums\ProductStatus;
+use App\Models\Inventory\Location;
 use App\Models\Product\Category;
 use App\Models\Product\Collection;
 use App\Models\Product\Product;
@@ -19,6 +21,11 @@ class ProductService
     public function __construct(
         private CacheService $cache,
     ) {}
+
+    public function getStatusOptions(): array
+    {
+        return ProductStatus::options();
+    }
 
     public function getVendorOptions(): EloquentCollection
     {
@@ -64,6 +71,26 @@ class ProductService
                 ->map(fn (Collection $collection) => [
                     'id' => $collection->id,
                     'label' => $collection->display_name,
+                ])
+        );
+    }
+
+    public function getLocationOptions(): EloquentCollection
+    {
+        return Cache::remember(
+            CacheKeys::inventory('locations'),
+            CacheKeys::TTL,
+            fn () => Location::query()
+                ->where('is_active', true)
+                ->orderBy('type')
+                ->orderBy('name')
+                ->get(['id', 'code', 'name', 'type', 'address_data', 'province_name', 'ward_name'])
+                ->map(fn (Location $location) => [
+                    'id' => $location->id,
+                    'code' => $location->code,
+                    'label' => $location->name,
+                    'type' => $location->type->value,
+                    'address' => $location->getFullAddress(),
                 ])
         );
     }
@@ -212,7 +239,7 @@ class ProductService
     public function getFiltered(ProductFilterData $filter): LengthAwarePaginator
     {
         return Product::query()
-            ->with(['vendor', 'category', 'collection'])
+            ->with(['vendor', 'category', 'collection', 'variants.inventories'])
             ->when($filter->vendor_id, fn ($q) => $q->where('vendor_id', $filter->vendor_id))
             ->when($filter->category_id, fn ($q) => $q->where('category_id', $filter->category_id))
             ->when($filter->collection_id, fn ($q) => $q->where('collection_id', $filter->collection_id))

@@ -27,9 +27,11 @@ class ProductController
         $filter = ProductFilterData::fromRequest($request);
 
         return Inertia::render('employee/products/products/Index', [
+            'statusOptions' => $this->service->getStatusOptions(),
             'vendorOptions' => $this->service->getVendorOptions(),
             'categoryOptions' => $this->service->getCategoryOptions(),
             'collectionOptions' => $this->service->getCollectionOptions(),
+            'locationOptions' => $this->service->getLocationOptions(),
             'variantOptions' => $this->service->getVariantOptions(),
             'featureOptions' => $this->service->getFeatureOptions(),
             'specNamespaces' => $this->service->getSpecNamespaces(),
