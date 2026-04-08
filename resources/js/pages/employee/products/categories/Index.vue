@@ -234,128 +234,135 @@ function handlePreviewImage(url: string) {
                 </Button>
             </div>
 
-            <div class="grid grid-cols-1 items-start sm:grid-cols-12 sm:gap-3">
-                <Card
-                    class="col-span-1 hidden space-y-2 sm:col-span-4 sm:block md:col-span-3 xl:col-span-2"
+            <div class="@container">
+                <div
+                    class="flex flex-col gap-2 @lg:flex-row @lg:items-start"
                 >
-                    <CardHeader>
-                        <CardTitle class="text-lg font-medium text-primary"
-                            >Nhóm danh mục</CardTitle
-                        >
-                    </CardHeader>
-                    <CardContent class="grid gap-1">
-                        <Link
-                            :href="index().url"
-                            :class="[
-                                'group flex items-center justify-between rounded-md px-3 py-2 transition-all',
-                                !currentGroup
-                                    ? 'bg-primary/10 text-primary shadow-sm'
-                                    : 'text-muted-foreground hover:bg-muted',
-                            ]"
-                        >
-                            <span class="text-sm font-medium">Tất cả</span>
-                        </Link>
-
-                        <Link
-                            v-for="group in categoryGroups"
-                            :key="group.id"
-                            :href="index(group.slug).url"
-                            :class="[
-                                'group flex items-center justify-between rounded-md px-3 py-2 transition-all',
-                                currentGroup?.id === group.id
-                                    ? 'bg-primary/10 text-primary shadow-sm'
-                                    : 'text-muted-foreground hover:bg-muted',
-                            ]"
-                        >
-                            <span class="text-sm font-medium">{{
-                                group.label
-                            }}</span>
-                            <Badge variant="secondary" class="text-xs">{{
-                                group.count
-                            }}</Badge>
-                        </Link>
-                    </CardContent>
-                </Card>
-
-                <div class="sm:hidden">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger as-child>
-                            <Button
-                                variant="outline"
-                                class="w-full justify-between"
+                    <Card
+                        class="hidden @lg:flex w-full shrink-0 @lg:w-65"
+                    >
+                        <CardHeader>
+                            <CardTitle class="text-lg font-medium text-primary"
+                                >Nhóm danh mục</CardTitle
                             >
-                                <span class="font-medium">
-                                    Nhóm danh mục:
-                                    {{
-                                        selectedGroup?.display_name || 'Tất cả'
-                                    }}
-                                </span>
-                                <Badge variant="secondary">
-                                    {{ selectedGroup?.count || 0 }}
-                                </Badge>
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent class="w-75">
-                            <DropdownMenuItem
+                        </CardHeader>
+                        <CardContent class="grid gap-1">
+                            <Link
+                                :href="index().url"
+                                :class="[
+                                    'group flex items-center justify-between rounded-md px-3 py-2 transition-all',
+                                    !currentGroup
+                                        ? 'bg-primary/10 text-primary shadow-sm'
+                                        : 'text-muted-foreground hover:bg-muted',
+                                ]"
+                            >
+                                <span class="text-sm font-medium">Tất cả</span>
+                            </Link>
+
+                            <Link
                                 v-for="group in categoryGroups"
                                 :key="group.id"
-                                as-child
+                                :href="index(group.slug).url"
+                                :class="[
+                                    'group flex items-center justify-between rounded-md px-3 py-2 transition-all',
+                                    currentGroup?.id === group.id
+                                        ? 'bg-primary/10 text-primary shadow-sm'
+                                        : 'text-muted-foreground hover:bg-muted',
+                                ]"
                             >
-                                <Link
-                                    :href="index(group.slug).url"
-                                    class="flex min-h-12 w-full cursor-pointer items-center justify-between"
-                                    preserve-state
-                                    preserve-scroll
+                                <span class="text-sm font-medium">{{
+                                    group.label
+                                }}</span>
+                                <Badge variant="secondary" class="text-xs">{{
+                                    group.count
+                                }}</Badge>
+                            </Link>
+                        </CardContent>
+                    </Card>
+
+                    <div class="@md:hidden">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger as-child>
+                                <Button
+                                    variant="outline"
+                                    class="w-full justify-between"
                                 >
-                                    <span :class="[capitalize, 'font-medium']">
-                                        {{ group.label }}
+                                    <span class="font-medium">
+                                        Nhóm danh mục:
+                                        {{
+                                            selectedGroup?.display_name ||
+                                            'Tất cả'
+                                        }}
                                     </span>
                                     <Badge variant="secondary">
-                                        {{ group.count }}
+                                        {{ selectedGroup?.count || 0 }}
                                     </Badge>
-                                </Link>
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent class="w-75">
+                                <DropdownMenuItem
+                                    v-for="group in categoryGroups"
+                                    :key="group.id"
+                                    as-child
+                                >
+                                    <Link
+                                        :href="index(group.slug).url"
+                                        class="flex min-h-12 w-full cursor-pointer items-center justify-between"
+                                        preserve-state
+                                        preserve-scroll
+                                    >
+                                        <span
+                                            :class="[capitalize, 'font-medium']"
+                                        >
+                                            {{ group.label }}
+                                        </span>
+                                        <Badge variant="secondary">
+                                            {{ group.count }}
+                                        </Badge>
+                                    </Link>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
 
-                <!-- MAIN TABLE -->
-                <div
-                    class="col-span-1 space-y-4 sm:col-span-8 md:col-span-9 xl:col-span-10"
-                >
-                    <DataTableGroup
-                        v-model:search="search"
-                        :is-actually-loading="isActuallyLoading"
-                        :columns="activeColumns"
-                        :data="categories?.data ?? []"
-                        :has-active-filters="hasActiveFilters"
-                        :total="categories?.meta.total ?? 0"
-                        :page-size="categories?.meta.per_page ?? 15"
-                        :current-page="categories?.meta.current_page ?? 1"
-                        :last-page="categories?.meta.last_page ?? 1"
-                        :order-by="filters.order_by"
-                        :order-direction="filters.order_direction"
-                        @reset="resetFilters"
-                        @sort="handleSort"
-                        @row-click="handleEdit"
-                        @update:page="handlePageChange"
-                        @update:page-size="handlePageSizeChange"
+                    <!-- MAIN TABLE -->
+                    <div
+                        class="w-full min-w-0 flex-1"
                     >
-                        <template #filters>
-                            <DataTableSingleFilter
-                                title="Trạng thái"
-                                v-model="selectedStatus"
-                                :options="statusOptions"
-                                icon_location="end"
-                            />
-                            <DataTableSingleFilter
-                                title="Loại sản phẩm"
-                                v-model="selectedType"
-                                :options="typeOptions"
-                                icon_location="end"
-                            />
-                        </template>
-                    </DataTableGroup>
+                        <DataTableGroup
+                            v-model:search="search"
+                            :is-actually-loading="isActuallyLoading"
+                            :columns="activeColumns"
+                            :data="categories?.data ?? []"
+                            :has-active-filters="hasActiveFilters"
+                            :total="categories?.meta.total ?? 0"
+                            :page-size="categories?.meta.per_page ?? 15"
+                            :current-page="categories?.meta.current_page ?? 1"
+                            :last-page="categories?.meta.last_page ?? 1"
+                            :order-by="filters.order_by"
+                            :order-direction="filters.order_direction"
+                            @reset="resetFilters"
+                            @sort="handleSort"
+                            @row-click="handleEdit"
+                            @update:page="handlePageChange"
+                            @update:page-size="handlePageSizeChange"
+                        >
+                            <template #filters>
+                                <DataTableSingleFilter
+                                    title="Trạng thái"
+                                    v-model="selectedStatus"
+                                    :options="statusOptions"
+                                    icon_location="end"
+                                />
+                                <DataTableSingleFilter
+                                    title="Loại sản phẩm"
+                                    v-model="selectedType"
+                                    :options="typeOptions"
+                                    icon_location="end"
+                                />
+                            </template>
+                        </DataTableGroup>
+                    </div>
                 </div>
             </div>
         </div>

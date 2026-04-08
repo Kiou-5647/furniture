@@ -25,4 +25,14 @@ class CacheKeys
     {
         return "inventory.{$key}";
     }
+
+    public static function geodata(string $key): string
+    {
+        return "geodata.{$key}";
+    }
+
+    public static function stockTransfer(string $key): string
+    {
+        return "stock_transfer.{$key}";
+    }
 }

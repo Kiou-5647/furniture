@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Employee\EmployeeDashboardController;
 use App\Http\Controllers\Employee\Inventory\LocationController;
+use App\Http\Controllers\Employee\Inventory\StockMovementController;
+use App\Http\Controllers\Employee\Inventory\StockTransferController;
 use App\Http\Controllers\Employee\Product\CategoryController;
 use App\Http\Controllers\Employee\Product\CollectionController;
 use App\Http\Controllers\Employee\Product\ProductController;
@@ -153,6 +155,37 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
                     Route::post('/{location}/restore', [LocationController::class, 'restore'])->name('restore')->withTrashed();
                     Route::delete('/{location}/force', [LocationController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
                 });
+            });
+        });
+
+        // Stock Transfers routes
+        Route::prefix('chuyen-kho')->name('transfers.')->group(function () {
+            // View Group
+            Route::middleware(['can:inventory.view'])->group(function () {
+                Route::get('/', [StockTransferController::class, 'index'])->name('index');
+                Route::get('/tao', [StockTransferController::class, 'create'])->name('create');
+                Route::get('/{transfer}', [StockTransferController::class, 'show'])->name('show');
+            });
+
+            // Manage Group
+            Route::middleware(['can:inventory.manage'])->group(function () {
+                Route::post('/', [StockTransferController::class, 'store'])->name('store');
+                Route::post('/{transfer}/ship', [StockTransferController::class, 'ship'])->name('ship');
+                Route::post('/{transfer}/receive', [StockTransferController::class, 'receive'])->name('receive');
+                Route::post('/{transfer}/cancel', [StockTransferController::class, 'cancel'])->name('cancel');
+            });
+
+            // API-like routes for dynamic form data
+            Route::middleware(['can:inventory.view'])->group(function () {
+                Route::get('/variants/{locationId}', [StockTransferController::class, 'variants'])->name('variants');
+                Route::get('/locations/variant/{variantId}', [StockTransferController::class, 'locations'])->name('locations');
+            });
+        });
+
+        // Stock Movements routes
+        Route::prefix('lich-su-ton-kho')->name('movements.')->group(function () {
+            Route::middleware(['can:inventory.view'])->group(function () {
+                Route::get('/', [StockMovementController::class, 'index'])->name('index');
             });
         });
     });

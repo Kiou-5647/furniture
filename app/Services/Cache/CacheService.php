@@ -48,6 +48,22 @@ class CacheService
     public function flushInventory(): void
     {
         Cache::forget(CacheKeys::inventory('locations'));
+        Cache::forget(CacheKeys::inventory('location_options_simple'));
+        Cache::forget(CacheKeys::inventory('location_options_full'));
+    }
+
+    public function flushStockTransfers(): void
+    {
+        Cache::forget(CacheKeys::stockTransfer('filtered'));
+    }
+
+    public function flushGeodata(): void
+    {
+        Cache::forget(CacheKeys::geodata('provinces'));
+
+        if ($this->usingRedis()) {
+            $this->flushByPattern('geodata.wards.*');
+        }
     }
 
     public function flushCollectionOptions(): void

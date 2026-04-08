@@ -215,7 +215,7 @@ function handleLookupFormClosed() {
                                 "
                                 class="z-10 h-7 w-7 shrink-0 rounded-full transition-all duration-200"
                                 :class="{
-                                    'bg-green-600 text-white hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600':
+                                    'bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600':
                                         ctx.stepStates[i] === 'complete' &&
                                         state !== 'active',
                                     'bg-amber-400 text-amber-900 hover:bg-amber-500 dark:bg-amber-600 dark:text-amber-100 dark:hover:bg-amber-500':
@@ -232,7 +232,7 @@ function handleLookupFormClosed() {
                                         :class="
                                             ctx.stepStates[i] === 'complete' &&
                                             state !== 'active'
-                                                ? 'text-white'
+                                                ? 'text-black dark:text-white'
                                                 : ''
                                         "
                                     />
@@ -336,7 +336,7 @@ function handleLookupFormClosed() {
                                                 ctx.stepStates[i] ===
                                                     'complete' &&
                                                 state !== 'active'
-                                                    ? 'text-white'
+                                                    ? 'text-black dark:text-white'
                                                     : ''
                                             "
                                         />

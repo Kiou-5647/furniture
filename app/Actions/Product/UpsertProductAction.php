@@ -146,29 +146,36 @@ class UpsertProductAction
             $currentQuantity = $existingInventory->get($locationId)?->quantity ?? 0;
             $quantityDiff = $newQuantity - $currentQuantity;
 
+            $movementTypeStr = $stock['movement_type'] ?? null;
+            $movementType = $movementTypeStr ? StockMovementType::tryFrom($movementTypeStr) : null;
+            $movementNotes = $stock['movement_notes'] ?? null;
+
             if ($quantityDiff === 0) {
                 if ($costPerUnit !== null && $existingInventory->has($locationId)) {
                     $inventory = $existingInventory->get($locationId);
                     $oldCost = $inventory->cost_per_unit;
-                    $inventory->cost_per_unit = $costPerUnit;
-                    $inventory->save();
 
-                    StockMovement::create([
-                        'variant_id' => $variant->id,
-                        'location_id' => $location->id,
-                        'type' => StockMovementType::Adjust,
-                        'quantity' => 0,
-                        'quantity_before' => $currentQuantity,
-                        'quantity_after' => $currentQuantity,
-                        'cost_per_unit_before' => $oldCost > 0 ? (float) $oldCost : null,
-                        'cost_per_unit' => $costPerUnit,
-                        'notes' => 'Cập nhật giá vốn',
-                        'performed_by' => $performedBy?->id,
-                    ]);
+                    if ((float) $oldCost !== (float) $costPerUnit) {
+                        $inventory->cost_per_unit = $costPerUnit;
+                        $inventory->save();
 
-                    if ($forceUpdatePrice) {
-                        $variant->refresh();
-                        $variant->updateQuietly(['price' => $this->calculatePrice($variant)]);
+                        StockMovement::create([
+                            'variant_id' => $variant->id,
+                            'location_id' => $location->id,
+                            'type' => $movementType ?? StockMovementType::Adjust,
+                            'quantity' => 0,
+                            'quantity_before' => $currentQuantity,
+                            'quantity_after' => $currentQuantity,
+                            'cost_per_unit_before' => $oldCost > 0 ? (float) $oldCost : null,
+                            'cost_per_unit' => $costPerUnit,
+                            'notes' => $movementNotes ?: 'Cập nhật giá vốn',
+                            'performed_by' => $performedBy?->id,
+                        ]);
+
+                        if ($forceUpdatePrice) {
+                            $variant->refresh();
+                            $variant->updateQuietly(['price' => $this->calculatePrice($variant)]);
+                        }
                     }
                 }
 
@@ -176,23 +183,25 @@ class UpsertProductAction
             }
 
             if ($quantityDiff > 0) {
+                $type = $movementType ?? StockMovementType::Receive;
                 $this->recordStockMovement->handle(
                     variant: $variant,
                     location: $location,
-                    type: StockMovementType::Receive,
+                    type: $type,
                     quantity: $quantityDiff,
-                    notes: 'Cập nhật tồn kho',
+                    notes: $movementNotes ?: 'Cập nhật tồn kho',
                     costPerUnit: $costPerUnit,
                     forceUpdatePrice: $forceUpdatePrice,
                     performedBy: $performedBy,
                 );
             } else {
+                $type = $movementType ?? StockMovementType::Adjust;
                 $this->recordStockMovement->handle(
                     variant: $variant,
                     location: $location,
-                    type: StockMovementType::Adjust,
+                    type: $type,
                     quantity: abs($quantityDiff),
-                    notes: 'Cập nhật tồn kho (giảm)',
+                    notes: $movementNotes ?: 'Cập nhật tồn kho (giảm)',
                     costPerUnit: null,
                     forceUpdatePrice: $forceUpdatePrice,
                     performedBy: $performedBy,

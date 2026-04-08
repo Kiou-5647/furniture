@@ -5,6 +5,8 @@ export interface VariantStock {
     location_id: string;
     quantity: number;
     cost_per_unit: number | null;
+    movement_type?: string;
+    movement_notes?: string;
 }
 
 export interface Product {

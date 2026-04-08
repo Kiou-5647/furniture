@@ -184,6 +184,8 @@ class UpdateProductRequest extends FormRequest
             'variants.*.stock.*.location_id' => ['required_with:variants.*.stock', 'uuid', 'exists:locations,id'],
             'variants.*.stock.*.quantity' => ['required_with:variants.*.stock', 'integer', 'min:1'],
             'variants.*.stock.*.cost_per_unit' => ['nullable', 'numeric', 'min:0'],
+            'variants.*.stock.*.movement_type' => ['nullable', 'string'],
+            'variants.*.stock.*.movement_notes' => ['nullable', 'string'],
         ];
     }
 

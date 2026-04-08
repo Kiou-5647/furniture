@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Employee\Setting;
 
+use App\Data\Setting\LookupNamespaceFilterData;
 use App\Http\Requests\Setting\LookupNamespace\StoreLookupNamespaceRequest;
 use App\Http\Requests\Setting\LookupNamespace\UpdateLookupNamespaceRequest;
 use App\Http\Resources\Setting\LookupNamespace\EmployeeLookupNamespaceResource;
 use App\Models\Setting\LookupNamespace;
+use App\Services\Setting\LookupNamespaceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -13,49 +15,22 @@ use Inertia\Response;
 
 class LookupNamespaceController
 {
+    public function __construct(private LookupNamespaceService $service) {}
+
     public function index(Request $request): Response
     {
-        $perPage = (int) $request->cookie('per_page', 15);
-
-        $query = LookupNamespace::query();
-
-        if ($request->filled('search')) {
-            $search = $request->string('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('display_name', 'ilike', "%{$search}%")
-                    ->orWhere('slug', 'ilike', "%{$search}%")
-                    ->orWhere('description', 'ilike', "%{$search}%");
-            });
-        }
-
-        if ($request->has('is_active')) {
-            $query->where('is_active', $request->boolean('is_active'));
-        }
-
-        if ($request->has('for_variants')) {
-            $query->where('for_variants', $request->boolean('for_variants'));
-        }
-
-        $orderBy = $request->input('order_by', 'is_system');
-        $orderDirection = $request->input('order_direction', 'desc');
-
-        if ($orderBy === 'is_system') {
-            $query->orderBy('is_system', 'desc')
-                ->orderBy('created_at', 'asc');
-        } else {
-            $query->orderBy($orderBy, $orderDirection);
-        }
+        $filter = LookupNamespaceFilterData::fromRequest($request);
 
         return Inertia::render('employee/settings/lookup-namespaces/Index', [
             'namespaces' => Inertia::defer(fn () => EmployeeLookupNamespaceResource::collection(
-                $query->paginate($perPage)
+                $this->service->getFiltered($filter)
             )),
             'filters' => [
-                'search' => $request->input('search'),
-                'is_active' => $request->has('is_active') ? $request->boolean('is_active') : null,
-                'for_variants' => $request->has('for_variants') ? $request->boolean('for_variants') : null,
-                'order_by' => $request->input('order_by'),
-                'order_direction' => $request->input('order_direction'),
+                'search' => $filter->search,
+                'is_active' => $filter->is_active,
+                'for_variants' => $filter->for_variants,
+                'order_by' => $filter->order_by,
+                'order_direction' => $filter->order_direction,
             ],
         ]);
     }

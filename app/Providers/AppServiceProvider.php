@@ -4,12 +4,15 @@ namespace App\Providers;
 
 use App\Models\Auth\User;
 use App\Models\Inventory\Location;
+use App\Models\Inventory\StockTransfer;
 use App\Models\Product\Category;
 use App\Models\Product\Collection;
 use App\Models\Product\Product;
 use App\Models\Product\ProductVariant;
 use App\Models\Setting\Lookup;
 use App\Models\Setting\LookupNamespace;
+use App\Models\Setting\Province;
+use App\Models\Setting\Ward;
 use App\Models\Vendor\Vendor;
 use App\Observers\CacheInvalidationObserver;
 use App\Observers\LocationObserver;
@@ -75,5 +78,8 @@ class AppServiceProvider extends ServiceProvider
         Collection::observe(CacheInvalidationObserver::class);
         Vendor::observe(CacheInvalidationObserver::class);
         Location::observe(CacheInvalidationObserver::class);
+        StockTransfer::observe(CacheInvalidationObserver::class);
+        Province::observe(CacheInvalidationObserver::class);
+        Ward::observe(CacheInvalidationObserver::class);
     }
 }

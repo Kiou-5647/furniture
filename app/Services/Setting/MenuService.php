@@ -80,6 +80,18 @@ class MenuService
                     'href' => route('employee.inventory.locations.index'),
                     'isActive' => Route::is('employee.inventory.locations.*'),
                 ];
+
+                $inventoryItems[] = [
+                    'title' => 'Chuyển kho',
+                    'href' => route('employee.inventory.transfers.index'),
+                    'isActive' => Route::is('employee.inventory.transfers.*'),
+                ];
+
+                $inventoryItems[] = [
+                    'title' => 'Lịch sử tồn kho',
+                    'href' => route('employee.inventory.movements.index'),
+                    'isActive' => Route::is('employee.inventory.movements.*'),
+                ];
             }
 
             $menu[] = [

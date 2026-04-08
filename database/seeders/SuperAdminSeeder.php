@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Actions\Fortify\CreateEmployeeProfile;
 use App\Enums\UserType;
 use App\Models\Auth\Role;
 use App\Models\Auth\User;
@@ -10,7 +11,7 @@ use Illuminate\Support\Facades\Hash;
 
 class SuperAdminSeeder extends Seeder
 {
-    public function run(): void
+    public function run(CreateEmployeeProfile $createEmployeeProfile): void
     {
         $user = User::firstOrCreate(
             ['email' => 'admin@example.com'],
@@ -27,6 +28,10 @@ class SuperAdminSeeder extends Seeder
 
         if ($superAdminRole) {
             $user->assignRole($superAdminRole);
+        }
+
+        if (! $user->employee) {
+            $createEmployeeProfile->create($user);
         }
     }
 }

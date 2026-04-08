@@ -2,6 +2,7 @@
 
 namespace App\Models\Setting;
 
+use App\Builders\Setting\LookupNamespaceBuilder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -21,6 +22,11 @@ class LookupNamespace extends Model
             'is_active' => 'boolean',
             'is_system' => 'boolean',
         ];
+    }
+
+    public function newEloquentBuilder($query): LookupNamespaceBuilder
+    {
+        return new LookupNamespaceBuilder($query);
     }
 
     public function lookups(): HasMany

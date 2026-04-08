@@ -9,7 +9,7 @@ import {
     Warehouse,
     X,
 } from '@lucide/vue';
-import { inject, ref } from 'vue';
+import { inject, ref, watch } from 'vue';
 import {
     Accordion,
     AccordionContent,
@@ -64,6 +64,18 @@ const adjustingLocationId = ref<string | null>(null);
 const adjustmentType = ref<'add' | 'remove' | 'cost'>('add');
 const adjustmentQuantity = ref(0);
 const adjustmentCost = ref<number | null>(null);
+const adjustmentReason = ref<string>('');
+const adjustmentNotes = ref<string>('');
+
+watch(adjustmentType, (newType) => {
+    if (newType === 'add') {
+        adjustmentReason.value = 'receive';
+    } else if (newType === 'remove') {
+        adjustmentReason.value = 'damage';
+    } else {
+        adjustmentReason.value = 'adjust';
+    }
+});
 
 const showPriceConfirmDialog = ref(false);
 const priceConfirmData = ref<{
@@ -132,6 +144,8 @@ function saveAddDialog() {
         location_id: addDialogLocationId.value,
         quantity: addDialogQuantity.value,
         cost_per_unit: addDialogCost.value,
+        movement_type: 'receive',
+        movement_notes: 'Nhập kho ban đầu',
     });
 
     closeAddDialog();
@@ -168,6 +182,8 @@ function openAdjustment(variantIndex: number, locationId: string) {
     adjustingLocationId.value = locationId;
     adjustmentType.value = 'add';
     adjustmentQuantity.value = 0;
+    adjustmentReason.value = 'receive';
+    adjustmentNotes.value = '';
 
     const variant = ctx.form.variants[variantIndex];
     const stock = variant?.stock?.find(
@@ -182,6 +198,8 @@ function closeAdjustment() {
     adjustmentType.value = 'add';
     adjustmentQuantity.value = 0;
     adjustmentCost.value = null;
+    adjustmentReason.value = '';
+    adjustmentNotes.value = '';
 }
 
 function saveAdjustment() {
@@ -208,6 +226,12 @@ function saveAdjustment() {
         if (adjustmentCost.value !== null) {
             stock.cost_per_unit = adjustmentCost.value;
         }
+        adjustmentReason.value = 'adjust';
+    }
+
+    if (adjustmentQuantity.value > 0 || adjustmentType.value === 'cost') {
+        stock.movement_type = adjustmentReason.value || 'adjust';
+        stock.movement_notes = adjustmentNotes.value;
     }
 
     closeAdjustment();
@@ -701,6 +725,95 @@ defineExpose({ checkPriceAndSubmit });
                                                 min="0"
                                                 step="1000"
                                                 class="text-sm"
+                                            />
+                                        </div>
+
+                                        <div
+                                            v-if="adjustmentType !== 'cost'"
+                                            class="grid gap-1.5"
+                                        >
+                                            <Label
+                                                class="text-xs text-muted-foreground"
+                                                >Lý do</Label
+                                            >
+                                            <Select v-model="adjustmentReason">
+                                                <SelectTrigger
+                                                    class="h-8 text-xs"
+                                                >
+                                                    <SelectValue
+                                                        placeholder="Chọn lý do"
+                                                    />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <template
+                                                        v-if="
+                                                            adjustmentType ===
+                                                            'add'
+                                                        "
+                                                    >
+                                                        <SelectItem
+                                                            value="receive"
+                                                            class="text-xs"
+                                                            >Nhập kho (Nhập
+                                                            mới)</SelectItem
+                                                        >
+                                                        <SelectItem
+                                                            value="restock"
+                                                            class="text-xs"
+                                                            >Nhập bổ
+                                                            sung</SelectItem
+                                                        >
+                                                        <SelectItem
+                                                            value="return"
+                                                            class="text-xs"
+                                                            >Trả
+                                                            hàng</SelectItem
+                                                        >
+                                                        <SelectItem
+                                                            value="adjust"
+                                                            class="text-xs"
+                                                            >Điều chỉnh (Kiểm
+                                                            kê)</SelectItem
+                                                        >
+                                                    </template>
+                                                    <template
+                                                        v-if="
+                                                            adjustmentType ===
+                                                            'remove'
+                                                        "
+                                                    >
+                                                        <SelectItem
+                                                            value="damage"
+                                                            class="text-xs"
+                                                            >Hư hỏng / Hao
+                                                            hụt</SelectItem
+                                                        >
+                                                        <SelectItem
+                                                            value="sell"
+                                                            class="text-xs"
+                                                            >Xuất
+                                                            bán</SelectItem
+                                                        >
+                                                        <SelectItem
+                                                            value="adjust"
+                                                            class="text-xs"
+                                                            >Điều chỉnh (Kiểm
+                                                            kê)</SelectItem
+                                                        >
+                                                    </template>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+                                        <div class="grid gap-1.5">
+                                            <Label
+                                                class="text-xs text-muted-foreground"
+                                                >Ghi chú</Label
+                                            >
+                                            <Input
+                                                v-model="adjustmentNotes"
+                                                class="h-8 text-xs"
+                                                placeholder="Ghi chú thêm..."
                                             />
                                         </div>
 

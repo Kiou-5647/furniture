@@ -2,6 +2,7 @@
 
 namespace App\Models\Inventory;
 
+use App\Builders\Inventory\StockMovementBuilder;
 use App\Enums\StockMovementType;
 use App\Models\Employee\Employee;
 use App\Models\Product\ProductVariant;
@@ -58,5 +59,10 @@ class StockMovement extends Model
     public function reference(): MorphTo
     {
         return $this->morphTo();
+    }
+
+    public function newEloquentBuilder($query): StockMovementBuilder
+    {
+        return new StockMovementBuilder($query);
     }
 }

@@ -71,4 +71,14 @@ class CacheInvalidator
     {
         $this->cache->flushInventory();
     }
+
+    public function onStockTransferChanged(): void
+    {
+        $this->cache->flushStockTransfers();
+    }
+
+    public function onGeodataChanged(): void
+    {
+        $this->cache->flushGeodata();
+    }
 }

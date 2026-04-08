@@ -42,6 +42,8 @@ class CacheInvalidationObserver
             'Collection' => $this->invalidator->onCollectionChanged(),
             'Vendor' => $this->invalidator->onVendorChanged(),
             'Location' => $this->invalidator->onLocationChanged(),
+            'StockTransfer' => $this->invalidator->onStockTransferChanged(),
+            'Province', 'Ward' => $this->invalidator->onGeodataChanged(),
             default => null,
         };
     }

@@ -1,18 +1,17 @@
 <template>
-    <div class="space-y-2">
+    <div class="@container space-y-2">
         <!-- Toolbar: Search + Filters + Actions -->
-        <div class="grid grid-cols-1 sm:grid-cols-12 items-center justify-between gap-2">
-            <div class="col-span-1 sm:col-span-7 flex gap-2 justify-between mt-2 sm:mt-0">
+        <div class="flex flex-col gap-2 @lg:flex-row">
+            <div class="flex w-full min-w-0 gap-2">
                 <DataTableSearchBar :search="search" @update:search="emit('update:search', $event)" />
-
                 <!-- Mobile: Sheet for filters -->
                 <Sheet>
                     <SheetTrigger as-child>
-                        <Button variant="outline" size="icon" class="shrink-0 sm:hidden">
+                        <Button variant="outline" size="icon" class="shrink-0 @lg:hidden">
                             <ListFilter class="h-4 w-4" />
                         </Button>
                     </SheetTrigger>
-                    <SheetContent side="right" class="w-[300px] sm:w-[400px]">
+                    <SheetContent side="right" class="w-[300px] @md:w-[400px]">
                         <SheetHeader>
                             <SheetTitle>Bộ lọc</SheetTitle>
                             <SheetDescription>Chọn các bộ lọc để áp dụng cho bảng dữ liệu.</SheetDescription>
@@ -24,15 +23,15 @@
                 </Sheet>
             </div>
 
-            <div class="col-span-1 sm:col-span-5 flex gap-2 justify-between sm:justify-end">
+            <div class="flex gap-2 justify-between @lg:justify-end">
                 <DataTableClearFilter :has-active-filters="hasActiveFilters" @reset="emit('reset')" />
                 <DataTableVisibility :table="table" />
             </div>
         </div>
 
         <!-- Desktop: Inline filters -->
-        <div class="hidden sm:flex items-center justify-start gap-3 flex-wrap">
-            <slot name="filters" />
+        <div class="hidden gap-2 overflow-auto @lg:flex">
+            <slot name="filters" class="flex"/>
         </div>
 
         <!-- Table with loading state -->
