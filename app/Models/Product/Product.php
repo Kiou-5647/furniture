@@ -94,6 +94,16 @@ class Product extends Model
         return $this->hasMany(ProductVariant::class);
     }
 
+    public function bundleContents(): HasMany
+    {
+        return $this->hasMany(BundleContent::class);
+    }
+
+    public function isInAnyBundle(): bool
+    {
+        return $this->bundleContents()->exists();
+    }
+
     public function totalInventory(): HasManyThrough
     {
         return $this->hasManyThrough(Inventory::class, ProductVariant::class);

@@ -28,7 +28,6 @@ class CreateEmployeeProfile
                 'department_id' => $department->id,
                 'full_name' => $input['name'] ?? $user->name,
                 'phone' => $input['phone'] ?? null,
-                'avatar_path' => $input['avatar_path'] ?? null,
                 'hire_date' => now(),
             ]);
         });

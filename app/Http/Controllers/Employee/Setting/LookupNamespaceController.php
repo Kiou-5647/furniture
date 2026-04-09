@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Employee\Setting;
 use App\Data\Setting\LookupNamespaceFilterData;
 use App\Http\Requests\Setting\LookupNamespace\StoreLookupNamespaceRequest;
 use App\Http\Requests\Setting\LookupNamespace\UpdateLookupNamespaceRequest;
-use App\Http\Resources\Setting\LookupNamespace\EmployeeLookupNamespaceResource;
+use App\Http\Resources\Employee\Setting\LookupNamespaceResource;
 use App\Models\Setting\LookupNamespace;
 use App\Services\Setting\LookupNamespaceService;
 use Illuminate\Http\Request;
@@ -22,7 +22,7 @@ class LookupNamespaceController
         $filter = LookupNamespaceFilterData::fromRequest($request);
 
         return Inertia::render('employee/settings/lookup-namespaces/Index', [
-            'namespaces' => Inertia::defer(fn () => EmployeeLookupNamespaceResource::collection(
+            'namespaces' => Inertia::defer(fn () => LookupNamespaceResource::collection(
                 $this->service->getFiltered($filter)
             )),
             'filters' => [

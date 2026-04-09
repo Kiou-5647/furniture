@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Employee\Inventory;
 
 use App\Data\Inventory\StockMovementFilterData;
-use App\Http\Resources\Inventory\StockMovementResource;
+use App\Http\Resources\Employee\Inventory\StockMovementResource;
 use App\Services\Inventory\StockMovementService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;

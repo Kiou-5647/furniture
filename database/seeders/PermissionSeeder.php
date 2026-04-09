@@ -67,6 +67,9 @@ class PermissionSeeder extends Seeder
             ['name' => 'collections.view', 'description' => 'View product collections'],
             ['name' => 'collections.manage', 'description' => 'Manage curated collections'],
 
+            ['name' => 'bundles.view', 'description' => 'View product bundles'],
+            ['name' => 'bundles.manage', 'description' => 'Manage product bundles'],
+
             // Entities: Customers, Vendors, Employees
             ['name' => 'customers.view', 'description' => 'View customer profiles'],
             ['name' => 'customers.update', 'description' => 'Update customer information'],
@@ -100,10 +103,11 @@ class PermissionSeeder extends Seeder
                 'products.manage',
                 'categories.manage',
                 'collections.manage',
+                'bundles.manage',
                 'customers.view',
                 'customers.update',
                 'customers.delete',
-                'vendors.manage', // Future implementation of vendors.manage
+                'vendors.manage',
                 'employees.manage',
                 'settings.manage',
                 'lookups.manage',
@@ -114,6 +118,7 @@ class PermissionSeeder extends Seeder
                 'products.manage',
                 'categories.manage',
                 'collections.manage',
+                'bundles.manage',
                 'vendors.view',
                 'vendors.verify',
                 'inventory.manage',
@@ -125,6 +130,7 @@ class PermissionSeeder extends Seeder
                 'products.publish',
                 'categories.view',
                 'collections.view',
+                'bundles.view',
             ],
             'vendor_owner' => [
                 'vendors.view',

@@ -4,6 +4,7 @@ use App\Http\Controllers\Employee\EmployeeDashboardController;
 use App\Http\Controllers\Employee\Inventory\LocationController;
 use App\Http\Controllers\Employee\Inventory\StockMovementController;
 use App\Http\Controllers\Employee\Inventory\StockTransferController;
+use App\Http\Controllers\Employee\Product\BundleController;
 use App\Http\Controllers\Employee\Product\CategoryController;
 use App\Http\Controllers\Employee\Product\CollectionController;
 use App\Http\Controllers\Employee\Product\ProductController;
@@ -127,6 +128,28 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
                     Route::get('/', [ProductController::class, 'trash'])->name('index');
                     Route::post('/{product}/restore', [ProductController::class, 'restore'])->name('restore')->withTrashed();
                     Route::delete('/{product}/force', [ProductController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
+                });
+            });
+        });
+
+        Route::prefix('goi-san-pham')->name('bundles.')->group(function () {
+            // View Group
+            Route::middleware(['can:bundles.view'])->group(function () {
+                Route::get('/', [BundleController::class, 'index'])->name('index');
+                Route::get('/{bundle}', [BundleController::class, 'show'])->name('show');
+            });
+
+            // Manage Group
+            Route::middleware(['can:bundles.manage'])->group(function () {
+                Route::post('/', [BundleController::class, 'store'])->name('store');
+                Route::put('/{bundle}', [BundleController::class, 'update'])->name('update');
+                Route::delete('/{bundle}', [BundleController::class, 'destroy'])->name('destroy');
+
+                // Soft Delete / Trash Sub-group
+                Route::prefix('thung-rac')->name('trash.')->group(function () {
+                    Route::get('/', [BundleController::class, 'trash'])->name('index');
+                    Route::post('/{bundle}/restore', [BundleController::class, 'restore'])->name('restore')->withTrashed();
+                    Route::delete('/{bundle}/force', [BundleController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
                 });
             });
         });

@@ -6,7 +6,7 @@ use App\Actions\Product\UpsertProductAction;
 use App\Data\Product\ProductFilterData;
 use App\Http\Requests\Product\StoreProductRequest;
 use App\Http\Requests\Product\UpdateProductRequest;
-use App\Http\Resources\Product\EmployeeProductResource;
+use App\Http\Resources\Employee\Product\ProductResource;
 use App\Models\Product\Product;
 use App\Services\Product\ProductService;
 use App\Services\Setting\LookupService;
@@ -37,7 +37,7 @@ class ProductController
             'specNamespaces' => $this->service->getSpecNamespaces(),
             'allSpecLookupOptions' => $this->service->getAllSpecLookupOptions(),
             'lookupNamespaces' => $this->lookupService->getNamespaces(),
-            'products' => Inertia::defer(fn () => EmployeeProductResource::collection(
+            'products' => Inertia::defer(fn () => ProductResource::collection(
                 $this->service->getFiltered($filter)
             )),
             'filters' => $filter,
@@ -49,7 +49,7 @@ class ProductController
         $filter = ProductFilterData::fromRequest($request);
 
         return Inertia::render('employee/products/products/Trash', [
-            'products' => Inertia::defer(fn () => EmployeeProductResource::collection(
+            'products' => Inertia::defer(fn () => ProductResource::collection(
                 $this->service->getTrashedFiltered($filter)
             )),
             'filters' => $filter,

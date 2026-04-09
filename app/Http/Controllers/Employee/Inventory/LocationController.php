@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Employee\Inventory;
 use App\Data\Inventory\LocationFilterData;
 use App\Http\Requests\Inventory\StoreLocationRequest;
 use App\Http\Requests\Inventory\UpdateLocationRequest;
-use App\Http\Resources\Inventory\EmployeeLocationResource;
+use App\Http\Resources\Employee\Inventory\LocationResource;
 use App\Models\Inventory\Location;
 use App\Services\Inventory\LocationService;
 use Illuminate\Http\Request;
@@ -26,7 +26,7 @@ class LocationController
         return Inertia::render('employee/inventory/locations/Index', [
             'typeOptions' => $this->service->getTypeOptions(),
             'managerOptions' => $this->service->getManagerOptions()->toArray(),
-            'locations' => Inertia::defer(fn () => EmployeeLocationResource::collection(
+            'locations' => Inertia::defer(fn () => LocationResource::collection(
                 $this->service->getFiltered($filter)
             )),
             'filters' => $filter,
@@ -40,7 +40,7 @@ class LocationController
         return Inertia::render('employee/inventory/locations/Trash', [
             'typeOptions' => $this->service->getTypeOptions(),
             'managerOptions' => $this->service->getManagerOptions()->toArray(),
-            'locations' => Inertia::defer(fn () => EmployeeLocationResource::collection(
+            'locations' => Inertia::defer(fn () => LocationResource::collection(
                 $this->service->getTrashedFiltered($filter)
             )),
             'filters' => $filter,

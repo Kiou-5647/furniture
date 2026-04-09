@@ -9,7 +9,7 @@ use App\Actions\Inventory\ShipStockTransferAction;
 use App\Data\Inventory\StockTransferFilterData;
 use App\Http\Requests\Inventory\ReceiveStockTransferRequest;
 use App\Http\Requests\Inventory\StoreStockTransferRequest;
-use App\Http\Resources\Inventory\StockTransferResource;
+use App\Http\Resources\Employee\Inventory\StockTransferResource;
 use App\Models\Inventory\Inventory;
 use App\Models\Inventory\Location;
 use App\Models\Inventory\StockTransfer;

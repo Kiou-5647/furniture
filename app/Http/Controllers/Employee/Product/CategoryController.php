@@ -6,7 +6,7 @@ use App\Actions\Product\UpsertCategoryAction;
 use App\Data\Product\CategoryFilterData;
 use App\Http\Requests\Product\Category\StoreCategoryRequest;
 use App\Http\Requests\Product\Category\UpdateCategoryRequest;
-use App\Http\Resources\Product\Category\EmployeeCategoryResource;
+use App\Http\Resources\Employee\Product\CategoryResource;
 use App\Models\Product\Category;
 use App\Models\Setting\Lookup;
 use App\Services\Product\CategoryService;
@@ -27,7 +27,7 @@ class CategoryController
         return Inertia::render('employee/products/categories/Index', [
             'categoryGroups' => $this->service->getCategoryGroups(),
             'roomOptions' => $this->service->getRoomOptions(),
-            'categories' => Inertia::defer(fn () => EmployeeCategoryResource::collection(
+            'categories' => Inertia::defer(fn () => CategoryResource::collection(
                 $this->service->getFiltered($filter)
             )),
             'filters' => $filter,
@@ -43,7 +43,7 @@ class CategoryController
         return Inertia::render('employee/products/categories/Trash', [
             'categoryGroups' => $this->service->getCategoryGroups(),
             'roomOptions' => $this->service->getRoomOptions(),
-            'categories' => Inertia::defer(fn () => EmployeeCategoryResource::collection(
+            'categories' => Inertia::defer(fn () => CategoryResource::collection(
                 $this->service->getTrashedFiltered($filter)
             )),
             'filters' => $filter,

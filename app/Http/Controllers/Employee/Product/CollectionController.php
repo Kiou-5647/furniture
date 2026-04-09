@@ -6,7 +6,7 @@ use App\Actions\Product\UpsertCollectionAction;
 use App\Data\Product\CollectionFilterData;
 use App\Http\Requests\Product\Collection\StoreCollectionRequest;
 use App\Http\Requests\Product\Collection\UpdateCollectionRequest;
-use App\Http\Resources\Product\Collection\EmployeeCollectionResource;
+use App\Http\Resources\Employee\Product\CollectionResource;
 use App\Models\Product\Collection;
 use App\Services\Product\CollectionService;
 use Illuminate\Http\Request;
@@ -23,7 +23,7 @@ class CollectionController
         $filter = CollectionFilterData::fromRequest($request);
 
         return Inertia::render('employee/products/collections/Index', [
-            'collections' => Inertia::defer(fn () => EmployeeCollectionResource::collection(
+            'collections' => Inertia::defer(fn () => CollectionResource::collection(
                 $this->service->getFiltered($filter)
             )),
             'filters' => $filter,
@@ -35,7 +35,7 @@ class CollectionController
         $filter = CollectionFilterData::fromRequest($request);
 
         return Inertia::render('employee/products/collections/Trash', [
-            'collections' => Inertia::defer(fn () => EmployeeCollectionResource::collection(
+            'collections' => Inertia::defer(fn () => CollectionResource::collection(
                 $this->service->getTrashedFiltered($filter)
             )),
             'filters' => $filter,

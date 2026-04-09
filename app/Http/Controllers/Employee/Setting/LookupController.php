@@ -6,7 +6,7 @@ use App\Actions\Setting\UpsertLookupAction;
 use App\Data\Setting\LookupFilterData;
 use App\Http\Requests\Setting\Lookup\StoreLookupRequest;
 use App\Http\Requests\Setting\Lookup\UpdateLookupRequest;
-use App\Http\Resources\Setting\Lookup\EmployeeLookupResource;
+use App\Http\Resources\Employee\Setting\LookupResource;
 use App\Models\Setting\Lookup;
 use App\Services\Setting\LookupService;
 use Illuminate\Http\Request;
@@ -24,7 +24,7 @@ class LookupController
 
         return Inertia::render('employee/settings/lookups/Index', [
             'namespaces' => $this->service->getNamespaces(),
-            'lookups' => Inertia::defer(fn () => EmployeeLookupResource::collection(
+            'lookups' => Inertia::defer(fn () => LookupResource::collection(
                 $this->service->getFiltered($filter)
             )),
             'filters' => $filter,
@@ -37,7 +37,7 @@ class LookupController
 
         return Inertia::render('employee/settings/lookups/Trash', [
             'namespaces' => $this->service->getNamespaces(),
-            'lookups' => Inertia::defer(fn () => EmployeeLookupResource::collection(
+            'lookups' => Inertia::defer(fn () => LookupResource::collection(
                 $this->service->getTrashedFiltered($filter)
             )),
             'filters' => $filter,

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Employee\Setting;
 
 use App\Http\Requests\Setting\ActivityLog\ActivityLogIndexRequest;
-use App\Http\Resources\Setting\ActivityLog\ActivityLogResource;
+use App\Http\Resources\Employee\Setting\ActivityLogResource;
 use App\Services\Setting\ActivityLogService;
 
 class ActivityLogController
