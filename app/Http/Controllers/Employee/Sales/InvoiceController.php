@@ -66,6 +66,8 @@ class InvoiceController
 
     public function destroy(Invoice $invoice)
     {
+        $this->authorize('forceDelete', $invoice);
+
         if (! Auth::user()->can('invoices.delete')) {
             return back()->with('error', 'Không đủ quyền hạn!');
         }

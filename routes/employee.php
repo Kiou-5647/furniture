@@ -19,6 +19,8 @@ use App\Http\Controllers\Employee\Sales\PaymentController;
 use App\Http\Controllers\Employee\Setting\ActivityLogController;
 use App\Http\Controllers\Employee\Setting\LookupController;
 use App\Http\Controllers\Employee\Setting\LookupNamespaceController;
+use App\Http\Controllers\HR\DepartmentController;
+use App\Http\Controllers\HR\EmployeeController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien')->name('employee.')->group(function () {
@@ -29,6 +31,43 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
 
     Route::get('/nhat-ky-hoat-dong', [ActivityLogController::class, 'index'])
         ->name('activities.index');
+
+    /**
+     * HR routes
+     */
+    Route::prefix('quan-ly-nhan-vien')->name('hr.employees.')->group(function () {
+        Route::middleware(['can:hr.employees.view'])->group(function () {
+            Route::get('/', [EmployeeController::class, 'index'])->name('index');
+            Route::get('/{employee}', [EmployeeController::class, 'show'])->name('show');
+        });
+
+        Route::middleware(['can:hr.employees.manage'])->group(function () {
+            Route::post('/', [EmployeeController::class, 'store'])->name('store');
+            Route::put('/{employee}', [EmployeeController::class, 'update'])->name('update');
+            Route::post('/{employee}/terminate', [EmployeeController::class, 'terminate'])->name('terminate');
+            Route::post('/{employee}/restore', [EmployeeController::class, 'restore'])->name('restore');
+
+            Route::middleware(['can:hr.roles.manage'])->group(function () {
+                Route::get('/{employee}/permissions', [EmployeeController::class, 'permissions'])->name('permissions');
+                Route::post('/{employee}/roles', [EmployeeController::class, 'assignRole'])->name('assign-role');
+                Route::delete('/{employee}/roles/{role}', [EmployeeController::class, 'removeRole'])->name('remove-role');
+                Route::post('/{employee}/permissions/{permission}', [EmployeeController::class, 'grantPermission'])->name('grant-permission');
+                Route::delete('/{employee}/permissions/{permission}', [EmployeeController::class, 'revokePermission'])->name('revoke-permission');
+            });
+        });
+    });
+
+    Route::prefix('quan-ly-phong-ban')->name('hr.departments.')->group(function () {
+        Route::middleware(['can:hr.departments.view'])->group(function () {
+            Route::get('/', [DepartmentController::class, 'index'])->name('index');
+        });
+
+        Route::middleware(['can:hr.departments.manage'])->group(function () {
+            Route::post('/', [DepartmentController::class, 'store'])->name('store');
+            Route::put('/{department}', [DepartmentController::class, 'update'])->name('update');
+            Route::delete('/{department}', [DepartmentController::class, 'destroy'])->name('destroy');
+        });
+    });
 
     /**
      * Design Booking routes

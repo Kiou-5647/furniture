@@ -68,6 +68,8 @@ class ShipmentController
 
     public function ship(Request $request, Shipment $shipment, ShipShipmentAction $action)
     {
+        $this->authorize('update', $shipment);
+
         $employee = $request->user()->employee;
 
         $request->validate([
@@ -87,6 +89,8 @@ class ShipmentController
 
     public function deliver(Shipment $shipment, Request $request, DeliverShipmentAction $action)
     {
+        $this->authorize('update', $shipment);
+
         $employee = $request->user()->employee;
 
         $action->execute($shipment, $employee);

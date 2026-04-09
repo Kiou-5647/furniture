@@ -53,6 +53,8 @@ class PaymentController
 
     public function refund(Payment $payment, Request $request, RefundPaymentAction $action)
     {
+        $this->authorize('update', $payment);
+
         $employee = $request->user()->employee;
 
         $action->execute($payment, $employee);

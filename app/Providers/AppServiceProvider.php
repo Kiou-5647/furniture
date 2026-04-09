@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use App\Models\Auth\User;
 use App\Models\Inventory\Location;
 use App\Models\Inventory\StockTransfer;
 use App\Models\Product\Bundle;
@@ -24,7 +23,6 @@ use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -40,10 +38,6 @@ class AppServiceProvider extends ServiceProvider
         Model::unguard();
         $this->configureDefaults();
         $this->registerObservers();
-
-        Gate::before(function (User $user, string $ability) {
-            return $user->hasRole('super_admin') ? true : null;
-        });
     }
 
     protected function configureDefaults(): void

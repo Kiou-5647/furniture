@@ -139,6 +139,13 @@ class PermissionSeeder extends Seeder
 
             ['name' => 'design_services.view', 'description' => 'View design services'],
             ['name' => 'design_services.manage', 'description' => 'Manage design services'],
+
+            // HR
+            ['name' => 'hr.employees.view', 'description' => 'View employees'],
+            ['name' => 'hr.employees.manage', 'description' => 'Manage employees'],
+            ['name' => 'hr.roles.manage', 'description' => 'Manage roles and permissions'],
+            ['name' => 'hr.departments.view', 'description' => 'View departments'],
+            ['name' => 'hr.departments.manage', 'description' => 'Manage departments'],
         ];
     }
 
@@ -162,6 +169,9 @@ class PermissionSeeder extends Seeder
                 'shipments.manage',
                 'bookings.manage',
                 'designers.view',
+                'hr.employees.manage',
+                'hr.roles.manage',
+                'hr.departments.manage',
                 'customers.view',
                 'customers.update',
                 'customers.delete',

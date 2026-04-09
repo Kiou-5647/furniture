@@ -67,6 +67,8 @@ class BookingController
 
     public function confirm(Booking $booking, Request $request, ConfirmBookingAction $action)
     {
+        $this->authorize('approve', $booking);
+
         $employee = $request->user()->employee;
 
         $action->execute($booking, $employee);

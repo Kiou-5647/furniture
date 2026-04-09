@@ -71,6 +71,8 @@ class OrderController
 
     public function updateStatus(UpdateOrderStatusRequest $request, Order $order, UpdateOrderStatusAction $action)
     {
+        $this->authorize('update', $order);
+
         $employee = $request->user()->employee;
         $newStatus = OrderStatus::tryFrom($request->input('status'));
 
