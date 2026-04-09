@@ -1,6 +1,10 @@
 <?php
 
+use App\Http\Controllers\Employee\Commerce\OrderController;
+use App\Http\Controllers\Employee\Commerce\ShippingMethodController;
 use App\Http\Controllers\Employee\EmployeeDashboardController;
+use App\Http\Controllers\Employee\Finance\InvoiceController;
+use App\Http\Controllers\Employee\Finance\PaymentController;
 use App\Http\Controllers\Employee\Inventory\LocationController;
 use App\Http\Controllers\Employee\Inventory\StockMovementController;
 use App\Http\Controllers\Employee\Inventory\StockTransferController;
@@ -21,6 +25,90 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
 
     Route::get('/nhat-ky-hoat-dong', [ActivityLogController::class, 'index'])
         ->name('activities.index');
+
+    /**
+     * Commerce routes
+     */
+    Route::prefix('thuong-mai')->name('commerce.')->group(function () {
+        // Orders
+        Route::prefix('don-hang')->name('orders.')->group(function () {
+            Route::middleware(['can:orders.view'])->group(function () {
+                Route::get('/', [OrderController::class, 'index'])->name('index');
+                Route::get('/{order}', [OrderController::class, 'show'])->name('show');
+            });
+
+            Route::middleware(['can:orders.manage'])->group(function () {
+                Route::post('/', [OrderController::class, 'store'])->name('store');
+                Route::post('/{order}/update-status', [OrderController::class, 'updateStatus'])->name('update-status');
+                Route::post('/{order}/cancel', [OrderController::class, 'cancel'])->name('cancel');
+                Route::post('/{order}/complete', [OrderController::class, 'complete'])->name('complete');
+                Route::delete('/{order}', [OrderController::class, 'destroy'])->name('destroy');
+
+                Route::prefix('thung-rac')->name('trash.')->group(function () {
+                    Route::get('/', [OrderController::class, 'trash'])->name('index');
+                    Route::post('/{order}/restore', [OrderController::class, 'restore'])->name('restore')->withTrashed();
+                    Route::delete('/{order}/force', [OrderController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
+                });
+            });
+        });
+
+        // Shipping Methods
+        Route::prefix('phuong-thuc-van-chuyen')->name('shipping-methods.')->group(function () {
+            Route::middleware(['can:shipping_methods.view'])->group(function () {
+                Route::get('/', [ShippingMethodController::class, 'index'])->name('index');
+            });
+
+            Route::middleware(['can:shipping_methods.manage'])->group(function () {
+                Route::post('/', [ShippingMethodController::class, 'store'])->name('store');
+                Route::put('/{shippingMethod}', [ShippingMethodController::class, 'update'])->name('update');
+                Route::delete('/{shippingMethod}', [ShippingMethodController::class, 'destroy'])->name('destroy');
+            });
+        });
+    });
+
+    /**
+     * Finance routes
+     */
+    Route::prefix('tai-chinh')->name('finance.')->group(function () {
+        // Invoices
+        Route::prefix('hoa-don')->name('invoices.')->group(function () {
+            Route::middleware(['can:invoices.view'])->group(function () {
+                Route::get('/', [InvoiceController::class, 'index'])->name('index');
+                Route::get('/{invoice}', [InvoiceController::class, 'show'])->name('show');
+            });
+
+            Route::middleware(['can:invoices.manage'])->group(function () {
+                Route::post('/', [InvoiceController::class, 'store'])->name('store');
+                Route::delete('/{invoice}', [InvoiceController::class, 'destroy'])->name('destroy');
+
+                Route::prefix('thung-rac')->name('trash.')->group(function () {
+                    Route::get('/', [InvoiceController::class, 'trash'])->name('index');
+                    Route::post('/{invoice}/restore', [InvoiceController::class, 'restore'])->name('restore')->withTrashed();
+                    Route::delete('/{invoice}/force', [InvoiceController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
+                });
+            });
+        });
+
+        // Payments
+        Route::prefix('thanh-toan')->name('payments.')->group(function () {
+            Route::middleware(['can:payments.view'])->group(function () {
+                Route::get('/', [PaymentController::class, 'index'])->name('index');
+                Route::get('/{payment}', [PaymentController::class, 'show'])->name('show');
+            });
+
+            Route::middleware(['can:payments.manage'])->group(function () {
+                Route::post('/', [PaymentController::class, 'store'])->name('store');
+                Route::post('/{payment}/refund', [PaymentController::class, 'refund'])->name('refund');
+                Route::delete('/{payment}', [PaymentController::class, 'destroy'])->name('destroy');
+
+                Route::prefix('thung-rac')->name('trash.')->group(function () {
+                    Route::get('/', [PaymentController::class, 'trash'])->name('index');
+                    Route::post('/{payment}/restore', [PaymentController::class, 'restore'])->name('restore')->withTrashed();
+                    Route::delete('/{payment}/force', [PaymentController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
+                });
+            });
+        });
+    });
 
     Route::prefix('cau-hinh')->name('settings.')->group(function () {
         /**

@@ -11,10 +11,10 @@ class BundleItemResource extends JsonResource
     {
         return [
             'product_id' => $this->product_id,
-            'product_name' => $this->whenLoaded('product', fn() => $this->product->name),
-            'product_slug' => $this->whenLoaded('product', fn() => $this->product->slug),
+            'product_name' => $this->whenLoaded('product', fn () => $this->product->name),
+            'product_slug' => $this->whenLoaded('product', fn () => $this->product->slug),
             'quantity' => $this->quantity,
-            'variants' => $this->whenLoaded('product', fn() => $this->product->variants->map(fn($variant) => [
+            'variants' => $this->whenLoaded('product', fn () => $this->product->variants->map(fn ($variant) => [
                 'id' => $variant->id,
                 'sku' => $variant->sku,
                 'name' => $variant->name,

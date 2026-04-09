@@ -51,7 +51,7 @@ class CartItemResource extends JsonResource
             'variant_sku' => $variant?->sku,
             'variant_name' => $variant?->name,
             'image_url' => $variant?->getFirstMediaUrl('primary_image') ?: '',
-            'image_thumb_url' => $variant?->getFirstMediaUrl('primary_image', 'thumb') ?: ''
+            'image_thumb_url' => $variant?->getFirstMediaUrl('primary_image', 'thumb') ?: '',
         ];
     }
 
@@ -63,7 +63,7 @@ class CartItemResource extends JsonResource
             'name' => $bundle->name,
             'slug' => $bundle->slug,
             'image_url' => $bundle->getFirstMediaUrl('primary_image') ?: '',
-            'image_thumb_url' => $bundle->getFirstMediaUrl('primary_image', 'thumb') ?: ''
+            'image_thumb_url' => $bundle->getFirstMediaUrl('primary_image', 'thumb') ?: '',
         ];
     }
 

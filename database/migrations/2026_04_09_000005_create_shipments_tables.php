@@ -20,7 +20,7 @@ return new class extends Migration
             $table->softDeletes();
         });
 
-        DB::statement("CREATE INDEX idx_shipping_methods_active ON shipping_methods (is_active) WHERE is_active = true AND deleted_at IS NULL");
+        DB::statement('CREATE INDEX idx_shipping_methods_active ON shipping_methods (is_active) WHERE is_active = true AND deleted_at IS NULL');
 
         Schema::create('shipments', function (Blueprint $table) {
             $table->uuid('id')->primary();
@@ -37,10 +37,10 @@ return new class extends Migration
             $table->softDeletes();
         });
 
-        DB::statement("CREATE INDEX idx_shipments_order_id ON shipments (order_id)");
-        DB::statement("CREATE INDEX idx_shipments_vendor_id ON shipments (vendor_id) WHERE vendor_id IS NOT NULL");
-        DB::statement("CREATE INDEX idx_shipments_status ON shipments (status)");
-        DB::statement("CREATE INDEX idx_shipments_tracking ON shipments (tracking_number) WHERE tracking_number IS NOT NULL");
+        DB::statement('CREATE INDEX idx_shipments_order_id ON shipments (order_id)');
+        DB::statement('CREATE INDEX idx_shipments_vendor_id ON shipments (vendor_id) WHERE vendor_id IS NOT NULL');
+        DB::statement('CREATE INDEX idx_shipments_status ON shipments (status)');
+        DB::statement('CREATE INDEX idx_shipments_tracking ON shipments (tracking_number) WHERE tracking_number IS NOT NULL');
 
         Schema::create('shipment_items', function (Blueprint $table) {
             $table->uuid('id')->primary();
@@ -50,8 +50,8 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        DB::statement("CREATE INDEX idx_shipment_items_shipment_id ON shipment_items (shipment_id)");
-        DB::statement("CREATE INDEX idx_shipment_items_order_item_id ON shipment_items (order_item_id)");
+        DB::statement('CREATE INDEX idx_shipment_items_shipment_id ON shipment_items (shipment_id)');
+        DB::statement('CREATE INDEX idx_shipment_items_order_item_id ON shipment_items (order_item_id)');
     }
 
     public function down(): void

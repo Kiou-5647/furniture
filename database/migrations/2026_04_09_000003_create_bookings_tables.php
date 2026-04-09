@@ -35,8 +35,8 @@ return new class extends Migration
             $table->softDeletes();
         });
 
-        DB::statement("CREATE INDEX idx_designers_user_id ON designers (user_id)");
-        DB::statement("CREATE INDEX idx_designers_active ON designers (is_active) WHERE is_active = true AND deleted_at IS NULL");
+        DB::statement('CREATE INDEX idx_designers_user_id ON designers (user_id)');
+        DB::statement('CREATE INDEX idx_designers_active ON designers (is_active) WHERE is_active = true AND deleted_at IS NULL');
 
         Schema::create('designer_availabilities', function (Blueprint $table) {
             $table->uuid('id')->primary();
@@ -46,8 +46,8 @@ return new class extends Migration
             $table->time('end_time');
             $table->timestamps();
         });
-        
-        DB::statement("CREATE INDEX idx_designer_availabilities_designer_id ON designer_availabilities (designer_id)");
+
+        DB::statement('CREATE INDEX idx_designer_availabilities_designer_id ON designer_availabilities (designer_id)');
 
         Schema::create('bookings', function (Blueprint $table) {
             $table->uuid('id')->primary();
@@ -63,11 +63,11 @@ return new class extends Migration
             $table->softDeletes();
         });
 
-        DB::statement("CREATE INDEX idx_bookings_customer_id ON bookings (customer_id)");
-        DB::statement("CREATE INDEX idx_bookings_designer_id ON bookings (designer_id)");
-        DB::statement("CREATE INDEX idx_bookings_status ON bookings (status)");
-        DB::statement("CREATE INDEX idx_bookings_start_at ON bookings (start_at) WHERE start_at IS NOT NULL");
-        DB::statement("CREATE INDEX idx_bookings_deadline_at ON bookings (deadline_at) WHERE deadline_at IS NOT NULL");
+        DB::statement('CREATE INDEX idx_bookings_customer_id ON bookings (customer_id)');
+        DB::statement('CREATE INDEX idx_bookings_designer_id ON bookings (designer_id)');
+        DB::statement('CREATE INDEX idx_bookings_status ON bookings (status)');
+        DB::statement('CREATE INDEX idx_bookings_start_at ON bookings (start_at) WHERE start_at IS NOT NULL');
+        DB::statement('CREATE INDEX idx_bookings_deadline_at ON bookings (deadline_at) WHERE deadline_at IS NOT NULL');
     }
 
     public function down(): void

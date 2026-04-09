@@ -3,6 +3,7 @@
 namespace App\Models\Employee;
 
 use App\Models\Auth\User;
+use App\Models\Commerce\Order;
 use App\Models\Inventory\Location;
 use App\Models\Inventory\StockMovement;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -36,6 +37,11 @@ class Employee extends Model implements HasMedia
     public function department(): BelongsTo
     {
         return $this->belongsTo(Department::class);
+    }
+
+    public function acceptedOrders(): HasMany
+    {
+        return $this->hasMany(Order::class, 'accepted_by');
     }
 
     public function managedLocations(): HasMany

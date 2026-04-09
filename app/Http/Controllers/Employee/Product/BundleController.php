@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Employee\Product;
 
 use App\Actions\Product\UpsertBundleAction;
 use App\Data\Product\BundleFilterData;
-use App\Http\Requests\Product\StoreBundleRequest;
-use App\Http\Requests\Product\UpdateBundleRequest;
+use App\Http\Requests\Product\Bundle\StoreBundleRequest;
+use App\Http\Requests\Product\Bundle\UpdateBundleRequest;
 use App\Http\Resources\Employee\Product\BundleResource;
 use App\Models\Product\Bundle;
 use App\Services\Product\BundleService;

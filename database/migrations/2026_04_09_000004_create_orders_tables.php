@@ -21,9 +21,9 @@ return new class extends Migration
             $table->softDeletes();
         });
 
-        DB::statement("CREATE INDEX idx_orders_customer_id ON orders (customer_id)");
-        DB::statement("CREATE INDEX idx_orders_status ON orders (status)");
-        DB::statement("CREATE INDEX idx_orders_created_at ON orders (created_at)");
+        DB::statement('CREATE INDEX idx_orders_customer_id ON orders (customer_id)');
+        DB::statement('CREATE INDEX idx_orders_status ON orders (status)');
+        DB::statement('CREATE INDEX idx_orders_created_at ON orders (created_at)');
 
         Schema::create('order_items', function (Blueprint $table) {
             $table->uuid('id')->primary();
@@ -36,8 +36,8 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        DB::statement("CREATE INDEX idx_order_items_order_id ON order_items (order_id)");
-        DB::statement("CREATE INDEX idx_order_items_purchasable ON order_items (purchasable_type, purchasable_id)");
+        DB::statement('CREATE INDEX idx_order_items_order_id ON order_items (order_id)');
+        DB::statement('CREATE INDEX idx_order_items_purchasable ON order_items (purchasable_type, purchasable_id)');
     }
 
     public function down(): void

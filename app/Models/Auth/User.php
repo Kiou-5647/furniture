@@ -3,6 +3,7 @@
 namespace App\Models\Auth;
 
 use App\Enums\UserType;
+use App\Models\Commerce\Order;
 use App\Models\Customer\Customer;
 use App\Models\Employee\Employee;
 use App\Models\Vendor\Vendor;
@@ -10,6 +11,7 @@ use App\Models\Vendor\VendorUser;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -57,6 +59,27 @@ class User extends Authenticatable implements MustVerifyEmail
         ];
     }
 
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['name', 'email', 'type', 'is_active', 'is_verified', 'last_login_at'])
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges()
+            ->setDescriptionForEvent(fn (string $eventName) => "User account {$eventName}");
+    }
+
+    public function getAvatarUrlAttribute(): ?string
+    {
+        $profile = match ($this->type->value) {
+            'employee' => $this->employee,
+            'customer' => $this->customer,
+            'vendor' => $this->vendorUser,
+            default => null,
+        };
+
+        return $profile?->getFirstMediaUrl('avatar', 'thumb') ?: null;
+    }
+
     public function isEmployee(): bool
     {
         return $this->type === UserType::Employee;
@@ -99,24 +122,8 @@ class User extends Authenticatable implements MustVerifyEmail
         );
     }
 
-    public function getAvatarUrlAttribute(): ?string
+    public function orders(): HasMany
     {
-        $profile = match ($this->type->value) {
-            'employee' => $this->employee,
-            'customer' => $this->customer,
-            'vendor' => $this->vendorUser,
-            default => null,
-        };
-
-        return $profile?->getFirstMediaUrl('avatar', 'thumb') ?: null;
-    }
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly(['name', 'email', 'type', 'is_active', 'is_verified', 'last_login_at'])
-            ->logOnlyDirty()
-            ->dontLogEmptyChanges()
-            ->setDescriptionForEvent(fn (string $eventName) => "User account {$eventName}");
+        return $this->hasMany(Order::class, 'customer_id');
     }
 }

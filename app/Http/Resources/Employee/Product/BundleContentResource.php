@@ -12,11 +12,11 @@ class BundleContentResource extends JsonResource
         return [
             'id' => $this->id,
             'product_id' => $this->product_id,
-            'product' => $this->whenLoaded('product', fn() => [
+            'product' => $this->whenLoaded('product', fn () => [
                 'id' => $this->product->id,
                 'name' => $this->product->name,
                 'min_price' => $this->product->min_price,
-                'variants' => $this->product->variants->map(fn($variant) => [
+                'variants' => $this->product->variants->map(fn ($variant) => [
                     'id' => $variant->id,
                     'sku' => $variant->sku,
                     'name' => $variant->name,
@@ -31,8 +31,8 @@ class BundleContentResource extends JsonResource
                 ])->values()->toArray(),
             ]),
             'quantity' => $this->quantity,
-            'unit_price' => $this->whenLoaded('product', fn() => $this->product->min_price),
-            'subtotal' => $this->whenLoaded('product', fn() => (float) $this->product->min_price * $this->quantity),
+            'unit_price' => $this->whenLoaded('product', fn () => $this->product->min_price),
+            'subtotal' => $this->whenLoaded('product', fn () => (float) $this->product->min_price * $this->quantity),
         ];
     }
 }

@@ -22,9 +22,9 @@ return new class extends Migration
         });
 
         // Partial unique index for slug where active and not deleted
-        DB::statement("CREATE UNIQUE INDEX unq_bundles_slug_active ON bundles (slug) WHERE deleted_at IS NULL");
-        DB::statement("CREATE INDEX idx_bundles_active ON bundles (is_active) WHERE is_active = true AND deleted_at IS NULL");
-        DB::statement("CREATE INDEX idx_bundles_created_at ON bundles (created_at)");
+        DB::statement('CREATE UNIQUE INDEX unq_bundles_slug_active ON bundles (slug) WHERE deleted_at IS NULL');
+        DB::statement('CREATE INDEX idx_bundles_active ON bundles (is_active) WHERE is_active = true AND deleted_at IS NULL');
+        DB::statement('CREATE INDEX idx_bundles_created_at ON bundles (created_at)');
 
         Schema::create('bundle_contents', function (Blueprint $table) {
             $table->uuid('id')->primary();
@@ -34,8 +34,8 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        DB::statement("CREATE INDEX idx_bundle_contents_bundle_id ON bundle_contents (bundle_id)");
-        DB::statement("CREATE INDEX idx_bundle_contents_product_id ON bundle_contents (product_id)");
+        DB::statement('CREATE INDEX idx_bundle_contents_bundle_id ON bundle_contents (bundle_id)');
+        DB::statement('CREATE INDEX idx_bundle_contents_product_id ON bundle_contents (product_id)');
     }
 
     public function down(): void

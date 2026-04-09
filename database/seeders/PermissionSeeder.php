@@ -88,6 +88,33 @@ class PermissionSeeder extends Seeder
             // Inventory
             ['name' => 'inventory.view', 'description' => 'View inventory and stock levels'],
             ['name' => 'inventory.manage', 'description' => 'Manage inventory, locations, and stock transfers'],
+
+            // Commerce
+            ['name' => 'orders.view', 'description' => 'View orders'],
+            ['name' => 'orders.create', 'description' => 'Create orders'],
+            ['name' => 'orders.update', 'description' => 'Update order status'],
+            ['name' => 'orders.delete', 'description' => 'Delete orders'],
+            ['name' => 'orders.force_delete', 'description' => 'Permanently delete orders'],
+            ['name' => 'orders.restore', 'description' => 'Restore deleted orders'],
+            ['name' => 'orders.manage', 'description' => 'Manage all order operations'],
+
+            ['name' => 'shipping_methods.view', 'description' => 'View shipping methods'],
+            ['name' => 'shipping_methods.manage', 'description' => 'Manage shipping methods'],
+
+            // Finance
+            ['name' => 'invoices.view', 'description' => 'View invoices'],
+            ['name' => 'invoices.create', 'description' => 'Create invoices'],
+            ['name' => 'invoices.update', 'description' => 'Update invoices'],
+            ['name' => 'invoices.delete', 'description' => 'Delete invoices'],
+            ['name' => 'invoices.force_delete', 'description' => 'Permanently delete invoices'],
+            ['name' => 'invoices.manage', 'description' => 'Manage all invoice operations'],
+
+            ['name' => 'payments.view', 'description' => 'View payments'],
+            ['name' => 'payments.create', 'description' => 'Create payments'],
+            ['name' => 'payments.update', 'description' => 'Update payments'],
+            ['name' => 'payments.delete', 'description' => 'Delete payments'],
+            ['name' => 'payments.force_delete', 'description' => 'Permanently delete payments'],
+            ['name' => 'payments.manage', 'description' => 'Manage all payment operations'],
         ];
     }
 
@@ -104,6 +131,10 @@ class PermissionSeeder extends Seeder
                 'categories.manage',
                 'collections.manage',
                 'bundles.manage',
+                'orders.manage',
+                'shipping_methods.manage',
+                'invoices.manage',
+                'payments.manage',
                 'customers.view',
                 'customers.update',
                 'customers.delete',

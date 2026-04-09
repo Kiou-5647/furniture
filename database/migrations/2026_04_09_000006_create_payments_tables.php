@@ -23,8 +23,8 @@ return new class extends Migration
             $table->softDeletes();
         });
 
-        DB::statement("CREATE INDEX idx_invoices_invoiceable ON invoices (invoiceable_type, invoiceable_id)");
-        DB::statement("CREATE INDEX idx_invoices_status ON invoices (status)");
+        DB::statement('CREATE INDEX idx_invoices_invoiceable ON invoices (invoiceable_type, invoiceable_id)');
+        DB::statement('CREATE INDEX idx_invoices_status ON invoices (status)');
 
         Schema::create('payments', function (Blueprint $table) {
             $table->uuid('id')->primary();
@@ -38,9 +38,9 @@ return new class extends Migration
             $table->softDeletes();
         });
 
-        DB::statement("CREATE INDEX idx_payments_customer_id ON payments (customer_id)");
-        DB::statement("CREATE INDEX idx_payments_transaction_id ON payments (transaction_id) WHERE transaction_id IS NOT NULL");
-        DB::statement("CREATE INDEX idx_payments_status ON payments (status)");
+        DB::statement('CREATE INDEX idx_payments_customer_id ON payments (customer_id)');
+        DB::statement('CREATE INDEX idx_payments_transaction_id ON payments (transaction_id) WHERE transaction_id IS NOT NULL');
+        DB::statement('CREATE INDEX idx_payments_status ON payments (status)');
 
         Schema::create('payment_allocations', function (Blueprint $table) {
             $table->uuid('id')->primary();
@@ -50,8 +50,8 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        DB::statement("CREATE INDEX idx_payment_allocations_payment_id ON payment_allocations (payment_id)");
-        DB::statement("CREATE INDEX idx_payment_allocations_invoice_id ON payment_allocations (invoice_id)");
+        DB::statement('CREATE INDEX idx_payment_allocations_payment_id ON payment_allocations (payment_id)');
+        DB::statement('CREATE INDEX idx_payment_allocations_invoice_id ON payment_allocations (invoice_id)');
     }
 
     public function down(): void

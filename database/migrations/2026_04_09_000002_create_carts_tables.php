@@ -17,9 +17,9 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        DB::statement("CREATE INDEX idx_carts_user_id ON carts (user_id) WHERE user_id IS NOT NULL");
-        DB::statement("CREATE INDEX idx_carts_session_id ON carts (session_id) WHERE session_id IS NOT NULL");
-        DB::statement("CREATE INDEX idx_carts_status ON carts (status)");
+        DB::statement('CREATE INDEX idx_carts_user_id ON carts (user_id) WHERE user_id IS NOT NULL');
+        DB::statement('CREATE INDEX idx_carts_session_id ON carts (session_id) WHERE session_id IS NOT NULL');
+        DB::statement('CREATE INDEX idx_carts_status ON carts (status)');
 
         Schema::create('cart_items', function (Blueprint $table) {
             $table->uuid('id')->primary();
@@ -30,12 +30,12 @@ return new class extends Migration
             $table->decimal('unit_price', 15, 2)->default(0);
             $table->jsonb('configuration')->default('{}');
             $table->timestamps();
-            
+
             // Note: Not foreign keying purchasable_id directly since it's polymorphic (products or bundles)
         });
 
-        DB::statement("CREATE INDEX idx_cart_items_cart_id ON cart_items (cart_id)");
-        DB::statement("CREATE INDEX idx_cart_items_purchasable ON cart_items (purchasable_type, purchasable_id)");
+        DB::statement('CREATE INDEX idx_cart_items_cart_id ON cart_items (cart_id)');
+        DB::statement('CREATE INDEX idx_cart_items_purchasable ON cart_items (purchasable_type, purchasable_id)');
     }
 
     public function down(): void
