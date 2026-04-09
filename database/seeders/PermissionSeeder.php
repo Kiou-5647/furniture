@@ -124,6 +124,21 @@ class PermissionSeeder extends Seeder
             ['name' => 'shipments.restore', 'description' => 'Restore shipments'],
             ['name' => 'shipments.force_delete', 'description' => 'Permanently delete shipments'],
             ['name' => 'shipments.manage', 'description' => 'Manage all shipment operations'],
+
+            // Design Booking
+            ['name' => 'bookings.view', 'description' => 'View bookings'],
+            ['name' => 'bookings.create', 'description' => 'Create bookings'],
+            ['name' => 'bookings.update', 'description' => 'Update bookings'],
+            ['name' => 'bookings.delete', 'description' => 'Delete bookings'],
+            ['name' => 'bookings.restore', 'description' => 'Restore bookings'],
+            ['name' => 'bookings.force_delete', 'description' => 'Permanently delete bookings'],
+            ['name' => 'bookings.manage', 'description' => 'Manage all booking operations'],
+            ['name' => 'bookings.approve', 'description' => 'Approve bookings'],
+
+            ['name' => 'designers.manage', 'description' => 'Manage designers'],
+
+            ['name' => 'design_services.view', 'description' => 'View design services'],
+            ['name' => 'design_services.manage', 'description' => 'Manage design services'],
         ];
     }
 
@@ -145,6 +160,8 @@ class PermissionSeeder extends Seeder
                 'invoices.manage',
                 'payments.manage',
                 'shipments.manage',
+                'bookings.manage',
+                'designers.view',
                 'customers.view',
                 'customers.update',
                 'customers.delete',

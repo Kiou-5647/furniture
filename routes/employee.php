@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\Employee\Booking\BookingController;
+use App\Http\Controllers\Employee\Booking\DesignerController;
+use App\Http\Controllers\Employee\Booking\DesignServiceController;
 use App\Http\Controllers\Employee\EmployeeDashboardController;
 use App\Http\Controllers\Employee\Fulfillment\ShipmentController;
 use App\Http\Controllers\Employee\Fulfillment\ShippingMethodController;
@@ -26,6 +29,48 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
 
     Route::get('/nhat-ky-hoat-dong', [ActivityLogController::class, 'index'])
         ->name('activities.index');
+
+    /**
+     * Design Booking routes
+     */
+    Route::prefix('dat-lich')->name('booking.')->group(function () {
+        // Bookings
+        Route::middleware(['can:bookings.view'])->group(function () {
+            Route::get('/', [BookingController::class, 'index'])->name('index');
+            Route::get('/{booking}', [BookingController::class, 'show'])->name('show');
+        });
+
+        Route::middleware(['can:bookings.manage'])->group(function () {
+            Route::post('/', [BookingController::class, 'store'])->name('store');
+            Route::post('/{booking}/confirm', [BookingController::class, 'confirm'])->name('confirm');
+            Route::post('/{booking}/cancel', [BookingController::class, 'cancel'])->name('cancel');
+            Route::delete('/{booking}', [BookingController::class, 'destroy'])->name('destroy');
+
+            Route::prefix('thung-rac')->name('trash.')->group(function () {
+                Route::get('/', [BookingController::class, 'trash'])->name('index');
+                Route::post('/{booking}/restore', [BookingController::class, 'restore'])->name('restore')->withTrashed();
+                Route::delete('/{booking}/force', [BookingController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
+            });
+        });
+
+        // Designers
+        Route::prefix('nha-thiet-ke')->name('designers.')->group(function () {
+            Route::get('/', [DesignerController::class, 'index'])->name('index');
+            Route::post('/', [DesignerController::class, 'store'])->name('store');
+            Route::put('/{designer}', [DesignerController::class, 'update'])->name('update');
+            Route::delete('/{designer}', [DesignerController::class, 'destroy'])->name('destroy');
+            Route::post('/{designer}/restore', [DesignerController::class, 'restore'])->name('restore')->withTrashed();
+        });
+
+        // Design Services
+        Route::prefix('dich-vu')->name('services.')->group(function () {
+            Route::get('/', [DesignServiceController::class, 'index'])->name('index');
+            Route::post('/', [DesignServiceController::class, 'store'])->name('store');
+            Route::put('/{service}', [DesignServiceController::class, 'update'])->name('update');
+            Route::delete('/{service}', [DesignServiceController::class, 'destroy'])->name('destroy');
+            Route::post('/{service}/restore', [DesignServiceController::class, 'restore'])->name('restore')->withTrashed();
+        });
+    });
 
     /**
      * Sales routes
