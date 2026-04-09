@@ -1,10 +1,8 @@
 <?php
 
-use App\Http\Controllers\Employee\Commerce\OrderController;
-use App\Http\Controllers\Employee\Commerce\ShippingMethodController;
 use App\Http\Controllers\Employee\EmployeeDashboardController;
-use App\Http\Controllers\Employee\Finance\InvoiceController;
-use App\Http\Controllers\Employee\Finance\PaymentController;
+use App\Http\Controllers\Employee\Fulfillment\ShipmentController;
+use App\Http\Controllers\Employee\Fulfillment\ShippingMethodController;
 use App\Http\Controllers\Employee\Inventory\LocationController;
 use App\Http\Controllers\Employee\Inventory\StockMovementController;
 use App\Http\Controllers\Employee\Inventory\StockTransferController;
@@ -12,6 +10,9 @@ use App\Http\Controllers\Employee\Product\BundleController;
 use App\Http\Controllers\Employee\Product\CategoryController;
 use App\Http\Controllers\Employee\Product\CollectionController;
 use App\Http\Controllers\Employee\Product\ProductController;
+use App\Http\Controllers\Employee\Sales\InvoiceController;
+use App\Http\Controllers\Employee\Sales\OrderController;
+use App\Http\Controllers\Employee\Sales\PaymentController;
 use App\Http\Controllers\Employee\Setting\ActivityLogController;
 use App\Http\Controllers\Employee\Setting\LookupController;
 use App\Http\Controllers\Employee\Setting\LookupNamespaceController;
@@ -27,9 +28,9 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
         ->name('activities.index');
 
     /**
-     * Commerce routes
+     * Sales routes
      */
-    Route::prefix('thuong-mai')->name('commerce.')->group(function () {
+    Route::prefix('ban-hang')->name('sales.')->group(function () {
         // Orders
         Route::prefix('don-hang')->name('orders.')->group(function () {
             Route::middleware(['can:orders.view'])->group(function () {
@@ -52,24 +53,6 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
             });
         });
 
-        // Shipping Methods
-        Route::prefix('phuong-thuc-van-chuyen')->name('shipping-methods.')->group(function () {
-            Route::middleware(['can:shipping_methods.view'])->group(function () {
-                Route::get('/', [ShippingMethodController::class, 'index'])->name('index');
-            });
-
-            Route::middleware(['can:shipping_methods.manage'])->group(function () {
-                Route::post('/', [ShippingMethodController::class, 'store'])->name('store');
-                Route::put('/{shippingMethod}', [ShippingMethodController::class, 'update'])->name('update');
-                Route::delete('/{shippingMethod}', [ShippingMethodController::class, 'destroy'])->name('destroy');
-            });
-        });
-    });
-
-    /**
-     * Finance routes
-     */
-    Route::prefix('tai-chinh')->name('finance.')->group(function () {
         // Invoices
         Route::prefix('hoa-don')->name('invoices.')->group(function () {
             Route::middleware(['can:invoices.view'])->group(function () {
@@ -106,6 +89,43 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
                     Route::post('/{payment}/restore', [PaymentController::class, 'restore'])->name('restore')->withTrashed();
                     Route::delete('/{payment}/force', [PaymentController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
                 });
+            });
+        });
+    });
+
+    /**
+     * Fulfillment routes
+     */
+    Route::prefix('van-chuyen')->name('fulfillment.')->group(function () {
+        // Shipping Methods
+        Route::prefix('phuong-thuc')->name('shipping-methods.')->group(function () {
+            Route::middleware(['can:shipping_methods.view'])->group(function () {
+                Route::get('/', [ShippingMethodController::class, 'index'])->name('index');
+            });
+
+            Route::middleware(['can:shipping_methods.manage'])->group(function () {
+                Route::post('/', [ShippingMethodController::class, 'store'])->name('store');
+                Route::put('/{shippingMethod}', [ShippingMethodController::class, 'update'])->name('update');
+                Route::delete('/{shippingMethod}', [ShippingMethodController::class, 'destroy'])->name('destroy');
+            });
+        });
+
+        // Shipments
+        Route::middleware(['can:shipments.view'])->group(function () {
+            Route::get('/', [ShipmentController::class, 'index'])->name('shipments.index');
+            Route::get('/{shipment}', [ShipmentController::class, 'show'])->name('shipments.show');
+        });
+
+        Route::middleware(['can:shipments.manage'])->group(function () {
+            Route::post('/create', [ShipmentController::class, 'createShipments'])->name('shipments.create');
+            Route::post('/{shipment}/ship', [ShipmentController::class, 'ship'])->name('shipments.ship');
+            Route::post('/{shipment}/deliver', [ShipmentController::class, 'deliver'])->name('shipments.deliver');
+            Route::delete('/{shipment}', [ShipmentController::class, 'destroy'])->name('shipments.destroy');
+
+            Route::prefix('thung-rac')->name('shipments.trash.')->group(function () {
+                Route::get('/', [ShipmentController::class, 'trash'])->name('index');
+                Route::post('/{shipment}/restore', [ShipmentController::class, 'restore'])->name('restore')->withTrashed();
+                Route::delete('/{shipment}/force', [ShipmentController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
             });
         });
     });

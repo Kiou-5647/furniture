@@ -115,6 +115,15 @@ class PermissionSeeder extends Seeder
             ['name' => 'payments.delete', 'description' => 'Delete payments'],
             ['name' => 'payments.force_delete', 'description' => 'Permanently delete payments'],
             ['name' => 'payments.manage', 'description' => 'Manage all payment operations'],
+
+            // Fulfillment
+            ['name' => 'shipments.view', 'description' => 'View shipments'],
+            ['name' => 'shipments.create', 'description' => 'Create shipments'],
+            ['name' => 'shipments.update', 'description' => 'Update shipments'],
+            ['name' => 'shipments.delete', 'description' => 'Delete shipments'],
+            ['name' => 'shipments.restore', 'description' => 'Restore shipments'],
+            ['name' => 'shipments.force_delete', 'description' => 'Permanently delete shipments'],
+            ['name' => 'shipments.manage', 'description' => 'Manage all shipment operations'],
         ];
     }
 
@@ -135,6 +144,7 @@ class PermissionSeeder extends Seeder
                 'shipping_methods.manage',
                 'invoices.manage',
                 'payments.manage',
+                'shipments.manage',
                 'customers.view',
                 'customers.update',
                 'customers.delete',
