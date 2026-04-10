@@ -7,8 +7,8 @@ use App\Models\Employee\Department;
 use App\Models\Employee\Employee;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
+use App\Models\Auth\Permission;
+use App\Models\Auth\Role;
 
 class EmployeeService
 {
@@ -16,9 +16,9 @@ class EmployeeService
     {
         return Employee::query()
             ->with(['user', 'department'])
-            ->when($filter->department_id, fn ($q) => $q->where('department_id', $filter->department_id))
-            ->when($filter->is_active !== null, fn ($q) => $q->whereHas('user', fn ($u) => $u->where('is_active', $filter->is_active)))
-            ->when($filter->search, fn ($q) => $q->whereHas('user', fn ($u) => $u->where('name', 'ilike', "%{$filter->search}%")))
+            ->when($filter->department_id, fn($q) => $q->where('department_id', $filter->department_id))
+            ->when($filter->is_active !== null, fn($q) => $q->whereHas('user', fn($u) => $u->where('is_active', $filter->is_active)))
+            ->when($filter->search, fn($q) => $q->whereHas('user', fn($u) => $u->where('name', 'ilike', "%{$filter->search}%")))
             ->orderBy($filter->order_by, $filter->order_direction)
             ->paginate($filter->per_page);
     }
@@ -35,7 +35,7 @@ class EmployeeService
             ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name'])
-            ->map(fn (Department $dept) => [
+            ->map(fn(Department $dept) => [
                 'id' => $dept->id,
                 'label' => $dept->name,
             ]);
@@ -45,7 +45,7 @@ class EmployeeService
     {
         return Role::orderBy('name')
             ->get(['id', 'name'])
-            ->map(fn ($role) => [
+            ->map(fn($role) => [
                 'id' => $role->name,
                 'label' => ucfirst(str_replace('_', ' ', $role->name)),
             ]);
@@ -55,7 +55,7 @@ class EmployeeService
     {
         return Permission::orderBy('name')
             ->get(['id', 'name'])
-            ->map(fn ($perm) => [
+            ->map(fn($perm) => [
                 'id' => $perm->name,
                 'label' => ucfirst(str_replace('_', ' ', $perm->name)),
             ]);

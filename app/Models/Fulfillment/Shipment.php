@@ -4,8 +4,8 @@ namespace App\Models\Fulfillment;
 
 use App\Enums\ShipmentStatus;
 use App\Models\Auth\User;
-use App\Models\Commerce\Order;
 use App\Models\Inventory\Location;
+use App\Models\Sales\Order;
 use App\Models\Vendor\Vendor;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;

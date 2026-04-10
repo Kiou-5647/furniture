@@ -2,7 +2,7 @@
 
 namespace App\Models\Customer;
 
-use App\Models\Commerce\Order;
+use App\Models\Sales\Order;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -47,5 +47,16 @@ class CustomerAddress extends Model
             ])
             ->logOnlyDirty()
             ->dontLogEmptyChanges();
+    }
+
+    public function getFullAddress(): string
+    {
+        $parts = [
+            $this->address_data['street'] ?? null,
+            $this->ward_name,
+            $this->province_name,
+        ];
+
+        return implode(', ', array_filter($parts));
     }
 }

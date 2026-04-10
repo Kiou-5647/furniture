@@ -2,7 +2,7 @@
 
 namespace App\Models\Fulfillment;
 
-use App\Models\Commerce\OrderItem;
+use App\Models\Sales\OrderItem;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

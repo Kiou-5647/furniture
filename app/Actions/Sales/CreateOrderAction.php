@@ -15,37 +15,43 @@ class CreateOrderAction
 {
     public function execute(CreateOrderData $data): Order
     {
-        return DB::transaction(function ($data) {
-            /** @var CreateOrderData $data */
+        DB::beginTransaction();
 
-            // 1. Validate customer exists
-            $customer = User::where('type', 'customer')->findOrFail($data->customer_id);
+        try {
+            $user = User::where('type', 'customer')->findOrFail($data->customer_id);
+            $customerProfile = $user->customer;
 
-            // 2. Validate shipping address belongs to customer
-            $address = CustomerAddress::where('customer_id', $customer->id)
+            if (! $customerProfile) {
+                throw new \RuntimeException('Khách hàng chưa có thông tin.');
+            }
+
+            $address = CustomerAddress::where('customer_id', $customerProfile->id)
                 ->findOrFail($data->shipping_address_id);
 
-            // 3. Validate items and calculate total
             $validatedItems = $this->validateItems($data->items);
-            $totalAmount = collect($validatedItems)->sum(fn ($item) => $item['unit_price'] * $item['quantity']);
+            $totalAmount = collect($validatedItems)->sum(fn($item) => $item['unit_price'] * $item['quantity']);
 
-            // 4. Create order
             $order = Order::create([
                 'order_number' => Order::generateOrderNumber(),
-                'customer_id' => $customer->id,
+                'customer_id' => $user->id,
                 'shipping_address_id' => $address->id,
                 'total_amount' => $totalAmount,
                 'status' => OrderStatus::Pending,
             ]);
 
-            // 5. Create order items
             foreach ($validatedItems as $itemData) {
                 $order->items()->create($itemData);
             }
 
+            DB::commit();
+
             return $order->load(['items', 'customer', 'shippingAddress']);
-        }, $data);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
+
 
     protected function validateItems(array $items): array
     {

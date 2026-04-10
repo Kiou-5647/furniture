@@ -16,7 +16,7 @@ class ShippingMethodController
             ->orderBy('name')
             ->get();
 
-        return Inertia::render('employee/commerce/shipping-methods/Index', [
+        return Inertia::render('employee/fulfillment/shipping-methods/Index', [
             'shippingMethods' => $methods,
         ]);
     }

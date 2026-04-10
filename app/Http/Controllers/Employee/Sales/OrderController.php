@@ -11,7 +11,7 @@ use App\Data\Sales\OrderFilterData;
 use App\Enums\OrderStatus;
 use App\Http\Requests\Sales\CreateOrderRequest;
 use App\Http\Requests\Sales\UpdateOrderStatusRequest;
-use App\Http\Resources\Employee\Commerce\OrderResource;
+use App\Http\Resources\Employee\Sales\OrderResource;
 use App\Models\Sales\Order;
 use App\Services\Sales\OrderService;
 use Illuminate\Http\Request;
@@ -29,7 +29,7 @@ class OrderController
     {
         $filter = OrderFilterData::fromRequest($request);
 
-        return Inertia::render('employee/commerce/orders/Index', [
+        return Inertia::render('employee/sales/orders/Index', [
             'statusOptions' => $this->service->getStatusOptions(),
             'customerOptions' => $this->service->getCustomerOptions(),
             'orders' => Inertia::defer(fn () => OrderResource::collection(
@@ -43,7 +43,7 @@ class OrderController
     {
         $filter = OrderFilterData::fromRequest($request);
 
-        return Inertia::render('employee/commerce/orders/Trash', [
+        return Inertia::render('employee/sales/orders/Trash', [
             'orders' => Inertia::defer(fn () => OrderResource::collection(
                 $this->service->getTrashedFiltered($filter)
             )),
@@ -55,7 +55,7 @@ class OrderController
     {
         $order = $this->service->getById($order->id);
 
-        return Inertia::render('employee/commerce/orders/Show', [
+        return Inertia::render('employee/sales/orders/Show', [
             'order' => new OrderResource($order),
         ]);
     }
@@ -65,7 +65,7 @@ class OrderController
         $data = CreateOrderData::fromRequest($request);
         $order = $action->execute($data);
 
-        return redirect()->route('employee.commerce.orders.show', $order)
+        return redirect()->route('employee.sales.orders.show', $order)
             ->with('success', 'Đã tạo đơn hàng mới.');
     }
 

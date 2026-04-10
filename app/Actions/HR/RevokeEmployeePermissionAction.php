@@ -3,7 +3,7 @@
 namespace App\Actions\HR;
 
 use App\Models\Auth\User;
-use Spatie\Permission\Models\Permission;
+use App\Models\Auth\Permission;
 
 class RevokeEmployeePermissionAction
 {

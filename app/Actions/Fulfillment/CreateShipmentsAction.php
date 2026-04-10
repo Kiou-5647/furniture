@@ -2,7 +2,7 @@
 
 namespace App\Actions\Fulfillment;
 
-use App\Models\Commerce\Order;
+use App\Models\Sales\Order;
 use App\Services\Fulfillment\FulfillmentRouterService;
 
 class CreateShipmentsAction

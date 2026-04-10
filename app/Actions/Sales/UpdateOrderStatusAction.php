@@ -23,13 +23,13 @@ class UpdateOrderStatusAction
     protected function validateTransition(OrderStatus $from, OrderStatus $to): void
     {
         $validTransitions = [
-            OrderStatus::Pending => [OrderStatus::Processing, OrderStatus::Cancelled],
-            OrderStatus::Processing => [OrderStatus::Completed, OrderStatus::Cancelled],
-            OrderStatus::Completed => [],
-            OrderStatus::Cancelled => [],
+            'pending' => ['processing', 'cancelled'],
+            'processing' => ['completed', 'cancelled'],
+            'completed' => [],
+            'cancelled' => [],
         ];
 
-        if (! in_array($to, $validTransitions[$from] ?? [])) {
+        if (! in_array($to->value, $validTransitions[$from->value] ?? [])) {
             throw new \RuntimeException(
                 "Không thể chuyển trạng thái từ {$from->label()} sang {$to->label()}."
             );

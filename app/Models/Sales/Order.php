@@ -2,7 +2,7 @@
 
 namespace App\Models\Sales;
 
-use App\Builders\Commerce\OrderBuilder;
+use App\Builders\Sales\OrderBuilder;
 use App\Enums\OrderStatus;
 use App\Models\Auth\User;
 use App\Models\Customer\CustomerAddress;

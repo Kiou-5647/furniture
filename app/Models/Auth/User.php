@@ -3,9 +3,9 @@
 namespace App\Models\Auth;
 
 use App\Enums\UserType;
-use App\Models\Commerce\Order;
 use App\Models\Customer\Customer;
 use App\Models\Employee\Employee;
+use App\Models\Sales\Order;
 use App\Models\Vendor\Vendor;
 use App\Models\Vendor\VendorUser;
 use Illuminate\Contracts\Auth\MustVerifyEmail;

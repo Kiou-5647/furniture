@@ -16,7 +16,7 @@ class CreateInvoiceRequest extends FormRequest
     {
         return [
             'invoiceable_type' => ['required', Rule::in([
-                'App\\Models\\Commerce\\Order',
+                'App\\Models\\Sales\\Order',
                 'App\\Models\\Design\\Booking',
             ])],
             'invoiceable_id' => ['required', 'uuid'],

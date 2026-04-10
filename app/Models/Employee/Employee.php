@@ -3,9 +3,9 @@
 namespace App\Models\Employee;
 
 use App\Models\Auth\User;
-use App\Models\Commerce\Order;
 use App\Models\Inventory\Location;
 use App\Models\Inventory\StockMovement;
+use App\Models\Sales\Order;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

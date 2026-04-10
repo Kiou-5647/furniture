@@ -135,6 +135,7 @@ class PermissionSeeder extends Seeder
             ['name' => 'bookings.manage', 'description' => 'Manage all booking operations'],
             ['name' => 'bookings.approve', 'description' => 'Approve bookings'],
 
+            ['name' => 'designers.view', 'description' => 'View designers'],
             ['name' => 'designers.manage', 'description' => 'Manage designers'],
 
             ['name' => 'design_services.view', 'description' => 'View design services'],

@@ -6,7 +6,7 @@ use App\Actions\Sales\CreateInvoiceAction;
 use App\Data\Sales\CreateInvoiceData;
 use App\Data\Sales\InvoiceFilterData;
 use App\Http\Requests\Sales\CreateInvoiceRequest;
-use App\Http\Resources\Employee\Finance\InvoiceResource;
+use App\Http\Resources\Employee\Sales\InvoiceResource;
 use App\Models\Sales\Invoice;
 use App\Services\Sales\InvoiceService;
 use Illuminate\Http\Request;
@@ -24,7 +24,7 @@ class InvoiceController
     {
         $filter = InvoiceFilterData::fromRequest($request);
 
-        return Inertia::render('employee/finance/invoices/Index', [
+        return Inertia::render('employee/sales/invoices/Index', [
             'statusOptions' => $this->service->getStatusOptions(),
             'typeOptions' => $this->service->getTypeOptions(),
             'invoices' => Inertia::defer(fn () => InvoiceResource::collection(
@@ -38,7 +38,7 @@ class InvoiceController
     {
         $filter = InvoiceFilterData::fromRequest($request);
 
-        return Inertia::render('employee/finance/invoices/Trash', [
+        return Inertia::render('employee/sales/invoices/Trash', [
             'invoices' => Inertia::defer(fn () => InvoiceResource::collection(
                 $this->service->getTrashedFiltered($filter)
             )),
@@ -50,7 +50,7 @@ class InvoiceController
     {
         $invoice = $this->service->getById($invoice->id);
 
-        return Inertia::render('employee/finance/invoices/Show', [
+        return Inertia::render('employee/sales/invoices/Show', [
             'invoice' => new InvoiceResource($invoice),
         ]);
     }
@@ -60,7 +60,7 @@ class InvoiceController
         $data = CreateInvoiceData::fromArray($request->validated());
         $invoice = $action->execute($data);
 
-        return redirect()->route('employee.finance.invoices.show', $invoice)
+        return redirect()->route('employee.sales.invoices.show', $invoice)
             ->with('success', 'Đã tạo hóa đơn mới.');
     }
 

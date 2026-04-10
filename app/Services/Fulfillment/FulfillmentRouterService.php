@@ -3,10 +3,10 @@
 namespace App\Services\Fulfillment;
 
 use App\Enums\ShipmentStatus;
-use App\Models\Commerce\Order;
-use App\Models\Commerce\OrderItem;
 use App\Models\Fulfillment\Shipment;
 use App\Models\Fulfillment\ShipmentItem;
+use App\Models\Sales\Order;
+use App\Models\Sales\OrderItem;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 

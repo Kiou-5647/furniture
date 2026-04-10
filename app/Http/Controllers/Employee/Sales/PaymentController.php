@@ -6,7 +6,7 @@ use App\Actions\Sales\ProcessPaymentAction;
 use App\Actions\Sales\RefundPaymentAction;
 use App\Data\Sales\PaymentFilterData;
 use App\Http\Requests\Sales\ProcessPaymentRequest;
-use App\Http\Resources\Employee\Finance\PaymentResource;
+use App\Http\Resources\Employee\Sales\PaymentResource;
 use App\Models\Sales\Payment;
 use App\Services\Sales\PaymentService;
 use Illuminate\Http\Request;
@@ -24,7 +24,7 @@ class PaymentController
     {
         $filter = PaymentFilterData::fromRequest($request);
 
-        return Inertia::render('employee/finance/payments/Index', [
+        return Inertia::render('employee/sales/payments/Index', [
             'statusOptions' => $this->service->getStatusOptions(),
             'gatewayOptions' => $this->service->getGatewayOptions(),
             'payments' => Inertia::defer(fn () => PaymentResource::collection(
@@ -38,7 +38,7 @@ class PaymentController
     {
         $payment = $this->service->getById($payment->id);
 
-        return Inertia::render('employee/finance/payments/Show', [
+        return Inertia::render('employee/sales/payments/Show', [
             'payment' => new PaymentResource($payment),
         ]);
     }
@@ -47,7 +47,7 @@ class PaymentController
     {
         $payment = $action->execute($request->validated());
 
-        return redirect()->route('employee.finance.payments.show', $payment)
+        return redirect()->route('employee.sales.payments.show', $payment)
             ->with('success', 'Đã ghi nhận thanh toán.');
     }
 
