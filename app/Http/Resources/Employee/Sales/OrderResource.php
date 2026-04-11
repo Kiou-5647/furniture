@@ -35,6 +35,7 @@ class OrderResource extends JsonResource
             ]),
             'paid_at' => $this->paid_at?->format('d/m/Y H:i'),
             'shipping_cost' => $this->shipping_cost,
+            'shipping_method_id' => $this->shipping_method_id,
             'shipping_method' => $this->whenLoaded('shippingMethod', fn () => [
                 'id' => $this->shippingMethod->id,
                 'name' => $this->shippingMethod->name,
@@ -48,6 +49,7 @@ class OrderResource extends JsonResource
             'status_label' => $this->status->label(),
             'status_color' => $this->status->color(),
             'items' => OrderItemResource::collection($this->whenLoaded('items')),
+            'invoices' => InvoiceResource::collection($this->whenLoaded('invoices')),
             'accepted_by' => $this->whenLoaded('acceptedBy', fn () => $this->acceptedBy->full_name),
             'created_at' => $this->created_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
             'updated_at' => $this->updated_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),

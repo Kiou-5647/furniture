@@ -38,7 +38,7 @@ class OrderService
 
     public function getById(string $id): Order
     {
-        return Order::with(['customer', 'items.sourceLocation', 'acceptedBy', 'storeLocation', 'shippingMethod', 'shipments.items.sourceLocation'])->findOrFail($id);
+        return Order::with(['customer', 'items.sourceLocation', 'acceptedBy', 'storeLocation', 'shippingMethod', 'shipments.items.sourceLocation', 'invoices'])->findOrFail($id);
     }
 
     public function getStatusOptions(): array

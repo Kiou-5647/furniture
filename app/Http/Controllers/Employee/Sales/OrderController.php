@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Employee\Sales;
 use App\Actions\Sales\CancelOrderAction;
 use App\Actions\Sales\CompleteOrderAction;
 use App\Actions\Sales\CreateOrderAction;
+use App\Actions\Sales\MarkOrderAsPaidAction;
 use App\Actions\Sales\UpdateOrderStatusAction;
 use App\Data\Sales\CreateOrderData;
 use App\Data\Sales\OrderFilterData;
@@ -12,6 +13,7 @@ use App\Enums\OrderStatus;
 use App\Http\Requests\Sales\CreateOrderRequest;
 use App\Http\Requests\Sales\UpdateOrderStatusRequest;
 use App\Http\Resources\Employee\Sales\OrderResource;
+use App\Models\Fulfillment\ShippingMethod;
 use App\Models\Inventory\Location;
 use App\Models\Sales\Order;
 use App\Services\Sales\OrderService;
@@ -70,7 +72,7 @@ class OrderController
     public function catalog(Request $request)
     {
         $employeeLocationId = $request->user()->employee?->location_id;
-        $shippingMethods = \App\Models\Fulfillment\ShippingMethod::where('is_active', true)
+        $shippingMethods = ShippingMethod::where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name', 'estimated_delivery_days', 'price']);
 
@@ -159,17 +161,18 @@ class OrderController
         return back()->with('success', 'Đã xóa vĩnh viễn đơn hàng.');
     }
 
-    public function markAsPaid(Request $request, Order $order)
+    public function markAsPaid(Request $request, Order $order, MarkOrderAsPaidAction $action)
     {
         if (! Auth::user()->can('orders.manage')) {
             return back()->with('error', 'Không đủ quyền hạn!');
         }
 
-        if ($order->paid_at) {
-            return back()->with('error', 'Đơn hàng đã được thanh toán.');
+        try {
+            $employee = $request->user()->employee;
+            $action->execute($order, $employee);
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
         }
-
-        $order->update(['paid_at' => now()]);
 
         return back()->with('success', 'Đã xác nhận thanh toán.');
     }

@@ -17,12 +17,17 @@ class DeliverShipmentAction
         }
 
         DB::transaction(function () use ($shipment, $performedBy) {
+            // Mark all items as delivered
+            $shipment->items()->update([
+                'status' => ShipmentStatus::Delivered,
+            ]);
+
             $shipment->update([
                 'status' => ShipmentStatus::Delivered,
                 'handled_by' => $performedBy?->id ?? $shipment->handled_by,
             ]);
 
-            // Check if all shipments for the order are delivered → complete order
+            // Check if all items in ALL shipments for this order are delivered → complete order
             $this->checkOrderCompletion($shipment);
         });
 
@@ -33,11 +38,12 @@ class DeliverShipmentAction
     {
         $order = $shipment->order;
 
-        $allDelivered = $order->shipments()
-            ->where('status', '!=', ShipmentStatus::Delivered)
-            ->exists() === false;
+        // Check if ALL shipment items across ALL shipments are delivered
+        $allItemsDelivered = $order->shipments()
+            ->whereHas('items', fn ($q) => $q->where('status', '!=', ShipmentStatus::Delivered))
+            ->doesntExist();
 
-        if ($allDelivered) {
+        if ($allItemsDelivered) {
             $order->update(['status' => OrderStatus::Completed]);
         }
     }

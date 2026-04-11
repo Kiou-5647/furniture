@@ -20,15 +20,15 @@ class CancelOrderAction
             throw new \RuntimeException('Đơn hàng không thể hủy.');
         }
 
-        // For in-store orders: restore stock if order was completed (stock was deducted)
+        // For in-store orders without shipping: restore stock if completed (stock was deducted)
         if (! $order->shipping_method_id && $order->status === OrderStatus::Completed) {
             $this->stockDeductionService->restoreStockForInStore($order, $performedBy);
         }
 
-        // For shipping orders cancelled after shipment: restore shipment stock
-        if ($order->shipping_method_id && $order->status === OrderStatus::Completed) {
+        // For shipping orders cancelled after shipping: restore shipment stock
+        if ($order->shipping_method_id) {
             foreach ($order->shipments as $shipment) {
-                if ($shipment->status !== ShipmentStatus::Cancelled) {
+                if ($shipment->status === ShipmentStatus::Shipped) {
                     $this->stockDeductionService->restoreStockForShipment($shipment, $performedBy);
                 }
             }

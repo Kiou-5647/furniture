@@ -37,6 +37,13 @@ class CreateOrderAction
                 $addressData['address_number'] = $data->address_number;
             }
 
+            // Determine initial status based on order source
+            // Employee-created orders skip Pending → go straight to Processing
+            // Online orders (customer self-service) start at Pending waiting for payment
+            $initialStatus = $data->source === 'in_store'
+                ? OrderStatus::Processing
+                : OrderStatus::Pending;
+
             // Create order
             $order = Order::create([
                 'order_number' => Order::generateOrderNumber(),
@@ -56,7 +63,7 @@ class CreateOrderAction
                 'address_data' => ! empty($addressData) ? $addressData : null,
                 'total_amount' => $grandTotal,
                 'total_items' => $totalItems,
-                'status' => OrderStatus::Pending,
+                'status' => $initialStatus,
             ]);
 
             foreach ($validatedItems as $itemData) {
@@ -111,12 +118,8 @@ class CreateOrderAction
                     }
 
                     $sourceLocationId = $stockOptions->first()['location_id'];
-                } else {
+                } elseif ($data->store_location_id) {
                     // In-store: must have stock at store location
-                    if (! $data->store_location_id) {
-                        throw new \RuntimeException('Không có cửa hàng được chỉ định.');
-                    }
-
                     $stockOptions = $this->stockLocator->findStockForItem(
                         $item['purchasable_type'],
                         $item['purchasable_id'],
@@ -131,6 +134,9 @@ class CreateOrderAction
                     }
 
                     $sourceLocationId = $data->store_location_id;
+                } else {
+                    // Online order without shipping — no stock validation yet
+                    $sourceLocationId = null;
                 }
             }
 
@@ -169,12 +175,8 @@ class CreateOrderAction
                 if (! $hasStock) {
                     throw new \RuntimeException('Sản phẩm "'.$product->name.'" trong gói "'.$bundle->name.'" hết hàng trên toàn hệ thống.');
                 }
-            } else {
+            } elseif ($storeLocationId) {
                 // In-store: check if ANY variant has stock at store location
-                if (! $storeLocationId) {
-                    throw new \RuntimeException('Không có cửa hàng được chỉ định.');
-                }
-
                 $hasStock = $product->variants()
                     ->whereHas('inventories', fn ($q) => $q
                         ->where('location_id', $storeLocationId)
@@ -185,6 +187,7 @@ class CreateOrderAction
                     throw new \RuntimeException('Sản phẩm "'.$product->name.'" trong gói "'.$bundle->name.'" hết hàng tại cửa hàng.');
                 }
             }
+            // Online without shipping — no stock check yet
         }
     }
 

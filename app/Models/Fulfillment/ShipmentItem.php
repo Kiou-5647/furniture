@@ -2,6 +2,7 @@
 
 namespace App\Models\Fulfillment;
 
+use App\Enums\ShipmentStatus;
 use App\Models\Inventory\Location;
 use App\Models\Sales\OrderItem;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -20,6 +21,7 @@ class ShipmentItem extends Model
     {
         return [
             'quantity_shipped' => 'integer',
+            'status' => ShipmentStatus::class,
         ];
     }
 

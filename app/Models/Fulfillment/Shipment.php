@@ -82,4 +82,19 @@ class Shipment extends Model
     {
         return $this->status === ShipmentStatus::Shipped;
     }
+
+    public function areAllItemsDelivered(): bool
+    {
+        return $this->items->every(fn ($item) => $item->status === ShipmentStatus::Delivered);
+    }
+
+    public function deliveredItemsCount(): int
+    {
+        return $this->items->where('status', ShipmentStatus::Delivered)->count();
+    }
+
+    public function totalItemsCount(): int
+    {
+        return $this->items->count();
+    }
 }

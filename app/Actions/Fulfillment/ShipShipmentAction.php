@@ -6,6 +6,7 @@ use App\Enums\ShipmentStatus;
 use App\Models\Employee\Employee;
 use App\Models\Fulfillment\Shipment;
 use App\Services\Location\OrderStockDeductionService;
+use Illuminate\Support\Facades\DB;
 
 class ShipShipmentAction
 {
@@ -22,12 +23,19 @@ class ShipShipmentAction
         // Deduct stock from source locations when shipment ships
         $this->stockDeductionService->deductStockForShipment($shipment, $performedBy);
 
-        $shipment->update([
-            'status' => ShipmentStatus::Shipped,
-            'carrier' => $carrier,
-            'tracking_number' => $trackingNumber,
-            'handled_by' => $performedBy?->id ?? $shipment->handled_by,
-        ]);
+        DB::transaction(function () use ($shipment, $carrier, $trackingNumber, $performedBy) {
+            // Mark all items as shipped
+            $shipment->items()->update([
+                'status' => ShipmentStatus::Shipped,
+            ]);
+
+            $shipment->update([
+                'status' => ShipmentStatus::Shipped,
+                'carrier' => $carrier,
+                'tracking_number' => $trackingNumber,
+                'handled_by' => $performedBy?->id ?? $shipment->handled_by,
+            ]);
+        });
 
         return $shipment->refresh();
     }

@@ -1,3 +1,19 @@
+export interface Invoice {
+    id: string;
+    invoice_number: string;
+    type: string;
+    type_label: string;
+    status: string;
+    status_label: string;
+    status_color: string;
+    amount_due: string;
+    amount_paid: string;
+    remaining_balance: string;
+    validated_by?: string;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface Order {
     id: string;
     order_number: string;
@@ -23,12 +39,13 @@ export interface Order {
     guest_email: string | null;
     notes: string | null;
     total_items: number;
-    source: 'in_store';
+    source: 'in_store' | 'online';
     store_location: {
         id: string;
         name: string;
         code: string;
     } | null;
+    shipping_method_id: string | null;
     paid_at: string | null;
     shipping_cost: string;
     shipping_method: {
@@ -39,6 +56,7 @@ export interface Order {
     created_at: string;
     updated_at: string;
     deleted_at: string | null;
+    invoices?: Invoice[];
 }
 
 export interface OrderItem {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { ArrowLeft, MapPin, Package, User, XCircle, CheckCircle2 } from '@lucide/vue';
+import { ArrowLeft, FileText, MapPin, Package, User, XCircle, CheckCircle2 } from '@lucide/vue';
 import { computed } from 'vue';
 import Heading from '@/components/Heading.vue';
 import { Badge } from '@/components/ui/badge';
@@ -20,8 +20,8 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => [
 
 const canCancel = computed(() => !['completed', 'cancelled'].includes(props.order?.status));
 const canAccept = computed(() => props.order?.status === 'pending');
-const canComplete = computed(() => props.order?.status === 'processing');
-const canMarkPaid = computed(() => !props.order?.paid_at && props.order?.source === 'in_store');
+const canComplete = computed(() => props.order?.status === 'processing' && !props.order?.shipping_method_id);
+const canMarkPaid = computed(() => !props.order?.paid_at && props.order?.status === 'processing');
 
 function handleCancel() {
     if (!props.order) return;
@@ -217,6 +217,41 @@ function goBack() {
                             </td>
                         </tr>
                     </tfoot>
+                </table>
+            </div>
+
+            <!-- Invoices -->
+            <div v-if="order.invoices?.length" class="rounded-lg border">
+                <div class="px-4 py-3 border-b">
+                    <h3 class="flex items-center gap-2 text-sm font-medium">
+                        <FileText class="h-4 w-4" /> Hóa đơn ({{ order.invoices.length }})
+                    </h3>
+                </div>
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b bg-muted/50 text-xs text-muted-foreground">
+                            <th class="px-4 py-2 text-left">Mã hóa đơn</th>
+                            <th class="px-4 py-2 text-center">Loại</th>
+                            <th class="px-4 py-2 text-center">Trạng thái</th>
+                            <th class="px-4 py-2 text-right">Phải thu</th>
+                            <th class="px-4 py-2 text-right">Đã thu</th>
+                            <th class="px-4 py-2 text-right">Còn nợ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="inv in order.invoices" :key="inv.id" class="border-b text-sm">
+                            <td class="px-4 py-3 font-mono text-xs">{{ inv.invoice_number }}</td>
+                            <td class="px-4 py-3 text-center">{{ inv.type_label }}</td>
+                            <td class="px-4 py-3 text-center">
+                                <span :class="['text-xs', inv.status_color ? `text-${inv.status_color}-600` : '']">
+                                    {{ inv.status_label }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-right tabular-nums">{{ Number(inv.amount_due).toLocaleString('vi-VN') }}đ</td>
+                            <td class="px-4 py-3 text-right tabular-nums text-green-600">{{ Number(inv.amount_paid).toLocaleString('vi-VN') }}đ</td>
+                            <td class="px-4 py-3 text-right tabular-nums font-medium">{{ Number(inv.remaining_balance).toLocaleString('vi-VN') }}đ</td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
         </div>

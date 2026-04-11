@@ -23,6 +23,9 @@ class ShipmentItemResource extends JsonResource
                 'code' => $this->sourceLocation->code,
             ]),
             'quantity_shipped' => $this->quantity_shipped,
+            'status' => $this->status->value,
+            'status_label' => $this->status->label(),
+            'status_color' => $this->status->color(),
         ];
     }
 }

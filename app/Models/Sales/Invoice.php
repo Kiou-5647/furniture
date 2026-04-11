@@ -63,4 +63,16 @@ class Invoice extends Model
     {
         return $this->remainingBalance() <= 0;
     }
+
+    public static function generateInvoiceNumber(): string
+    {
+        $date = now()->format('Ymd');
+        $last = self::whereDate('created_at', today())
+            ->orderBy('invoice_number', 'desc')
+            ->first();
+
+        $sequence = $last ? (int) substr($last->invoice_number, -4) + 1 : 1;
+
+        return 'INV-'.$date.'-'.str_pad($sequence, 4, '0', STR_PAD_LEFT);
+    }
 }
