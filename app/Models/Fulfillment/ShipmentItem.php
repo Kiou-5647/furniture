@@ -2,6 +2,7 @@
 
 namespace App\Models\Fulfillment;
 
+use App\Models\Inventory\Location;
 use App\Models\Sales\OrderItem;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
@@ -30,5 +31,10 @@ class ShipmentItem extends Model
     public function orderItem(): BelongsTo
     {
         return $this->belongsTo(OrderItem::class);
+    }
+
+    public function sourceLocation(): BelongsTo
+    {
+        return $this->belongsTo(Location::class, 'source_location_id');
     }
 }

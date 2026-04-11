@@ -19,8 +19,7 @@ class BookingPolicy
 
         if ($booking->designer) {
             return $booking->designer->user_id === $user->id
-                || $booking->designer->employee_id === $user->employee?->id
-                || $booking->designer->vendor_user_id === $user->vendorUser?->id;
+                || $booking->designer->employee_id === $user->employee?->id;
         }
 
         return false;

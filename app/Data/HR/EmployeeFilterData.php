@@ -19,7 +19,7 @@ readonly class EmployeeFilterData
     {
         return new self(
             department_id: $request->query('department_id'),
-            is_active: $request->boolean('is_active') ? true : ($request->has('is_active') ? false : null),
+            is_active: $request->has('is_active') ? $request->boolean('is_active') : null,
             search: $request->query('search'),
             order_by: $request->query('order_by', 'created_at'),
             order_direction: $request->query('order_direction', 'desc'),

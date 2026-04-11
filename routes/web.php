@@ -11,6 +11,5 @@ Route::middleware(['auth', 'verified', 'user_type:customer'])->group(function ()
     Route::inertia('dashboard', 'Dashboard')->name('dashboard');
 });
 
-require __DIR__.'/vendor.php';
 require __DIR__.'/employee.php';
 require __DIR__.'/settings.php';

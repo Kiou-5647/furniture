@@ -16,7 +16,6 @@ class MenuService
 
         return match ($user->type) {
             UserType::Employee => $this->getEmployeeMenu($user),
-            UserType::Vendor => $this->getVendorMenu($user),
             UserType::Customer => $this->getCustomerMenu($user),
             default => [],
         };
@@ -32,6 +31,43 @@ class MenuService
                 'isActive' => Route::is('employee.dashboard'),
             ],
         ];
+
+        // HR Group
+        if ($user->canAny(['hr.employees.view', 'hr.departments.view', 'designers.view'])) {
+            $hrItems = [];
+
+            if ($user->can('hr.departments.view')) {
+                $hrItems[] = [
+                    'title' => 'Phòng ban',
+                    'href' => route('employee.hr.departments.index'),
+                    'isActive' => Route::is('hr.departments.*'),
+                ];
+            }
+
+            if ($user->can('hr.employees.view')) {
+                $hrItems[] = [
+                    'title' => 'Nhân viên',
+                    'href' => route('employee.hr.employees.index'),
+                    'isActive' => Route::is('hr.employees.*'),
+                ];
+            }
+
+            if ($user->can('designers.view')) {
+                $hrItems[] = [
+                    'title' => 'Nhà thiết kế',
+                    'href' => route('employee.booking.designers.index'),
+                    'isActive' => Route::is('booking.designers.*'),
+                ];
+            }
+
+            $menu[] = [
+                'title' => 'Quản lý nhân sự',
+                'href' => '#',
+                'icon' => 'Users',
+                'isActive' => Route::is('hr.*') || Route::is('booking.designers.*'),
+                'items' => $hrItems,
+            ];
+        }
 
         // Product Management Group
         if ($user->canAny(['categories.view', 'collections.view', 'products.view'])) {
@@ -67,6 +103,101 @@ class MenuService
                 'icon' => 'Package',
                 'isActive' => Route::is('employee.products.*'),
                 'items' => $productItems,
+            ];
+        }
+
+        // Sales Group
+        if ($user->canAny(['orders.view', 'invoices.view', 'payments.view'])) {
+            $salesItems = [];
+
+            if ($user->can('orders.view')) {
+                $salesItems[] = [
+                    'title' => 'Đơn hàng',
+                    'href' => route('employee.sales.orders.index'),
+                    'isActive' => Route::is('sales.orders.*'),
+                ];
+            }
+
+            if ($user->can('invoices.view')) {
+                $salesItems[] = [
+                    'title' => 'Hóa đơn',
+                    'href' => route('employee.sales.invoices.index'),
+                    'isActive' => Route::is('sales.invoices.*'),
+                ];
+            }
+
+            if ($user->can('payments.view')) {
+                $salesItems[] = [
+                    'title' => 'Thanh toán',
+                    'href' => route('employee.sales.payments.index'),
+                    'isActive' => Route::is('sales.payments.*'),
+                ];
+            }
+
+            $menu[] = [
+                'title' => 'Bán hàng',
+                'href' => '#',
+                'icon' => 'ShoppingCart',
+                'isActive' => Route::is('sales.*'),
+                'items' => $salesItems,
+            ];
+        }
+
+        // Fulfillment Group
+        if ($user->canAny(['shipments.view', 'shipping_methods.view'])) {
+            $fulfillmentItems = [];
+
+            if ($user->can('shipments.view')) {
+                $fulfillmentItems[] = [
+                    'title' => 'Vận chuyển',
+                    'href' => route('employee.fulfillment.shipments.index'),
+                    'isActive' => Route::is('fulfillment.shipments.*'),
+                ];
+            }
+
+            if ($user->can('shipping_methods.view')) {
+                $fulfillmentItems[] = [
+                    'title' => 'Phương thức vận chuyển',
+                    'href' => route('employee.fulfillment.shipping-methods.index'),
+                    'isActive' => Route::is('fulfillment.shipping-methods.*'),
+                ];
+            }
+
+            $menu[] = [
+                'title' => 'Vận hành',
+                'href' => '#',
+                'icon' => 'Truck',
+                'isActive' => Route::is('fulfillment.*'),
+                'items' => $fulfillmentItems,
+            ];
+        }
+
+        // Booking Group
+        if ($user->canAny(['bookings.view', 'design_services.view'])) {
+            $bookingItems = [];
+
+            if ($user->can('bookings.view')) {
+                $bookingItems[] = [
+                    'title' => 'Đặt lịch',
+                    'href' => route('employee.booking.index'),
+                    'isActive' => Route::is('booking.*') && ! Route::is('booking.designers.*') && ! Route::is('booking.services.*'),
+                ];
+            }
+
+            if ($user->can('design_services.view')) {
+                $bookingItems[] = [
+                    'title' => 'Dịch vụ thiết kế',
+                    'href' => route('employee.booking.services.index'),
+                    'isActive' => Route::is('booking.services.*'),
+                ];
+            }
+
+            $menu[] = [
+                'title' => 'Đặt lịch thiết kế',
+                'href' => '#',
+                'icon' => 'CalendarDays',
+                'isActive' => Route::is('booking.*'),
+                'items' => $bookingItems,
             ];
         }
 
@@ -121,18 +252,6 @@ class MenuService
         }
 
         return $menu;
-    }
-
-    private function getVendorMenu(User $user): array
-    {
-        return [
-            [
-                'title' => 'Bảng điều khiển',
-                'url' => route('dashboard'), // Placeholder
-                'icon' => 'LayoutGrid',
-                'isActive' => Route::is('dashboard'),
-            ],
-        ];
     }
 
     private function getCustomerMenu(User $user): array

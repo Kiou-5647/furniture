@@ -27,7 +27,7 @@ class CreateNewUser implements CreatesNewUsers
             'name' => $this->nameRules(),
             'email' => $this->emailRules(),
             'password' => $this->passwordRules(),
-            'type' => ['required', 'string', 'in:employee,customer,vendor'],
+            'type' => ['required', 'string', 'in:employee,customer'],
         ])->validate();
         $user = User::create([
             'name' => $input['name'],
@@ -38,7 +38,6 @@ class CreateNewUser implements CreatesNewUsers
         match ($input['type']) {
             'customer' => (new CreateCustomerProfile)->create($user, $input),
             'employee' => $this->createEmployeeProfileAndVerify($user, $input),
-            'vendor' => (new CreateVendorProfile)->create($user, $input),
         };
 
         return $user;

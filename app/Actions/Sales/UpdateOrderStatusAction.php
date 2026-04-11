@@ -5,12 +5,22 @@ namespace App\Actions\Sales;
 use App\Enums\OrderStatus;
 use App\Models\Employee\Employee;
 use App\Models\Sales\Order;
+use App\Services\Location\OrderStockDeductionService;
 
 class UpdateOrderStatusAction
 {
+    public function __construct(
+        protected OrderStockDeductionService $stockDeductionService,
+    ) {}
+
     public function execute(Order $order, OrderStatus $newStatus, ?Employee $performedBy = null): Order
     {
         $this->validateTransition($order->status, $newStatus);
+
+        // For in-store orders (no shipping): deduct stock when order is completed
+        if (! $order->shipping_method_id && $newStatus === OrderStatus::Completed) {
+            $this->stockDeductionService->deductStockForInStore($order, $performedBy);
+        }
 
         $order->update([
             'status' => $newStatus,

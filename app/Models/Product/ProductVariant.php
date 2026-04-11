@@ -97,7 +97,7 @@ class ProductVariant extends Model implements HasMedia
 
     public function isInStock(): bool
     {
-        if ($this->product && ($this->product->is_dropship || $this->product->is_custom_made)) {
+        if ($this->product && $this->product->is_custom_made) {
             return $this->status === 'active';
         }
 
@@ -153,7 +153,7 @@ class ProductVariant extends Model implements HasMedia
 
     public function isSellable(): bool
     {
-        if ($this->is_dropship || $this->is_custom_made) {
+        if ($this->is_custom_made) {
             return $this->status === 'active';
         }
 

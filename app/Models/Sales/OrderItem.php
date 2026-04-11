@@ -3,6 +3,7 @@
 namespace App\Models\Sales;
 
 use App\Models\Fulfillment\ShipmentItem;
+use App\Models\Inventory\Location;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -27,6 +28,11 @@ class OrderItem extends Model
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
+    }
+
+    public function sourceLocation(): BelongsTo
+    {
+        return $this->belongsTo(Location::class, 'source_location_id');
     }
 
     public function purchasable(): MorphTo

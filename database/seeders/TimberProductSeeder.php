@@ -425,7 +425,6 @@ class TimberProductSeeder extends Seeder
             'status' => 'draft',
             'category_id' => $categoryId,
             'collection_id' => $collectionId,
-            'vendor_id' => null,
             'min_price' => 12990000,
             'max_price' => 17990000,
             'features' => json_encode([
@@ -514,7 +513,6 @@ class TimberProductSeeder extends Seeder
             'is_custom_made' => false,
             'warranty_months' => 12,
             'is_featured' => false,
-            'is_dropship' => false,
             'is_new_arrival' => true,
             'published_date' => null,
             'new_arrival_until' => null,

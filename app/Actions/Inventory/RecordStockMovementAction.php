@@ -34,8 +34,8 @@ class RecordStockMovementAction
         }
 
         $product = $variant->product;
-        if ($product && ($product->is_dropship || $product->is_custom_made)) {
-            throw new \InvalidArgumentException('Sản phẩm dropship hoặc custom-made không áp dụng quản lý tồn kho');
+        if ($product && $product->is_custom_made) {
+            throw new \InvalidArgumentException('Sản phẩm custom-made không áp dụng quản lý tồn kho');
         }
 
         return DB::transaction(function () use ($variant, $location, $type, $quantity, $notes, $performedBy, $referenceType, $referenceId, $costPerUnit, $forceUpdatePrice) {

@@ -51,9 +51,4 @@ class ProductBuilder extends Builder
     {
         return $this->where('is_new_arrival', true);
     }
-
-    public function dropship(): self
-    {
-        return $this->where('is_dropship', true);
-    }
 }

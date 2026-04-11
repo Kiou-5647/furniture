@@ -9,7 +9,6 @@ import {
     ClipboardClock,
     Sparkles,
     Star,
-    Truck,
 } from '@lucide/vue';
 import { debounce } from 'lodash';
 import { computed, ref, watch } from 'vue';
@@ -84,9 +83,6 @@ const selectedNewArrival = ref<boolean | undefined>(
 const selectedFeatured = ref<boolean | undefined>(
     props.filters.is_featured ?? undefined,
 );
-const selectedDropship = ref<boolean | undefined>(
-    props.filters.is_dropship ?? undefined,
-);
 
 const hasActiveFilters = computed(() => {
     return (
@@ -96,7 +92,6 @@ const hasActiveFilters = computed(() => {
         !!props.filters.collection_id ||
         props.filters.is_new_arrival !== null ||
         props.filters.is_featured !== null ||
-        props.filters.is_dropship !== null ||
         !!props.filters.search ||
         !!props.filters.order_by
     );
@@ -148,11 +143,6 @@ const featuredOptions = [
     { label: 'Không', value: false },
 ];
 
-const dropshipOptions = [
-    { label: 'Dropship', value: true, icon: Truck },
-    { label: 'Không', value: false },
-];
-
 const updateSearch = debounce(() => {
     const rawQuery = {
         ...props.filters,
@@ -163,7 +153,6 @@ const updateSearch = debounce(() => {
         collection_id: selectedCollection.value ?? undefined,
         is_new_arrival: selectedNewArrival.value ?? undefined,
         is_featured: selectedFeatured.value ?? undefined,
-        is_dropship: selectedDropship.value ?? undefined,
         page: 1,
     };
 
@@ -180,7 +169,6 @@ watch(selectedCategory, () => updateSearch());
 watch(selectedCollection, () => updateSearch());
 watch(selectedNewArrival, () => updateSearch());
 watch(selectedFeatured, () => updateSearch());
-watch(selectedDropship, () => updateSearch());
 
 watch(
     () => props.products,
@@ -312,11 +300,6 @@ function performDelete() {
                         title="Nổi bật"
                         v-model="selectedFeatured"
                         :options="featuredOptions"
-                    />
-                    <DataTableSingleFilter
-                        title="Dropship"
-                        v-model="selectedDropship"
-                        :options="dropshipOptions"
                     />
                     <DataTableSingleFilter
                         title="Trạng thái"

@@ -37,7 +37,6 @@ class BookingService
             'customer',
             'designer.user',
             'designer.employee',
-            'designer.vendorUser',
             'service',
             'acceptedBy',
             'invoice',

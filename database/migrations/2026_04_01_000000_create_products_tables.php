@@ -36,7 +36,6 @@ return new class extends Migration
             $table->decimal('average_rating', 3, 2)->nullable();
 
             $table->boolean('is_featured')->default(false);
-            $table->boolean('is_dropship')->default(false);
             $table->boolean('is_new_arrival')->default(false);
 
             $table->timestamp('published_date')->nullable();
@@ -61,7 +60,6 @@ return new class extends Migration
         DB::statement('CREATE INDEX idx_products_max_price ON products (max_price) WHERE deleted_at IS NULL');
         DB::statement('CREATE INDEX idx_products_is_featured ON products (is_featured) WHERE deleted_at IS NULL AND is_featured = true');
         DB::statement('CREATE INDEX idx_products_is_new_arrival ON products (is_new_arrival) WHERE deleted_at IS NULL AND is_new_arrival = true');
-        DB::statement('CREATE INDEX idx_products_is_dropship ON products (is_dropship) WHERE deleted_at IS NULL');
 
         Schema::create('product_variants', function (Blueprint $table) {
             $table->uuid('id')->primary();

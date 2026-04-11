@@ -43,7 +43,6 @@ class ProductResource extends JsonResource
             'min_price' => $this->min_price,
             'max_price' => $this->max_price,
             'is_featured' => $this->is_featured,
-            'is_dropship' => $this->is_dropship,
             'is_new_arrival' => $this->is_new_arrival,
             'is_custom_made' => $this->is_custom_made,
             'published_date' => $this->published_date?->format('d/m/Y'),

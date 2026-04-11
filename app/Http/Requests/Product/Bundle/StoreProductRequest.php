@@ -122,7 +122,6 @@ class StoreProductRequest extends FormRequest
             'assembly_info.difficulty_level' => ['nullable', Rule::in(['easy', 'medium', 'hard'])],
             'warranty_months' => ['nullable', 'integer', 'min:1'],
             'is_featured' => ['boolean'],
-            'is_dropship' => ['boolean'],
             'is_new_arrival' => ['boolean'],
             'is_custom_made' => ['boolean'],
             'published_date' => ['nullable', 'date'],

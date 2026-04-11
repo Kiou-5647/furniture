@@ -2,6 +2,9 @@ export * from './auth';
 export * from './navigation';
 export * from './ui';
 export * from './lookup';
+export * from './department';
+export * from './employee';
+export * from './order';
 
 export type AttributeType =
     | 'text'

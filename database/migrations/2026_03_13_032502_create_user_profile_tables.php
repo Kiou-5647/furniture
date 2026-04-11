@@ -2,7 +2,6 @@
 
 use App\Models\Auth\User;
 use App\Models\Employee\Department;
-use App\Models\Vendor\Vendor;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -103,16 +102,6 @@ return new class extends Migration
             $table->foreign('verified_by')->references('id')->on('employees');
         });
 
-        Schema::create('vendor_users', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->foreignIdFor(User::class, 'user_id')->unique()->constrained()->onDelete('cascade');
-            $table->foreignIdFor(Vendor::class, 'vendor_id')->constrained()->onDelete('cascade');
-            $table->string('full_name')->nullable();
-            $table->string('phone', 20)->nullable();
-            $table->timestamps();
-            $table->softDeletes();
-            $table->unique(['user_id', 'vendor_id']);
-        });
         DB::statement('CREATE INDEX idx_vendors_active_clean ON vendors(is_active) WHERE is_active = true AND deleted_at IS NULL');
     }
 
@@ -121,7 +110,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('vendor_users');
         Schema::dropIfExists('vendors');
         Schema::dropIfExists('customer_addresses');
         Schema::dropIfExists('customers');

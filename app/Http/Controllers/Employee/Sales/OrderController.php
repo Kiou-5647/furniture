@@ -12,6 +12,7 @@ use App\Enums\OrderStatus;
 use App\Http\Requests\Sales\CreateOrderRequest;
 use App\Http\Requests\Sales\UpdateOrderStatusRequest;
 use App\Http\Resources\Employee\Sales\OrderResource;
+use App\Models\Inventory\Location;
 use App\Models\Sales\Order;
 use App\Services\Sales\OrderService;
 use Illuminate\Http\Request;
@@ -28,10 +29,16 @@ class OrderController
     public function index(Request $request): Response
     {
         $filter = OrderFilterData::fromRequest($request);
+        $employeeLocationId = $request->user()->employee?->location_id;
 
         return Inertia::render('employee/sales/orders/Index', [
             'statusOptions' => $this->service->getStatusOptions(),
             'customerOptions' => $this->service->getCustomerOptions(),
+            'storeLocationOptions' => $this->service->getStoreLocationOptions(),
+            'employeeLocationId' => $employeeLocationId,
+            'employeeLocationName' => $employeeLocationId
+                ? (Location::find($employeeLocationId)?->name)
+                : null,
             'orders' => Inertia::defer(fn () => OrderResource::collection(
                 $this->service->getFiltered($filter)
             )),
@@ -60,8 +67,30 @@ class OrderController
         ]);
     }
 
+    public function catalog(Request $request)
+    {
+        $employeeLocationId = $request->user()->employee?->location_id;
+        $shippingMethods = \App\Models\Fulfillment\ShippingMethod::where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'estimated_delivery_days', 'price']);
+
+        return response()->json([
+            'customerOptions' => $this->service->getCustomerOptions(),
+            'catalogItems' => $this->service->getCatalogItems($employeeLocationId),
+            'bundleContents' => $this->service->getBundleContents(),
+            'shippingMethods' => $shippingMethods,
+        ]);
+    }
+
     public function store(CreateOrderRequest $request, CreateOrderAction $action)
     {
+        $employee = $request->user()->employee;
+
+        // Merge store location into request data before creating DTO
+        if (! $request->input('store_location_id') && $employee) {
+            $request->merge(['store_location_id' => $employee->location_id]);
+        }
+
         $data = CreateOrderData::fromRequest($request);
         $order = $action->execute($data);
 
@@ -71,8 +100,6 @@ class OrderController
 
     public function updateStatus(UpdateOrderStatusRequest $request, Order $order, UpdateOrderStatusAction $action)
     {
-        $this->authorize('update', $order);
-
         $employee = $request->user()->employee;
         $newStatus = OrderStatus::tryFrom($request->input('status'));
 
@@ -130,5 +157,20 @@ class OrderController
         $order->forceDelete();
 
         return back()->with('success', 'Đã xóa vĩnh viễn đơn hàng.');
+    }
+
+    public function markAsPaid(Request $request, Order $order)
+    {
+        if (! Auth::user()->can('orders.manage')) {
+            return back()->with('error', 'Không đủ quyền hạn!');
+        }
+
+        if ($order->paid_at) {
+            return back()->with('error', 'Đơn hàng đã được thanh toán.');
+        }
+
+        $order->update(['paid_at' => now()]);
+
+        return back()->with('success', 'Đã xác nhận thanh toán.');
     }
 }

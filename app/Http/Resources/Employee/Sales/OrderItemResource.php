@@ -7,6 +7,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class OrderItemResource extends JsonResource
 {
+    public static $wrap = null;
+
     public function toArray(Request $request): array
     {
         return [
@@ -18,6 +20,11 @@ class OrderItemResource extends JsonResource
             'unit_price' => $this->unit_price,
             'subtotal' => (float) $this->unit_price * $this->quantity,
             'configuration' => $this->configuration,
+            'source_location' => $this->whenLoaded('sourceLocation', fn () => [
+                'id' => $this->sourceLocation->id,
+                'name' => $this->sourceLocation->name,
+                'code' => $this->sourceLocation->code,
+            ]),
         ];
     }
 }

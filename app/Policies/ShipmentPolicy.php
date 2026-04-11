@@ -9,19 +9,8 @@ class ShipmentPolicy
 {
     public function view(User $user, Shipment $shipment): bool
     {
-        if ($user->hasRole('super_admin')) {
-            return true;
-        }
-
-        if ($user->isEmployee() && $user->hasPermissionTo('shipments.view')) {
-            return true;
-        }
-
-        if ($user->isVendor()) {
-            return $shipment->vendor_id === $user->vendor?->id;
-        }
-
-        return false;
+        return $user->hasRole('super_admin')
+            || $user->hasPermissionTo('shipments.view');
     }
 
     public function update(User $user, Shipment $shipment): bool
@@ -30,15 +19,7 @@ class ShipmentPolicy
             return true;
         }
 
-        if (! $user->hasPermissionTo('shipments.update')) {
-            return false;
-        }
-
-        if ($user->isVendor()) {
-            return $shipment->vendor_id === $user->vendor?->id;
-        }
-
-        return true;
+        return $user->hasPermissionTo('shipments.update');
     }
 
     public function forceDelete(User $user, Shipment $shipment): bool
@@ -51,7 +32,6 @@ class ShipmentPolicy
             return false;
         }
 
-        // Only employees can force delete shipments
         return $user->isEmployee();
     }
 }

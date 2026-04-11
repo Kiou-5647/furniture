@@ -6,8 +6,6 @@ use App\Enums\ShipmentStatus;
 use App\Models\Fulfillment\Shipment;
 use App\Models\Fulfillment\ShipmentItem;
 use App\Models\Sales\Order;
-use App\Models\Sales\OrderItem;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class FulfillmentRouterService
@@ -19,29 +17,50 @@ class FulfillmentRouterService
         }
 
         DB::transaction(function () use ($order) {
-            // Group order items by product vendor_id
-            $itemsByVendor = $order->items
-                ->groupBy(fn (OrderItem $item) => $item->purchasable?->vendor_id ?? 'host');
+            // Group order items by source_location_id
+            $itemsByLocation = [];
 
-            foreach ($itemsByVendor as $vendorId => $vendorItems) {
-                $this->createShipment($order, $vendorId, $vendorItems);
+            foreach ($order->items as $item) {
+                // For shipping orders, use source_location_id
+                $locationId = $item->source_location_id;
+
+                if (! $locationId) {
+                    // Fallback: use order's store location
+                    $locationId = $order->store_location_id;
+                }
+
+                if (! $locationId) {
+                    continue; // Skip items with no source
+                }
+
+                if (! isset($itemsByLocation[$locationId])) {
+                    $itemsByLocation[$locationId] = [];
+                }
+
+                $itemsByLocation[$locationId][] = $item;
+            }
+
+            // Create one shipment per source location
+            foreach ($itemsByLocation as $locationId => $locationItems) {
+                $this->createShipment($order, $locationId, $locationItems);
             }
         });
     }
 
-    protected function createShipment(Order $order, mixed $vendorId, Collection $vendorItems): Shipment
+    protected function createShipment(Order $order, string $locationId, array $items): Shipment
     {
         $shipment = Shipment::create([
             'order_id' => $order->id,
             'shipment_number' => Shipment::generateShipmentNumber(),
-            'vendor_id' => $vendorId === 'host' ? null : $vendorId,
+            'origin_location_id' => $locationId,
             'status' => ShipmentStatus::Pending,
         ]);
 
-        foreach ($vendorItems as $item) {
+        foreach ($items as $item) {
             ShipmentItem::create([
                 'shipment_id' => $shipment->id,
                 'order_item_id' => $item->id,
+                'source_location_id' => $locationId,
                 'quantity_shipped' => $item->quantity,
             ]);
         }

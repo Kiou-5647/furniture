@@ -19,7 +19,7 @@ class DeliverShipmentAction
         DB::transaction(function () use ($shipment, $performedBy) {
             $shipment->update([
                 'status' => ShipmentStatus::Delivered,
-                'handled_by' => $performedBy?->user_id ?? $shipment->handled_by,
+                'handled_by' => $performedBy?->id ?? $shipment->handled_by,
             ]);
 
             // Check if all shipments for the order are delivered → complete order
@@ -37,7 +37,7 @@ class DeliverShipmentAction
             ->where('status', '!=', ShipmentStatus::Delivered)
             ->exists() === false;
 
-        if ($allDelivered && $order->canBeCompleted()) {
+        if ($allDelivered) {
             $order->update(['status' => OrderStatus::Completed]);
         }
     }

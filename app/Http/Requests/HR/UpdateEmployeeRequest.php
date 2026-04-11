@@ -20,8 +20,14 @@ class UpdateEmployeeRequest extends FormRequest
             'full_name' => ['required', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:20'],
             'department_id' => ['nullable', 'uuid', 'exists:departments,id'],
+            'location_id' => ['nullable', 'uuid', 'exists:locations,id'],
             'hire_date' => ['nullable', 'date'],
             'is_active' => ['boolean'],
+            'avatar' => ['nullable', 'image', 'max:2048'],
+            'roles' => ['nullable', 'array'],
+            'roles.*' => ['string'],
+            'permissions' => ['nullable', 'array'],
+            'permissions.*' => ['string'],
         ];
     }
 

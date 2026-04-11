@@ -159,7 +159,6 @@ export function useProductForm(
         },
         warranty_months: 12 as number | null,
         is_featured: false,
-        is_dropship: false,
         is_new_arrival: true,
         is_custom_made: false,
         published_date: '',
@@ -233,7 +232,6 @@ export function useProductForm(
                 };
                 form.warranty_months = newProduct.warranty_months;
                 form.is_featured = newProduct.is_featured;
-                form.is_dropship = newProduct.is_dropship;
                 form.is_new_arrival = newProduct.is_new_arrival;
                 form.is_custom_made = newProduct.is_custom_made;
                 form.published_date = newProduct.published_date ?? '';
@@ -302,20 +300,6 @@ export function useProductForm(
             }
         },
         { immediate: true },
-    );
-
-    watch(
-        () => form.is_dropship,
-        (val) => {
-            if (val && !form.vendor_id) form.is_dropship = false;
-        },
-    );
-
-    watch(
-        () => form.vendor_id,
-        (val) => {
-            if (!val && form.is_dropship) form.is_dropship = false;
-        },
     );
 
     watch(

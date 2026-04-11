@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -13,15 +12,12 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            PermissionSeeder::class,
-            SuperAdminSeeder::class,
-            GeodataSeeder::class,
-            VendorSeeder::class,
-            LookupSeeder::class,
-            CategorySeeder::class,
-            CollectionSeeder::class,
-            DefaultLocationSeeder::class,
-            TimberProductSeeder::class,
+            // Foundational data (must run first)
+            GeodataSeeder::class,      // Provinces & wards
+            LookupSeeder::class,       // Lookups: groups, rooms, styles, colors, materials, etc.
+
+            // Demo data (roles, users, products, inventory)
+            DemoDataSeeder::class,
         ]);
     }
 }

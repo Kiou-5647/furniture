@@ -14,12 +14,20 @@ class UpdateDesignerRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'full_name' => ['required', 'string', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:20'],
             'user_id' => ['nullable', 'uuid', 'exists:users,id'],
             'employee_id' => ['nullable', 'uuid', 'exists:employees,id'],
-            'vendor_user_id' => ['nullable', 'uuid', 'exists:vendor_users,id'],
+            'bio' => ['nullable', 'string'],
+            'portfolio_url' => ['nullable', 'url'],
             'hourly_rate' => ['required', 'numeric', 'min:0'],
             'auto_confirm_bookings' => ['boolean'],
             'is_active' => ['boolean'],
+            'avatar' => ['nullable', 'image', 'max:2048'],
+            'availabilities' => ['nullable', 'array'],
+            'availabilities.*.day_of_week' => ['integer', 'between:0,6'],
+            'availabilities.*.start_time' => ['date_format:H:i'],
+            'availabilities.*.end_time' => ['date_format:H:i'],
         ];
     }
 

@@ -2,19 +2,22 @@
 
 namespace App\Services\HR;
 
+use App\Data\HR\DepartmentFilterData;
 use App\Models\Employee\Department;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
 class DepartmentService
 {
-    public function getFiltered(): LengthAwarePaginator
+    public function getFiltered(DepartmentFilterData $filter): LengthAwarePaginator
     {
         return Department::query()
             ->withCount(['employees'])
             ->with(['manager'])
-            ->orderBy('name')
-            ->paginate(15);
+            ->when($filter->search, fn ($q) => $q->where('name', 'ilike', "%{$filter->search}%"))
+            ->when($filter->is_active !== null, fn ($q) => $q->where('is_active', $filter->is_active))
+            ->orderBy($filter->order_by ?: 'name', $filter->order_direction ?: 'asc')
+            ->paginate($filter->per_page ?: 15);
     }
 
     public function getActiveOptions(): Collection

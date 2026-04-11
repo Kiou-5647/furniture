@@ -14,9 +14,9 @@ use Illuminate\Support\Str;
 
 class CreateEmployeeAction
 {
-    public function execute(CreateEmployeeData $data): Employee
+    public function execute(CreateEmployeeData $data, array $roles = [], array $permissions = []): Employee
     {
-        return DB::transaction(function () use ($data) {
+        return DB::transaction(function () use ($data, $roles, $permissions) {
             $plainPassword = Str::random(16);
 
             $user = User::create([
@@ -29,9 +29,22 @@ class CreateEmployeeAction
                 'email_verified_at' => now(),
             ]);
 
+            if (! empty($roles)) {
+                foreach ($roles as $roleName) {
+                    $user->assignRole($roleName);
+                }
+            }
+
+            if (! empty($permissions)) {
+                foreach ($permissions as $permName) {
+                    $user->givePermissionTo($permName);
+                }
+            }
+
             $employee = Employee::create([
                 'user_id' => $user->id,
                 'department_id' => $data->department_id,
+                'location_id' => $data->location_id,
                 'full_name' => $data->full_name,
                 'phone' => $data->phone,
                 'hire_date' => $data->hire_date ?: now()->format('Y-m-d'),

@@ -34,6 +34,11 @@ class Employee extends Model implements HasMedia
         return $this->belongsTo(User::class);
     }
 
+    public function location(): BelongsTo
+    {
+        return $this->belongsTo(Location::class, 'location_id');
+    }
+
     public function department(): BelongsTo
     {
         return $this->belongsTo(Department::class);
@@ -64,6 +69,7 @@ class Employee extends Model implements HasMedia
         return LogOptions::defaults()
             ->logOnly(['full_name', 'phone', 'department_id', 'hire_date', 'termination_date'])
             ->logOnlyDirty()
-            ->dontLogEmptyChanges();
+            ->dontLogEmptyChanges()
+            ->setDescriptionForEvent(fn (string $eventName) => "Employee {$eventName}");
     }
 }

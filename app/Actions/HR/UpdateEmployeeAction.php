@@ -3,11 +3,15 @@
 namespace App\Actions\HR;
 
 use App\Models\Employee\Employee;
+use Illuminate\Http\UploadedFile;
 
 class UpdateEmployeeAction
 {
-    public function execute(Employee $employee, array $data): Employee
+    public function execute(Employee $employee, array $data, array $roles = [], array $permissions = []): Employee
     {
+        $avatarFile = $data['avatar'] ?? null;
+        unset($data['avatar']);
+
         $userData = [];
         $employeeData = [];
 
@@ -37,6 +41,14 @@ class UpdateEmployeeAction
         if (! empty($employeeData)) {
             $employee->update($employeeData);
         }
+
+        if ($avatarFile instanceof UploadedFile) {
+            $employee->clearMediaCollection('avatar');
+            $employee->addMedia($avatarFile)->toMediaCollection('avatar');
+        }
+
+        $employee->user->syncRoles($roles);
+        $employee->user->syncPermissions($permissions);
 
         return $employee->fresh(['user', 'department']);
     }

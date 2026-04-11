@@ -44,6 +44,7 @@
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "embla-carousel-vue": "^8.6.0",
+        "graphify": "^1.0.0",
         "laravel-vite-plugin": "^2.0.0",
         "lodash": "^4.17.23",
         "lucide-vue-next": "^0.468.0",

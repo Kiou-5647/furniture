@@ -7,6 +7,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class OrderResource extends JsonResource
 {
+    public static $wrap = null;
+
     public function toArray(Request $request): array
     {
         return [
@@ -17,11 +19,31 @@ class OrderResource extends JsonResource
                 'name' => $this->customer->name,
                 'email' => $this->customer->email,
             ]),
-            'shipping_address' => $this->whenLoaded('shippingAddress', fn () => [
-                'id' => $this->shippingAddress->id,
-                'full_address' => $this->shippingAddress->getFullAddress(),
-            ]),
+            'shipping_province_code' => $this->province_code,
+            'shipping_ward_code' => $this->ward_code,
+            'shipping_province_name' => $this->province_name,
+            'shipping_ward_name' => $this->ward_name,
+            'shipping_address_data' => $this->address_data,
+            'shipping_address_text' => $this->getShippingAddressText(),
             'total_amount' => $this->total_amount,
+            'total_items' => $this->total_items,
+            'source' => $this->source,
+            'store_location' => $this->whenLoaded('storeLocation', fn () => [
+                'id' => $this->storeLocation->id,
+                'name' => $this->storeLocation->name,
+                'code' => $this->storeLocation->code,
+            ]),
+            'paid_at' => $this->paid_at?->format('d/m/Y H:i'),
+            'shipping_cost' => $this->shipping_cost,
+            'shipping_method' => $this->whenLoaded('shippingMethod', fn () => [
+                'id' => $this->shippingMethod->id,
+                'name' => $this->shippingMethod->name,
+                'estimated_delivery_days' => $this->shippingMethod->estimated_delivery_days,
+            ]),
+            'guest_name' => $this->guest_name,
+            'guest_phone' => $this->guest_phone,
+            'guest_email' => $this->guest_email,
+            'notes' => $this->notes,
             'status' => $this->status->value,
             'status_label' => $this->status->label(),
             'status_color' => $this->status->color(),

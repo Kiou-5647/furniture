@@ -129,16 +129,6 @@ export function getColumns(
                                 ],
                             )
                             : null,
-                        item.is_dropship
-                            ? h(
-                                Badge,
-                                {
-                                    variant: 'secondary',
-                                    class: 'text-xs h-5 px-1 shrink-0',
-                                },
-                                () => 'Dropship',
-                            )
-                            : null,
                         item.is_custom_made
                             ? h(
                                 Badge,

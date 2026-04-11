@@ -17,6 +17,14 @@ class CreateShipmentsAction
             throw new \RuntimeException('Đơn hàng đã được điều phối vận chuyển.');
         }
 
+        if (! $order->paid_at) {
+            throw new \RuntimeException('Đơn hàng chưa được thanh toán, chưa tạo vận chuyển.');
+        }
+
+        if (! $order->shipping_method_id) {
+            throw new \RuntimeException('Đơn hàng không cần vận chuyển.');
+        }
+
         $this->router->routeOrder($order);
     }
 }

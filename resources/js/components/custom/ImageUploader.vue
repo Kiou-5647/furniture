@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ImageIcon, X } from 'lucide-vue-next';
+import { ImageIcon, X } from '@lucide/vue';
 import { computed, watch, ref, useTemplateRef, onBeforeUnmount } from 'vue';
 
 const props = withDefaults(

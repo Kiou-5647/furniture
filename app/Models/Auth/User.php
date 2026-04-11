@@ -6,14 +6,11 @@ use App\Enums\UserType;
 use App\Models\Customer\Customer;
 use App\Models\Employee\Employee;
 use App\Models\Sales\Order;
-use App\Models\Vendor\Vendor;
-use App\Models\Vendor\VendorUser;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -73,7 +70,6 @@ class User extends Authenticatable implements MustVerifyEmail
         $profile = match ($this->type->value) {
             'employee' => $this->employee,
             'customer' => $this->customer,
-            'vendor' => $this->vendorUser,
             default => null,
         };
 
@@ -83,11 +79,6 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isEmployee(): bool
     {
         return $this->type === UserType::Employee;
-    }
-
-    public function isVendor(): bool
-    {
-        return $this->type === UserType::Vendor;
     }
 
     public function isCustomer(): bool
@@ -103,23 +94,6 @@ class User extends Authenticatable implements MustVerifyEmail
     public function customer(): HasOne
     {
         return $this->hasOne(Customer::class);
-    }
-
-    public function vendorUser(): HasOne
-    {
-        return $this->hasOne(VendorUser::class);
-    }
-
-    public function vendor(): HasOneThrough
-    {
-        return $this->hasOneThrough(
-            Vendor::class,
-            VendorUser::class,
-            'user_id',
-            'id',
-            'id',
-            'vendor_id'
-        );
     }
 
     public function orders(): HasMany

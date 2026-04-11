@@ -3,10 +3,9 @@
 namespace App\Models\Fulfillment;
 
 use App\Enums\ShipmentStatus;
-use App\Models\Auth\User;
+use App\Models\Employee\Employee;
 use App\Models\Inventory\Location;
 use App\Models\Sales\Order;
-use App\Models\Vendor\Vendor;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -31,7 +30,7 @@ class Shipment extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['shipment_number', 'status', 'vendor_id', 'carrier', 'tracking_number', 'handled_by'])
+            ->logOnly(['shipment_number', 'status', 'carrier', 'tracking_number', 'handled_by'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
             ->setDescriptionForEvent(fn (string $eventName) => "Shipment {$eventName}");
@@ -40,11 +39,6 @@ class Shipment extends Model
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
-    }
-
-    public function vendor(): BelongsTo
-    {
-        return $this->belongsTo(Vendor::class);
     }
 
     public function originLocation(): BelongsTo
@@ -64,7 +58,7 @@ class Shipment extends Model
 
     public function handledBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'handled_by');
+        return $this->belongsTo(Employee::class, 'handled_by');
     }
 
     public static function generateShipmentNumber(): string

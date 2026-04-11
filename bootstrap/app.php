@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Middleware\EnsureUserType;
-use App\Http\Middleware\EnsureVendorVerified;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\SetUserTimezone;
@@ -29,7 +28,6 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'user_type' => EnsureUserType::class,
-            'vendor_verified' => EnsureVendorVerified::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

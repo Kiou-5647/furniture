@@ -37,6 +37,7 @@ class Department extends Model
         return LogOptions::defaults()
             ->logOnly(['name', 'code', 'manager_id', 'description', 'is_active'])
             ->logOnlyDirty()
-            ->dontLogEmptyChanges();
+            ->dontLogEmptyChanges()
+            ->setDescriptionForEvent(fn (string $eventName) => "Department {$eventName}");
     }
 }

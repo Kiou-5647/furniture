@@ -6,6 +6,8 @@ use App\Http\Controllers\Employee\Booking\DesignServiceController;
 use App\Http\Controllers\Employee\EmployeeDashboardController;
 use App\Http\Controllers\Employee\Fulfillment\ShipmentController;
 use App\Http\Controllers\Employee\Fulfillment\ShippingMethodController;
+use App\Http\Controllers\Employee\HR\DepartmentController;
+use App\Http\Controllers\Employee\HR\EmployeeController;
 use App\Http\Controllers\Employee\Inventory\LocationController;
 use App\Http\Controllers\Employee\Inventory\StockMovementController;
 use App\Http\Controllers\Employee\Inventory\StockTransferController;
@@ -19,8 +21,6 @@ use App\Http\Controllers\Employee\Sales\PaymentController;
 use App\Http\Controllers\Employee\Setting\ActivityLogController;
 use App\Http\Controllers\Employee\Setting\LookupController;
 use App\Http\Controllers\Employee\Setting\LookupNamespaceController;
-use App\Http\Controllers\HR\DepartmentController;
-use App\Http\Controllers\HR\EmployeeController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien')->name('employee.')->group(function () {
@@ -44,15 +44,13 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
         Route::middleware(['can:hr.employees.manage'])->group(function () {
             Route::post('/', [EmployeeController::class, 'store'])->name('store');
             Route::put('/{employee}', [EmployeeController::class, 'update'])->name('update');
+            Route::delete('/{employee}', [EmployeeController::class, 'destroy'])->name('destroy');
             Route::post('/{employee}/terminate', [EmployeeController::class, 'terminate'])->name('terminate');
             Route::post('/{employee}/restore', [EmployeeController::class, 'restore'])->name('restore');
 
             Route::middleware(['can:hr.roles.manage'])->group(function () {
                 Route::get('/{employee}/permissions', [EmployeeController::class, 'permissions'])->name('permissions');
-                Route::post('/{employee}/roles', [EmployeeController::class, 'assignRole'])->name('assign-role');
-                Route::delete('/{employee}/roles/{role}', [EmployeeController::class, 'removeRole'])->name('remove-role');
-                Route::post('/{employee}/permissions/{permission}', [EmployeeController::class, 'grantPermission'])->name('grant-permission');
-                Route::delete('/{employee}/permissions/{permission}', [EmployeeController::class, 'revokePermission'])->name('revoke-permission');
+                Route::post('/{employee}/sync-roles-permissions', [EmployeeController::class, 'syncRolesPermissions'])->name('sync-roles-permissions');
             });
         });
     });
@@ -94,11 +92,18 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
 
         // Designers
         Route::prefix('nha-thiet-ke')->name('designers.')->group(function () {
-            Route::get('/', [DesignerController::class, 'index'])->name('index');
-            Route::post('/', [DesignerController::class, 'store'])->name('store');
-            Route::put('/{designer}', [DesignerController::class, 'update'])->name('update');
-            Route::delete('/{designer}', [DesignerController::class, 'destroy'])->name('destroy');
-            Route::post('/{designer}/restore', [DesignerController::class, 'restore'])->name('restore')->withTrashed();
+            Route::middleware(['can:designers.view'])->group(function () {
+                Route::get('/', [DesignerController::class, 'index'])->name('index');
+                Route::get('/{designer}/availabilities', [DesignerController::class, 'availabilities'])->name('availabilities');
+            });
+
+            Route::middleware(['can:designers.manage'])->group(function () {
+                Route::post('/', [DesignerController::class, 'store'])->name('store');
+                Route::put('/{designer}', [DesignerController::class, 'update'])->name('update');
+                Route::delete('/{designer}', [DesignerController::class, 'destroy'])->name('destroy');
+                Route::post('/{designer}/restore', [DesignerController::class, 'restore'])->name('restore')->withTrashed();
+                Route::post('/{designer}/availabilities', [DesignerController::class, 'updateAvailabilities'])->name('update-availabilities');
+            });
         });
 
         // Design Services
@@ -119,6 +124,10 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
         Route::prefix('don-hang')->name('orders.')->group(function () {
             Route::middleware(['can:orders.view'])->group(function () {
                 Route::get('/', [OrderController::class, 'index'])->name('index');
+                Route::get('/catalog', [OrderController::class, 'catalog'])->name('catalog');
+                Route::prefix('thung-rac')->name('trash.')->group(function () {
+                    Route::get('/', [OrderController::class, 'trash'])->name('index');
+                });
                 Route::get('/{order}', [OrderController::class, 'show'])->name('show');
             });
 
@@ -127,10 +136,10 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
                 Route::post('/{order}/update-status', [OrderController::class, 'updateStatus'])->name('update-status');
                 Route::post('/{order}/cancel', [OrderController::class, 'cancel'])->name('cancel');
                 Route::post('/{order}/complete', [OrderController::class, 'complete'])->name('complete');
+                Route::post('/{order}/mark-paid', [OrderController::class, 'markAsPaid'])->name('mark-paid');
                 Route::delete('/{order}', [OrderController::class, 'destroy'])->name('destroy');
 
                 Route::prefix('thung-rac')->name('trash.')->group(function () {
-                    Route::get('/', [OrderController::class, 'trash'])->name('index');
                     Route::post('/{order}/restore', [OrderController::class, 'restore'])->name('restore')->withTrashed();
                     Route::delete('/{order}/force', [OrderController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
                 });

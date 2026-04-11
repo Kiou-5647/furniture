@@ -26,7 +26,6 @@ use Spatie\Activitylog\Support\LogOptions;
  * @method static ProductBuilder|Product byCollection(Collection $collection)
  * @method static ProductBuilder|Product featured()
  * @method static ProductBuilder|Product newArrivals()
- * @method static ProductBuilder|Product dropship()
  */
 class Product extends Model
 {
@@ -53,7 +52,6 @@ class Product extends Model
             'max_price' => 'decimal:2',
 
             'is_featured' => 'boolean',
-            'is_dropship' => 'boolean',
             'is_new_arrival' => 'boolean',
             'published_date' => 'datetime',
             'new_arrival_until' => 'datetime',
@@ -121,7 +119,7 @@ class Product extends Model
 
     public function isInStock(): bool
     {
-        if ($this->is_dropship || $this->is_custom_made) {
+        if ($this->is_custom_made) {
             return $this->status === ProductStatus::Published;
         }
 

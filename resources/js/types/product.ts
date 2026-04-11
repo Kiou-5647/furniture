@@ -50,7 +50,6 @@ export interface Product {
     min_price: string;
     max_price: string;
     is_featured: boolean;
-    is_dropship: boolean;
     is_new_arrival: boolean;
     is_custom_made: boolean;
     published_date: string | null;
@@ -142,7 +141,6 @@ export interface ProductFilterData {
     collection_id?: string | null;
     status?: ProductStatus | null;
     is_featured?: boolean | null;
-    is_dropship?: boolean | null;
     is_new_arrival?: boolean | null;
     search?: string;
     order_by?: string;

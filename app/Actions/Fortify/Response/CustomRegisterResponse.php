@@ -13,7 +13,6 @@ class CustomRegisterResponse implements RegisterResponse
 
         return match ($user?->type?->value) {
             'employee' => redirect()->route('employee.dashboard'),
-            'vendor' => redirect()->route('vendor.dashboard'),
             default => redirect()->route('home'),
         };
     }

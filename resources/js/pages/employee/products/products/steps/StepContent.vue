@@ -624,24 +624,6 @@ function setSpecGroupWithLabel(ns: string) {
             </div>
             <div class="flex items-center gap-2">
                 <Switch
-                    id="is_dropship"
-                    v-model="ctx.form.is_dropship"
-                    class="h-4 w-7"
-                    :disabled="!ctx.form.vendor_id"
-                />
-                <Label
-                    for="is_dropship"
-                    :class="!ctx.form.vendor_id && 'text-muted-foreground'"
-                    >Dropship
-                    <span
-                        v-if="!ctx.form.vendor_id"
-                        class="text-xs text-muted-foreground"
-                        >(cần nhà cung cấp)</span
-                    ></Label
-                >
-            </div>
-            <div class="flex items-center gap-2">
-                <Switch
                     id="is_custom_made"
                     v-model="ctx.form.is_custom_made"
                     class="h-4 w-7"

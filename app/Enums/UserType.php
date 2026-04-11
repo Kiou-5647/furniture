@@ -5,14 +5,12 @@ namespace App\Enums;
 enum UserType: string
 {
     case Employee = 'employee';
-    case Vendor = 'vendor';
     case Customer = 'customer';
 
     public function label(): string
     {
         return match ($this) {
             self::Employee => 'Nhân viên',
-            self::Vendor => 'Nhà cung cấp',
             self::Customer => 'Khách hàng',
         };
     }

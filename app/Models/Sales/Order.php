@@ -5,9 +5,10 @@ namespace App\Models\Sales;
 use App\Builders\Sales\OrderBuilder;
 use App\Enums\OrderStatus;
 use App\Models\Auth\User;
-use App\Models\Customer\CustomerAddress;
 use App\Models\Employee\Employee;
 use App\Models\Fulfillment\Shipment;
+use App\Models\Fulfillment\ShippingMethod;
+use App\Models\Inventory\Location;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -29,7 +30,11 @@ class Order extends Model
     {
         return [
             'total_amount' => 'decimal:2',
+            'total_items' => 'integer',
+            'shipping_cost' => 'decimal:2',
             'status' => OrderStatus::class,
+            'paid_at' => 'datetime',
+            'address_data' => 'array',
         ];
     }
 
@@ -52,11 +57,6 @@ class Order extends Model
         return $this->belongsTo(User::class, 'customer_id');
     }
 
-    public function shippingAddress(): BelongsTo
-    {
-        return $this->belongsTo(CustomerAddress::class, 'shipping_address_id');
-    }
-
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
@@ -70,6 +70,28 @@ class Order extends Model
     public function acceptedBy(): BelongsTo
     {
         return $this->belongsTo(Employee::class, 'accepted_by');
+    }
+
+    public function storeLocation(): BelongsTo
+    {
+        return $this->belongsTo(Location::class, 'store_location_id');
+    }
+
+    public function shippingMethod(): BelongsTo
+    {
+        return $this->belongsTo(ShippingMethod::class, 'shipping_method_id');
+    }
+
+    public function getShippingAddressText(): string
+    {
+        $parts = array_filter([
+            $this->address_data['address_number'] ?? null,
+            $this->address_data['building'] ?? null,
+            $this->ward_name,
+            $this->province_name,
+        ]);
+
+        return implode(', ', $parts) ?: '—';
     }
 
     public static function generateOrderNumber(): string
