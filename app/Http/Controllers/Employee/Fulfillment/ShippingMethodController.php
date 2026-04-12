@@ -2,7 +2,14 @@
 
 namespace App\Http\Controllers\Employee\Fulfillment;
 
+use App\Actions\Fulfillment\UpsertShippingMethodAction;
+use App\Data\Fulfillment\CreateShippingMethodData;
+use App\Data\Fulfillment\ShippingMethodFilterData;
+use App\Http\Requests\Fulfillment\StoreShippingMethodRequest;
+use App\Http\Requests\Fulfillment\UpdateShippingMethodRequest;
+use App\Http\Resources\Employee\Fulfillment\ShippingMethodResource;
 use App\Models\Fulfillment\ShippingMethod;
+use App\Services\Fulfillment\ShippingMethodService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -10,47 +17,46 @@ use Inertia\Response;
 
 class ShippingMethodController
 {
-    public function index(): Response
+    public function __construct(
+        private ShippingMethodService $service,
+    ) {}
+
+    public function index(Request $request): Response
     {
-        $methods = ShippingMethod::query()
-            ->orderBy('name')
-            ->get();
+        $filter = ShippingMethodFilterData::fromRequest($request);
 
         return Inertia::render('employee/fulfillment/shipping-methods/Index', [
-            'shippingMethods' => $methods,
+            'shippingMethods' => Inertia::defer(fn () => ShippingMethodResource::collection(
+                $this->service->getFiltered($filter)
+            )),
+            'filters' => $filter,
         ]);
     }
 
-    public function store(Request $request)
+    public function trash(Request $request): Response
     {
-        if (! Auth::user()->can('shipping_methods.manage')) {
-            return back()->with('error', 'Không đủ quyền hạn!');
-        }
+        $filter = ShippingMethodFilterData::fromRequest($request);
 
-        ShippingMethod::create($request->validate([
-            'code' => ['required', 'string', 'max:255', 'unique:shipping_methods,code'],
-            'name' => ['required', 'string', 'max:255'],
-            'price' => ['required', 'numeric', 'min:0'],
-            'estimated_delivery_days' => ['nullable', 'integer', 'min:1'],
-            'is_active' => ['boolean'],
-        ]));
+        return Inertia::render('employee/fulfillment/shipping-methods/Trash', [
+            'shippingMethods' => Inertia::defer(fn () => ShippingMethodResource::collection(
+                $this->service->getTrashedFiltered($filter)
+            )),
+            'filters' => $filter,
+        ]);
+    }
+
+    public function store(StoreShippingMethodRequest $request, UpsertShippingMethodAction $action)
+    {
+        $data = CreateShippingMethodData::fromRequest($request);
+        $action->execute($data);
 
         return back()->with('success', 'Đã thêm phương thức vận chuyển.');
     }
 
-    public function update(Request $request, ShippingMethod $shippingMethod)
+    public function update(UpdateShippingMethodRequest $request, ShippingMethod $shippingMethod, UpsertShippingMethodAction $action)
     {
-        if (! Auth::user()->can('shipping_methods.manage')) {
-            return back()->with('error', 'Không đủ quyền hạn!');
-        }
-
-        $shippingMethod->update($request->validate([
-            'code' => ['required', 'string', 'max:255', 'unique:shipping_methods,code,'.$shippingMethod->id],
-            'name' => ['required', 'string', 'max:255'],
-            'price' => ['required', 'numeric', 'min:0'],
-            'estimated_delivery_days' => ['nullable', 'integer', 'min:1'],
-            'is_active' => ['boolean'],
-        ]));
+        $data = CreateShippingMethodData::fromRequest($request);
+        $action->execute($data, $shippingMethod);
 
         return back()->with('success', 'Đã cập nhật phương thức vận chuyển.');
     }
@@ -64,5 +70,27 @@ class ShippingMethodController
         $shippingMethod->delete();
 
         return back()->with('success', 'Đã xóa phương thức vận chuyển.');
+    }
+
+    public function restore(ShippingMethod $shippingMethod)
+    {
+        if (! Auth::user()->can('shipping_methods.manage')) {
+            return back()->with('error', 'Không đủ quyền hạn!');
+        }
+
+        $shippingMethod->restore();
+
+        return back()->with('success', 'Đã khôi phục phương thức vận chuyển.');
+    }
+
+    public function forceDestroy(ShippingMethod $shippingMethod)
+    {
+        if (! Auth::user()->can('shipping_methods.manage')) {
+            return back()->with('error', 'Không đủ quyền hạn để xóa vĩnh viễn!');
+        }
+
+        $shippingMethod->forceDelete();
+
+        return back()->with('success', 'Đã xóa vĩnh viễn phương thức vận chuyển.');
     }
 }

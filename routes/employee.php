@@ -209,6 +209,12 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
                 Route::post('/', [ShippingMethodController::class, 'store'])->name('store');
                 Route::put('/{shippingMethod}', [ShippingMethodController::class, 'update'])->name('update');
                 Route::delete('/{shippingMethod}', [ShippingMethodController::class, 'destroy'])->name('destroy');
+                Route::post('/{shippingMethod}/restore', [ShippingMethodController::class, 'restore'])->name('restore')->withTrashed();
+                Route::delete('/{shippingMethod}/force', [ShippingMethodController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
+            });
+
+            Route::prefix('thung-rac')->name('trash.')->group(function () {
+                Route::get('/', [ShippingMethodController::class, 'trash'])->name('index');
             });
         });
 
