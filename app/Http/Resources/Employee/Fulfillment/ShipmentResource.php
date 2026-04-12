@@ -7,6 +7,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class ShipmentResource extends JsonResource
 {
+    public static $wrap = null;
+
     public function toArray(Request $request): array
     {
         return [
@@ -15,6 +17,19 @@ class ShipmentResource extends JsonResource
             'order' => $this->whenLoaded('order', fn () => [
                 'id' => $this->order->id,
                 'order_number' => $this->order->order_number,
+                'status' => $this->order->status->value,
+                'status_label' => $this->order->status->label(),
+                'guest_name' => $this->order->guest_name,
+                'guest_phone' => $this->order->guest_phone,
+                'guest_email' => $this->order->guest_email,
+                'customer' => [
+                    'name' => $this->order->customer?->name,
+                    'email' => $this->order->customer?->email,
+                ],
+                'shipping_address_text' => $this->order->getShippingAddressText(),
+                'total_amount' => $this->order->total_amount,
+                'shipping_cost' => $this->order->shipping_cost,
+                'notes' => $this->order->notes,
             ]),
             'origin_location' => $this->whenLoaded('originLocation', fn () => [
                 'id' => $this->originLocation->id,
@@ -27,9 +42,10 @@ class ShipmentResource extends JsonResource
             'status' => $this->status->value,
             'status_label' => $this->status->label(),
             'status_color' => $this->status->color(),
-            'carrier' => $this->carrier,
-            'tracking_number' => $this->tracking_number,
-            'handled_by' => $this->whenLoaded('handledBy', fn () => $this->handledBy->name),
+            'handled_by' => $this->whenLoaded('handledBy', fn () => [
+                'full_name' => $this->handledBy->full_name,
+                'phone' => $this->handledBy->phone,
+            ]),
             'items' => ShipmentItemResource::collection($this->whenLoaded('items')),
             'created_at' => $this->created_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
             'updated_at' => $this->updated_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),

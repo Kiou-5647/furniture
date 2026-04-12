@@ -6,6 +6,7 @@ use App\Actions\Inventory\RecordStockMovementAction;
 use App\Enums\StockMovementType;
 use App\Models\Employee\Employee;
 use App\Models\Fulfillment\Shipment;
+use App\Models\Fulfillment\ShipmentItem;
 use App\Models\Inventory\Location;
 use App\Models\Product\Bundle;
 use App\Models\Product\ProductVariant;
@@ -83,19 +84,21 @@ class OrderStockDeductionService
                     continue;
                 }
 
-                $variants = $this->resolveVariantsFromItem($orderItem);
-                foreach ($variants as [$variant, $qty]) {
-                    $this->recordStockMovement->handle(
-                        variant: $variant,
-                        location: $sourceLocation,
-                        type: StockMovementType::Sell,
-                        quantity: $qty,
-                        notes: 'Shipment '.$shipment->shipment_number,
-                        performedBy: $performedBy,
-                        referenceType: Shipment::class,
-                        referenceId: $shipment->id,
-                    );
+                $variant = ProductVariant::find($orderItem->purchasable_id);
+                if (! $variant) {
+                    continue;
                 }
+
+                $this->recordStockMovement->handle(
+                    variant: $variant,
+                    location: $sourceLocation,
+                    type: StockMovementType::Sell,
+                    quantity: $shipmentItem->quantity_shipped,
+                    notes: 'Shipment '.$shipment->shipment_number,
+                    performedBy: $performedBy,
+                    referenceType: Shipment::class,
+                    referenceId: $shipment->id,
+                );
             }
         });
     }
@@ -109,32 +112,61 @@ class OrderStockDeductionService
     ): void {
         DB::transaction(function () use ($shipment, $performedBy) {
             foreach ($shipment->items as $shipmentItem) {
-                $sourceLocation = $shipmentItem->sourceLocation
-                    ?? $shipmentItem->orderItem?->sourceLocation;
-                if (! $sourceLocation) {
-                    continue;
-                }
-
-                $orderItem = $shipmentItem->orderItem;
-                if (! $orderItem) {
-                    continue;
-                }
-
-                $variants = $this->resolveVariantsFromItem($orderItem);
-                foreach ($variants as [$variant, $qty]) {
-                    $this->recordStockMovement->handle(
-                        variant: $variant,
-                        location: $sourceLocation,
-                        type: StockMovementType::Return,
-                        quantity: $qty,
-                        notes: 'Shipment '.$shipment->shipment_number.' cancelled',
-                        performedBy: $performedBy,
-                        referenceType: Shipment::class,
-                        referenceId: $shipment->id,
-                    );
-                }
+                $this->restoreSingleShipmentItem($shipmentItem, $shipment, 'Shipment '.$shipment->shipment_number.' cancelled', $performedBy);
             }
         });
+    }
+
+    /**
+     * Restore stock for a single returned shipment item.
+     */
+    public function restoreStockForShipmentItem(
+        ShipmentItem $shipmentItem,
+        ?Employee $performedBy = null,
+        string $reason = ''
+    ): void {
+        DB::transaction(function () use ($shipmentItem, $performedBy, $reason) {
+            $this->restoreSingleShipmentItem(
+                $shipmentItem,
+                $shipmentItem->shipment,
+                'Item returned'.($reason ? ': '.$reason : ''),
+                $performedBy
+            );
+        });
+    }
+
+    protected function restoreSingleShipmentItem(
+        ShipmentItem $shipmentItem,
+        Shipment $shipment,
+        string $notes,
+        ?Employee $performedBy
+    ): void {
+        $sourceLocation = $shipmentItem->sourceLocation
+            ?? $shipmentItem->orderItem?->sourceLocation;
+        if (! $sourceLocation) {
+            return;
+        }
+
+        $orderItem = $shipmentItem->orderItem;
+        if (! $orderItem) {
+            return;
+        }
+
+        $variant = ProductVariant::find($orderItem->purchasable_id);
+        if (! $variant) {
+            return;
+        }
+
+        $this->recordStockMovement->handle(
+            variant: $variant,
+            location: $sourceLocation,
+            type: StockMovementType::Return,
+            quantity: $shipmentItem->quantity_shipped,
+            notes: $notes,
+            performedBy: $performedBy,
+            referenceType: Shipment::class,
+            referenceId: $shipment->id,
+        );
     }
 
     /**

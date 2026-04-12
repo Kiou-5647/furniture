@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { createLazyComponent } from '@/composables/createLazyComponent';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { cleanQuery, setCookie } from '@/lib/utils';
-import { index, destroy, cancel, complete, show } from '@/routes/employee/sales/orders';
+import { index, destroy, cancel, complete, show, catalog as catalogRoute } from '@/routes/employee/sales/orders';
 import {index as TrashIndex} from '@/routes/employee/sales/orders/trash';
 import type { BreadcrumbItem } from '@/types';
 import type {
@@ -27,7 +27,9 @@ const CreateOrderModal = createLazyComponent(
 
 const props = defineProps<{
     statusOptions: { value: string; label: string; color: string }[];
+    paymentMethodOptions: { value: string; label: string }[];
     customerOptions: { id: string; label: string }[];
+    sourceOptions: { value: string; label: string }[];
     storeLocationOptions: { id: string; label: string }[];
     employeeLocationId?: string;
     employeeLocationName?: string;
@@ -45,7 +47,7 @@ const shippingMethods = ref<any[]>([]);
 async function loadCatalog() {
     if (catalogLoaded.value) return;
     try {
-        const res = await fetch('/nhan-vien/ban-hang/don-hang/catalog');
+        const res = await fetch(catalogRoute().url);
         const json = await res.json();
         catalogCustomerOptions.value = json.customerOptions ?? [];
         catalogItems.value = json.catalogItems ?? [];
@@ -76,12 +78,16 @@ const isActuallyLoading = ref(true);
 const search = ref(props.filters.search ?? '');
 const selectedStatus = ref<string | undefined>(props.filters.status ?? undefined);
 const selectedCustomer = ref<string | undefined>(props.filters.customer_id ?? undefined);
+const selectedSource = ref<string | undefined>(props.filters.source ?? undefined);
+const selectedStoreLocation = ref<string | undefined>(props.filters.store_location_id ?? undefined);
 
 const hasActiveFilters = computed(() => {
     return (
         !!props.filters.search ||
         !!props.filters.status ||
-        !!props.filters.customer_id
+        !!props.filters.customer_id ||
+        !!props.filters.source ||
+        !!props.filters.store_location_id
     );
 });
 
@@ -99,6 +105,20 @@ const customerFilterOptions = computed(() =>
     })),
 );
 
+const sourceFilterOptions = computed(() =>
+    props.sourceOptions.map((s) => ({
+        label: s.label,
+        value: s.value,
+    })),
+);
+
+const storeLocationFilterOptions = computed(() =>
+    props.storeLocationOptions.map((s) => ({
+        label: s.label,
+        value: s.id,
+    })),
+);
+
 const updateSearch = debounce(() => {
     router.get(
         index().url,
@@ -106,6 +126,8 @@ const updateSearch = debounce(() => {
             search: search.value,
             status: selectedStatus.value ?? undefined,
             customer_id: selectedCustomer.value ?? undefined,
+            source: selectedSource.value ?? undefined,
+            store_location_id: selectedStoreLocation.value ?? undefined,
             page: 1,
         }),
         { preserveState: true, replace: true },
@@ -247,6 +269,22 @@ function performDelete() {
                         @update:model-value="updateSearch"
                     />
                     <DataTableSingleFilter
+                        v-model="selectedSource"
+                        title="Nguồn"
+                        :options="sourceFilterOptions"
+                        icon_location="end"
+                        :searchable="false"
+                        @update:model-value="updateSearch"
+                    />
+                    <DataTableSingleFilter
+                        v-model="selectedStoreLocation"
+                        title="Cửa hàng"
+                        :options="storeLocationFilterOptions"
+                        icon_location="end"
+                        :searchable="true"
+                        @update:model-value="updateSearch"
+                    />
+                    <DataTableSingleFilter
                         v-model="selectedCustomer"
                         title="Khách hàng"
                         :options="customerFilterOptions"
@@ -262,6 +300,7 @@ function performDelete() {
             v-if="showFormModal"
             :open="showFormModal"
             :customer-options="catalogCustomerOptions"
+            :payment-method-options="paymentMethodOptions"
             :store-location-id="employeeLocationId ?? null"
             :catalog-items="catalogItems"
             :bundle-contents="bundleContents"

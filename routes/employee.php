@@ -18,6 +18,7 @@ use App\Http\Controllers\Employee\Product\ProductController;
 use App\Http\Controllers\Employee\Sales\InvoiceController;
 use App\Http\Controllers\Employee\Sales\OrderController;
 use App\Http\Controllers\Employee\Sales\PaymentController;
+use App\Http\Controllers\Employee\Sales\RefundController;
 use App\Http\Controllers\Employee\Setting\ActivityLogController;
 use App\Http\Controllers\Employee\Setting\LookupController;
 use App\Http\Controllers\Employee\Setting\LookupNamespaceController;
@@ -125,10 +126,13 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
             Route::middleware(['can:orders.view'])->group(function () {
                 Route::get('/', [OrderController::class, 'index'])->name('index');
                 Route::get('/catalog', [OrderController::class, 'catalog'])->name('catalog');
+                Route::get('/stock-options', [OrderController::class, 'stockOptions'])->name('stock-options');
                 Route::prefix('thung-rac')->name('trash.')->group(function () {
                     Route::get('/', [OrderController::class, 'trash'])->name('index');
                 });
                 Route::get('/{order}', [OrderController::class, 'show'])->name('show');
+                Route::get('/{order}/create-shipments', [OrderController::class, 'createShipments'])->name('create-shipments');
+                Route::post('/{order}/store-shipments', [OrderController::class, 'storeShipments'])->name('store-shipments');
             });
 
             Route::middleware(['can:orders.manage'])->group(function () {
@@ -143,6 +147,20 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
                     Route::post('/{order}/restore', [OrderController::class, 'restore'])->name('restore')->withTrashed();
                     Route::delete('/{order}/force', [OrderController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
                 });
+            });
+        });
+
+        // Refunds
+        Route::prefix('hoan-tien')->name('refunds.')->group(function () {
+            Route::middleware(['can:payments.view'])->group(function () {
+                Route::get('/', [RefundController::class, 'index'])->name('index');
+                Route::get('/{refund}', [RefundController::class, 'show'])->name('show');
+            });
+
+            Route::middleware(['can:payments.manage'])->group(function () {
+                Route::post('/{refund}/mark-processing', [RefundController::class, 'markProcessing'])->name('mark-processing');
+                Route::post('/{refund}/approve', [RefundController::class, 'approve'])->name('approve');
+                Route::post('/{refund}/reject', [RefundController::class, 'reject'])->name('reject');
             });
         });
 
@@ -206,6 +224,9 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
         // Shipments
         Route::middleware(['can:shipments.view'])->group(function () {
             Route::get('/', [ShipmentController::class, 'index'])->name('shipments.index');
+            Route::prefix('thung-rac')->name('shipments.trash.')->group(function () {
+                Route::get('/', [ShipmentController::class, 'trash'])->name('index');
+            });
             Route::get('/{shipment}', [ShipmentController::class, 'show'])->name('shipments.show');
         });
 
@@ -213,10 +234,13 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
             Route::post('/create', [ShipmentController::class, 'createShipments'])->name('shipments.create');
             Route::post('/{shipment}/ship', [ShipmentController::class, 'ship'])->name('shipments.ship');
             Route::post('/{shipment}/deliver', [ShipmentController::class, 'deliver'])->name('shipments.deliver');
+            Route::post('/{shipment}/cancel', [ShipmentController::class, 'cancel'])->name('shipments.cancel');
+            Route::post('/{shipment}/resend', [ShipmentController::class, 'resend'])->name('shipments.resend');
+            Route::post('/{shipment}/items/{shipmentItem}/return', [ShipmentController::class, 'returnItem'])->name('shipments.return-item');
+            Route::post('/{shipment}/items/{shipmentItem}/update-location', [ShipmentController::class, 'updateItemLocation'])->name('shipments.update-item-location');
             Route::delete('/{shipment}', [ShipmentController::class, 'destroy'])->name('shipments.destroy');
 
             Route::prefix('thung-rac')->name('shipments.trash.')->group(function () {
-                Route::get('/', [ShipmentController::class, 'trash'])->name('index');
                 Route::post('/{shipment}/restore', [ShipmentController::class, 'restore'])->name('restore')->withTrashed();
                 Route::delete('/{shipment}/force', [ShipmentController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
             });

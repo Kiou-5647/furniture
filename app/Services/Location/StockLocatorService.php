@@ -13,6 +13,64 @@ class StockLocatorService
     ) {}
 
     /**
+     * Check if a shipping order has a clear "nearest" location.
+     * Returns null if employee should choose manually.
+     */
+    public function resolveBestLocation(
+        string $purchasableType,
+        string $purchasableId,
+        ?string $customerProvinceCode = null,
+        ?string $employeeLocationId = null
+    ): ?string {
+        $stockOptions = $this->findStockForItem(
+            $purchasableType,
+            $purchasableId,
+            $customerProvinceCode
+        );
+
+        if ($stockOptions->isEmpty()) {
+            return null;
+        }
+
+        // If employee's store has stock, auto-select it
+        if ($employeeLocationId) {
+            $storeStock = $stockOptions->firstWhere('location_id', $employeeLocationId);
+            if ($storeStock) {
+                return $employeeLocationId;
+            }
+        }
+
+        // If only one location has stock, auto-select it
+        if ($stockOptions->count() === 1) {
+            return $stockOptions->first()['location_id'];
+        }
+
+        // If only one location has same-province priority (0), auto-select it
+        $sameProvince = $stockOptions->where('distance_priority', 0);
+        if ($sameProvince->count() === 1) {
+            return $sameProvince->first()['location_id'];
+        }
+
+        // Multiple options, no clear winner → employee must choose
+        return null;
+    }
+
+    /**
+     * Get all available stock locations for manual selection.
+     */
+    public function getAllStockOptions(
+        string $purchasableType,
+        string $purchasableId,
+        ?string $customerProvinceCode = null
+    ): Collection {
+        return $this->findStockForItem(
+            $purchasableType,
+            $purchasableId,
+            $customerProvinceCode
+        );
+    }
+
+    /**
      * Find stock for a specific purchasable across all locations, sorted by distance.
      *
      * @return Collection<array{location_id: string, location_name: string, location_code: string, available_qty: int, distance_priority: int}>

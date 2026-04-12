@@ -2,14 +2,8 @@
 
 namespace App\Actions\Sales;
 
-use App\Actions\Fulfillment\CreateShipmentsAction;
-use App\Enums\InvoiceStatus;
-use App\Enums\InvoiceType;
-use App\Enums\OrderStatus;
-use App\Enums\PaymentStatus;
 use App\Models\Auth\User;
 use App\Models\Employee\Employee;
-use App\Models\Sales\Invoice;
 use App\Models\Sales\Order;
 use App\Models\Sales\Payment;
 use App\Models\Sales\PaymentAllocation;
@@ -37,17 +31,25 @@ class MarkOrderAsPaidAction
         }
 
         DB::transaction(function () use ($order, $performedBy, $customerId) {
-            // Create invoice
-            $invoice = Invoice::create([
-                'invoice_number' => Invoice::generateInvoiceNumber(),
-                'invoiceable_type' => Order::class,
-                'invoiceable_id' => $order->id,
-                'type' => InvoiceType::Full,
-                'amount_due' => $order->total_amount,
+            // Find existing invoice (created when order was created)
+            $invoice = $order->invoices()->first();
+            if (! $invoice) {
+                throw new \RuntimeException('Không tìm thấy hóa đơn.');
+            }
+
+            // Update invoice payment
+            $invoice->update([
                 'amount_paid' => $order->total_amount,
-                'status' => InvoiceStatus::Paid,
                 'validated_by' => $performedBy?->id,
             ]);
+
+            // InvoiceObserver will set order.paid_at when amount_paid >= amount_due
+            // and auto-create refund if invoice becomes overpaid
+
+            // Refresh order to get updated paid_at from observer
+            $order->refresh();
+
+            // Shipments are now created manually via "Tạo đơn vận chuyển" dialog
 
             // Create payment record (cash payment for in-store orders)
             $payment = Payment::create([
@@ -55,7 +57,6 @@ class MarkOrderAsPaidAction
                 'gateway' => 'cash',
                 'transaction_id' => 'CASH-'.now()->format('YmdHis').'-'.substr(md5($order->id), 0, 8),
                 'amount' => $order->total_amount,
-                'status' => PaymentStatus::Successful,
                 'gateway_payload' => null,
             ]);
 
@@ -65,19 +66,6 @@ class MarkOrderAsPaidAction
                 'invoice_id' => $invoice->id,
                 'amount_applied' => $order->total_amount,
             ]);
-
-            // Mark order as paid
-            $order->update(['paid_at' => now()]);
-
-            // For shipping orders, auto-create shipments
-            if ($order->shipping_method_id) {
-                app(CreateShipmentsAction::class)->execute($order);
-            }
-
-            // For in-store orders without shipping, mark completed
-            if (! $order->shipping_method_id && $order->status === OrderStatus::Processing) {
-                app(CompleteOrderAction::class)->execute($order, $performedBy);
-            }
         });
 
         return $order->refresh();

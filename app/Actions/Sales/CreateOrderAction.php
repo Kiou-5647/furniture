@@ -3,9 +3,12 @@
 namespace App\Actions\Sales;
 
 use App\Data\Sales\CreateOrderData;
+use App\Enums\InvoiceStatus;
+use App\Enums\InvoiceType;
 use App\Enums\OrderStatus;
 use App\Models\Product\Bundle;
 use App\Models\Product\ProductVariant;
+use App\Models\Sales\Invoice;
 use App\Models\Sales\Order;
 use App\Services\Location\StockLocatorService;
 use Illuminate\Support\Facades\DB;
@@ -56,6 +59,7 @@ class CreateOrderAction
                 'store_location_id' => $data->store_location_id,
                 'shipping_method_id' => $data->shipping_method_id,
                 'shipping_cost' => $shippingCost,
+                'payment_method' => $data->payment_method ?? 'cash',
                 'province_code' => $data->province_code,
                 'ward_code' => $data->ward_code,
                 'province_name' => $data->province_name,
@@ -64,6 +68,17 @@ class CreateOrderAction
                 'total_amount' => $grandTotal,
                 'total_items' => $totalItems,
                 'status' => $initialStatus,
+            ]);
+
+            // Create invoice for all orders
+            Invoice::create([
+                'invoice_number' => Invoice::generateInvoiceNumber(),
+                'invoiceable_type' => Order::class,
+                'invoiceable_id' => $order->id,
+                'type' => InvoiceType::Full,
+                'amount_due' => $grandTotal,
+                'amount_paid' => 0,
+                'status' => InvoiceStatus::Open,
             ]);
 
             foreach ($validatedItems as $itemData) {
@@ -106,18 +121,23 @@ class CreateOrderAction
                 $sourceLocationId = null; // Will be resolved when shipments are created
             } elseif ($purchasable instanceof ProductVariant) {
                 if ($isShipping) {
-                    // Shipping: find closest location with stock
-                    $stockOptions = $this->stockLocator->findStockForItem(
-                        $item['purchasable_type'],
-                        $item['purchasable_id'],
-                        $customerProvinceCode
-                    );
+                    // If location is explicitly provided, use it directly
+                    if (! empty($item['source_location_id'])) {
+                        $sourceLocationId = $item['source_location_id'];
+                    } else {
+                        // Auto-resolve best location
+                        $sourceLocationId = $this->stockLocator->resolveBestLocation(
+                            $item['purchasable_type'],
+                            $item['purchasable_id'],
+                            $customerProvinceCode,
+                            $data->store_location_id
+                        );
 
-                    if ($stockOptions->isEmpty()) {
-                        throw new \RuntimeException('Sản phẩm "'.$purchasable->name.'" hết hàng trên toàn hệ thống.');
+                        // If no clear nearest, leave null — employee will set it later
+                        if (! $sourceLocationId) {
+                            $sourceLocationId = null;
+                        }
                     }
-
-                    $sourceLocationId = $stockOptions->first()['location_id'];
                 } elseif ($data->store_location_id) {
                     // In-store: must have stock at store location
                     $stockOptions = $this->stockLocator->findStockForItem(

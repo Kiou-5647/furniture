@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\Fulfillment\Shipment;
+use App\Models\Fulfillment\ShipmentItem;
 use App\Models\Inventory\Location;
 use App\Models\Inventory\StockTransfer;
 use App\Models\Product\Bundle;
@@ -9,6 +11,8 @@ use App\Models\Product\Category;
 use App\Models\Product\Collection;
 use App\Models\Product\Product;
 use App\Models\Product\ProductVariant;
+use App\Models\Sales\Invoice;
+use App\Models\Sales\Order;
 use App\Models\Setting\Lookup;
 use App\Models\Setting\LookupNamespace;
 use App\Models\Setting\Province;
@@ -16,9 +20,13 @@ use App\Models\Setting\Ward;
 use App\Models\Vendor\Vendor;
 use App\Observers\BundleObserver;
 use App\Observers\CacheInvalidationObserver;
+use App\Observers\InvoiceObserver;
 use App\Observers\LocationObserver;
+use App\Observers\OrderObserver;
 use App\Observers\ProductObserver;
 use App\Observers\ProductVariantObserver;
+use App\Observers\ShipmentItemObserver;
+use App\Observers\ShipmentObserver;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Date;
@@ -79,5 +87,13 @@ class AppServiceProvider extends ServiceProvider
         StockTransfer::observe(CacheInvalidationObserver::class);
         Province::observe(CacheInvalidationObserver::class);
         Ward::observe(CacheInvalidationObserver::class);
+
+        // Fulfillment observers
+        Shipment::observe(ShipmentObserver::class);
+        ShipmentItem::observe(ShipmentItemObserver::class);
+
+        // Sales observers
+        Invoice::observe(InvoiceObserver::class);
+        Order::observe(OrderObserver::class);
     }
 }

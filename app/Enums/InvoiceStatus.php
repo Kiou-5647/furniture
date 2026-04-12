@@ -7,6 +7,8 @@ enum InvoiceStatus: string
     case Draft = 'draft';
     case Open = 'open';
     case Paid = 'paid';
+    case Overpaid = 'overpaid';
+    case Cancelled = 'cancelled';
 
     public function label(): string
     {
@@ -14,6 +16,8 @@ enum InvoiceStatus: string
             self::Draft => 'Nháp',
             self::Open => 'Đang mở',
             self::Paid => 'Đã thanh toán',
+            self::Overpaid => 'Thanh toán thừa',
+            self::Cancelled => 'Đã hủy',
         };
     }
 
@@ -23,6 +27,8 @@ enum InvoiceStatus: string
             self::Draft => 'gray',
             self::Open => 'yellow',
             self::Paid => 'green',
+            self::Overpaid => 'blue',
+            self::Cancelled => 'red',
         };
     }
 

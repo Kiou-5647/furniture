@@ -14,7 +14,7 @@ class ShipShipmentAction
         protected OrderStockDeductionService $stockDeductionService,
     ) {}
 
-    public function execute(Shipment $shipment, string $carrier, string $trackingNumber, ?Employee $performedBy = null): Shipment
+    public function execute(Shipment $shipment, ?Employee $performedBy = null): Shipment
     {
         if (! $shipment->canBeShipped()) {
             throw new \RuntimeException('Đơn vận chuyển không thể gửi.');
@@ -23,7 +23,7 @@ class ShipShipmentAction
         // Deduct stock from source locations when shipment ships
         $this->stockDeductionService->deductStockForShipment($shipment, $performedBy);
 
-        DB::transaction(function () use ($shipment, $carrier, $trackingNumber, $performedBy) {
+        DB::transaction(function () use ($shipment, $performedBy) {
             // Mark all items as shipped
             $shipment->items()->update([
                 'status' => ShipmentStatus::Shipped,
@@ -31,8 +31,6 @@ class ShipShipmentAction
 
             $shipment->update([
                 'status' => ShipmentStatus::Shipped,
-                'carrier' => $carrier,
-                'tracking_number' => $trackingNumber,
                 'handled_by' => $performedBy?->id ?? $shipment->handled_by,
             ]);
         });

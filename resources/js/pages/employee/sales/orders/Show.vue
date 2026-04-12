@@ -1,16 +1,40 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { ArrowLeft, FileText, MapPin, Package, User, XCircle, CheckCircle2 } from '@lucide/vue';
-import { computed } from 'vue';
+import { ArrowLeft, FileText, MapPin, Package, Truck, User, X, XCircle, CheckCircle2, DollarSign, RotateCcw, Plus, Loader2 } from '@lucide/vue';
+import { computed, ref } from 'vue';
 import Heading from '@/components/Heading.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { cancel, complete, index, updateStatus, markPaid } from '@/routes/employee/sales/orders';
-import type { BreadcrumbItem, Order } from '@/types';
+import { resend as resendShipment, returnItem as returnItemRoute } from '@/routes/employee/fulfillment/shipments';
+import { cancel, complete, index, updateStatus, markPaid, createShipments, storeShipments } from '@/routes/employee/sales/orders';
+import type { BreadcrumbItem, Order, ShipmentItem } from '@/types';
+
+interface StockOption {
+    location_id: string;
+    location_name: string;
+    location_code: string;
+    available_qty: number;
+}
+
+interface OrderItemWithStock {
+    id: string;
+    purchasable_name: string;
+    quantity: number;
+    stock_options: StockOption[];
+}
+
+interface ShipmentRow {
+    order_item_id: string;
+    location_id: string;
+    quantity: number;
+}
 
 const props = defineProps<{
     order: Order;
+    variantStockOptions: Record<string, { location_id: string; location_name: string; location_code: string; available_qty: number }[]>;
 }>();
 
 const breadcrumbs = computed<BreadcrumbItem[]>(() => [
@@ -22,6 +46,150 @@ const canCancel = computed(() => !['completed', 'cancelled'].includes(props.orde
 const canAccept = computed(() => props.order?.status === 'pending');
 const canComplete = computed(() => props.order?.status === 'processing' && !props.order?.shipping_method_id);
 const canMarkPaid = computed(() => !props.order?.paid_at && props.order?.status === 'processing');
+const canCreateShipments = computed(() => {
+    const order = props.order;
+    if (!order) return false;
+    if (order.shipments && order.shipments.length > 0) return false;
+    if (['completed', 'cancelled'].includes(order.status)) return false;
+    if (order.payment_method !== 'cod' && !order.paid_at) return false;
+    return true;
+});
+
+const showReturnDialog = ref(false);
+const returnItem = ref<ShipmentItem | null>(null);
+const returnShipmentId = ref('');
+const returnReason = ref('');
+
+// Shipment creation dialog
+const showShipmentsDialog = ref(false);
+const shipmentRows = ref<ShipmentRow[]>([]);
+const orderItemsWithStock = ref<OrderItemWithStock[]>([]);
+const loadingShipments = ref(false);
+const dialogError = ref('');
+
+function getRowsForItem(orderItemId: string) {
+    return shipmentRows.value.filter(r => r.order_item_id === orderItemId);
+}
+
+function getAllocatedQuantity(orderItemId: string) {
+    return shipmentRows.value
+        .filter(r => r.quantity > 0 && r.order_item_id === orderItemId)
+        .reduce((sum, r) => sum + r.quantity, 0);
+}
+
+function getMaxQuantityForLocation(orderItemId: string, locationId: string): number {
+    const item = orderItemsWithStock.value.find(i => i.id === orderItemId);
+    const stockOpt = item?.stock_options.find(s => s.location_id === locationId);
+    return stockOpt?.available_qty ?? 0;
+}
+
+function getMaxQuantityForItem(orderItemId: string, locationId: string): number {
+    return getMaxQuantityForLocation(orderItemId, locationId);
+}
+
+function isLocationUsed(orderItemId: string, locationId: string, currentIdx: number): boolean {
+    const rows = getRowsForItem(orderItemId);
+    return rows.some((r, idx) => idx !== currentIdx && r.location_id === locationId);
+}
+
+async function openCreateShipments() {
+    loadingShipments.value = true;
+    dialogError.value = '';
+    try {
+        const res = await fetch(createShipments({ order: props.order.id }).url);
+        if (res.ok) {
+            const data = await res.json();
+            orderItemsWithStock.value = data.items;
+            // Initialize with one row per item using first location
+            shipmentRows.value = data.items.map((item: OrderItemWithStock) => ({
+                order_item_id: item.id,
+                location_id: item.stock_options[0]?.location_id ?? '',
+                quantity: 0,
+            }));
+            showShipmentsDialog.value = true;
+        }
+    } catch {
+        // Silently fail
+    } finally {
+        loadingShipments.value = false;
+    }
+}
+
+function getUsedLocationsForItem(orderItemId: string): Set<string> {
+    const rows = getRowsForItem(orderItemId);
+    return new Set(rows.map(r => r.location_id).filter(Boolean));
+}
+
+function addLocationRow(orderItemId: string) {
+    const item = orderItemsWithStock.value.find(i => i.id === orderItemId);
+    const used = getUsedLocationsForItem(orderItemId);
+    const firstAvailable = item?.stock_options.find(o => !used.has(o.location_id));
+    if (firstAvailable) {
+        shipmentRows.value.push({
+            order_item_id: orderItemId,
+            location_id: firstAvailable.location_id,
+            quantity: 0,
+        });
+    }
+}
+
+function removeRow(index: number) {
+    shipmentRows.value.splice(index, 1);
+}
+
+function confirmCreateShipments() {
+    dialogError.value = '';
+
+    // Only consider rows with quantity > 0 for validation
+    const activeRows = shipmentRows.value.filter(r => r.quantity > 0);
+
+    // Validate each order item total equals required quantity
+    for (const item of orderItemsWithStock.value) {
+        const allocated = activeRows
+            .filter(r => r.order_item_id === item.id)
+            .reduce((sum, r) => sum + r.quantity, 0);
+        if (allocated !== item.quantity) {
+            const name = item.purchasable_name || 'Sản phẩm';
+            dialogError.value = `Tổng SL "${name}" phải bằng ${item.quantity} (hiện tại: ${allocated})`;
+            return;
+        }
+    }
+
+    // Validate each row quantity doesn't exceed location stock
+    for (let i = 0; i < activeRows.length; i++) {
+        const row = activeRows[i];
+        if (!row.location_id) {
+            dialogError.value = 'Vui lòng chọn kho cho tất cả các dòng';
+            return;
+        }
+        const maxQty = getMaxQuantityForLocation(row.order_item_id, row.location_id);
+        if (row.quantity > maxQty) {
+            const item = orderItemsWithStock.value.find(item => item.id === row.order_item_id);
+            const stockOpt = item?.stock_options.find(s => s.location_id === row.location_id);
+            dialogError.value = `"${item?.purchasable_name}" tại ${stockOpt?.location_name ?? '?'} chỉ còn ${maxQty} (bạn nhập ${row.quantity})`;
+            return;
+        }
+    }
+
+    // Must have at least one active row
+    if (activeRows.length === 0) {
+        dialogError.value = 'Vui lòng chọn ít nhất một kho';
+        return;
+    }
+
+    router.post(storeShipments({ order: props.order.id }).url, {
+        items: activeRows.map(r => ({
+            order_item_id: r.order_item_id,
+            location_id: r.location_id,
+            quantity: r.quantity,
+        })),
+    }, { preserveScroll: true });
+    showShipmentsDialog.value = false;
+}
+
+function canReturnItem(item: ShipmentItem): boolean {
+    return ['shipped', 'delivered'].includes(item.status);
+}
 
 function handleCancel() {
     if (!props.order) return;
@@ -55,6 +223,29 @@ function handleComplete() {
 
 function goBack() {
     router.visit(index().url);
+}
+
+function handleResendShipment(shipmentId: string) {
+    router.post(resendShipment({ shipment: shipmentId }).url, {}, {
+        preserveScroll: true,
+    });
+}
+
+function handleReturnItem(item: ShipmentItem, shipmentId: string) {
+    returnItem.value = item;
+    returnShipmentId.value = shipmentId;
+    returnReason.value = 'Hàng lỗi / Khách từ chối';
+    showReturnDialog.value = true;
+}
+
+function confirmReturn() {
+    if (!returnItem.value || !returnShipmentId.value) return;
+    router.post(returnItemRoute({ shipment: returnShipmentId.value, shipmentItem: returnItem.value.id }).url, {
+        reason: returnReason.value,
+    }, { preserveScroll: true });
+    showReturnDialog.value = false;
+    returnItem.value = null;
+    returnShipmentId.value = '';
 }
 
 </script>
@@ -93,6 +284,16 @@ function goBack() {
                         class="text-green-600"
                     >
                         Đã thanh toán
+                    </Badge>
+                    <Badge
+                        v-if="order.payment_method"
+                        :variant="order.payment_method === 'cod' ? 'secondary' : 'outline'"
+                    >
+                        <component
+                            :is="order.payment_method === 'cod' ? Truck : DollarSign"
+                            class="mr-1.5 h-3 w-3"
+                        />
+                        {{ order.payment_method_label }}
                     </Badge>
                     <Button
                         v-if="canMarkPaid"
@@ -253,6 +454,242 @@ function goBack() {
                         </tr>
                     </tbody>
                 </table>
+            </div>
+
+            <!-- Shipments -->
+            <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2 text-sm font-medium">
+                        <Truck class="h-4 w-4" /> Đơn vận chuyển ({{ order.shipments?.length ?? 0 }})
+                    </div>
+                    <Button
+                        v-if="canCreateShipments"
+                        variant="outline"
+                        size="sm"
+                        class="text-blue-600"
+                        :disabled="loadingShipments"
+                        @click="openCreateShipments"
+                    >
+                        <Loader2 v-if="loadingShipments" class="mr-2 h-4 w-4 animate-spin" />
+                        <Plus v-else class="mr-2 h-4 w-4" />
+                        Tạo đơn vận chuyển
+                    </Button>
+                </div>
+
+                <div
+                    v-for="shipment in order.shipments"
+                    :key="shipment.id"
+                    class="rounded-lg border"
+                >
+                    <div class="flex items-center justify-between border-b px-4 py-3">
+                        <div class="flex items-center gap-3">
+                            <span class="font-mono text-sm">{{ shipment.shipment_number }}</span>
+                            <Badge :class="['text-xs', shipment.status_color ? `text-${shipment.status_color}-600` : '']" variant="outline">
+                                {{ shipment.status_label }}
+                            </Badge>
+                            <span v-if="shipment.origin_location" class="text-xs text-muted-foreground">
+                                Từ: {{ shipment.origin_location.name }}
+                            </span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <Button
+                                v-if="shipment.status === 'cancelled' && order.status !== 'cancelled'"
+                                variant="outline"
+                                size="sm"
+                                class="text-blue-600 text-xs h-7"
+                                @click="handleResendShipment(shipment.id)"
+                            >
+                                <Truck class="mr-1 h-3 w-3" /> Gửi lại
+                            </Button>
+                        </div>
+                    </div>
+                    <table class="w-full table-fixed">
+                        <thead>
+                            <tr class="border-b bg-muted/50 text-xs text-muted-foreground">
+                                <th class="w-[25%] px-4 py-2 text-left">Sản phẩm</th>
+                                <th class="w-[7%] px-4 py-2 text-center">SL</th>
+                                <th class="w-[15%] px-4 py-2 text-center">Nguồn</th>
+                                <th class="w-[15%] px-4 py-2 text-center">Trạng thái</th>
+                                <th class="w-[15%] px-4 py-2 text-center">Thao tác</th>
+                                <th class="w-[23%] px-4 py-2 text-center">Người gửi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="item in shipment.items" :key="item.id" class="border-b text-sm">
+                                <td class="w-[25%] truncate px-4 py-3">{{ item.order_item?.purchasable_name ?? '—' }}</td>
+                                <td class="w-[7%] px-4 py-3 text-center tabular-nums">{{ item.quantity_shipped }}</td>
+                                <td class="w-[20%] truncate px-4 py-3 text-center text-xs text-muted-foreground">
+                                    {{ item.source_location?.name ?? '—' }}
+                                </td>
+                                <td class="w-[15%] px-4 py-3 text-center">
+                                    <Badge
+                                        :class="['text-xs', item.status_color ? `text-${item.status_color}-600` : '']"
+                                        variant="outline"
+                                    >
+                                        {{ item.status_label }}
+                                    </Badge>
+                                </td>
+                                <td class="w-[15%] px-4 py-3 text-center">
+                                    <Button
+                                        v-if="canReturnItem(item)"
+                                        variant="outline"
+                                        size="sm"
+                                        class="text-orange-600 text-xs h-7"
+                                        @click="handleReturnItem(item, shipment.id)"
+                                    >
+                                        <RotateCcw class="mr-1 h-3 w-3" /> Trả
+                                    </Button>
+                                    <span v-else class="text-xs text-muted-foreground">—</span>
+                                </td>
+                                <td class="w-[23%] px-4 py-3 text-center">
+                                    <template v-if="shipment.handled_by">
+                                        <div class="text-xs font-medium">{{ shipment.handled_by.full_name }}</div>
+                                        <div class="text-[10px] text-muted-foreground">{{ shipment.handled_by.phone ?? '—' }}</div>
+                                    </template>
+                                    <span v-else class="text-xs text-muted-foreground">—</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Refunds -->
+            <div v-if="order.refunds?.length" class="space-y-3">
+                <div class="flex items-center gap-2 text-sm font-medium">
+                    <DollarSign class="h-4 w-4" /> Yêu cầu hoàn tiền ({{ order.refunds.length }})
+                </div>
+                <div
+                    v-for="refund in order.refunds"
+                    :key="refund.id"
+                    class="rounded-lg border"
+                >
+                    <div class="flex items-center justify-between px-4 py-3 border-b">
+                        <div class="flex items-center gap-3">
+                            <span class="font-mono text-xs">{{ refund.id.substring(0, 8) }}...</span>
+                            <Badge :class="['text-xs', refund.status_color ? `text-${refund.status_color}-600` : '']" variant="outline">
+                                {{ refund.status_label }}
+                            </Badge>
+                        </div>
+                        <span class="text-sm font-medium tabular-nums">{{ Number(refund.amount).toLocaleString('vi-VN') }}đ</span>
+                    </div>
+                    <div class="flex gap-4 px-4 py-2 text-xs">
+                        <span v-if="refund.reason" class="text-muted-foreground">Lý do: {{ refund.reason }}</span>
+                        <span v-if="refund.requested_by" class="text-muted-foreground">Tạo bởi: {{ refund.requested_by.full_name }}</span>
+                        <span v-if="refund.processed_by" class="text-muted-foreground">Duyệt bởi: {{ refund.processed_by.full_name }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Return Item Dialog -->
+        <div
+            v-if="showReturnDialog"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+            @click.self="showReturnDialog = false"
+        >
+            <div class="w-full max-w-md rounded-lg border bg-background p-6 shadow-lg">
+                <h3 class="mb-4 text-lg font-semibold">Trả hàng</h3>
+                <p v-if="returnItem" class="mb-3 text-sm text-muted-foreground">
+                    {{ returnItem.order_item?.purchasable_name ?? 'Sản phẩm' }} — SL: {{ returnItem.quantity_shipped }}
+                </p>
+                <Input v-model="returnReason" placeholder="Lý do trả hàng..." class="mb-4" />
+                <div class="flex justify-end gap-2">
+                    <Button variant="outline" @click="showReturnDialog = false">Hủy</Button>
+                    <Button variant="destructive" @click="confirmReturn">Xác nhận trả hàng</Button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Shipments Dialog -->
+        <div
+            v-if="showShipmentsDialog"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+            @click.self="showShipmentsDialog = false"
+        >
+            <div class="w-full max-w-lg rounded-lg border bg-background p-6 shadow-lg max-h-[80vh] overflow-y-auto">
+                <h3 class="mb-4 text-lg font-semibold">Tạo đơn vận chuyển</h3>
+                <div class="space-y-4">
+                    <div
+                        v-for="item in orderItemsWithStock"
+                        :key="item.id"
+                        class="rounded-lg border p-3"
+                    >
+                        <div class="flex items-center justify-between mb-2">
+                            <div>
+                                <span class="text-sm font-medium">{{ item.purchasable_name }}</span>
+                                <span class="ml-2 text-xs text-muted-foreground">
+                                    (SL: {{ item.quantity }})
+                                </span>
+                            </div>
+                            <div class="text-xs">
+                                <span :class="getAllocatedQuantity(item.id) === item.quantity ? 'text-green-600' : 'text-orange-600'">
+                                    Đã chia: {{ getAllocatedQuantity(item.id) }}/{{ item.quantity }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <div
+                                v-for="(row, idx) in getRowsForItem(item.id)"
+                                :key="idx"
+                                class="flex items-center gap-2"
+                            >
+                                <Select
+                                    :model-value="row.location_id"
+                                    @update:model-value="(val) => { row.location_id = val as string; row.quantity = Math.min(row.quantity, getMaxQuantityForItem(item.id, row.location_id)); }"
+                                >
+                                    <SelectTrigger class="flex-1 text-sm">
+                                        <SelectValue placeholder="Chọn kho..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem
+                                            v-for="opt in item.stock_options.filter(o => !isLocationUsed(item.id, o.location_id, idx))"
+                                            :key="opt.location_id"
+                                            :value="opt.location_id"
+                                        >
+                                            {{ opt.location_name }} ({{ opt.available_qty }})
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <Input
+                                    :model-value="row.quantity"
+                                    type="number"
+                                    min="0"
+                                    :max="getMaxQuantityForItem(item.id, row.location_id)"
+                                    class="w-20 text-sm"
+                                    @update:model-value="(val: any) => { const v = parseInt(val) || 0; row.quantity = Math.min(v, getMaxQuantityForItem(item.id, row.location_id)); }"
+                                />
+                                <Button
+                                    v-if="getRowsForItem(item.id).length > 1"
+                                    variant="ghost"
+                                    size="icon"
+                                    class="h-8 w-8 shrink-0"
+                                    @click="removeRow(shipmentRows.indexOf(row))"
+                                >
+                                    <X class="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </div>
+
+                        <Button
+                            v-if="getRowsForItem(item.id).length < item.stock_options.length"
+                            variant="outline"
+                            size="sm"
+                            class="mt-2 text-xs h-7"
+                            @click="addLocationRow(item.id)"
+                        >
+                            <Plus class="mr-1 h-3 w-3" /> Thêm kho
+                        </Button>
+                    </div>
+                </div>
+
+                <p v-if="dialogError" class="mt-3 text-sm text-destructive">{{ dialogError }}</p>
+
+                <div class="flex justify-end gap-2 mt-4">
+                    <Button variant="outline" @click="showShipmentsDialog = false">Hủy</Button>
+                    <Button @click="confirmCreateShipments">Xác nhận</Button>
+                </div>
             </div>
         </div>
     </AppLayout>

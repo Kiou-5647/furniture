@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Employee\Sales;
 
+use App\Http\Resources\Employee\Fulfillment\ShipmentResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -28,6 +29,8 @@ class OrderResource extends JsonResource
             'total_amount' => $this->total_amount,
             'total_items' => $this->total_items,
             'source' => $this->source,
+            'payment_method' => $this->payment_method?->value,
+            'payment_method_label' => $this->payment_method?->label(),
             'store_location' => $this->whenLoaded('storeLocation', fn () => [
                 'id' => $this->storeLocation->id,
                 'name' => $this->storeLocation->name,
@@ -50,6 +53,8 @@ class OrderResource extends JsonResource
             'status_color' => $this->status->color(),
             'items' => OrderItemResource::collection($this->whenLoaded('items')),
             'invoices' => InvoiceResource::collection($this->whenLoaded('invoices')),
+            'shipments' => ShipmentResource::collection($this->whenLoaded('shipments')),
+            'refunds' => RefundResource::collection($this->whenLoaded('refunds')),
             'accepted_by' => $this->whenLoaded('acceptedBy', fn () => $this->acceptedBy->full_name),
             'created_at' => $this->created_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
             'updated_at' => $this->updated_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),

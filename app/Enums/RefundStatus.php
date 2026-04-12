@@ -2,20 +2,20 @@
 
 namespace App\Enums;
 
-enum PaymentStatus: string
+enum RefundStatus: string
 {
     case Pending = 'pending';
-    case Successful = 'successful';
-    case Failed = 'failed';
-    case Refunded = 'refunded';
+    case Processing = 'processing';
+    case Completed = 'completed';
+    case Rejected = 'rejected';
 
     public function label(): string
     {
         return match ($this) {
-            self::Pending => 'Đang chờ',
-            self::Successful => 'Thành công',
-            self::Failed => 'Thất bại',
-            self::Refunded => 'Đã hoàn tiền',
+            self::Pending => 'Chờ xử lý',
+            self::Processing => 'Đang xử lý',
+            self::Completed => 'Đã hoàn thành',
+            self::Rejected => 'Đã từ chối',
         };
     }
 
@@ -23,9 +23,9 @@ enum PaymentStatus: string
     {
         return match ($this) {
             self::Pending => 'yellow',
-            self::Successful => 'green',
-            self::Failed => 'red',
-            self::Refunded => 'gray',
+            self::Processing => 'blue',
+            self::Completed => 'green',
+            self::Rejected => 'red',
         };
     }
 

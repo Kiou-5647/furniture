@@ -14,7 +14,7 @@ class TimberProductSeeder extends Seeder
     private array $variants = [
         [
             'sku' => 'V2WNL566',
-            'name' => 'Ghế Timber sofa bọc da 90" - Charme Black',
+            'name' => 'sofa bọc da 90" - Charme Black',
             'slug' => 'ghe-timber-sofa-boc-da-90-charme-black',
             'description' => 'The Timber will inspire you to explore — even if your journey only goes as far as the pantry. With its oak wood trim, plump cushions, and full-aniline dye process, the Timber is sinkable and plush but cleans up real nice. Natural color variations, wrinkles, and creases are part of the unique characteristics of this leather. It will develop a relaxed vintage look with regular use.',
             'price' => 17990000,
@@ -68,7 +68,7 @@ class TimberProductSeeder extends Seeder
         ],
         [
             'sku' => '39Y6EMDB',
-            'name' => 'Ghế Timber sofa bọc da 90" - Charme Chocolat',
+            'name' => 'sofa bọc da 90" - Charme Chocolat',
             'slug' => 'ghe-timber-sofa-boc-da-90-charme-chocolat',
             'description' => 'The Timber will inspire you to explore — even if your journey only goes as far as the pantry. With its oak wood trim, plump cushions, and full-aniline dye process, the Timber is sinkable and plush but cleans up real nice. Natural color variations, wrinkles, and creases are part of the unique characteristics of this leather. It will develop a relaxed vintage look with regular use.',
             'price' => 17990000,
@@ -123,7 +123,7 @@ class TimberProductSeeder extends Seeder
         ],
         [
             'sku' => 'AHZ92DOW',
-            'name' => 'Ghế Timber sofa bọc da 90" - Charme Green',
+            'name' => 'sofa bọc da 90" - Charme Green',
             'slug' => 'ghe-timber-sofa-boc-da-90-charme-green',
             'description' => 'The Timber will inspire you to explore — even if your journey only goes as far as the pantry. With its oak wood trim, plump cushions, and full-aniline dye process, the Timber is sinkable and plush but cleans up real nice. Natural color variations, wrinkles, and creases are part of the unique characteristics of this leather. It will develop a relaxed vintage look with regular use.',
             'price' => 17990000,
@@ -179,7 +179,7 @@ class TimberProductSeeder extends Seeder
         ],
         [
             'sku' => 'P4QWZSL8',
-            'name' => 'Ghế Timber sofa bọc da 90" - Charme Tan',
+            'name' => 'sofa bọc da 90" - Charme Tan',
             'slug' => 'ghe-timber-sofa-boc-da-90-charme-tan',
             'description' => 'The Timber will inspire you to explore — even if your journey only goes as far as the pantry. With its oak wood trim, plump cushions, and full-aniline dye process, the Timber is sinkable and plush but cleans up real nice. Natural color variations, wrinkles, and creases are part of the unique characteristics of this leather. It will develop a relaxed vintage look with regular use.',
             'price' => 17990000,
@@ -234,7 +234,7 @@ class TimberProductSeeder extends Seeder
         ],
         [
             'sku' => 'BGA4AK6R',
-            'name' => 'Ghế Timber sofa bọc vải 90" - Olio Green',
+            'name' => 'sofa bọc vải 90" - Olio Green',
             'slug' => 'ghe-timber-sofa-boc-vai-90-olio-green',
             'description' => 'Hãy tưởng tượng thế này: bạn vừa thức dậy. Người yêu của bạn vừa trở về từ quán cà phê với hai ly latte trên tay. Bạn di chuyển đến ghế sofa và thả mình vào sự êm ái rộng lớn của nó — không ai làm đổ đồ uống. Đó chính là giấc mơ cuối tuần lý tưởng (ngay cả vào thứ Hai). Đó cũng chính là điều chúng tôi gọi là một buổi sáng hoàn hảo cùng Timber.',
             'price' => 12990000,
@@ -285,7 +285,7 @@ class TimberProductSeeder extends Seeder
         ],
         [
             'sku' => '2P1XI34G',
-            'name' => 'Ghế Timber sofa bọc vải 90" - Pebble Gray',
+            'name' => 'sofa bọc vải 90" - Pebble Gray',
             'slug' => 'ghe-timber-sofa-boc-vai-90-pebble-gray',
             'description' => 'Hãy tưởng tượng thế này: bạn vừa thức dậy. Người yêu của bạn vừa trở về từ quán cà phê với hai ly latte trên tay. Bạn di chuyển đến ghế sofa và thả mình vào sự êm ái rộng lớn của nó — không ai làm đổ đồ uống. Đó chính là giấc mơ cuối tuần lý tưởng (ngay cả vào thứ Hai). Đó cũng chính là điều chúng tôi gọi là một buổi sáng hoàn hảo cùng Timber.',
             'price' => 12990000,
@@ -339,7 +339,7 @@ class TimberProductSeeder extends Seeder
         ],
         [
             'sku' => 'TLJJY4C2',
-            'name' => 'Ghế Timber sofa bọc vải 90" - Rain Cloud Gray',
+            'name' => 'sofa bọc vải 90" - Rain Cloud Gray',
             'slug' => 'ghe-timber-sofa-boc-vai-90-rain-cloud-gray',
             'description' => 'Hãy tưởng tượng thế này: bạn vừa thức dậy. Người yêu của bạn vừa trở về từ quán cà phê với hai ly latte trên tay. Bạn di chuyển đến ghế sofa và thả mình vào sự êm ái rộng lớn của nó — không ai làm đổ đồ uống. Đó chính là giấc mơ cuối tuần lý tưởng (ngay cả vào thứ Hai). Đó cũng chính là điều chúng tôi gọi là một buổi sáng hoàn hảo cùng Timber.',
             'price' => 12990000,

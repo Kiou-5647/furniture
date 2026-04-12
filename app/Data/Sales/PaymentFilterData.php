@@ -2,13 +2,11 @@
 
 namespace App\Data\Sales;
 
-use App\Enums\PaymentStatus;
 use Illuminate\Http\Request;
 
 readonly class PaymentFilterData
 {
     public function __construct(
-        public ?PaymentStatus $status = null,
         public ?string $customer_id = null,
         public ?string $gateway = null,
         public ?string $search = null,
@@ -20,7 +18,6 @@ readonly class PaymentFilterData
     public static function fromRequest(Request $request): self
     {
         return new self(
-            status: $request->query('status') ? PaymentStatus::tryFrom($request->query('status')) : null,
             customer_id: $request->query('customer_id'),
             gateway: $request->query('gateway'),
             search: $request->query('search'),

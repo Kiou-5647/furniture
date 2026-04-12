@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Employee\Sales;
 
 use App\Actions\Sales\ProcessPaymentAction;
-use App\Actions\Sales\RefundPaymentAction;
 use App\Data\Sales\PaymentFilterData;
 use App\Http\Requests\Sales\ProcessPaymentRequest;
 use App\Http\Resources\Employee\Sales\PaymentResource;
@@ -25,7 +24,6 @@ class PaymentController
         $filter = PaymentFilterData::fromRequest($request);
 
         return Inertia::render('employee/sales/payments/Index', [
-            'statusOptions' => $this->service->getStatusOptions(),
             'gatewayOptions' => $this->service->getGatewayOptions(),
             'payments' => Inertia::defer(fn () => PaymentResource::collection(
                 $this->service->getFiltered($filter)
@@ -49,17 +47,6 @@ class PaymentController
 
         return redirect()->route('employee.sales.payments.show', $payment)
             ->with('success', 'Đã ghi nhận thanh toán.');
-    }
-
-    public function refund(Payment $payment, Request $request, RefundPaymentAction $action)
-    {
-        $this->authorize('update', $payment);
-
-        $employee = $request->user()->employee;
-
-        $action->execute($payment, $employee);
-
-        return back()->with('success', 'Đã hoàn tiền thanh toán.');
     }
 
     public function destroy(Payment $payment)

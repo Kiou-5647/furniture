@@ -16,6 +16,7 @@ class ShipmentItemResource extends JsonResource
             'order_item' => $this->whenLoaded('orderItem', fn () => [
                 'id' => $this->orderItem->id,
                 'purchasable_name' => $this->orderItem->purchasable?->name ?? '—',
+                'purchasable_id' => $this->orderItem->purchasable_id,
             ]),
             'source_location' => $this->whenLoaded('sourceLocation', fn () => [
                 'id' => $this->sourceLocation->id,

@@ -2,7 +2,6 @@
 
 namespace App\Models\Sales;
 
-use App\Enums\PaymentStatus;
 use App\Models\Auth\User;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
@@ -22,7 +21,6 @@ class Payment extends Model
     {
         return [
             'amount' => 'decimal:2',
-            'status' => PaymentStatus::class,
             'gateway_payload' => 'array',
         ];
     }
@@ -30,7 +28,7 @@ class Payment extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['gateway', 'transaction_id', 'amount', 'status'])
+            ->logOnly(['gateway', 'transaction_id', 'amount'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
             ->setDescriptionForEvent(fn (string $eventName) => "Payment {$eventName}");

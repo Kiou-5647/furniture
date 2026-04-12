@@ -9,23 +9,21 @@ class ProductVariantObserver
 {
     public function saving(ProductVariant $variant): void
     {
-        $product = $variant->product;
-        $productName = $product ? Str::title($product->name) : '';
-
         if (filled($variant->name)) {
-            $name = trim($variant->name);
-            if ($productName && ! str_starts_with(strtolower($name), strtolower($productName))) {
-                $name = $productName.' '.$name;
-            }
-            $variant->name = $name;
+            $variant->name = trim($variant->name);
             $variant->slug = Str::slug($variant->name);
-        } elseif ($productName) {
+        } else {
+            $product = $variant->product;
+            $productName = $product ? Str::title($product->name) : '';
             $optionLabels = collect($variant->option_values ?? [])
                 ->map(fn ($v) => Str::title($v))
                 ->implode(' ');
-            $variant->name = $optionLabels
-                ? $productName.' '.$optionLabels
-                : $productName;
+
+            if ($optionLabels) {
+                $variant->name = $productName.' '.$optionLabels;
+            } elseif ($productName) {
+                $variant->name = $productName;
+            }
             $variant->slug = Str::slug($variant->name);
         }
     }

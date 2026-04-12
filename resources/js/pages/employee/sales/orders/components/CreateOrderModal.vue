@@ -4,7 +4,6 @@ import {
     Loader2,
     MapPin,
     Minus,
-    Package,
     Plus,
     Search,
     Tag,
@@ -12,7 +11,13 @@ import {
     User,
     X,
 } from '@lucide/vue';
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,10 +28,21 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Field, FieldContent, FieldError, FieldLabel } from '@/components/ui/field';
+import {
+    Field,
+    FieldContent,
+    FieldError,
+    FieldLabel,
+} from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { store } from '@/routes/employee/sales/orders';
 
@@ -49,6 +65,8 @@ interface BundleOption {
     purchasable_type: 'bundle';
     available_at_store: boolean;
     available_system_wide: boolean;
+    discount_type: 'percentage' | 'fixed_amount' | 'fixed_price';
+    discount_value: number;
 }
 
 type CatalogItem = VariantOption | BundleOption;
@@ -57,17 +75,29 @@ interface BundleContentItem {
     product_id: string;
     product_name: string;
     quantity: number;
-    variants: { id: string; name: string; sku: string; price: string }[];
+    variants: { id: string; name: string; sku: string; price: string; image_url?: string | null }[];
 }
 
 const props = defineProps<{
     open: boolean;
-    customerOptions: { id: string; name: string; email: string; phone?: string; default_address?: any }[];
+    customerOptions: {
+        id: string;
+        name: string;
+        email: string;
+        phone?: string;
+        default_address?: any;
+    }[];
+    paymentMethodOptions: { value: string; label: string }[];
     storeLocationId: string | null;
     storeName?: string;
     catalogItems: CatalogItem[];
     bundleContents?: Record<string, BundleContentItem[]>;
-    shippingMethods?: { id: string; name: string; estimated_delivery_days: number | null; price: string }[];
+    shippingMethods?: {
+        id: string;
+        name: string;
+        estimated_delivery_days: number | null;
+        price: string;
+    }[];
 }>();
 
 const emit = defineEmits(['close', 'refresh']);
@@ -77,6 +107,49 @@ const customerSearch = ref('');
 const catalogSearch = ref('');
 const activeCategory = ref<'all' | 'variant' | 'bundle'>('all');
 const showCustomerDropdown = ref(false);
+
+// Province and ward dropdowns
+const provinces = ref<{ value: string; label: string }[]>([]);
+const wards = ref<{ value: string; label: string }[]>([]);
+const loadingProvinces = ref(false);
+const loadingWards = ref(false);
+
+async function loadProvinces() {
+    loadingProvinces.value = true;
+    try {
+        const response = await fetch('/api/geodata/provinces');
+        provinces.value = await response.json();
+    } catch {
+        // Silently fail
+    } finally {
+        loadingProvinces.value = false;
+    }
+}
+
+async function loadWards(provinceCode: string) {
+    loadingWards.value = true;
+    try {
+        const response = await fetch(
+            `/api/geodata/wards?province_code=${provinceCode}`,
+        );
+        wards.value = await response.json();
+    } catch {
+        // Silently fail
+    } finally {
+        loadingWards.value = false;
+    }
+}
+
+onMounted(() => {
+    loadProvinces();
+});
+
+const wardDisplayLabel = computed(() => {
+    if (form.ward_name) return form.ward_name;
+    if (!form.province_code) return 'Chọn Tỉnh trước';
+    if (loadingWards.value) return 'Đang tải...';
+    return 'Chọn Quận/Huyện';
+});
 
 interface OrderItem {
     purchasable_type: string;
@@ -95,12 +168,13 @@ interface OrderForm {
     notes: string;
     source: string;
     store_location_id: string;
-    shipping_method_id: string;
-    shipping_cost: string;
-    province_code: string;
-    ward_code: string;
-    province_name: string;
-    ward_name: string;
+    shipping_method_id: string | null;
+    shipping_cost: string | null;
+    payment_method: string | null;
+    province_code: string | undefined;
+    ward_code: string | undefined;
+    province_name: string | undefined;
+    ward_name: string | undefined;
     building: string;
     address_number: string;
     items: OrderItem[];
@@ -113,13 +187,14 @@ const form = useForm<OrderForm>({
     guest_email: '',
     notes: '',
     source: 'in_store',
-    store_location_id: '',
+    store_location_id: props.storeLocationId ?? '',
     shipping_method_id: '',
     shipping_cost: '',
-    province_code: '',
-    ward_code: '',
-    province_name: '',
-    ward_name: '',
+    payment_method: 'cash',
+    province_code: undefined,
+    ward_code: undefined,
+    province_name: undefined,
+    ward_name: undefined,
     building: '',
     address_number: '',
     items: [],
@@ -151,13 +226,17 @@ const filteredCatalog = computed(() => {
     let items = props.catalogItems;
 
     if (activeCategory.value !== 'all') {
-        items = items.filter((i) => i.purchasable_type === activeCategory.value);
+        items = items.filter(
+            (i) => i.purchasable_type === activeCategory.value,
+        );
     }
 
     if (catalogSearch.value) {
         const q = catalogSearch.value.toLowerCase();
-        items = items.filter((i) =>
-            i.name.toLowerCase().includes(q) || ('sku' in i && i.sku.toLowerCase().includes(q)),
+        items = items.filter(
+            (i) =>
+                i.name.toLowerCase().includes(q) ||
+                ('sku' in i && i.sku.toLowerCase().includes(q)),
         );
     }
 
@@ -165,14 +244,23 @@ const filteredCatalog = computed(() => {
 });
 
 const totalAmount = computed(() => {
-    return form.items.reduce((sum, item) => sum + (parseFloat(item.unit_price) || 0) * item.quantity, 0);
+    return form.items.reduce(
+        (sum, item) => sum + (parseFloat(item.unit_price) || 0) * item.quantity,
+        0,
+    );
 });
 
 const grandTotal = computed(() => {
-    return totalAmount.value + (parseFloat(form.shipping_cost) || 0);
+    return totalAmount.value + (parseFloat(form.shipping_cost!) || 0);
 });
 
-function selectCustomer(c: { id: string; name: string; email: string; phone?: string; default_address?: any }) {
+async function selectCustomer(c: {
+    id: string;
+    name: string;
+    email: string;
+    phone?: string;
+    default_address?: any;
+}) {
     form.customer_id = c.id;
     form.guest_name = c.name;
     form.guest_email = c.email || '';
@@ -181,10 +269,27 @@ function selectCustomer(c: { id: string; name: string; email: string; phone?: st
     // Auto-fill address from customer's default address
     const addr = c.default_address;
     if (addr?.address_data) {
+        // Ensure provinces are loaded first
+        if (provinces.value.length === 0) {
+            await loadProvinces();
+        }
+
+        skipProvinceWatch.value = true;
+        form.province_code = addr.province_code || '';
         form.province_name = addr.province_name || '';
-        form.ward_name = addr.ward_name || '';
         form.building = addr.address_data?.building || '';
-        form.address_number = addr.address_data?.address_number || addr.address_data?.street || '';
+        form.address_number =
+            addr.address_data?.address_number ||
+            addr.address_data?.street ||
+            '';
+
+        // Load wards for this province, then set ward code
+        if (form.province_code) {
+            await loadWards(form.province_code);
+            form.ward_code = addr.ward_code || '';
+            form.ward_name = addr.ward_name || '';
+        }
+        skipProvinceWatch.value = false;
     }
 
     customerSearch.value = '';
@@ -222,14 +327,24 @@ function isBundleUnavailable(item: BundleOption): boolean {
 function addVariant(item: VariantOption) {
     if (isVariantOutOfStock(item)) return;
 
-    form.items.push({
-        purchasable_type: 'App\\Models\\Product\\ProductVariant',
-        purchasable_id: item.id,
-        purchasable_name: item.name,
-        quantity: 1,
-        unit_price: item.price,
-        configuration: {},
-    });
+    // Check if item already exists in cart
+    const existingIndex = form.items.findIndex(
+        (i) => i.purchasable_type === 'App\\Models\\Product\\ProductVariant' && i.purchasable_id === item.id
+    );
+
+    if (existingIndex !== -1) {
+        // Increment quantity
+        form.items[existingIndex].quantity += 1;
+    } else {
+        form.items.push({
+            purchasable_type: 'App\\Models\\Product\\ProductVariant',
+            purchasable_id: item.id,
+            purchasable_name: item.name,
+            quantity: 1,
+            unit_price: item.price,
+            configuration: {},
+        });
+    }
 }
 
 function addBundle(bundle: BundleOption) {
@@ -263,23 +378,73 @@ function addBundle(bundle: BundleOption) {
 function confirmBundleSelection() {
     if (!selectedBundle.value) return;
 
-    const selectedVariants = Object.entries(bundleVariantSelections.value).map(([productId, variantId]) => ({
-        product_id: productId,
-        variant_id: variantId,
-        quantity: props.bundleContents?.[selectedBundle.value!.id]?.find((c) => c.product_id === productId)?.quantity ?? 1,
-    }));
+    const selectedVariants = Object.entries(bundleVariantSelections.value).map(
+        ([productId, variantId]) => {
+            const content = props.bundleContents?.[
+                selectedBundle.value!.id
+            ]?.find((c) => c.product_id === productId);
+            const variant = content?.variants.find((v) => v.id === variantId);
+            return {
+                product_id: productId,
+                variant_id: variantId,
+                variant_price: variant?.price ?? 0,
+                quantity: content?.quantity ?? 1,
+            };
+        },
+    );
+
+    // Calculate actual price from selected variants
+    let variantTotal = 0;
+    for (const sv of selectedVariants) {
+        variantTotal +=
+            (parseFloat(sv.variant_price as string) || 0) * sv.quantity;
+    }
+
+    // Apply discount
+    const bundleData = selectedBundle.value;
+    let finalPrice = variantTotal;
+    if (bundleData) {
+        if (bundleData.discount_type === 'percentage') {
+            finalPrice = Math.max(
+                0,
+                variantTotal * (1 - bundleData.discount_value / 100),
+            );
+        } else if (bundleData.discount_type === 'fixed_amount') {
+            finalPrice = Math.max(0, variantTotal - bundleData.discount_value);
+        } else if (bundleData.discount_type === 'fixed_price') {
+            finalPrice = bundleData.discount_value;
+        }
+    }
 
     form.items.push({
         purchasable_type: 'App\\Models\\Product\\Bundle',
         purchasable_id: selectedBundle.value.id,
         purchasable_name: selectedBundle.value.name,
         quantity: 1,
-        unit_price: selectedBundle.value.price,
-        configuration: { selected_variants: selectedVariants } as unknown as OrderItem['configuration'],
+        unit_price: String(finalPrice),
+        configuration: {
+            selected_variants: selectedVariants,
+        } as unknown as OrderItem['configuration'],
     });
 
     showBundleDialog.value = false;
     selectedBundle.value = null;
+}
+
+function getSelectedVariantName(
+    content: BundleContentItem,
+): string | undefined {
+    const variantId = bundleVariantSelections.value[content.product_id];
+    const variant = content.variants.find((v) => v.id === variantId);
+    return variant?.name;
+}
+
+function getSelectedVariantImage(
+    content: BundleContentItem,
+): string | null | undefined {
+    const variantId = bundleVariantSelections.value[content.product_id];
+    const variant = content.variants.find((v) => v.id === variantId);
+    return variant?.image_url;
 }
 
 function removeItem(index: number) {
@@ -310,6 +475,8 @@ function closeModal() {
     emit('close');
 }
 
+const skipProvinceWatch = ref(false);
+
 watch(
     () => props.open,
     (isOpen) => {
@@ -319,8 +486,22 @@ watch(
             showShipping.value = false;
             catalogSearch.value = '';
             customerSearch.value = '';
+            provinces.value = [];
+            wards.value = [];
+            loadProvinces();
         }
     },
+);
+
+watch(
+    () => showShipping.value,
+    (newValue) => {
+        if (newValue) {
+            form.shipping_method_id = (props.shippingMethods ?? [])[0].id;
+        } else {
+            form.shipping_method_id = null;
+        }
+    }
 );
 
 watch(
@@ -334,9 +515,36 @@ watch(
 watch(
     () => form.shipping_method_id,
     (methodId) => {
-        const method = (props.shippingMethods ?? []).find((m) => m.id === methodId);
+        const method = (props.shippingMethods ?? []).find(
+            (m) => m.id === methodId,
+        );
         if (method) {
             form.shipping_cost = method.price;
+        }
+    },
+);
+
+watch(
+    () => form.province_code,
+    async (newCode) => {
+        if (skipProvinceWatch.value) return;
+        if (newCode) {
+            const province = provinces.value.find((p) => p.value === newCode);
+            form.province_name = province?.label ?? '';
+            form.ward_code = '';
+            form.ward_name = '';
+            wards.value = [];
+            await loadWards(newCode);
+        }
+    },
+);
+
+watch(
+    () => form.ward_code,
+    (newCode) => {
+        if (newCode) {
+            const ward = wards.value.find((w) => w.value === newCode);
+            form.ward_name = ward?.label ?? '';
         }
     },
 );
@@ -344,7 +552,9 @@ watch(
 
 <template>
     <Dialog :open="open" @update:open="(val) => !val && closeModal()">
-        <DialogContent class="flex h-[90vh] max-h-[90vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-[1200px]">
+        <DialogContent
+            class="flex h-[90vh] max-h-[90vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-[1200px]"
+        >
             <DialogHeader class="shrink-0 px-6 pt-5 pb-3">
                 <div class="flex items-center justify-between">
                     <div>
@@ -352,25 +562,36 @@ watch(
                             Tạo đơn hàng mới
                         </DialogTitle>
                         <DialogDescription class="mt-1">
-                            {{ storeName ? `Cửa hàng: ${storeName}` : 'Chọn sản phẩm và tạo đơn hàng' }}
+                            {{
+                                storeName
+                                    ? `Cửa hàng: ${storeName}`
+                                    : 'Chọn sản phẩm và tạo đơn hàng'
+                            }}
                         </DialogDescription>
                     </div>
                     <div class="flex items-center gap-2">
                         <Label class="text-sm">Cần giao hàng</Label>
-                        <Switch :model-value="showShipping" @update:model-value="showShipping = $event" />
+                        <Switch
+                            :model-value="showShipping"
+                            @update:model-value="showShipping = $event"
+                        />
                     </div>
                 </div>
             </DialogHeader>
 
             <!-- Two-Panel Layout -->
             <div class="flex min-h-0 flex-1 overflow-hidden">
-                <!-- Left Panel: Order Info + Items -->
-                <div class="flex w-[420px] shrink-0 flex-col border-r">
+                <!-- Left Panel: Order Info + Items (scrollable) -->
+                <div
+                    class="flex w-[420px] shrink-0 flex-col overflow-y-auto border-r"
+                >
                     <!-- Customer -->
                     <div class="space-y-3 border-b p-4">
                         <Field>
                             <FieldLabel>
-                                <User class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                                <User
+                                    class="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                                />
                                 Khách hàng
                             </FieldLabel>
                             <FieldContent>
@@ -379,7 +600,9 @@ watch(
                                     class="relative"
                                     @click.stop
                                 >
-                                    <Search class="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                                    <Search
+                                        class="absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground"
+                                    />
                                     <Input
                                         v-model="customerSearch"
                                         placeholder="Tìm theo tên hoặc SĐT..."
@@ -388,8 +611,11 @@ watch(
                                         @blur="closeCustomerDropdown"
                                     />
                                     <div
-                                        v-if="showCustomerDropdown && filteredCustomerOptions.length > 0"
-                                        class="absolute z-10 mt-1 w-full max-h-48 overflow-y-auto rounded-md border bg-popover shadow-md"
+                                        v-if="
+                                            showCustomerDropdown &&
+                                            filteredCustomerOptions.length > 0
+                                        "
+                                        class="absolute z-10 mt-1 max-h-48 w-full overflow-y-auto rounded-md border bg-popover shadow-md"
                                     >
                                         <div
                                             v-for="c in filteredCustomerOptions"
@@ -397,9 +623,18 @@ watch(
                                             class="cursor-pointer px-3 py-2 text-sm hover:bg-muted"
                                             @click="selectCustomer(c)"
                                         >
-                                            <span class="font-medium">{{ c.name }}</span>
-                                            <span v-if="c.phone" class="ml-2 text-xs text-muted-foreground">{{ c.phone }}</span>
-                                            <span class="ml-1 text-xs text-muted-foreground">({{ c.email }})</span>
+                                            <span class="font-medium">{{
+                                                c.name
+                                            }}</span>
+                                            <span
+                                                v-if="c.phone"
+                                                class="ml-2 text-xs text-muted-foreground"
+                                                >{{ c.phone }}</span
+                                            >
+                                            <span
+                                                class="ml-1 text-xs text-muted-foreground"
+                                                >({{ c.email }})</span
+                                            >
                                         </div>
                                     </div>
                                 </div>
@@ -407,59 +642,202 @@ watch(
                                     v-else
                                     class="flex items-center justify-between rounded-md border bg-muted px-3 py-2"
                                 >
-                                    <span class="text-sm font-medium">{{ selectedCustomerLabel }}</span>
-                                    <Button variant="ghost" size="icon" class="h-6 w-6" @click="clearCustomer()">
+                                    <span class="text-sm font-medium">{{
+                                        selectedCustomerLabel
+                                    }}</span>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        class="h-6 w-6"
+                                        @click="clearCustomer()"
+                                    >
                                         <X class="h-3.5 w-3.5" />
                                     </Button>
                                 </div>
-                                <FieldError :errors="[form.errors.customer_id]" />
+                                <FieldError
+                                    :errors="[form.errors.customer_id]"
+                                />
                             </FieldContent>
                         </Field>
 
                         <!-- Quick customer fields -->
                         <div class="grid grid-cols-2 gap-2">
-                            <Input v-model="form.guest_name" placeholder="Họ tên" class="text-sm" />
-                            <Input v-model="form.guest_phone" placeholder="SĐT" class="text-sm" />
+                            <Input
+                                v-model="form.guest_name"
+                                placeholder="Họ tên"
+                                class="text-sm"
+                            />
+                            <Input
+                                v-model="form.guest_phone"
+                                placeholder="SĐT"
+                                class="text-sm"
+                            />
                         </div>
                     </div>
 
-                    <!-- Shipping Address (conditional) -->
-                    <div v-if="showShipping" class="shrink-0 space-y-3 border-b p-4">
-                        <div class="flex items-center gap-2 text-sm font-medium">
-                            <MapPin class="h-4 w-4" /> Địa chỉ giao hàng
-                        </div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <Input v-model="form.province_name" placeholder="Tỉnh/TP" class="text-sm" />
-                            <Input v-model="form.ward_name" placeholder="Quận/Huyện" class="text-sm" />
-                        </div>
-                        <Input v-model="form.building" placeholder="Tòa nhà / Chung cư" class="text-sm" />
-                        <Input v-model="form.address_number" placeholder="Số nhà / Đường" class="text-sm" />
-                        <div class="grid grid-cols-2 gap-2">
-                            <Field>
-                                <FieldContent>
-                                    <Select v-model="form.shipping_method_id">
-                                        <SelectTrigger class="w-full text-sm">
-                                            <SelectValue placeholder="Phương thức..." />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem
-                                                v-for="m in shippingMethods ?? []"
-                                                :key="m.id"
-                                                :value="m.id"
+                    <!-- Shipping Address (accordion) -->
+                    <div v-if="showShipping" class="shrink-0 border-b">
+                        <Accordion type="single" collapsible>
+                            <AccordionItem value="shipping" class="border-0">
+                                <AccordionTrigger
+                                    class="px-4 py-3 text-sm font-medium hover:no-underline"
+                                >
+                                    <div class="flex items-center gap-2">
+                                        <MapPin class="h-4 w-4" /> Địa chỉ giao
+                                        hàng
+                                    </div>
+                                </AccordionTrigger>
+                                <AccordionContent class="space-y-3 px-4 pb-4">
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <Field>
+                                            <FieldLabel>Tỉnh/TP</FieldLabel>
+                                            <FieldContent>
+                                                <Select
+                                                    v-model="form.province_code"
+                                                >
+                                                    <SelectTrigger
+                                                        class="w-full text-sm"
+                                                    >
+                                                        <SelectValue
+                                                            :placeholder="
+                                                                loadingProvinces
+                                                                    ? 'Đang tải...'
+                                                                    : 'Chọn Tỉnh/TP'
+                                                            "
+                                                        />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem
+                                                            v-for="province in provinces"
+                                                            :key="
+                                                                province.value
+                                                            "
+                                                            :value="
+                                                                province.value
+                                                            "
+                                                        >
+                                                            {{ province.label }}
+                                                        </SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </FieldContent>
+                                        </Field>
+                                        <Field>
+                                            <FieldLabel>Quận/Huyện</FieldLabel>
+                                            <FieldContent>
+                                                <Select
+                                                    v-model="form.ward_code"
+                                                    :disabled="
+                                                        !form.province_code ||
+                                                        loadingWards
+                                                    "
+                                                >
+                                                    <SelectTrigger
+                                                        class="w-full text-sm"
+                                                    >
+                                                        <SelectValue
+                                                            :placeholder="
+                                                                wardDisplayLabel
+                                                            "
+                                                        />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem
+                                                            v-for="ward in wards"
+                                                            :key="ward.value"
+                                                            :value="ward.value"
+                                                        >
+                                                            {{ ward.label }}
+                                                        </SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </FieldContent>
+                                        </Field>
+                                    </div>
+                                    <Input
+                                        v-model="form.building"
+                                        placeholder="Tòa nhà / Chung cư"
+                                        class="text-sm"
+                                    />
+                                    <Input
+                                        v-model="form.address_number"
+                                        placeholder="Số nhà / Đường"
+                                        class="text-sm"
+                                    />
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <Field>
+                                            <FieldContent>
+                                                <Select
+                                                    v-model="
+                                                        form.shipping_method_id
+                                                    "
+                                                >
+                                                    <SelectTrigger
+                                                        class="w-full text-sm"
+                                                    >
+                                                        <SelectValue
+                                                            placeholder="Phương thức..."
+                                                        />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem
+                                                            v-for="m in shippingMethods ??
+                                                            []"
+                                                            :key="m.id"
+                                                            :value="m.id"
+                                                        >
+                                                            {{ m.name }}
+                                                        </SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </FieldContent>
+                                        </Field>
+                                        <Input
+                                            v-model="form.shipping_cost!"
+                                            type="number"
+                                            placeholder="Phí ship"
+                                            class="text-sm"
+                                        />
+                                    </div>
+                                    <!-- Payment Method for shipping orders -->
+                                    <Field>
+                                        <FieldLabel
+                                            >Phương thức thanh toán</FieldLabel
+                                        >
+                                        <FieldContent>
+                                            <Select
+                                                v-model="form.payment_method"
                                             >
-                                                {{ m.name }}
-                                            </SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </FieldContent>
-                            </Field>
-                            <Input v-model="form.shipping_cost" type="number" placeholder="Phí ship" class="text-sm" />
-                        </div>
+                                                <SelectTrigger
+                                                    class="w-full text-sm"
+                                                >
+                                                    <SelectValue
+                                                        placeholder="Chọn phương thức..."
+                                                    />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem
+                                                        v-for="m in paymentMethodOptions"
+                                                        :key="m.value"
+                                                        :value="m.value"
+                                                    >
+                                                        {{ m.label }}
+                                                    </SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </FieldContent>
+                                    </Field>
+                                </AccordionContent>
+                            </AccordionItem>
+                        </Accordion>
                     </div>
 
                     <!-- Order Items -->
-                    <div class="flex-1 overflow-y-auto p-4">
-                        <div v-if="form.items.length === 0" class="flex h-full items-center justify-center text-sm text-muted-foreground">
+                    <div class="p-4">
+                        <div
+                            v-if="form.items.length === 0"
+                            class="flex h-full items-center justify-center text-sm text-muted-foreground"
+                        >
                             Chưa có sản phẩm nào
                         </div>
                         <div v-else class="space-y-2">
@@ -468,40 +846,78 @@ watch(
                                 :key="index"
                                 class="rounded-lg border p-3"
                             >
-                                <div class="flex items-start justify-between gap-2">
+                                <div
+                                    class="flex items-start justify-between gap-2"
+                                >
                                     <div class="flex-1">
                                         <div class="flex items-center gap-1.5">
                                             <Badge
-                                                :variant="item.purchasable_type.includes('Bundle') ? 'secondary' : 'outline'"
+                                                :variant="
+                                                    item.purchasable_type.includes(
+                                                        'Bundle',
+                                                    )
+                                                        ? 'secondary'
+                                                        : 'outline'
+                                                "
                                                 class="text-[10px]"
                                             >
-                                                {{ item.purchasable_type.includes('Bundle') ? 'Gói' : 'SP' }}
+                                                {{
+                                                    item.purchasable_type.includes(
+                                                        'Bundle',
+                                                    )
+                                                        ? 'Gói'
+                                                        : 'SP'
+                                                }}
                                             </Badge>
-                                            <span class="text-sm font-medium">{{ item.purchasable_name }}</span>
+                                            <span class="text-sm font-medium">{{
+                                                item.purchasable_name
+                                            }}</span>
                                         </div>
-                                        <div class="mt-2 flex items-center gap-2">
-                                            <div class="flex items-center border rounded">
+                                        <div
+                                            class="mt-2 flex items-center gap-2"
+                                        >
+                                            <div
+                                                class="flex items-center rounded border"
+                                            >
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
                                                     class="h-6 w-6"
-                                                    :disabled="item.quantity <= 1"
-                                                    @click="updateQuantity(index, -1)"
+                                                    :disabled="
+                                                        item.quantity <= 1
+                                                    "
+                                                    @click="
+                                                        updateQuantity(
+                                                            index,
+                                                            -1,
+                                                        )
+                                                    "
                                                 >
                                                     <Minus class="h-3 w-3" />
                                                 </Button>
-                                                <span class="w-8 text-center text-xs tabular-nums">{{ item.quantity }}</span>
+                                                <span
+                                                    class="w-8 text-center text-xs tabular-nums"
+                                                    >{{ item.quantity }}</span
+                                                >
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
                                                     class="h-6 w-6"
-                                                    @click="updateQuantity(index, 1)"
+                                                    @click="
+                                                        updateQuantity(index, 1)
+                                                    "
                                                 >
                                                     <Plus class="h-3 w-3" />
                                                 </Button>
                                             </div>
-                                            <span class="ml-auto text-sm font-medium tabular-nums">
-                                                {{ ((parseFloat(item.unit_price) || 0) * item.quantity).toLocaleString('vi-VN') }}đ
+                                            <span
+                                                class="ml-auto text-sm font-medium tabular-nums"
+                                            >
+                                                {{
+                                                    parseFloat(
+                                                        item.unit_price,
+                                                    ).toLocaleString('vi-VN')
+                                                }}đ
                                             </span>
                                         </div>
                                     </div>
@@ -517,164 +933,345 @@ watch(
                             </div>
                         </div>
                     </div>
-
-                    <!-- Totals -->
-                    <div class="shrink-0 border-t p-4 space-y-2">
-                        <div class="flex justify-between text-sm">
-                            <span class="text-muted-foreground">Tạm tính</span>
-                            <span class="tabular-nums">{{ totalAmount.toLocaleString('vi-VN') }}đ</span>
-                        </div>
-                        <div v-if="showShipping && parseFloat(form.shipping_cost) > 0" class="flex justify-between text-sm">
-                            <span class="text-muted-foreground">Phí vận chuyển</span>
-                            <span class="tabular-nums">{{ Number(form.shipping_cost).toLocaleString('vi-VN') }}đ</span>
-                        </div>
-                        <div class="flex justify-between border-t pt-2">
-                            <span class="font-medium">Tổng cộng</span>
-                            <span class="text-lg font-bold tabular-nums">{{ grandTotal.toLocaleString('vi-VN') }}đ</span>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Right Panel: Catalog -->
                 <div class="flex flex-1 flex-col">
                     <!-- Search & Filter -->
-                    <div class="shrink-0 border-b p-4 space-y-3">
+                    <div class="shrink-0 space-y-3 border-b p-4">
                         <div class="flex items-center gap-2">
-                            <div class="relative flex-1">
-                                <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                                <Input
-                                    v-model="catalogSearch"
-                                    placeholder="Tìm theo tên hoặc SKU..."
-                                    class="pl-9 text-sm"
-                                />
-                            </div>
+                            <Search class="h-4 w-4 text-muted-foreground" />
+                            <Input
+                                v-model="catalogSearch"
+                                placeholder="Tìm sản phẩm..."
+                                class="flex-1"
+                            />
                         </div>
-                        <div class="flex items-center gap-2">
-                            <Button
-                                :variant="activeCategory === 'all' ? 'default' : 'outline'"
-                                size="sm"
+                        <div class="flex gap-2">
+                            <Badge
+                                :variant="
+                                    activeCategory === 'all'
+                                        ? 'default'
+                                        : 'outline'
+                                "
+                                class="cursor-pointer"
                                 @click="activeCategory = 'all'"
                             >
                                 Tất cả
-                            </Button>
-                            <Button
-                                :variant="activeCategory === 'variant' ? 'default' : 'outline'"
-                                size="sm"
+                            </Badge>
+                            <Badge
+                                :variant="
+                                    activeCategory === 'variant'
+                                        ? 'default'
+                                        : 'outline'
+                                "
+                                class="cursor-pointer"
                                 @click="activeCategory = 'variant'"
                             >
-                                <Package class="mr-1 h-3.5 w-3.5" /> Biến thể
-                            </Button>
-                            <Button
-                                :variant="activeCategory === 'bundle' ? 'default' : 'outline'"
-                                size="sm"
+                                Sản phẩm
+                            </Badge>
+                            <Badge
+                                :variant="
+                                    activeCategory === 'bundle'
+                                        ? 'default'
+                                        : 'outline'
+                                "
+                                class="cursor-pointer"
                                 @click="activeCategory = 'bundle'"
                             >
-                                <Tag class="mr-1 h-3.5 w-3.5" /> Gói SP
-                            </Button>
+                                Gói
+                            </Badge>
                         </div>
                     </div>
 
                     <!-- Items Grid -->
                     <div class="flex-1 overflow-y-auto p-4">
-                        <div class="grid grid-cols-2 gap-3 lg:grid-cols-3">
+                        <div class="grid grid-cols-2 gap-3">
                             <div
                                 v-for="item in filteredCatalog"
                                 :key="item.id"
                                 :class="[
                                     'cursor-pointer rounded-lg border p-3 transition-colors hover:border-primary',
-                                    ((item.purchasable_type === 'variant' && isVariantOutOfStock(item as VariantOption)) || (item.purchasable_type === 'bundle' && isBundleUnavailable(item as BundleOption))) && 'opacity-50 cursor-not-allowed hover:border-border',
+                                    ((item.purchasable_type === 'variant' &&
+                                        isVariantOutOfStock(
+                                            item as VariantOption,
+                                        )) ||
+                                        (item.purchasable_type === 'bundle' &&
+                                            isBundleUnavailable(
+                                                item as BundleOption,
+                                            ))) &&
+                                        'cursor-not-allowed opacity-50 hover:border-border',
                                 ]"
-                                @click="(item as any).purchasable_type === 'variant' ? addVariant(item as VariantOption) : addBundle(item as BundleOption)"
+                                @click="
+                                    (item as any).purchasable_type === 'variant'
+                                        ? addVariant(item as VariantOption)
+                                        : addBundle(item as BundleOption)
+                                "
                             >
+                                <!-- Product Image -->
+                                <div
+                                    v-if="item.image_url"
+                                    class="mb-2 aspect-square overflow-hidden rounded-md border bg-muted"
+                                >
+                                    <img
+                                        :src="item.image_url"
+                                        :alt="item.name"
+                                        class="h-full w-full object-cover"
+                                    />
+                                </div>
                                 <div class="flex items-start gap-2">
-                                    <div class="flex-1 min-w-0">
+                                    <div class="min-w-0 flex-1">
                                         <div class="flex items-center gap-1.5">
                                             <Badge
-                                                :variant="(item as any).purchasable_type === 'bundle' ? 'secondary' : 'outline'"
+                                                :variant="
+                                                    (item as any)
+                                                        .purchasable_type ===
+                                                    'bundle'
+                                                        ? 'secondary'
+                                                        : 'outline'
+                                                "
                                                 class="text-[10px]"
                                             >
-                                                {{ (item as any).purchasable_type === 'bundle' ? 'Gói' : 'SP' }}
+                                                {{
+                                                    (item as any)
+                                                        .purchasable_type ===
+                                                    'bundle'
+                                                        ? 'Gói'
+                                                        : 'SP'
+                                                }}
                                             </Badge>
+                                            <Tag
+                                                v-if="'discount_type' in item"
+                                                class="h-3 w-3 text-orange-500"
+                                            />
                                         </div>
-                                        <p class="mt-1 text-sm font-medium truncate">{{ item.name }}</p>
-                                        <p v-if="'sku' in item" class="text-[11px] text-muted-foreground font-mono">{{ (item as VariantOption).sku }}</p>
+                                        <p
+                                            class="mt-1 truncate text-sm font-medium"
+                                        >
+                                            {{ item.name }}
+                                        </p>
+                                        <p
+                                            v-if="'sku' in item"
+                                            class="font-mono text-[11px] text-muted-foreground"
+                                        >
+                                            {{ (item as VariantOption).sku }}
+                                        </p>
 
                                         <!-- Stock info -->
-                                        <div v-if="'stock_at_store' in item" class="mt-1.5 text-[11px]">
-                                            <span v-if="(item as VariantOption).stock_at_store > 0" class="text-green-600">
-                                                Tại store: {{ (item as VariantOption).stock_at_store }}
+                                        <div
+                                            v-if="'stock_at_store' in item"
+                                            class="mt-1.5 text-[11px]"
+                                        >
+                                            <span
+                                                v-if="
+                                                    (item as VariantOption)
+                                                        .stock_at_store > 0
+                                                "
+                                                class="text-green-600"
+                                            >
+                                                Có sẵn tại cửa hàng:
+                                                {{
+                                                    (item as VariantOption)
+                                                        .stock_at_store
+                                                }}
                                             </span>
-                                            <span v-else-if="showShipping && (item as VariantOption).stock_total > 0" class="text-amber-600">
-                                                Hết tại store · Tổng: {{ (item as VariantOption).stock_total }}
-                                            </span>
+                                            <div
+                                                v-else-if="
+                                                    showShipping &&
+                                                    (item as VariantOption)
+                                                        .stock_total > 0
+                                                "
+                                                class="text-amber-600"
+                                            >
+                                                Không có sẵn tại cửa hàng Tổng
+                                                số lượng toàn hệ thống:
+                                                {{
+                                                    (item as VariantOption)
+                                                        .stock_total
+                                                }}
+                                            </div>
                                             <span v-else class="text-red-500">
                                                 Hết hàng
                                             </span>
                                         </div>
 
-                                        <p class="mt-1 text-sm font-bold tabular-nums">
-                                            {{ Number(item.price).toLocaleString('vi-VN') }}đ
+                                        <p
+                                            class="mt-1 text-sm font-bold tabular-nums"
+                                        >
+                                            {{
+                                                Number(
+                                                    item.price,
+                                                ).toLocaleString('vi-VN')
+                                            }}đ
                                         </p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div v-if="filteredCatalog.length === 0" class="py-12 text-center text-sm text-muted-foreground">
+                        <div
+                            v-if="filteredCatalog.length === 0"
+                            class="py-12 text-center text-sm text-muted-foreground"
+                        >
                             Không tìm thấy sản phẩm
                         </div>
                     </div>
                 </div>
             </div>
 
-            <DialogFooter class="border-t px-6 py-4">
-                <Button type="button" variant="outline" @click="closeModal">
-                    Hủy
-                </Button>
-                <Button type="submit" :disabled="form.processing || form.items.length === 0" @click="submit">
-                    <Loader2 v-if="form.processing" class="mr-2 h-4 w-4 animate-spin" />
-                    Tạo đơn hàng
-                </Button>
+            <DialogFooter
+                class="flex items-center justify-between border-t px-6 py-4"
+            >
+                <div v-if="form.items.length > 0" class="space-y-0.5">
+                    <div class="flex items-center gap-4 text-sm">
+                        <span class="text-muted-foreground">Tạm tính</span>
+                        <span class="tabular-nums"
+                            >{{ totalAmount.toLocaleString('vi-VN') }}đ</span
+                        >
+                        <span
+                            v-if="
+                                showShipping &&
+                                parseFloat(form.shipping_cost!) > 0
+                            "
+                            class="text-muted-foreground"
+                            >· Phí ship</span
+                        >
+                        <span
+                            v-if="
+                                showShipping &&
+                                parseFloat(form.shipping_cost!) > 0
+                            "
+                            class="tabular-nums"
+                            >{{
+                                Number(form.shipping_cost).toLocaleString(
+                                    'vi-VN',
+                                )
+                            }}đ</span
+                        >
+                    </div>
+                    <div
+                        class="justify-self-end text-lg font-bold tabular-nums"
+                    >
+                        Tổng: {{ grandTotal.toLocaleString('vi-VN') }}đ
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <Button type="button" variant="outline" @click="closeModal">
+                        Hủy
+                    </Button>
+                    <Button
+                        type="submit"
+                        :disabled="form.processing || form.items.length === 0"
+                        @click="submit"
+                    >
+                        <Loader2
+                            v-if="form.processing"
+                            class="mr-2 h-4 w-4 animate-spin"
+                        />
+                        Tạo đơn hàng
+                    </Button>
+                </div>
             </DialogFooter>
         </DialogContent>
 
         <!-- Bundle Variant Selection Dialog -->
-        <Dialog :open="showBundleDialog" @update:open="(val) => !val && (showBundleDialog = false)">
+        <Dialog
+            :open="showBundleDialog"
+            @update:open="(val) => !val && (showBundleDialog = false)"
+        >
             <DialogContent class="max-w-[500px]">
                 <DialogHeader>
-                    <DialogTitle>Chọn biến thể cho gói "{{ selectedBundle?.name }}"</DialogTitle>
-                    <DialogDescription>Chọn biến thể cho từng sản phẩm trong gói</DialogDescription>
+                    <DialogTitle
+                        >Chọn biến thể cho gói "{{
+                            selectedBundle?.name
+                        }}"</DialogTitle
+                    >
+                    <DialogDescription
+                        >Chọn biến thể cho từng sản phẩm trong
+                        gói</DialogDescription
+                    >
                 </DialogHeader>
-
-                <div class="space-y-4">
+                <div class="space-y-3">
                     <div
-                        v-for="content in bundleContents?.[selectedBundle?.id ?? ''] ?? []"
+                        v-for="content in bundleContents?.[
+                            selectedBundle?.id ?? ''
+                        ] ?? []"
                         :key="content.product_id"
                         class="rounded-lg border p-3"
                     >
-                        <p class="text-sm font-medium">{{ content.product_name }} (×{{ content.quantity }})</p>
-                        <select
-                            v-model="bundleVariantSelections[content.product_id]"
-                            class="mt-2 w-full rounded-md border bg-background px-3 py-2 text-sm"
+                        <div class="mb-2 flex items-center gap-1.5">
+                            <p class="text-sm font-medium">
+                                {{ content.product_name }}
+                            </p>
+                            <Badge variant="secondary" class="text-[10px]">
+                                x{{ content.quantity }}
+                            </Badge>
+                        </div>
+                        <Select
+                            v-model="
+                                bundleVariantSelections[content.product_id]
+                            "
                         >
-                            <option
-                                v-for="v in content.variants"
-                                :key="v.id"
-                                :value="v.id"
-                            >
-                                {{ v.name }} — {{ v.sku }} — {{ Number(v.price).toLocaleString('vi-VN') }}đ
-                            </option>
-                        </select>
+                            <SelectTrigger>
+                                <SelectValue>
+                                    <template #default>
+                                        <div class="flex items-center gap-2">
+                                            <template
+                                                v-if="getSelectedVariantImage(content)"
+                                            >
+                                                <div class="h-6 w-6 overflow-hidden rounded border">
+                                                    <img
+                                                        :src="getSelectedVariantImage(content)!"
+                                                        :alt="getSelectedVariantName(content)"
+                                                        class="h-full w-full object-cover"
+                                                    />
+                                                </div>
+                                            </template>
+                                            <span class="truncate">{{
+                                                getSelectedVariantName(content) || 'Chọn biến thể...'
+                                            }}</span>
+                                        </div>
+                                    </template>
+                                </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem
+                                    v-for="variant in content.variants"
+                                    :key="variant.id"
+                                    :value="variant.id"
+                                    class="py-2"
+                                >
+                                    <div class="flex items-center gap-2">
+                                        <div
+                                            v-if="variant.image_url"
+                                            class="h-6 w-6 shrink-0 overflow-hidden rounded border"
+                                        >
+                                            <img
+                                                :src="variant.image_url"
+                                                :alt="variant.name"
+                                                class="h-full w-full object-cover"
+                                            />
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="truncate text-sm">
+                                                {{ variant.name }}
+                                            </div>
+                                            <div class="flex items-center gap-2 text-[11px] text-muted-foreground">
+                                                <span v-if="variant.sku" class="font-mono">{{ variant.sku }}</span>
+                                                <span class="tabular-nums">{{ Number(variant.price).toLocaleString('vi-VN') }}đ</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                 </div>
-
                 <DialogFooter>
-                    <Button variant="outline" @click="showBundleDialog = false">
-                        Hủy
-                    </Button>
-                    <Button @click="confirmBundleSelection">
-                        Thêm vào đơn
-                    </Button>
+                    <Button variant="outline" @click="showBundleDialog = false"
+                        >Hủy</Button
+                    >
+                    <Button @click="confirmBundleSelection">Xác nhận</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

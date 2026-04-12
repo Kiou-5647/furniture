@@ -6,6 +6,7 @@ use App\Enums\ShipmentStatus;
 use App\Models\Fulfillment\Shipment;
 use App\Models\Fulfillment\ShipmentItem;
 use App\Models\Sales\Order;
+use App\Services\Location\StockLocatorService;
 use Illuminate\Support\Facades\DB;
 
 class FulfillmentRouterService
@@ -25,8 +26,21 @@ class FulfillmentRouterService
                 $locationId = $item->source_location_id;
 
                 if (! $locationId) {
-                    // Fallback: use order's store location
-                    $locationId = $order->store_location_id;
+                    // Fallback: first location with stock for this variant (prefer highest stock)
+                    $locator = app(StockLocatorService::class);
+                    $stockOptions = $locator->findStockForItem(
+                        $item->purchasable_type,
+                        $item->purchasable_id
+                    );
+
+                    if ($stockOptions->isNotEmpty()) {
+                        // Pick the location with the most stock
+                        $bestOption = $stockOptions->sortByDesc('available_qty')->first();
+                        $locationId = $bestOption['location_id'];
+                    } else {
+                        // Last resort: use order's store location
+                        $locationId = $order->store_location_id;
+                    }
                 }
 
                 if (! $locationId) {

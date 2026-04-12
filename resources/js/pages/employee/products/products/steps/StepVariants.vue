@@ -704,7 +704,8 @@ function canAddMoreImages(variant: any) {
                                     >{{ ctx.form.name }} &nbsp;</span
                                 >
                                 <Input
-                                    v-model="variant.name"
+                                    :model-value="variant.name"
+                                    @update:model-value="variant.name = $event"
                                     placeholder='VD: 48" Black Table'
                                     class="flex-1 text-sm"
                                 />

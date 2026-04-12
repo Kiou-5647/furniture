@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Employee\Sales;
 
+use App\Actions\Fulfillment\CreateShipmentsAction;
 use App\Actions\Sales\CancelOrderAction;
 use App\Actions\Sales\CompleteOrderAction;
 use App\Actions\Sales\CreateOrderAction;
@@ -10,12 +11,14 @@ use App\Actions\Sales\UpdateOrderStatusAction;
 use App\Data\Sales\CreateOrderData;
 use App\Data\Sales\OrderFilterData;
 use App\Enums\OrderStatus;
+use App\Enums\PaymentMethod;
 use App\Http\Requests\Sales\CreateOrderRequest;
 use App\Http\Requests\Sales\UpdateOrderStatusRequest;
 use App\Http\Resources\Employee\Sales\OrderResource;
 use App\Models\Fulfillment\ShippingMethod;
 use App\Models\Inventory\Location;
 use App\Models\Sales\Order;
+use App\Services\Location\StockLocatorService;
 use App\Services\Sales\OrderService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -35,7 +38,12 @@ class OrderController
 
         return Inertia::render('employee/sales/orders/Index', [
             'statusOptions' => $this->service->getStatusOptions(),
+            'paymentMethodOptions' => PaymentMethod::options(),
             'customerOptions' => $this->service->getCustomerOptions(),
+            'sourceOptions' => [
+                ['value' => 'in_store', 'label' => 'Tại quầy'],
+                ['value' => 'online', 'label' => 'Trực tuyến'],
+            ],
             'storeLocationOptions' => $this->service->getStoreLocationOptions(),
             'employeeLocationId' => $employeeLocationId,
             'employeeLocationName' => $employeeLocationId
@@ -64,14 +72,100 @@ class OrderController
     {
         $order = $this->service->getById($order->id);
 
+        // Get stock options for each unique variant in the shipments
+        $variantIds = collect();
+        foreach ($order->shipments as $shipment) {
+            foreach ($shipment->items as $item) {
+                if ($item->orderItem && str_contains($item->orderItem->purchasable_type, 'ProductVariant')) {
+                    $variantIds->push($item->orderItem->purchasable_id);
+                }
+            }
+        }
+
+        $variantStockOptions = [];
+        foreach ($variantIds->unique() as $variantId) {
+            $variantStockOptions[$variantId] = $this->service->getVariantStockOptions($variantId);
+        }
+
         return Inertia::render('employee/sales/orders/Show', [
             'order' => new OrderResource($order),
+            'variantStockOptions' => $variantStockOptions,
         ]);
+    }
+
+    public function createShipments(Order $order)
+    {
+        // Only allow if no shipments exist yet and order is not completed/cancelled
+        if ($order->shipments()->exists()) {
+            return back()->with('error', 'Đơn hàng đã có đơn vận chuyển.');
+        }
+
+        if (in_array($order->status->value, ['completed', 'cancelled'], true)) {
+            return back()->with('error', 'Không thể tạo đơn vận chuyển cho đơn hàng này.');
+        }
+
+        // Prepaid orders must be paid first
+        if ($order->isPrepaid() && ! $order->paid_at) {
+            return back()->with('error', 'Đơn hàng chưa được thanh toán.');
+        }
+
+        $locator = app(StockLocatorService::class);
+        $itemsWithStock = [];
+
+        foreach ($order->items()->with('purchasable')->get() as $item) {
+            if (str_contains($item->purchasable_type, 'ProductVariant')) {
+                $stockOptions = $locator->findStockForItem(
+                    $item->purchasable_type,
+                    $item->purchasable_id
+                );
+
+                $itemsWithStock[] = [
+                    'id' => $item->id,
+                    'purchasable_name' => $item->purchasable?->name ?? 'Sản phẩm',
+                    'quantity' => $item->quantity,
+                    'stock_options' => $stockOptions->toArray(),
+                ];
+            }
+        }
+
+        return response()->json([
+            'order_id' => $order->id,
+            'items' => $itemsWithStock,
+        ]);
+    }
+
+    public function storeShipments(Request $request, Order $order)
+    {
+        if ($order->shipments()->exists()) {
+            return back()->with('error', 'Đơn hàng đã có đơn vận chuyển.');
+        }
+
+        $request->validate([
+            'items' => ['required', 'array'],
+            'items.*.order_item_id' => ['required', 'uuid'],
+            'items.*.location_id' => ['required', 'uuid', 'exists:locations,id'],
+            'items.*.quantity' => ['required', 'integer', 'min:1'],
+        ]);
+
+        $shipmentData = [];
+        foreach ($request->input('items') as $itemData) {
+            $shipmentData[] = [
+                'order_item_id' => $itemData['order_item_id'],
+                'location_id' => $itemData['location_id'],
+                'quantity' => $itemData['quantity'],
+            ];
+        }
+
+        $createAction = app(CreateShipmentsAction::class);
+        $createAction->executeWithLocations($order, $shipmentData);
+
+        return back()->with('success', 'Đã tạo đơn vận chuyển.');
     }
 
     public function catalog(Request $request)
     {
-        $employeeLocationId = $request->user()->employee?->location_id;
+        $employee = $request->user()->employee;
+        $employeeLocationId = $employee?->location_id;
         $shippingMethods = ShippingMethod::where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name', 'estimated_delivery_days', 'price']);
@@ -81,6 +175,27 @@ class OrderController
             'catalogItems' => $this->service->getCatalogItems($employeeLocationId),
             'bundleContents' => $this->service->getBundleContents(),
             'shippingMethods' => $shippingMethods,
+            'employeeLocationId' => $employeeLocationId,
+            'employeeLocationName' => $employee?->location?->name,
+        ]);
+    }
+
+    public function stockOptions(Request $request)
+    {
+        $request->validate([
+            'variant_id' => ['required', 'uuid'],
+        ]);
+
+        $locator = app(StockLocatorService::class);
+
+        // Get all locations with stock for this variant
+        $stockOptions = $locator->findStockForItem(
+            'App\\Models\\Product\\ProductVariant',
+            $request->input('variant_id')
+        );
+
+        return response()->json([
+            'stock_options' => $stockOptions,
         ]);
     }
 

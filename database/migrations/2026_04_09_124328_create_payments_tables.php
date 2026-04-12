@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('type', 50)->comment('deposit, final_balance, full');
             $table->decimal('amount_due', 15, 2)->default(0);
             $table->decimal('amount_paid', 15, 2)->default(0);
-            $table->string('status', 50)->default('draft')->comment('draft, open, paid');
+            $table->string('status', 50)->default('draft')->comment('draft, open, paid', 'overpaid');
             $table->foreignUuid('validated_by')->nullable()->constrained('employees')->onDelete('set null');
             $table->timestamps();
             $table->softDeletes();

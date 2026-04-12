@@ -10,6 +10,7 @@ use App\Models\Product\Bundle;
 use App\Models\Product\Product;
 use App\Models\Product\ProductVariant;
 use App\Models\Sales\Order;
+use App\Services\Location\StockLocatorService;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
@@ -18,9 +19,11 @@ class OrderService
     public function getFiltered(OrderFilterData $filter): LengthAwarePaginator
     {
         return Order::query()
-            ->with(['customer', 'acceptedBy', 'items.sourceLocation'])
+            ->with(['customer', 'acceptedBy', 'items.sourceLocation', 'storeLocation'])
             ->when($filter->customer_id, fn ($q) => $q->where('customer_id', $filter->customer_id))
             ->when($filter->status, fn ($q) => $q->where('status', $filter->status))
+            ->when($filter->source, fn ($q) => $q->where('source', $filter->source))
+            ->when($filter->store_location_id, fn ($q) => $q->where('store_location_id', $filter->store_location_id))
             ->when($filter->search, fn ($q) => $q->where('order_number', 'ilike', "%{$filter->search}%"))
             ->orderBy($filter->order_by, $filter->order_direction)
             ->paginate($filter->per_page);
@@ -38,7 +41,35 @@ class OrderService
 
     public function getById(string $id): Order
     {
-        return Order::with(['customer', 'items.sourceLocation', 'acceptedBy', 'storeLocation', 'shippingMethod', 'shipments.items.sourceLocation', 'invoices'])->findOrFail($id);
+        return Order::with([
+            'customer',
+            'items.sourceLocation',
+            'items.purchasable',
+            'acceptedBy',
+            'storeLocation',
+            'shippingMethod',
+            'shipments.items.orderItem.purchasable',
+            'shipments.items.sourceLocation',
+            'shipments.originLocation',
+            'shipments.shippingMethod',
+            'shipments.handledBy',
+            'refunds',
+            'invoices',
+        ])->findOrFail($id);
+    }
+
+    /**
+     * Get all locations with stock for a specific variant.
+     */
+    public function getVariantStockOptions(string $variantId): array
+    {
+        $locator = app(StockLocatorService::class);
+        $stockOptions = $locator->findStockForItem(
+            'App\\Models\\Product\\ProductVariant',
+            $variantId
+        );
+
+        return $stockOptions->toArray();
     }
 
     public function getStatusOptions(): array
@@ -146,6 +177,7 @@ class OrderService
                 'price' => $variant->price,
                 'stock_at_store' => $stockAtStore,
                 'stock_total' => $stockTotal,
+                'image_url' => $variant->getFirstMediaUrl('primary_image') ?: null,
                 'purchasable_type' => 'variant',
             ];
         }
@@ -187,9 +219,12 @@ class OrderService
                 'id' => $bundle->id,
                 'name' => $bundle->name,
                 'price' => $bundle->calculateBundlePrice(),
+                'image_url' => $bundle->getFirstMediaUrl('primary_image') ?: null,
                 'purchasable_type' => 'bundle',
                 'available_at_store' => $availableAtStore,
                 'available_system_wide' => $availableSystemWide,
+                'discount_type' => $bundle->discount_type,
+                'discount_value' => $bundle->discount_value,
             ];
         }
 
@@ -217,6 +252,7 @@ class OrderService
                     'name' => $v->name,
                     'sku' => $v->sku,
                     'price' => $v->price,
+                    'image_url' => $v->getFirstMediaUrl('primary_image') ?: null,
                 ])->values()->toArray() ?? [],
             ])->values()->toArray();
         }

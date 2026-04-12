@@ -337,7 +337,8 @@ export function useProductForm(
                 const date = new Date();
                 date.setMonth(date.getMonth() + months);
                 form.new_arrival_until = date.toISOString().split('T')[0];
-            } else if (!months) {
+            } else if (!months && !product) {
+                // Only clear in create mode — in edit mode, preserve existing value
                 form.new_arrival_until = '';
             }
         },

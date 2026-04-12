@@ -3,7 +3,6 @@
 namespace App\Actions\Sales;
 
 use App\Enums\InvoiceStatus;
-use App\Enums\PaymentStatus;
 use App\Models\Auth\User;
 use App\Models\Sales\Invoice;
 use App\Models\Sales\Payment;
@@ -21,7 +20,6 @@ class ProcessPaymentAction
                 'gateway' => $data['gateway'],
                 'transaction_id' => $data['transaction_id'],
                 'amount' => $data['amount'],
-                'status' => PaymentStatus::Successful,
                 'gateway_payload' => $data['gateway_payload'] ?? null,
             ]);
 

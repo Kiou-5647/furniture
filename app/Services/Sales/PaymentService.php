@@ -3,7 +3,6 @@
 namespace App\Services\Sales;
 
 use App\Data\Sales\PaymentFilterData;
-use App\Enums\PaymentStatus;
 use App\Models\Sales\Payment;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -26,11 +25,6 @@ class PaymentService
     {
         return Payment::with(['customer', 'allocations.invoice'])
             ->findOrFail($id);
-    }
-
-    public function getStatusOptions(): array
-    {
-        return PaymentStatus::options();
     }
 
     public function getGatewayOptions(): Collection

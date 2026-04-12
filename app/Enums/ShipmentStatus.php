@@ -7,6 +7,7 @@ enum ShipmentStatus: string
     case Pending = 'pending';
     case Shipped = 'shipped';
     case Delivered = 'delivered';
+    case Returned = 'returned';
     case Cancelled = 'cancelled';
 
     public function label(): string
@@ -15,6 +16,7 @@ enum ShipmentStatus: string
             self::Pending => 'Đang chờ',
             self::Shipped => 'Đã gửi',
             self::Delivered => 'Đã giao',
+            self::Returned => 'Đã trả',
             self::Cancelled => 'Đã hủy',
         };
     }
@@ -25,6 +27,7 @@ enum ShipmentStatus: string
             self::Pending => 'yellow',
             self::Shipped => 'blue',
             self::Delivered => 'green',
+            self::Returned => 'orange',
             self::Cancelled => 'red',
         };
     }

@@ -6,7 +6,6 @@ use App\Data\Fulfillment\ShipmentFilterData;
 use App\Enums\ShipmentStatus;
 use App\Models\Fulfillment\Shipment;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
 
 class ShipmentService
 {
@@ -33,11 +32,11 @@ class ShipmentService
     public function getById(string $id): Shipment
     {
         return Shipment::with([
-            'order',
+            'order.customer',
             'originLocation',
             'shippingMethod',
             'handledBy',
-            'items.orderItem',
+            'items.orderItem.purchasable',
             'items.sourceLocation',
         ])->findOrFail($id);
     }
@@ -45,17 +44,5 @@ class ShipmentService
     public function getStatusOptions(): array
     {
         return ShipmentStatus::options();
-    }
-
-    public function getCarrierOptions(): Collection
-    {
-        return collect([
-            ['id' => 'GHN', 'label' => 'Giao Hàng Nhanh'],
-            ['id' => 'GHTK', 'label' => 'Giao Hàng Tiết Kiệm'],
-            ['id' => 'VIETTEL', 'label' => 'ViettelPost'],
-            ['id' => 'VNPOST', 'label' => 'VNPost'],
-            ['id' => 'GRAB', 'label' => 'GrabExpress'],
-            ['id' => 'OTHER', 'label' => 'Khác'],
-        ]);
     }
 }

@@ -11,6 +11,7 @@ use App\Models\Customer\Customer;
 use App\Models\Customer\CustomerAddress;
 use App\Models\Employee\Department;
 use App\Models\Employee\Employee;
+use App\Models\Fulfillment\ShippingMethod;
 use App\Models\Inventory\Inventory;
 use App\Models\Inventory\Location;
 use App\Models\Product\Bundle;
@@ -54,26 +55,57 @@ class DemoDataSeeder extends Seeder
     protected function seedRolesAndPermissions(): void
     {
         $permissions = [
-            'users.view', 'users.create', 'users.update', 'users.delete', 'users.manage',
-            'roles.view', 'roles.manage',
-            'permissions.view', 'permissions.assign',
-            'products.view', 'products.create', 'products.update', 'products.delete', 'products.manage', 'products.publish',
-            'categories.view', 'categories.manage',
-            'bundles.view', 'bundles.manage',
-            'customers.view', 'customers.update', 'customers.delete',
-            'employees.view', 'employees.manage',
-            'inventory.view', 'inventory.manage',
-            'orders.view', 'orders.create', 'orders.update', 'orders.manage',
-            'invoices.view', 'invoices.manage',
-            'payments.view', 'payments.manage',
-            'shipments.view', 'shipments.manage',
-            'bookings.view', 'bookings.manage', 'bookings.approve',
-            'designers.view', 'designers.manage',
-            'design_services.view', 'design_services.manage',
-            'hr.employees.view', 'hr.employees.manage',
-            'settings.view', 'settings.manage',
-            'lookups.view', 'lookups.manage',
-            'shipping_methods.view', 'shipping_methods.manage',
+            'users.view',
+            'users.create',
+            'users.update',
+            'users.delete',
+            'users.manage',
+            'roles.view',
+            'roles.manage',
+            'permissions.view',
+            'permissions.assign',
+            'products.view',
+            'products.create',
+            'products.update',
+            'products.delete',
+            'products.manage',
+            'products.publish',
+            'categories.view',
+            'categories.manage',
+            'bundles.view',
+            'bundles.manage',
+            'customers.view',
+            'customers.update',
+            'customers.delete',
+            'employees.view',
+            'employees.manage',
+            'inventory.view',
+            'inventory.manage',
+            'orders.view',
+            'orders.create',
+            'orders.update',
+            'orders.manage',
+            'invoices.view',
+            'invoices.manage',
+            'payments.view',
+            'payments.manage',
+            'shipments.view',
+            'shipments.manage',
+            'bookings.view',
+            'bookings.manage',
+            'bookings.approve',
+            'designers.view',
+            'designers.manage',
+            'design_services.view',
+            'design_services.manage',
+            'hr.employees.view',
+            'hr.employees.manage',
+            'settings.view',
+            'settings.manage',
+            'lookups.view',
+            'lookups.manage',
+            'shipping_methods.view',
+            'shipping_methods.manage',
             'horizon.view',
         ];
 
@@ -84,37 +116,71 @@ class DemoDataSeeder extends Seeder
         $rolePermissions = [
             'super_admin' => null,
             'admin' => [
-                'users.manage', 'roles.manage', 'permissions.assign',
-                'products.manage', 'products.publish',
-                'categories.manage', 'bundles.manage',
-                'customers.view', 'customers.update', 'customers.delete',
-                'employees.manage', 'inventory.manage',
-                'orders.view', 'orders.create', 'orders.update', 'orders.manage',
-                'shipments.view', 'shipments.manage',
-                'invoices.manage', 'payments.manage',
-                'bookings.manage', 'bookings.approve',
-                'designers.view', 'design_services.view', 'design_services.manage',
+                'users.manage',
+                'roles.manage',
+                'permissions.assign',
+                'products.manage',
+                'products.publish',
+                'categories.manage',
+                'bundles.manage',
+                'customers.view',
+                'customers.update',
+                'customers.delete',
+                'employees.manage',
+                'inventory.manage',
+                'orders.view',
+                'orders.create',
+                'orders.update',
+                'orders.manage',
+                'shipments.view',
+                'shipments.manage',
+                'invoices.manage',
+                'payments.manage',
+                'bookings.manage',
+                'bookings.approve',
+                'designers.view',
+                'design_services.view',
+                'design_services.manage',
                 'hr.employees.manage',
-                'settings.manage', 'lookups.manage',
-                'shipping_methods.view', 'shipping_methods.manage',
+                'settings.manage',
+                'lookups.manage',
+                'shipping_methods.view',
+                'shipping_methods.manage',
                 'horizon.view',
             ],
             'store_manager' => [
-                'products.view', 'categories.view', 'bundles.view',
-                'customers.view', 'customers.update',
-                'inventory.view', 'inventory.manage',
-                'orders.view', 'orders.create', 'orders.update', 'orders.manage',
-                'shipments.view', 'shipments.manage',
-                'bookings.view', 'bookings.manage',
-                'designers.view', 'design_services.view',
+                'products.view',
+                'categories.view',
+                'bundles.view',
+                'customers.view',
+                'customers.update',
+                'inventory.view',
+                'inventory.manage',
+                'orders.view',
+                'orders.create',
+                'orders.update',
+                'orders.manage',
+                'shipments.view',
+                'shipments.manage',
+                'bookings.view',
+                'bookings.manage',
+                'designers.view',
+                'design_services.view',
             ],
             'warehouse_staff' => [
-                'products.view', 'inventory.view', 'inventory.manage',
-                'orders.view', 'shipments.view', 'shipments.manage',
+                'products.view',
+                'inventory.view',
+                'inventory.manage',
+                'orders.view',
+                'shipments.view',
+                'shipments.manage',
             ],
             'support' => [
-                'customers.view', 'customers.update',
-                'products.view', 'orders.view', 'bookings.view',
+                'customers.view',
+                'customers.update',
+                'products.view',
+                'orders.view',
+                'bookings.view',
             ],
         ];
 
@@ -169,12 +235,14 @@ class DemoDataSeeder extends Seeder
 
     protected function seedDepartments(): void
     {
-        foreach ([
-            ['name' => 'Phòng Kinh doanh', 'code' => 'SALES', 'is_active' => true],
-            ['name' => 'Phòng Kho vận', 'code' => 'WAREHOUSE', 'is_active' => true],
-            ['name' => 'Phòng Thiết kế', 'code' => 'DESIGN', 'is_active' => true],
-            ['name' => 'Phòng Hỗ trợ', 'code' => 'SUPPORT', 'is_active' => true],
-        ] as $d) {
+        foreach (
+            [
+                ['name' => 'Phòng Kinh doanh', 'code' => 'SALES', 'is_active' => true],
+                ['name' => 'Phòng Kho vận', 'code' => 'WAREHOUSE', 'is_active' => true],
+                ['name' => 'Phòng Thiết kế', 'code' => 'DESIGN', 'is_active' => true],
+                ['name' => 'Phòng Hỗ trợ', 'code' => 'SUPPORT', 'is_active' => true],
+            ] as $d
+        ) {
             Department::firstOrCreate(['code' => $d['code']], $d);
         }
 
@@ -189,10 +257,10 @@ class DemoDataSeeder extends Seeder
         $salesDept = Department::where('code', 'SALES')->first();
 
         $data = [
-            ['email' => 'admin@furniture.vn', 'full_name' => 'Quản trị viên', 'role' => 'super_admin', 'dept' => $salesDept?->id, 'loc' => $store?->id],
-            ['email' => 'manager@furniture.vn', 'full_name' => 'Nguyễn Thị Lan', 'role' => 'store_manager', 'dept' => $salesDept?->id, 'loc' => $store?->id],
-            ['email' => 'warehouse1@furniture.vn', 'full_name' => 'Trần Văn Hùng', 'role' => 'warehouse_staff', 'dept' => null, 'loc' => null],
-            ['email' => 'support1@furniture.vn', 'full_name' => 'Lê Thị Mai', 'role' => 'support', 'dept' => null, 'loc' => null],
+            ['email' => 'admin@furniture.com', 'name' => 'Quản trị viên', 'full_name' => 'Quản trị viên', 'role' => 'super_admin', 'dept' => $salesDept?->id, 'loc' => $store?->id],
+            ['email' => 'manager@furniture.com', 'name' => 'Lan', 'full_name' => 'Nguyễn Thị Lan', 'role' => 'store_manager', 'dept' => $salesDept?->id, 'loc' => $store?->id],
+            ['email' => 'warehouse1@furniture.com', 'name' => 'Hùng', 'full_name' => 'Trần Văn Hùng', 'role' => 'warehouse_staff', 'dept' => null, 'loc' => null],
+            ['email' => 'support1@furniture.com', 'name' => 'Mai', 'full_name' => 'Lê Thị Mai', 'role' => 'support', 'dept' => null, 'loc' => null],
         ];
 
         foreach ($data as $d) {
@@ -200,7 +268,7 @@ class DemoDataSeeder extends Seeder
                 ['email' => $d['email']],
                 [
                     'type' => 'employee',
-                    'name' => Str::slug($d['email'], '_'),
+                    'name' => $d['name'],
                     'password' => Hash::make('password'),
                     'is_active' => true,
                     'is_verified' => true,
@@ -286,16 +354,18 @@ class DemoDataSeeder extends Seeder
         $group = Lookup::first(); // Ghế ngồi
         $room = Lookup::firstWhere('display_name', 'Phòng khách');
 
-        foreach ([
-            ['display_name' => 'Ghế', 'slug' => 'ghe'],
-            ['display_name' => 'Bàn', 'slug' => 'ban'],
-            ['display_name' => 'Giường', 'slug' => 'giuong'],
-            ['display_name' => 'Tủ', 'slug' => 'tu'],
-            ['display_name' => 'Kệ', 'slug' => 'ke'],
-            ['display_name' => 'Sofa', 'slug' => 'sofas'],
-            ['display_name' => 'Bàn trang điểm', 'slug' => 'ban-trang-diem'],
-            ['display_name' => 'Ghế thư giãn', 'slug' => 'ghe-thu-gian'],
-        ] as $d) {
+        foreach (
+            [
+                ['display_name' => 'Ghế', 'slug' => 'ghe'],
+                ['display_name' => 'Bàn', 'slug' => 'ban'],
+                ['display_name' => 'Giường', 'slug' => 'giuong'],
+                ['display_name' => 'Tủ', 'slug' => 'tu'],
+                ['display_name' => 'Kệ', 'slug' => 'ke'],
+                ['display_name' => 'Sofa', 'slug' => 'sofas'],
+                ['display_name' => 'Bàn trang điểm', 'slug' => 'ban-trang-diem'],
+                ['display_name' => 'Ghế thư giãn', 'slug' => 'ghe-thu-gian'],
+            ] as $d
+        ) {
             Category::firstOrCreate(
                 ['slug' => $d['slug']],
                 [
@@ -494,11 +564,13 @@ class DemoDataSeeder extends Seeder
     {
         $products = Product::with('variants')->get();
 
-        foreach ([
-            ['name' => 'Gói Phòng Khách', 'discount_type' => 'percentage', 'discount_value' => 10, 'product_names' => ['Ghế sofa', 'Bàn trà']],
-            ['name' => 'Gói Phòng Ngủ', 'discount_type' => 'percentage', 'discount_value' => 12, 'product_names' => ['Giường ngủ', 'Ghế thư giãn']],
-            ['name' => 'Gói Làm Việc', 'discount_type' => 'fixed_amount', 'discount_value' => 5000000, 'product_names' => ['Bàn làm việc', 'Bàn trang điểm']],
-        ] as $b) {
+        foreach (
+            [
+                ['name' => 'Gói Phòng Khách', 'discount_type' => 'percentage', 'discount_value' => 10, 'product_names' => ['Ghế sofa', 'Bàn trà']],
+                ['name' => 'Gói Phòng Ngủ', 'discount_type' => 'percentage', 'discount_value' => 12, 'product_names' => ['Giường ngủ', 'Ghế thư giãn']],
+                ['name' => 'Gói Làm Việc', 'discount_type' => 'fixed_amount', 'discount_value' => 5000000, 'product_names' => ['Bàn làm việc', 'Bàn trang điểm']],
+            ] as $b
+        ) {
             $bundle = Bundle::firstOrCreate(
                 ['slug' => Str::slug($b['name'])],
                 [
@@ -529,7 +601,7 @@ class DemoDataSeeder extends Seeder
 
     protected function seedShippingMethods(): void
     {
-        \App\Models\Fulfillment\ShippingMethod::firstOrCreate(
+        ShippingMethod::firstOrCreate(
             ['code' => 'standard'],
             [
                 'name' => 'Tiêu chuẩn',
@@ -540,7 +612,7 @@ class DemoDataSeeder extends Seeder
             ]
         );
 
-        \App\Models\Fulfillment\ShippingMethod::firstOrCreate(
+        ShippingMethod::firstOrCreate(
             ['code' => 'express'],
             [
                 'name' => 'Nhanh',

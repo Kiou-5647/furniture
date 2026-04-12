@@ -30,7 +30,7 @@ class Shipment extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['shipment_number', 'status', 'carrier', 'tracking_number', 'handled_by'])
+            ->logOnly(['shipment_number', 'status', 'shipped_by', 'delivered_by'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
             ->setDescriptionForEvent(fn (string $eventName) => "Shipment {$eventName}");
@@ -54,6 +54,16 @@ class Shipment extends Model
     public function items(): HasMany
     {
         return $this->hasMany(ShipmentItem::class);
+    }
+
+    public function shippedBy(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class, 'shipped_by');
+    }
+
+    public function deliveredBy(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class, 'delivered_by');
     }
 
     public function handledBy(): BelongsTo
@@ -83,18 +93,8 @@ class Shipment extends Model
         return $this->status === ShipmentStatus::Shipped;
     }
 
-    public function areAllItemsDelivered(): bool
+    public function canBeCancelled(): bool
     {
-        return $this->items->every(fn ($item) => $item->status === ShipmentStatus::Delivered);
-    }
-
-    public function deliveredItemsCount(): int
-    {
-        return $this->items->where('status', ShipmentStatus::Delivered)->count();
-    }
-
-    public function totalItemsCount(): int
-    {
-        return $this->items->count();
+        return in_array($this->status, [ShipmentStatus::Pending, ShipmentStatus::Shipped], true);
     }
 }
