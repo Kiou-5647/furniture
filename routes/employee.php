@@ -187,19 +187,10 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
         Route::prefix('thanh-toan')->name('payments.')->group(function () {
             Route::middleware(['can:payments.view'])->group(function () {
                 Route::get('/', [PaymentController::class, 'index'])->name('index');
-                Route::get('/{payment}', [PaymentController::class, 'show'])->name('show');
             });
 
             Route::middleware(['can:payments.manage'])->group(function () {
                 Route::post('/', [PaymentController::class, 'store'])->name('store');
-                Route::post('/{payment}/refund', [PaymentController::class, 'refund'])->name('refund');
-                Route::delete('/{payment}', [PaymentController::class, 'destroy'])->name('destroy');
-
-                Route::prefix('thung-rac')->name('trash.')->group(function () {
-                    Route::get('/', [PaymentController::class, 'trash'])->name('index');
-                    Route::post('/{payment}/restore', [PaymentController::class, 'restore'])->name('restore')->withTrashed();
-                    Route::delete('/{payment}/force', [PaymentController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
-                });
             });
         });
     });

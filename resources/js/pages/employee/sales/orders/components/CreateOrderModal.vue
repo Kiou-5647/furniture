@@ -75,7 +75,13 @@ interface BundleContentItem {
     product_id: string;
     product_name: string;
     quantity: number;
-    variants: { id: string; name: string; sku: string; price: string; image_url?: string | null }[];
+    variants: {
+        id: string;
+        name: string;
+        sku: string;
+        price: string;
+        image_url?: string | null;
+    }[];
 }
 
 const props = defineProps<{
@@ -329,7 +335,9 @@ function addVariant(item: VariantOption) {
 
     // Check if item already exists in cart
     const existingIndex = form.items.findIndex(
-        (i) => i.purchasable_type === 'App\\Models\\Product\\ProductVariant' && i.purchasable_id === item.id
+        (i) =>
+            i.purchasable_type === 'App\\Models\\Product\\ProductVariant' &&
+            i.purchasable_id === item.id,
     );
 
     if (existingIndex !== -1) {
@@ -501,7 +509,7 @@ watch(
         } else {
             form.shipping_method_id = null;
         }
-    }
+    },
 );
 
 watch(
@@ -1081,14 +1089,15 @@ watch(
                                                     (item as VariantOption)
                                                         .stock_total > 0
                                                 "
-                                                class="text-amber-600"
                                             >
-                                                Không có sẵn tại cửa hàng Tổng
-                                                số lượng toàn hệ thống:
-                                                {{
-                                                    (item as VariantOption)
-                                                        .stock_total
-                                                }}
+                                                <p class="text-amber-600">Không có sẵn tại cửa hàng</p>
+                                                <p>
+                                                    Tổng số lượng toàn hệ thống:
+                                                    {{
+                                                        (item as VariantOption)
+                                                            .stock_total
+                                                    }}
+                                                </p>
                                             </div>
                                             <span v-else class="text-red-500">
                                                 Hết hàng
@@ -1217,18 +1226,34 @@ watch(
                                     <template #default>
                                         <div class="flex items-center gap-2">
                                             <template
-                                                v-if="getSelectedVariantImage(content)"
+                                                v-if="
+                                                    getSelectedVariantImage(
+                                                        content,
+                                                    )
+                                                "
                                             >
-                                                <div class="h-6 w-6 overflow-hidden rounded border">
+                                                <div
+                                                    class="h-6 w-6 overflow-hidden rounded border"
+                                                >
                                                     <img
-                                                        :src="getSelectedVariantImage(content)!"
-                                                        :alt="getSelectedVariantName(content)"
+                                                        :src="
+                                                            getSelectedVariantImage(
+                                                                content,
+                                                            )!
+                                                        "
+                                                        :alt="
+                                                            getSelectedVariantName(
+                                                                content,
+                                                            )
+                                                        "
                                                         class="h-full w-full object-cover"
                                                     />
                                                 </div>
                                             </template>
                                             <span class="truncate">{{
-                                                getSelectedVariantName(content) || 'Chọn biến thể...'
+                                                getSelectedVariantName(
+                                                    content,
+                                                ) || 'Chọn biến thể...'
                                             }}</span>
                                         </div>
                                     </template>
@@ -1256,9 +1281,23 @@ watch(
                                             <div class="truncate text-sm">
                                                 {{ variant.name }}
                                             </div>
-                                            <div class="flex items-center gap-2 text-[11px] text-muted-foreground">
-                                                <span v-if="variant.sku" class="font-mono">{{ variant.sku }}</span>
-                                                <span class="tabular-nums">{{ Number(variant.price).toLocaleString('vi-VN') }}đ</span>
+                                            <div
+                                                class="flex items-center gap-2 text-[11px] text-muted-foreground"
+                                            >
+                                                <span
+                                                    v-if="variant.sku"
+                                                    class="font-mono"
+                                                    >{{ variant.sku }}</span
+                                                >
+                                                <span class="tabular-nums"
+                                                    >{{
+                                                        Number(
+                                                            variant.price,
+                                                        ).toLocaleString(
+                                                            'vi-VN',
+                                                        )
+                                                    }}đ</span
+                                                >
                                             </div>
                                         </div>
                                     </div>

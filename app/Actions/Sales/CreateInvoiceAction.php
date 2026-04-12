@@ -16,7 +16,7 @@ class CreateInvoiceAction
             $invoiceable = $this->resolveInvoiceable($data->invoiceable_type, $data->invoiceable_id);
 
             $invoice = Invoice::create([
-                'invoice_number' => $this->generateInvoiceNumber(),
+                'invoice_number' => Invoice::generateInvoiceNumber(),
                 'invoiceable_type' => $data->invoiceable_type,
                 'invoiceable_id' => $data->invoiceable_id,
                 'type' => $data->type,
@@ -37,17 +37,5 @@ class CreateInvoiceAction
             Booking::class => Booking::findOrFail($id),
             default => throw new \InvalidArgumentException('Invalid invoiceable type.'),
         };
-    }
-
-    protected function generateInvoiceNumber(): string
-    {
-        $date = now()->format('Ymd');
-        $lastInvoice = Invoice::whereDate('created_at', today())
-            ->orderBy('invoice_number', 'desc')
-            ->first();
-
-        $sequence = $lastInvoice ? (int) substr($lastInvoice->invoice_number, -4) + 1 : 1;
-
-        return 'INV-'.$date.'-'.str_pad($sequence, 4, '0', STR_PAD_LEFT);
     }
 }

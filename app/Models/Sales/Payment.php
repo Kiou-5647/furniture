@@ -2,6 +2,7 @@
 
 namespace App\Models\Sales;
 
+use App\Builders\Sales\PaymentBuilder;
 use App\Models\Auth\User;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
@@ -11,11 +12,19 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
+/**
+ * @method static PaymentBuilder|Payment query()
+ */
 class Payment extends Model
 {
     use HasUuids, LogsActivity, SoftDeletes;
 
     protected $table = 'payments';
+
+    public function newEloquentBuilder($query): PaymentBuilder
+    {
+        return new PaymentBuilder($query);
+    }
 
     protected function casts(): array
     {

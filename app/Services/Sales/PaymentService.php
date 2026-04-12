@@ -11,20 +11,17 @@ class PaymentService
 {
     public function getFiltered(PaymentFilterData $filter): LengthAwarePaginator
     {
+        $allowedSortColumns = ['transaction_id', 'amount', 'gateway', 'created_at', 'updated_at'];
+        $orderBy = in_array($filter->order_by, $allowedSortColumns, true) ? $filter->order_by : 'created_at';
+        $orderDirection = $filter->order_direction === 'asc' ? 'asc' : 'desc';
+
         return Payment::query()
-            ->with(['customer', 'allocations.invoice'])
-            ->when($filter->status, fn ($q) => $q->where('status', $filter->status))
+            ->with(['customer.customer', 'allocations.invoice'])
             ->when($filter->customer_id, fn ($q) => $q->where('customer_id', $filter->customer_id))
             ->when($filter->gateway, fn ($q) => $q->where('gateway', $filter->gateway))
-            ->when($filter->search, fn ($q) => $q->where('transaction_id', 'ilike', "%{$filter->search}%"))
-            ->orderBy($filter->order_by, $filter->order_direction)
+            ->when($filter->search, fn ($q) => $q->search($filter->search))
+            ->orderBy($orderBy, $orderDirection)
             ->paginate($filter->per_page);
-    }
-
-    public function getById(string $id): Payment
-    {
-        return Payment::with(['customer', 'allocations.invoice'])
-            ->findOrFail($id);
     }
 
     public function getGatewayOptions(): Collection
@@ -36,6 +33,21 @@ class PaymentService
             ->map(fn ($gateway) => [
                 'id' => $gateway,
                 'label' => ucfirst($gateway),
+            ]);
+    }
+
+    public function getCustomerOptions(): Collection
+    {
+        return Payment::query()
+            ->join('users', 'payments.customer_id', '=', 'users.id')
+            ->leftJoin('customers', 'users.id', '=', 'customers.user_id')
+            ->distinct()
+            ->select('users.id', 'customers.full_name', 'users.name')
+            ->orderBy('customers.full_name')
+            ->get()
+            ->map(fn ($payment) => [
+                'id' => $payment->id,
+                'label' => $payment->full_name ?? $payment->name ?? 'Unknown',
             ]);
     }
 }

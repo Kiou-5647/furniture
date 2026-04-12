@@ -28,7 +28,7 @@ const CreateOrderModal = createLazyComponent(
 const props = defineProps<{
     statusOptions: { value: string; label: string; color: string }[];
     paymentMethodOptions: { value: string; label: string }[];
-    customerOptions: { id: string; label: string }[];
+    customerOptions: { id: string; name: string; email: string }[];
     sourceOptions: { value: string; label: string }[];
     storeLocationOptions: { id: string; label: string }[];
     employeeLocationId?: string;
@@ -100,8 +100,9 @@ const statusFilterOptions = computed(() =>
 
 const customerFilterOptions = computed(() =>
     props.customerOptions.map((c) => ({
-        label: c.label,
+        label: c.name,
         value: c.id,
+        id: c.id,
     })),
 );
 

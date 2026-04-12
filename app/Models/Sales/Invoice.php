@@ -2,6 +2,7 @@
 
 namespace App\Models\Sales;
 
+use App\Builders\Sales\InvoiceBuilder;
 use App\Enums\InvoiceStatus;
 use App\Enums\InvoiceType;
 use App\Models\Employee\Employee;
@@ -14,11 +15,19 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
+/**
+ * @method static InvoiceBuilder|Invoice query()
+ */
 class Invoice extends Model
 {
     use HasUuids, LogsActivity, SoftDeletes;
 
     protected $table = 'invoices';
+
+    public function newEloquentBuilder($query): InvoiceBuilder
+    {
+        return new InvoiceBuilder($query);
+    }
 
     protected function casts(): array
     {

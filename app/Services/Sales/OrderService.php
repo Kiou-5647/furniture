@@ -18,23 +18,27 @@ class OrderService
 {
     public function getFiltered(OrderFilterData $filter): LengthAwarePaginator
     {
+        $allowedSortColumns = ['order_number', 'total_amount', 'created_at', 'updated_at'];
+        $orderBy = in_array($filter->order_by, $allowedSortColumns, true) ? $filter->order_by : 'created_at';
+        $orderDirection = $filter->order_direction === 'asc' ? 'asc' : 'desc';
+
         return Order::query()
-            ->with(['customer', 'acceptedBy', 'items.sourceLocation', 'storeLocation'])
-            ->when($filter->customer_id, fn ($q) => $q->where('customer_id', $filter->customer_id))
-            ->when($filter->status, fn ($q) => $q->where('status', $filter->status))
-            ->when($filter->source, fn ($q) => $q->where('source', $filter->source))
-            ->when($filter->store_location_id, fn ($q) => $q->where('store_location_id', $filter->store_location_id))
-            ->when($filter->search, fn ($q) => $q->where('order_number', 'ilike', "%{$filter->search}%"))
-            ->orderBy($filter->order_by, $filter->order_direction)
+            ->with(['customer.customer', 'acceptedBy', 'items.sourceLocation', 'storeLocation'])
+            ->when($filter->customer_id, fn ($q) => $q->byCustomerId($filter->customer_id))
+            ->when($filter->status, fn ($q) => $q->byStatus($filter->status))
+            ->when($filter->source, fn ($q) => $q->bySource($filter->source))
+            ->when($filter->store_location_id, fn ($q) => $q->byStoreLocation($filter->store_location_id))
+            ->when($filter->search, fn ($q) => $q->search($filter->search))
+            ->orderBy($orderBy, $orderDirection)
             ->paginate($filter->per_page);
     }
 
     public function getTrashedFiltered(OrderFilterData $filter): LengthAwarePaginator
     {
         return Order::onlyTrashed()
-            ->with(['customer', 'acceptedBy'])
-            ->when($filter->customer_id, fn ($q) => $q->where('customer_id', $filter->customer_id))
-            ->when($filter->search, fn ($q) => $q->where('order_number', 'ilike', "%{$filter->search}%"))
+            ->with(['customer.customer', 'acceptedBy'])
+            ->when($filter->customer_id, fn ($q) => $q->byCustomerId($filter->customer_id))
+            ->when($filter->search, fn ($q) => $q->search($filter->search))
             ->orderBy($filter->order_by ?? 'deleted_at', $filter->order_direction ?? 'desc')
             ->paginate($filter->per_page);
     }
@@ -42,7 +46,7 @@ class OrderService
     public function getById(string $id): Order
     {
         return Order::with([
-            'customer',
+            'customer.customer',
             'items.sourceLocation',
             'items.purchasable',
             'acceptedBy',

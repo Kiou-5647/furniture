@@ -20,8 +20,8 @@ enum InvoiceType: string
     public function color(): string
     {
         return match ($this) {
-            self::Deposit => 'blue',
-            self::FinalBalance => 'orange',
+            self::Deposit => 'orange',
+            self::FinalBalance => 'blue',
             self::Full => 'green',
         };
     }

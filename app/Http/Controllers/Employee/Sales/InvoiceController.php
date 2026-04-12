@@ -27,6 +27,9 @@ class InvoiceController
         return Inertia::render('employee/sales/invoices/Index', [
             'statusOptions' => $this->service->getStatusOptions(),
             'typeOptions' => $this->service->getTypeOptions(),
+            'currentEmployeeId' => auth()->user()?->employee?->id,
+            'orderOptions' => $this->service->getOrderOptions()->values(),
+            // 'bookingOptions' => $this->service->getBookingOptions()->values(),
             'invoices' => Inertia::defer(fn () => InvoiceResource::collection(
                 $this->service->getFiltered($filter)
             )),
@@ -66,8 +69,6 @@ class InvoiceController
 
     public function destroy(Invoice $invoice)
     {
-        $this->authorize('forceDelete', $invoice);
-
         if (! Auth::user()->can('invoices.delete')) {
             return back()->with('error', 'Không đủ quyền hạn!');
         }

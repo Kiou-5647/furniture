@@ -5,6 +5,7 @@ namespace App\Observers;
 use App\Actions\Sales\CreateRefundRequestAction;
 use App\Enums\InvoiceStatus;
 use App\Enums\OrderStatus;
+use App\Enums\RefundStatus;
 use App\Models\Employee\Employee;
 use App\Models\Sales\Order;
 
@@ -39,14 +40,18 @@ class OrderObserver
             $invoice->updateQuietly(['status' => InvoiceStatus::Overpaid]);
         }
 
-        // Check if a refund already exists for this overpaid amount
         $overpaidAmount = $invoice->amount_paid - $invoice->amount_due;
+
+        // Check if a pending refund already exists — update it instead of creating new
         $existingRefund = $order->refunds()
-            ->where('amount', '>=', $overpaidAmount)
-            ->whereIn('status', ['pending', 'processing', 'completed'])
-            ->exists();
+            ->where('status', RefundStatus::Pending)
+            ->first();
 
         if ($existingRefund) {
+            $existingRefund->update([
+                'amount' => max(0, (float) $overpaidAmount),
+            ]);
+
             return;
         }
 

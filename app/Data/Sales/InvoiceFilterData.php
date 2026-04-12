@@ -9,7 +9,7 @@ readonly class InvoiceFilterData
 {
     public function __construct(
         public ?InvoiceStatus $status = null,
-        public ?string $type = null,
+        public ?InvoiceType $type = null,
         public ?string $invoiceable_type = null,
         public ?string $search = null,
         public string $order_by = 'created_at',
@@ -21,7 +21,7 @@ readonly class InvoiceFilterData
     {
         return new self(
             status: $request->query('status') ? InvoiceStatus::tryFrom($request->query('status')) : null,
-            type: $request->query('type'),
+            type: $request->query('type') ? InvoiceType::tryFrom($request->query('type')) : null,
             invoiceable_type: $request->query('invoiceable_type'),
             search: $request->query('search'),
             order_by: $request->query('order_by', 'created_at'),
