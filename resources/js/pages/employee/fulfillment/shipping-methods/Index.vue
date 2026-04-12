@@ -18,9 +18,10 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { createLazyComponent } from '@/composables/createLazyComponent';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { cleanQuery, setCookie } from '@/lib/utils';
-import { index, store, update, destroy } from '@/routes/employee/fulfillment/shipping-methods';
+import { index, destroy } from '@/routes/employee/fulfillment/shipping-methods';
 import { index as trashIndex } from '@/routes/employee/fulfillment/shipping-methods/trash';
 import type { BreadcrumbItem } from '@/types';
 import type {
@@ -28,8 +29,11 @@ import type {
     ShippingMethodFilterData,
     ShippingMethodPagination,
 } from '@/types/shipping-method';
-import ShippingMethodDialog from './components/ShippingMethodDialog.vue';
 import { getColumns } from './types/columns';
+
+const ShippingMethodDialog = createLazyComponent(
+    () => import('./components/ShippingMethodDialog.vue'),
+);
 
 const props = defineProps<{
     shippingMethods?: ShippingMethodPagination;

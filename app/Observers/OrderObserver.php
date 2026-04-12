@@ -6,7 +6,7 @@ use App\Actions\Sales\CreateRefundRequestAction;
 use App\Enums\InvoiceStatus;
 use App\Enums\OrderStatus;
 use App\Enums\RefundStatus;
-use App\Models\Employee\Employee;
+use App\Models\Hr\Employee;
 use App\Models\Sales\Order;
 
 class OrderObserver

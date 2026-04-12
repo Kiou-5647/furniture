@@ -5,7 +5,7 @@ namespace App\Actions\Sales;
 use App\Enums\InvoiceStatus;
 use App\Enums\OrderStatus;
 use App\Enums\ShipmentStatus;
-use App\Models\Employee\Employee;
+use App\Models\Hr\Employee;
 use App\Models\Sales\Invoice;
 use App\Models\Sales\Order;
 use App\Services\Location\OrderStockDeductionService;

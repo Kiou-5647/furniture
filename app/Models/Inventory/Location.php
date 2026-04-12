@@ -3,7 +3,7 @@
 namespace App\Models\Inventory;
 
 use App\Enums\LocationType;
-use App\Models\Employee\Employee;
+use App\Models\Hr\Employee;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

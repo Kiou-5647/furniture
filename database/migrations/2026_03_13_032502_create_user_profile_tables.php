@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\Auth\User;
-use App\Models\Employee\Department;
+use App\Models\Hr\Department;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;

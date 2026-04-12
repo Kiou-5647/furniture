@@ -4,7 +4,7 @@ namespace App\Actions\Booking;
 
 use App\Enums\BookingStatus;
 use App\Models\Booking\Booking;
-use App\Models\Employee\Employee;
+use App\Models\Hr\Employee;
 
 class CancelBookingAction
 {

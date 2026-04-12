@@ -3,8 +3,8 @@
 namespace App\Actions\Fulfillment;
 
 use App\Enums\ShipmentStatus;
-use App\Models\Employee\Employee;
 use App\Models\Fulfillment\Shipment;
+use App\Models\Hr\Employee;
 use App\Services\Location\OrderStockDeductionService;
 use Illuminate\Support\Facades\DB;
 

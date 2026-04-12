@@ -4,8 +4,8 @@ namespace App\Actions\Fulfillment;
 
 use App\Enums\OrderStatus;
 use App\Enums\ShipmentStatus;
-use App\Models\Employee\Employee;
 use App\Models\Fulfillment\Shipment;
+use App\Models\Hr\Employee;
 use Illuminate\Support\Facades\DB;
 
 class CancelShipmentAction

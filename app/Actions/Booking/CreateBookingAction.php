@@ -5,7 +5,7 @@ namespace App\Actions\Booking;
 use App\Data\Booking\CreateBookingData;
 use App\Enums\BookingStatus;
 use App\Models\Booking\Booking;
-use App\Models\Booking\Designer;
+use App\Models\Hr\Designer;
 use Illuminate\Support\Facades\DB;
 
 class CreateBookingAction

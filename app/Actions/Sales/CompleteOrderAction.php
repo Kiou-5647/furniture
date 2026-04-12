@@ -3,7 +3,7 @@
 namespace App\Actions\Sales;
 
 use App\Enums\OrderStatus;
-use App\Models\Employee\Employee;
+use App\Models\Hr\Employee;
 use App\Models\Sales\Order;
 use App\Services\Location\OrderStockDeductionService;
 

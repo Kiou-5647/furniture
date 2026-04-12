@@ -5,13 +5,13 @@ namespace Database\Seeders;
 use App\Enums\LocationType;
 use App\Models\Auth\Role;
 use App\Models\Auth\User;
-use App\Models\Booking\Designer;
 use App\Models\Booking\DesignService;
 use App\Models\Customer\Customer;
 use App\Models\Customer\CustomerAddress;
-use App\Models\Employee\Department;
-use App\Models\Employee\Employee;
 use App\Models\Fulfillment\ShippingMethod;
+use App\Models\Hr\Department;
+use App\Models\Hr\Designer;
+use App\Models\Hr\Employee;
 use App\Models\Inventory\Inventory;
 use App\Models\Inventory\Location;
 use App\Models\Product\Bundle;
@@ -98,8 +98,8 @@ class DemoDataSeeder extends Seeder
             'designers.manage',
             'design_services.view',
             'design_services.manage',
-            'hr.employees.view',
-            'hr.employees.manage',
+            'employees.view',
+            'employees.manage',
             'settings.view',
             'settings.manage',
             'lookups.view',
@@ -141,7 +141,7 @@ class DemoDataSeeder extends Seeder
                 'designers.view',
                 'design_services.view',
                 'design_services.manage',
-                'hr.employees.manage',
+                'employees.manage',
                 'settings.manage',
                 'lookups.manage',
                 'shipping_methods.view',

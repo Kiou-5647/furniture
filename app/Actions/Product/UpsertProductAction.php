@@ -4,7 +4,7 @@ namespace App\Actions\Product;
 
 use App\Actions\Inventory\RecordStockMovementAction;
 use App\Enums\StockMovementType;
-use App\Models\Employee\Employee;
+use App\Models\Hr\Employee;
 use App\Models\Inventory\Inventory;
 use App\Models\Inventory\Location;
 use App\Models\Inventory\StockMovement;

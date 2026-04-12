@@ -9,12 +9,12 @@ class DepartmentPolicy
     public function view(User $user): bool
     {
         return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('hr.departments.view');
+            || $user->hasPermissionTo('departments.view');
     }
 
     public function update(User $user): bool
     {
         return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('hr.departments.manage');
+            || $user->hasPermissionTo('departments.manage');
     }
 }

@@ -1,13 +1,13 @@
 <?php
 
 use App\Http\Controllers\Employee\Booking\BookingController;
-use App\Http\Controllers\Employee\Booking\DesignerController;
 use App\Http\Controllers\Employee\Booking\DesignServiceController;
 use App\Http\Controllers\Employee\EmployeeDashboardController;
 use App\Http\Controllers\Employee\Fulfillment\ShipmentController;
 use App\Http\Controllers\Employee\Fulfillment\ShippingMethodController;
-use App\Http\Controllers\Employee\HR\DepartmentController;
-use App\Http\Controllers\Employee\HR\EmployeeController;
+use App\Http\Controllers\Employee\Hr\DepartmentController;
+use App\Http\Controllers\Employee\Hr\DesignerController;
+use App\Http\Controllers\Employee\Hr\EmployeeController;
 use App\Http\Controllers\Employee\Inventory\LocationController;
 use App\Http\Controllers\Employee\Inventory\StockMovementController;
 use App\Http\Controllers\Employee\Inventory\StockTransferController;
@@ -36,35 +36,52 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
     /**
      * HR routes
      */
-    Route::prefix('quan-ly-nhan-vien')->name('hr.employees.')->group(function () {
-        Route::middleware(['can:hr.employees.view'])->group(function () {
-            Route::get('/', [EmployeeController::class, 'index'])->name('index');
-            Route::get('/{employee}', [EmployeeController::class, 'show'])->name('show');
-        });
+    Route::prefix('quan-ly-nhan-su')->name('hr.')->group(function () {
+        Route::prefix('nhan-vien')->name('employees.')->group(function () {
+            Route::middleware(['can:employees.view'])->group(function () {
+                Route::get('/', [EmployeeController::class, 'index'])->name('index');
+                Route::get('/{employee}', [EmployeeController::class, 'show'])->name('show');
+            });
 
-        Route::middleware(['can:hr.employees.manage'])->group(function () {
-            Route::post('/', [EmployeeController::class, 'store'])->name('store');
-            Route::put('/{employee}', [EmployeeController::class, 'update'])->name('update');
-            Route::delete('/{employee}', [EmployeeController::class, 'destroy'])->name('destroy');
-            Route::post('/{employee}/terminate', [EmployeeController::class, 'terminate'])->name('terminate');
-            Route::post('/{employee}/restore', [EmployeeController::class, 'restore'])->name('restore');
+            Route::middleware(['can:employees.manage'])->group(function () {
+                Route::post('/', [EmployeeController::class, 'store'])->name('store');
+                Route::put('/{employee}', [EmployeeController::class, 'update'])->name('update');
+                Route::delete('/{employee}', [EmployeeController::class, 'destroy'])->name('destroy');
+                Route::post('/{employee}/terminate', [EmployeeController::class, 'terminate'])->name('terminate');
+                Route::post('/{employee}/restore', [EmployeeController::class, 'restore'])->name('restore');
 
-            Route::middleware(['can:hr.roles.manage'])->group(function () {
-                Route::get('/{employee}/permissions', [EmployeeController::class, 'permissions'])->name('permissions');
-                Route::post('/{employee}/sync-roles-permissions', [EmployeeController::class, 'syncRolesPermissions'])->name('sync-roles-permissions');
+                Route::middleware(['can:roles/manage'])->group(function () {
+                    Route::get('/{employee}/permissions', [EmployeeController::class, 'permissions'])->name('permissions');
+                    Route::post('/{employee}/sync-roles-permissions', [EmployeeController::class, 'syncRolesPermissions'])->name('sync-roles-permissions');
+                });
             });
         });
-    });
 
-    Route::prefix('quan-ly-phong-ban')->name('hr.departments.')->group(function () {
-        Route::middleware(['can:hr.departments.view'])->group(function () {
-            Route::get('/', [DepartmentController::class, 'index'])->name('index');
+        Route::prefix('phong-ban')->name('departments.')->group(function () {
+            Route::middleware(['can:departments.view'])->group(function () {
+                Route::get('/', [DepartmentController::class, 'index'])->name('index');
+            });
+
+            Route::middleware(['can:departments.manage'])->group(function () {
+                Route::post('/', [DepartmentController::class, 'store'])->name('store');
+                Route::put('/{department}', [DepartmentController::class, 'update'])->name('update');
+                Route::delete('/{department}', [DepartmentController::class, 'destroy'])->name('destroy');
+            });
         });
 
-        Route::middleware(['can:hr.departments.manage'])->group(function () {
-            Route::post('/', [DepartmentController::class, 'store'])->name('store');
-            Route::put('/{department}', [DepartmentController::class, 'update'])->name('update');
-            Route::delete('/{department}', [DepartmentController::class, 'destroy'])->name('destroy');
+        Route::prefix('nha-thiet-ke')->name('designers.')->group(function () {
+            Route::middleware(['can:designers.view'])->group(function () {
+                Route::get('/', [DesignerController::class, 'index'])->name('index');
+                Route::get('/{designer}/availabilities', [DesignerController::class, 'availabilities'])->name('availabilities');
+            });
+
+            Route::middleware(['can:designers.manage'])->group(function () {
+                Route::post('/', [DesignerController::class, 'store'])->name('store');
+                Route::put('/{designer}', [DesignerController::class, 'update'])->name('update');
+                Route::delete('/{designer}', [DesignerController::class, 'destroy'])->name('destroy');
+                Route::post('/{designer}/restore', [DesignerController::class, 'restore'])->name('restore')->withTrashed();
+                Route::post('/{designer}/availabilities', [DesignerController::class, 'updateAvailabilities'])->name('update-availabilities');
+            });
         });
     });
 
@@ -88,22 +105,6 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
                 Route::get('/', [BookingController::class, 'trash'])->name('index');
                 Route::post('/{booking}/restore', [BookingController::class, 'restore'])->name('restore')->withTrashed();
                 Route::delete('/{booking}/force', [BookingController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
-            });
-        });
-
-        // Designers
-        Route::prefix('nha-thiet-ke')->name('designers.')->group(function () {
-            Route::middleware(['can:designers.view'])->group(function () {
-                Route::get('/', [DesignerController::class, 'index'])->name('index');
-                Route::get('/{designer}/availabilities', [DesignerController::class, 'availabilities'])->name('availabilities');
-            });
-
-            Route::middleware(['can:designers.manage'])->group(function () {
-                Route::post('/', [DesignerController::class, 'store'])->name('store');
-                Route::put('/{designer}', [DesignerController::class, 'update'])->name('update');
-                Route::delete('/{designer}', [DesignerController::class, 'destroy'])->name('destroy');
-                Route::post('/{designer}/restore', [DesignerController::class, 'restore'])->name('restore')->withTrashed();
-                Route::post('/{designer}/availabilities', [DesignerController::class, 'updateAvailabilities'])->name('update-availabilities');
             });
         });
 

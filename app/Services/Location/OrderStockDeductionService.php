@@ -4,9 +4,9 @@ namespace App\Services\Location;
 
 use App\Actions\Inventory\RecordStockMovementAction;
 use App\Enums\StockMovementType;
-use App\Models\Employee\Employee;
 use App\Models\Fulfillment\Shipment;
 use App\Models\Fulfillment\ShipmentItem;
+use App\Models\Hr\Employee;
 use App\Models\Inventory\Location;
 use App\Models\Product\Bundle;
 use App\Models\Product\ProductVariant;
@@ -30,6 +30,7 @@ class OrderStockDeductionService
             return;
         }
 
+        /** @var Location $location */
         $location = Location::find($order->store_location_id);
         if (! $location) {
             return;
@@ -51,6 +52,7 @@ class OrderStockDeductionService
             return;
         }
 
+        /** @var Location $location */
         $location = Location::find($order->store_location_id);
         if (! $location) {
             return;
@@ -84,6 +86,7 @@ class OrderStockDeductionService
                     continue;
                 }
 
+                /** @var ProductVariant $variant */
                 $variant = ProductVariant::find($orderItem->purchasable_id);
                 if (! $variant) {
                     continue;
@@ -152,6 +155,7 @@ class OrderStockDeductionService
             return;
         }
 
+        /** @var ProductVariant $variant */
         $variant = ProductVariant::find($orderItem->purchasable_id);
         if (! $variant) {
             return;

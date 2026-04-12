@@ -3,7 +3,7 @@
 namespace App\Actions\Sales;
 
 use App\Models\Auth\User;
-use App\Models\Employee\Employee;
+use App\Models\Hr\Employee;
 use App\Models\Sales\Order;
 use App\Models\Sales\Payment;
 use App\Models\Sales\PaymentAllocation;

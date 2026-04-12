@@ -4,7 +4,7 @@ namespace App\Models\Auth;
 
 use App\Enums\UserType;
 use App\Models\Customer\Customer;
-use App\Models\Employee\Employee;
+use App\Models\Hr\Employee;
 use App\Models\Sales\Order;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;

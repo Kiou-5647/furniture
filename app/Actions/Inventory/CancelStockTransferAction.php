@@ -4,7 +4,7 @@ namespace App\Actions\Inventory;
 
 use App\Enums\StockMovementType;
 use App\Enums\StockTransferStatus;
-use App\Models\Employee\Employee;
+use App\Models\Hr\Employee;
 use App\Models\Inventory\StockTransfer;
 use Illuminate\Support\Facades\DB;
 

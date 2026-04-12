@@ -3,8 +3,8 @@
 namespace App\Actions\Fortify;
 
 use App\Models\Auth\User;
-use App\Models\Employee\Department;
-use App\Models\Employee\Employee;
+use App\Models\Hr\Department;
+use App\Models\Hr\Employee;
 use Illuminate\Support\Facades\DB;
 
 class CreateEmployeeProfile

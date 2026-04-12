@@ -33,10 +33,10 @@ class MenuService
         ];
 
         // HR Group
-        if ($user->canAny(['hr.employees.view', 'hr.departments.view', 'designers.view'])) {
+        if ($user->canAny(['employees.view', 'departments.view', 'designers.view'])) {
             $hrItems = [];
 
-            if ($user->can('hr.departments.view')) {
+            if ($user->can('departments.view')) {
                 $hrItems[] = [
                     'title' => 'Phòng ban',
                     'href' => route('employee.hr.departments.index'),
@@ -44,7 +44,7 @@ class MenuService
                 ];
             }
 
-            if ($user->can('hr.employees.view')) {
+            if ($user->can('employees.view')) {
                 $hrItems[] = [
                     'title' => 'Nhân viên',
                     'href' => route('employee.hr.employees.index'),
@@ -55,8 +55,8 @@ class MenuService
             if ($user->can('designers.view')) {
                 $hrItems[] = [
                     'title' => 'Nhà thiết kế',
-                    'href' => route('employee.booking.designers.index'),
-                    'isActive' => Route::is('booking.designers.*'),
+                    'href' => route('employee.hr.designers.index'),
+                    'isActive' => Route::is('hr.designers.*'),
                 ];
             }
 
@@ -64,7 +64,7 @@ class MenuService
                 'title' => 'Quản lý nhân sự',
                 'href' => '#',
                 'icon' => 'Users',
-                'isActive' => Route::is('hr.*') || Route::is('booking.designers.*'),
+                'isActive' => Route::is('hr.*'),
                 'items' => $hrItems,
             ];
         }
@@ -180,7 +180,7 @@ class MenuService
                 $bookingItems[] = [
                     'title' => 'Đặt lịch',
                     'href' => route('employee.booking.index'),
-                    'isActive' => Route::is('booking.*') && ! Route::is('booking.designers.*') && ! Route::is('booking.services.*'),
+                    'isActive' => Route::is('booking.*') && ! Route::is('booking.services.*'),
                 ];
             }
 

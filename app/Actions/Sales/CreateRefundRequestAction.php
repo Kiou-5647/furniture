@@ -3,7 +3,7 @@
 namespace App\Actions\Sales;
 
 use App\Enums\RefundStatus;
-use App\Models\Employee\Employee;
+use App\Models\Hr\Employee;
 use App\Models\Sales\Invoice;
 use App\Models\Sales\Refund;
 use Illuminate\Support\Facades\DB;

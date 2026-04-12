@@ -3,7 +3,7 @@
 namespace App\Models\Fulfillment;
 
 use App\Enums\ShipmentStatus;
-use App\Models\Employee\Employee;
+use App\Models\Hr\Employee;
 use App\Models\Inventory\Location;
 use App\Models\Sales\Order;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;

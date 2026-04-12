@@ -4,7 +4,7 @@ namespace App\Models\Inventory;
 
 use App\Builders\Inventory\StockMovementBuilder;
 use App\Enums\StockMovementType;
-use App\Models\Employee\Employee;
+use App\Models\Hr\Employee;
 use App\Models\Product\ProductVariant;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

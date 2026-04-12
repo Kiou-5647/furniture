@@ -6,7 +6,7 @@ use App\Concerns\PasswordValidationRules;
 use App\Concerns\ProfileValidationRules;
 use App\Mail\EmployeeWelcome;
 use App\Models\Auth\User;
-use App\Models\Employee\Employee;
+use App\Models\Hr\Employee;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Fortify\Contracts\CreatesNewUsers;

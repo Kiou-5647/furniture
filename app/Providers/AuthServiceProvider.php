@@ -4,9 +4,9 @@ namespace App\Providers;
 
 use App\Models\Auth\User;
 use App\Models\Booking\Booking;
-use App\Models\Employee\Department;
-use App\Models\Employee\Employee;
 use App\Models\Fulfillment\Shipment;
+use App\Models\Hr\Department;
+use App\Models\Hr\Employee;
 use App\Models\Sales\Invoice;
 use App\Models\Sales\Order;
 use App\Models\Sales\Payment;

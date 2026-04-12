@@ -6,7 +6,7 @@ use App\Data\Sales\InvoiceFilterData;
 use App\Enums\InvoiceStatus;
 use App\Enums\InvoiceType;
 // use App\Models\Design\Booking;
-use App\Models\Employee\Employee;
+use App\Models\Hr\Employee;
 use App\Models\Sales\Invoice;
 use App\Models\Sales\Order;
 use Illuminate\Pagination\LengthAwarePaginator;
