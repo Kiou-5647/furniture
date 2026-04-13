@@ -22,6 +22,7 @@ use App\Http\Controllers\Employee\Sales\RefundController;
 use App\Http\Controllers\Employee\Setting\ActivityLogController;
 use App\Http\Controllers\Employee\Setting\LookupController;
 use App\Http\Controllers\Employee\Setting\LookupNamespaceController;
+use App\Http\Controllers\Payment\VnPayPaymentController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien')->name('employee.')->group(function () {
@@ -72,7 +73,10 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
         Route::prefix('nha-thiet-ke')->name('designers.')->group(function () {
             Route::middleware(['can:designers.view'])->group(function () {
                 Route::get('/', [DesignerController::class, 'index'])->name('index');
+                Route::get('/lich-lam-viec', [DesignerController::class, 'availabilityPage'])->name('availability');
                 Route::get('/{designer}/availabilities', [DesignerController::class, 'availabilities'])->name('availabilities');
+                Route::get('/{designer}/available-slots', [DesignerController::class, 'availableSlots'])->name('available-slots');
+                Route::get('/{designer}/available-dates', [DesignerController::class, 'availableDates'])->name('available-dates');
             });
 
             Route::middleware(['can:designers.manage'])->group(function () {
@@ -80,14 +84,24 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
                 Route::put('/{designer}', [DesignerController::class, 'update'])->name('update');
                 Route::delete('/{designer}', [DesignerController::class, 'destroy'])->name('destroy');
                 Route::post('/{designer}/restore', [DesignerController::class, 'restore'])->name('restore')->withTrashed();
-                Route::post('/{designer}/availabilities', [DesignerController::class, 'updateAvailabilities'])->name('update-availabilities');
+                Route::put('/{designer}/availability-slots', [DesignerController::class, 'updateAvailabilitySlots'])->name('update-availability-slots');
             });
         });
     });
 
-    /**
-     * Design Booking routes
-     */
+    Route::prefix('dich-vu')->name('services.')->group(function () {
+        Route::middleware('can:design_services.manage')->group(function () {
+            Route::get('/', [DesignServiceController::class, 'index'])->name('index');
+        });
+
+        Route::middleware('can:design_services.manage')->group(function () {
+            Route::post('/', [DesignServiceController::class, 'store'])->name('store');
+            Route::put('/{service}', [DesignServiceController::class, 'update'])->name('update');
+            Route::delete('/{service}', [DesignServiceController::class, 'destroy'])->name('destroy');
+            Route::post('/{service}/restore', [DesignServiceController::class, 'restore'])->name('restore')->withTrashed();
+        });
+    });
+
     Route::prefix('dat-lich')->name('booking.')->group(function () {
         // Bookings
         Route::middleware(['can:bookings.view'])->group(function () {
@@ -99,6 +113,7 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
             Route::post('/', [BookingController::class, 'store'])->name('store');
             Route::post('/{booking}/confirm', [BookingController::class, 'confirm'])->name('confirm');
             Route::post('/{booking}/cancel', [BookingController::class, 'cancel'])->name('cancel');
+            Route::post('/{booking}/open-invoice', [BookingController::class, 'openInvoice'])->name('open-invoice');
             Route::delete('/{booking}', [BookingController::class, 'destroy'])->name('destroy');
 
             Route::prefix('thung-rac')->name('trash.')->group(function () {
@@ -106,15 +121,6 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
                 Route::post('/{booking}/restore', [BookingController::class, 'restore'])->name('restore')->withTrashed();
                 Route::delete('/{booking}/force', [BookingController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
             });
-        });
-
-        // Design Services
-        Route::prefix('dich-vu')->name('services.')->group(function () {
-            Route::get('/', [DesignServiceController::class, 'index'])->name('index');
-            Route::post('/', [DesignServiceController::class, 'store'])->name('store');
-            Route::put('/{service}', [DesignServiceController::class, 'update'])->name('update');
-            Route::delete('/{service}', [DesignServiceController::class, 'destroy'])->name('destroy');
-            Route::post('/{service}/restore', [DesignServiceController::class, 'restore'])->name('restore')->withTrashed();
         });
     });
 
@@ -192,6 +198,7 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
 
             Route::middleware(['can:payments.manage'])->group(function () {
                 Route::post('/', [PaymentController::class, 'store'])->name('store');
+                Route::get('/vnpay/{invoice}', [VnPayPaymentController::class, 'initiate'])->name('vnpay.initiate');
             });
         });
     });

@@ -6,11 +6,11 @@ use App\Actions\Hr\CreateDesignerAction;
 use App\Actions\Hr\UpdateDesignerAction;
 use App\Data\Hr\DesignerFilterData;
 use App\Http\Requests\Hr\StoreDesignerRequest;
-use App\Http\Requests\Hr\UpdateDesignerAvailabilitiesRequest;
 use App\Http\Requests\Hr\UpdateDesignerRequest;
 use App\Http\Resources\Employee\Hr\DesignerResource;
 use App\Models\Hr\Designer;
-use App\Models\Hr\DesignerAvailability;
+use App\Services\Booking\BookingAvailabilityChecker;
+use App\Services\Booking\DesignerAvailabilityService;
 use App\Services\Hr\DesignerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -21,6 +21,7 @@ class DesignerController
 {
     public function __construct(
         private DesignerService $service,
+        private DesignerAvailabilityService $availabilityService,
     ) {}
 
     public function index(Request $request): Response
@@ -33,6 +34,18 @@ class DesignerController
                 $this->service->getFiltered($filter)
             )),
             'filters' => $filter,
+        ]);
+    }
+
+    public function availabilityPage(Request $request): Response
+    {
+        $designers = Designer::query()
+            ->where('is_active', true)
+            ->orderBy('full_name')
+            ->get(['id', 'full_name', 'display_name']);
+
+        return Inertia::render('employee/hr/designers/Availability', [
+            'designers' => $designers,
         ]);
     }
 
@@ -81,34 +94,53 @@ class DesignerController
 
     public function availabilities(Designer $designer)
     {
-        $availabilities = DesignerAvailability::where('designer_id', $designer->id)
-            ->orderBy('day_of_week')
-            ->get(['id', 'day_of_week', 'start_time', 'end_time']);
+        $weeklySlots = $this->availabilityService->getWeeklySlots($designer);
 
         return response()->json([
-            'data' => $availabilities->mapWithKeys(fn ($a) => [
-                $a->day_of_week => [
-                    'id' => $a->id,
-                    'start_time' => $a->start_time,
-                    'end_time' => $a->end_time,
-                ],
-            ]),
+            'weekly' => $weeklySlots,
         ]);
     }
 
-    public function updateAvailabilities(UpdateDesignerAvailabilitiesRequest $request, Designer $designer)
+    public function updateAvailabilitySlots(Request $request, Designer $designer)
     {
-        $designer->availabilities()->delete();
+        $request->validate([
+            'slots' => ['required', 'array'],
+            'slots.*.day_of_week' => ['required', 'integer', 'min:0', 'max:6'],
+            'slots.*.hour' => ['required', 'integer', 'min:0', 'max:23'],
+            'slots.*.is_available' => ['required', 'boolean'],
+        ]);
 
-        foreach ($request->input('availabilities', []) as $slot) {
-            DesignerAvailability::create([
-                'designer_id' => $designer->id,
-                'day_of_week' => $slot['day_of_week'],
-                'start_time' => $slot['start_time'],
-                'end_time' => $slot['end_time'],
-            ]);
-        }
+        $this->availabilityService->setWeeklySlots($designer, $request->input('slots'));
 
-        return back()->with('success', 'Đã cập nhật lịch làm việc.');
+        return back()->with('success', 'Đã cập nhật lịch làm việc hàng tuần.');
+    }
+
+    public function availableSlots(Request $request, Designer $designer, BookingAvailabilityChecker $checker)
+    {
+        $request->validate([
+            'date' => ['required', 'date'],
+            'service_id' => ['nullable', 'uuid', 'exists:design_services,id'],
+        ]);
+
+        $date = $request->input('date');
+
+        $slots = $checker->getAvailableSlots($designer, $date);
+
+        return response()->json([
+            'date' => $date,
+            'slots' => $slots,
+        ]);
+    }
+
+    public function availableDates(Designer $designer)
+    {
+        $startDate = request()->query('start_date', today()->toDateString());
+        $endDate = request()->query('end_date', today()->addDays(30)->toDateString());
+
+        $dates = $this->availabilityService->getAvailableDates($designer, $startDate, $endDate);
+
+        return response()->json([
+            'dates' => $dates,
+        ]);
     }
 }

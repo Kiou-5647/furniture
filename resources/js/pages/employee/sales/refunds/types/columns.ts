@@ -4,7 +4,7 @@ import { h } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import type { Refund } from '@/types/order';
+import type { Refund } from '@/types/refund';
 
 export function getColumns(
     onShow: (refund: Refund) => void,

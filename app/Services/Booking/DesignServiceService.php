@@ -12,9 +12,9 @@ class DesignServiceService
     public function getFiltered(DesignServiceFilterData $filter): LengthAwarePaginator
     {
         return DesignService::query()
-            ->when($filter->search, fn ($q) => $q->where('name', 'ilike', "%{$filter->search}%"))
-            ->when($filter->type, fn ($q) => $q->where('type', $filter->type))
-            ->when($filter->is_schedule_blocking !== null, fn ($q) => $q->where('is_schedule_blocking', $filter->is_schedule_blocking))
+            ->when($filter->search, fn ($q) => $q->search($filter->search))
+            ->when($filter->type, fn ($q) => $q->byType($filter->type))
+            ->when($filter->is_schedule_blocking !== null, fn ($q) => $filter->is_schedule_blocking ? $q->scheduleBlocking() : $q->nonScheduleBlocking())
             ->orderBy($filter->order_by, $filter->order_direction)
             ->paginate($filter->per_page);
     }
@@ -31,7 +31,7 @@ class DesignServiceService
             ->orderBy('name')
             ->get(['id', 'name', 'type', 'base_price'])
             ->map(fn (DesignService $service) => [
-                'id' => $service->id,
+                'value' => $service->id,
                 'label' => $service->name.' — '.number_format($service->base_price, 0, ',', '.').'đ',
             ]);
     }

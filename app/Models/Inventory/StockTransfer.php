@@ -69,15 +69,23 @@ class StockTransfer extends Model
 
     public static function generateTransferNumber(): string
     {
-        $today = now()->format('Ymd');
-        $prefix = "ST-{$today}-";
+        $date = now()->format('dmy');
 
-        $lastNumber = static::where('transfer_number', 'like', "{$prefix}%")
-            ->orderByDesc('transfer_number')
-            ->value('transfer_number');
+        do {
+            $number = 'ST-'.$date.'-'.self::randomToken();
+        } while (static::where('transfer_number', $number)->exists());
 
-        $sequence = $lastNumber ? ((int) substr($lastNumber, -4)) + 1 : 1;
+        return $number;
+    }
 
-        return $prefix.str_pad($sequence, 4, '0', STR_PAD_LEFT);
+    protected static function randomToken(int $length = 8): string
+    {
+        $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        $token = '';
+        for ($i = 0; $i < $length; $i++) {
+            $token .= $chars[random_int(0, strlen($chars) - 1)];
+        }
+
+        return $token;
     }
 }

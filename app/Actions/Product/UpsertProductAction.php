@@ -10,7 +10,6 @@ use App\Models\Inventory\Location;
 use App\Models\Inventory\StockMovement;
 use App\Models\Product\Product;
 use App\Models\Product\ProductVariant;
-use App\Services\Product\ProductService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
@@ -19,7 +18,8 @@ use Illuminate\Support\Facades\DB;
 class UpsertProductAction
 {
     public function __construct(
-        private ProductService $productService,
+        private SyncProductPriceRangeAction $syncPriceRange,
+        private SyncProductFilterableOptionsAction $syncFilterableOptions,
         private RecordStockMovementAction $recordStockMovement,
     ) {}
 
@@ -41,8 +41,8 @@ class UpsertProductAction
 
             $this->syncVariants($product, $variants, $forceUpdatePrice, $performedBy);
 
-            $this->productService->syncPriceRange($product->id);
-            $this->productService->syncFilterableOptions($product->id);
+            $this->syncPriceRange->execute($product->id);
+            $this->syncFilterableOptions->execute($product->id);
 
             DB::commit();
         } catch (\Throwable $e) {

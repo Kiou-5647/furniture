@@ -18,8 +18,8 @@ import type {
     InvoiceFilterData,
     InvoicePagination,
 } from '@/types/invoice';
-import { getColumns } from './types/columns';
 import CreateInvoiceDialog from './components/CreateInvoiceDialog.vue';
+import { getColumns } from './types/columns';
 
 const props = defineProps<{
     statusOptions: { value: string; label: string; color: string }[];

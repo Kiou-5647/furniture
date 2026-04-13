@@ -5,6 +5,7 @@ namespace App\Models\Hr;
 use App\Builders\Hr\DesignerBuilder;
 use App\Models\Auth\User;
 use App\Models\Booking\Booking;
+use App\Models\Booking\DesignerAvailabilitySlot;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -58,9 +59,9 @@ class Designer extends Model implements HasMedia
         return $this->belongsTo(Employee::class);
     }
 
-    public function availabilities(): HasMany
+    public function availabilitySlots(): HasMany
     {
-        return $this->hasMany(DesignerAvailability::class);
+        return $this->hasMany(DesignerAvailabilitySlot::class);
     }
 
     public function bookings(): HasMany
@@ -73,7 +74,7 @@ class Designer extends Model implements HasMedia
         return $this->employee_id !== null;
     }
 
-    public function getDisplayNameAttribute(): string
+    public function getDisplayNameAttribute(): ?string
     {
         return $this->full_name;
     }

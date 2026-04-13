@@ -1,8 +1,8 @@
+import { MoreHorizontal, Pencil, Trash2 } from '@lucide/vue';
 import type { ColumnDef } from '@tanstack/vue-table';
 import { h } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Pencil, Trash2 } from '@lucide/vue';
 import {
     DropdownMenu,
     DropdownMenuContent,

@@ -654,7 +654,7 @@ class DemoDataSeeder extends Seeder
                 'is_schedule_blocking' => true,
                 'base_price' => 1000000,
                 'deposit_percentage' => 30,
-                'estimated_minutes' => 90,
+                'estimated_hours' => 1,
             ]
         );
 

@@ -110,14 +110,24 @@ class Order extends Model
 
     public static function generateOrderNumber(): string
     {
-        $date = now()->format('Ymd');
-        $lastOrder = self::whereDate('created_at', today())
-            ->orderBy('order_number', 'desc')
-            ->first();
+        $date = now()->format('dmy');
 
-        $sequence = $lastOrder ? (int) substr($lastOrder->order_number, -4) + 1 : 1;
+        do {
+            $number = 'ORD-'.$date.'-'.self::randomToken();
+        } while (self::where('order_number', $number)->exists());
 
-        return 'ORD-'.$date.'-'.str_pad($sequence, 4, '0', STR_PAD_LEFT);
+        return $number;
+    }
+
+    protected static function randomToken(int $length = 8): string
+    {
+        $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        $token = '';
+        for ($i = 0; $i < $length; $i++) {
+            $token .= $chars[random_int(0, strlen($chars) - 1)];
+        }
+
+        return $token;
     }
 
     public function canBeCancelled(): bool

@@ -2,8 +2,10 @@
 
 namespace App\Models\Booking;
 
+use App\Builders\Booking\BookingBuilder;
 use App\Enums\BookingStatus;
 use App\Enums\DesignServiceType;
+use App\Enums\InvoiceStatus;
 use App\Models\Auth\User;
 use App\Models\Hr\Designer;
 use App\Models\Hr\Employee;
@@ -11,6 +13,7 @@ use App\Models\Sales\Invoice;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
@@ -21,6 +24,11 @@ class Booking extends Model
     use HasUuids, LogsActivity, SoftDeletes;
 
     protected $table = 'bookings';
+
+    public function newEloquentBuilder($query): BookingBuilder
+    {
+        return new BookingBuilder($query);
+    }
 
     protected function casts(): array
     {
@@ -66,6 +74,29 @@ class Booking extends Model
         return $this->morphOne(Invoice::class, 'invoiceable');
     }
 
+    public function depositInvoice(): BelongsTo
+    {
+        return $this->belongsTo(Invoice::class, 'deposit_invoice_id');
+    }
+
+    public function finalInvoice(): BelongsTo
+    {
+        return $this->belongsTo(Invoice::class, 'final_invoice_id');
+    }
+
+    public function sessions(): HasMany
+    {
+        return $this->hasMany(BookingSession::class);
+    }
+
+    /**
+     * Check if the deposit invoice has been fully paid.
+     */
+    public function hasDepositPaid(): bool
+    {
+        return $this->depositInvoice?->status === InvoiceStatus::Paid;
+    }
+
     public function isConsultation(): bool
     {
         return $this->service?->type === DesignServiceType::Consultation;
@@ -89,5 +120,20 @@ class Booking extends Model
     public function canBeCancelled(): bool
     {
         return in_array($this->status, [BookingStatus::PendingDeposit, BookingStatus::PendingConfirmation, BookingStatus::Confirmed], true);
+    }
+
+    public function canPayDeposit(): bool
+    {
+        return $this->status === BookingStatus::PendingDeposit;
+    }
+
+    public function isConfirmed(): bool
+    {
+        return $this->status === BookingStatus::Confirmed;
+    }
+
+    public function isPending(): bool
+    {
+        return in_array($this->status, [BookingStatus::PendingDeposit, BookingStatus::PendingConfirmation], true);
     }
 }

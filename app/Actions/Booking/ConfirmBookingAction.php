@@ -14,11 +14,12 @@ class ConfirmBookingAction
             throw new \RuntimeException('Đặt lịch không thể xác nhận.');
         }
 
+        // Status transition triggers BookingObserver → auto-creates final invoice
         $booking->update([
             'status' => BookingStatus::Confirmed,
             'accepted_by' => $performedBy?->id,
         ]);
 
-        return $booking->refresh();
+        return $booking->fresh(['depositInvoice', 'finalInvoice', 'sessions']);
     }
 }

@@ -93,13 +93,24 @@ class OrderService
             }])
             ->orderBy('name')
             ->get(['id', 'name', 'email'])
-            ->map(fn ($user) => [
-                'id' => $user->id,
-                'name' => $user->customer->full_name ?? $user->name,
-                'email' => $user->email,
-                'phone' => $user->customer->phone ?? null,
-                'default_address' => $user->customer->addresses->first(),
-            ]);
+            ->map(function ($user) {
+                $customerProfile = $user->customer;
+                $defaultAddress = $customerProfile?->addresses->first();
+
+                return [
+                    'id' => $user->id,
+                    'name' => $customerProfile->full_name ?? $user->name,
+                    'email' => $user->email,
+                    'phone' => $customerProfile->phone ?? null,
+                    'default_address' => $defaultAddress ? [
+                        'province_code' => $defaultAddress->province_code,
+                        'province_name' => $defaultAddress->province_name,
+                        'ward_code' => $defaultAddress->ward_code,
+                        'ward_name' => $defaultAddress->ward_name,
+                        'address_data' => $defaultAddress->address_data,
+                    ] : null,
+                ];
+            });
     }
 
     public function getVariantOptions(): Collection

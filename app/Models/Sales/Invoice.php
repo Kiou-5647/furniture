@@ -75,13 +75,23 @@ class Invoice extends Model
 
     public static function generateInvoiceNumber(): string
     {
-        $date = now()->format('Ymd');
-        $last = self::whereDate('created_at', today())
-            ->orderBy('invoice_number', 'desc')
-            ->first();
+        $date = now()->format('dmy');
 
-        $sequence = $last ? (int) substr($last->invoice_number, -4) + 1 : 1;
+        do {
+            $number = 'INV-'.$date.'-'.self::randomToken();
+        } while (self::where('invoice_number', $number)->exists());
 
-        return 'INV-'.$date.'-'.str_pad($sequence, 4, '0', STR_PAD_LEFT);
+        return $number;
+    }
+
+    protected static function randomToken(int $length = 8): string
+    {
+        $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        $token = '';
+        for ($i = 0; $i < $length; $i++) {
+            $token .= $chars[random_int(0, strlen($chars) - 1)];
+        }
+
+        return $token;
     }
 }

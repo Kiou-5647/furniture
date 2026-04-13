@@ -11,6 +11,8 @@ use App\Http\Requests\Booking\CreateBookingRequest;
 use App\Http\Resources\Employee\Booking\BookingResource;
 use App\Models\Booking\Booking;
 use App\Services\Booking\BookingService;
+use App\Services\Booking\DesignServiceService;
+use App\Services\Hr\DesignerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -20,6 +22,8 @@ class BookingController
 {
     public function __construct(
         private BookingService $service,
+        private DesignerService $designerService,
+        private DesignServiceService $designServiceService,
     ) {}
 
     public function index(Request $request): Response
@@ -28,6 +32,9 @@ class BookingController
 
         return Inertia::render('employee/booking/bookings/Index', [
             'statusOptions' => $this->service->getStatusOptions(),
+            'customerOptions' => $this->service->getCustomerOptions(),
+            'designerOptions' => $this->designerService->getActiveOptions()->toArray(),
+            'serviceOptions' => $this->designServiceService->getActiveOptions()->toArray(),
             'bookings' => Inertia::defer(fn () => BookingResource::collection(
                 $this->service->getFiltered($filter)
             )),
@@ -67,8 +74,6 @@ class BookingController
 
     public function confirm(Booking $booking, Request $request, ConfirmBookingAction $action)
     {
-        $this->authorize('approve', $booking);
-
         $employee = $request->user()->employee;
 
         $action->execute($booking, $employee);
@@ -116,5 +121,23 @@ class BookingController
         $booking->forceDelete();
 
         return back()->with('success', 'Đã xóa vĩnh viễn đặt lịch.');
+    }
+
+    public function openInvoice(Booking $booking)
+    {
+        $finalInvoice = $booking->finalInvoice;
+
+        if (! $finalInvoice) {
+            return back()->with('error', 'Hóa đơn cuối chưa được tạo.');
+        }
+
+        if ($finalInvoice->status->value !== 'draft') {
+            return back()->with('error', 'Hóa đơn không ở trạng thái nháp.');
+        }
+
+        $finalInvoice->status = \App\Enums\InvoiceStatus::Open;
+        $finalInvoice->save();
+
+        return back()->with('success', 'Đã mở hóa đơn thanh toán.');
     }
 }

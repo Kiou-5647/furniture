@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Booking\Booking;
 use App\Models\Fulfillment\Shipment;
 use App\Models\Fulfillment\ShipmentItem;
 use App\Models\Inventory\Location;
@@ -18,6 +19,7 @@ use App\Models\Setting\LookupNamespace;
 use App\Models\Setting\Province;
 use App\Models\Setting\Ward;
 use App\Models\Vendor\Vendor;
+use App\Observers\BookingObserver;
 use App\Observers\BundleObserver;
 use App\Observers\CacheInvalidationObserver;
 use App\Observers\InvoiceObserver;
@@ -93,6 +95,7 @@ class AppServiceProvider extends ServiceProvider
         ShipmentItem::observe(ShipmentItemObserver::class);
 
         // Sales observers
+        Booking::observe(BookingObserver::class);
         Invoice::observe(InvoiceObserver::class);
         Order::observe(OrderObserver::class);
     }

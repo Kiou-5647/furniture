@@ -3,8 +3,8 @@
 namespace App\Services\Hr;
 
 use App\Data\Hr\DesignerFilterData;
-use App\Models\Hr\Employee;
 use App\Models\Hr\Designer;
+use App\Models\Hr\Employee;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
@@ -17,27 +17,27 @@ class DesignerService
         $orderDirection = $filter->order_direction === 'asc' ? 'asc' : 'desc';
 
         return Designer::query()
-            ->with(['user', 'employee.user', 'availabilities'])
-            ->when($filter->search, fn($q) => $q->search($filter->search))
-            ->when($filter->is_active !== null, fn($q) => $q->byActiveStatus($filter->is_active))
+            ->with(['user', 'employee.user', 'availabilitySlots'])
+            ->when($filter->search, fn ($q) => $q->search($filter->search))
+            ->when($filter->is_active !== null, fn ($q) => $q->byActiveStatus($filter->is_active))
             ->orderBy($orderBy, $orderDirection)
             ->paginate($filter->per_page);
     }
 
     public function getById(string $id): Designer
     {
-        return Designer::with(['user', 'employee.user', 'availabilities'])->findOrFail($id);
+        return Designer::with(['user', 'employee.user', 'availabilitySlots'])->findOrFail($id);
     }
 
     public function getActiveOptions(): Collection
     {
         return Designer::query()
             ->where('is_active', true)
-            ->orderBy('hourly_rate')
-            ->get(['id', 'hourly_rate'])
-            ->map(fn(Designer $designer) => [
-                'id' => $designer->id,
-                'label' => $designer->display_name . ' — ' . number_format($designer->hourly_rate, 0, ',', '.') . 'đ/h',
+            ->orderBy('full_name')
+            ->get(['id', 'full_name', 'hourly_rate'])
+            ->map(fn (Designer $designer) => [
+                'value' => $designer->id,
+                'label' => $designer->display_name.' — '.number_format($designer->hourly_rate, 0, ',', '.').'đ/h',
             ]);
     }
 
@@ -53,7 +53,7 @@ class DesignerService
             ->with('user')
             ->orderBy('full_name')
             ->get(['id', 'full_name', 'phone', 'user_id'])
-            ->map(fn($e) => [
+            ->map(fn ($e) => [
                 'id' => $e->id,
                 'full_name' => $e->full_name,
                 'phone' => $e->phone,

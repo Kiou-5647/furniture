@@ -2,6 +2,7 @@
 
 namespace App\Models\Booking;
 
+use App\Builders\Booking\DesignServiceBuilder;
 use App\Enums\DesignServiceType;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
@@ -14,12 +15,18 @@ class DesignService extends Model
 
     protected $table = 'design_services';
 
+    public function newEloquentBuilder($query): DesignServiceBuilder
+    {
+        return new DesignServiceBuilder($query);
+    }
+
     protected function casts(): array
     {
         return [
             'base_price' => 'decimal:2',
             'deposit_percentage' => 'integer',
-            'estimated_minutes' => 'integer',
+            'estimated_hours' => 'integer',
+            'deadline_days' => 'integer',
             'is_schedule_blocking' => 'boolean',
             'type' => DesignServiceType::class,
         ];

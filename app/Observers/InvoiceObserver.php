@@ -2,11 +2,19 @@
 
 namespace App\Observers;
 
+use App\Enums\BookingStatus;
 use App\Enums\InvoiceStatus;
+use App\Enums\InvoiceType;
+use App\Models\Booking\Booking;
 use App\Models\Sales\Invoice;
+use App\Services\Booking\BookingInvoiceService;
 
 class InvoiceObserver
 {
+    public function __construct(
+        private BookingInvoiceService $bookingInvoiceService,
+    ) {}
+
     /**
      * Handle the Invoice "updated" event.
      */
@@ -14,6 +22,7 @@ class InvoiceObserver
     {
         $this->updateInvoiceStatus($invoice);
         $this->updateOrderPaidAt($invoice);
+        $this->handleBookingLifecycle($invoice);
     }
 
     /**
@@ -54,6 +63,48 @@ class InvoiceObserver
             }
         } else {
             $order->update(['paid_at' => null]);
+        }
+    }
+
+    /**
+     * Handle Booking lifecycle transitions triggered by invoice status changes.
+     *
+     * - Deposit invoice paid → PendingDeposit → PendingConfirmation/Confirmed
+     * - Final invoice paid → Confirmed → Completed
+     */
+    protected function handleBookingLifecycle(Invoice $invoice): void
+    {
+        $invoiceable = $invoice->invoiceable;
+        if (! $invoiceable instanceof Booking) {
+            return;
+        }
+
+        if (! $invoice->isDirty('status')) {
+            return;
+        }
+
+        // Deposit invoice just paid → transition booking status
+        if ($invoice->type === InvoiceType::Deposit
+            && $invoice->status === InvoiceStatus::Paid
+            && $invoiceable->status === BookingStatus::PendingDeposit) {
+
+            $designer = $invoiceable->designer;
+
+            if ($designer?->auto_confirm_bookings) {
+                $invoiceable->update(['status' => BookingStatus::Confirmed]);
+            } else {
+                $invoiceable->update(['status' => BookingStatus::PendingConfirmation]);
+            }
+
+            return;
+        }
+
+        // Final invoice just paid → complete booking
+        if ($invoice->type === InvoiceType::FinalBalance
+            && $invoice->status === InvoiceStatus::Paid
+            && $invoiceable->status === BookingStatus::Confirmed) {
+
+            $invoiceable->update(['status' => BookingStatus::Completed]);
         }
     }
 }

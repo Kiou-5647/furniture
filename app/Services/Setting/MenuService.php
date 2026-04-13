@@ -107,7 +107,7 @@ class MenuService
         }
 
         // Sales Group
-        if ($user->canAny(['orders.view', 'invoices.view', 'payments.view'])) {
+        if ($user->canAny(['orders.view', 'invoices.view', 'payments.view', 'payments.manage'])) {
             $salesItems = [];
 
             if ($user->can('orders.view')) {
@@ -131,6 +131,14 @@ class MenuService
                     'title' => 'Thanh toán',
                     'href' => route('employee.sales.payments.index'),
                     'isActive' => Route::is('sales.payments.*'),
+                ];
+            }
+
+            if ($user->can('payments.manage')) {
+                $salesItems[] = [
+                    'title' => 'Hoàn tiền',
+                    'href' => route('employee.sales.refunds.index'),
+                    'isActive' => Route::is('sales.refunds.*'),
                 ];
             }
 
@@ -187,7 +195,7 @@ class MenuService
             if ($user->can('design_services.view')) {
                 $bookingItems[] = [
                     'title' => 'Dịch vụ thiết kế',
-                    'href' => route('employee.booking.services.index'),
+                    'href' => route('employee.services.index'),
                     'isActive' => Route::is('booking.services.*'),
                 ];
             }

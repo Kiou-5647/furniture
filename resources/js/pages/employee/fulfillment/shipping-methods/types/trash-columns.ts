@@ -1,8 +1,8 @@
+import { RotateCcw, Trash2 } from '@lucide/vue';
 import type { ColumnDef } from '@tanstack/vue-table';
 import { h } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { RotateCcw, Trash2 } from '@lucide/vue';
 import type { ShippingMethod } from '@/types/shipping-method';
 
 export function getTrashColumns(

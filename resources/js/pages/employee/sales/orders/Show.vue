@@ -1,16 +1,21 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { ArrowLeft, FileText, MapPin, Package, Truck, User, X, XCircle, CheckCircle2, DollarSign, RotateCcw, Plus, Loader2 } from '@lucide/vue';
+import { ArrowLeft, FileText, MapPin, Package, Truck, User, X, XCircle, CheckCircle2, DollarSign, RotateCcw, Plus, Loader2, CreditCard } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import Heading from '@/components/Heading.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { createLazyComponent } from '@/composables/createLazyComponent';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { resend as resendShipment, returnItem as returnItemRoute } from '@/routes/employee/fulfillment/shipments';
 import { cancel, complete, index, updateStatus, markPaid, createShipments, storeShipments } from '@/routes/employee/sales/orders';
 import type { BreadcrumbItem, Order, ShipmentItem } from '@/types';
+
+const VnPayPaymentDialog = createLazyComponent(
+    () => import('@/components/custom/paywall/VnPayPaymentDialog.vue'),
+);
 
 interface StockOption {
     location_id: string;
@@ -59,6 +64,18 @@ const showReturnDialog = ref(false);
 const returnItem = ref<ShipmentItem | null>(null);
 const returnShipmentId = ref('');
 const returnReason = ref('');
+
+// VNPay payment
+const showVnPayDialog = ref(false);
+const vnPayUrl = ref('');
+
+function handleVnPayPayment() {
+    if (!props.order?.invoices?.length) return;
+    const openInvoice = props.order.invoices.find(i => i.status !== 'paid' && i.status !== 'cancelled');
+    if (!openInvoice?.id) return;
+    vnPayUrl.value = `/nhan-vien/ban-hang/thanh-toan/vnpay/${openInvoice.id}`;
+    showVnPayDialog.value = true;
+}
 
 // Shipment creation dialog
 const showShipmentsDialog = ref(false);
@@ -296,12 +313,20 @@ function confirmReturn() {
                         {{ order.payment_method_label }}
                     </Badge>
                     <Button
-                        v-if="canMarkPaid"
+                        v-if="canMarkPaid && order.payment_method === 'cash'"
                         variant="outline"
                         class="text-green-600"
                         @click="handleMarkPaid"
                     >
-                        <CheckCircle2 class="mr-2 h-4 w-4" /> Đã thanh toán
+                        <CheckCircle2 class="mr-2 h-4 w-4" /> Thanh toán tiền mặt
+                    </Button>
+                    <Button
+                        v-if="canMarkPaid && order.payment_method === 'bank_transfer'"
+                        variant="outline"
+                        class="text-purple-600"
+                        @click="handleVnPayPayment"
+                    >
+                        <CreditCard class="mr-2 h-4 w-4" /> Chuyển khoản
                     </Button>
                     <Button
                         v-if="canAccept"
@@ -693,4 +718,11 @@ function confirmReturn() {
             </div>
         </div>
     </AppLayout>
+
+    <VnPayPaymentDialog
+        :open="showVnPayDialog"
+        :payment-url="vnPayUrl"
+        :amount="props.order?.total_amount ?? '0'"
+        @close="showVnPayDialog = false"
+    />
 </template>

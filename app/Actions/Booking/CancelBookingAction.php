@@ -8,6 +8,10 @@ use App\Models\Hr\Employee;
 
 class CancelBookingAction
 {
+    public function __construct(
+        private CreateBookingRefundAction $createRefund,
+    ) {}
+
     public function execute(Booking $booking, ?Employee $performedBy = null): Booking
     {
         if (! $booking->canBeCancelled()) {
@@ -18,6 +22,11 @@ class CancelBookingAction
             'status' => BookingStatus::Cancelled,
             'accepted_by' => $performedBy?->id,
         ]);
+
+        // Create refund if deposit was paid and employee is cancelling
+        if ($booking->hasDepositPaid() && $performedBy !== null) {
+            $this->createRefund->execute($booking, $performedBy);
+        }
 
         return $booking->refresh();
     }

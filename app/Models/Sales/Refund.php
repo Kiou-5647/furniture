@@ -3,6 +3,7 @@
 namespace App\Models\Sales;
 
 use App\Enums\RefundStatus;
+use App\Models\Booking\Booking;
 use App\Models\Hr\Employee;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
@@ -29,7 +30,7 @@ class Refund extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['order_id', 'payment_id', 'amount', 'status', 'reason', 'notes'])
+            ->logOnly(['order_id', 'invoice_id', 'payment_id', 'amount', 'status', 'reason', 'notes'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
             ->setDescriptionForEvent(fn (string $eventName) => "Refund {$eventName}");
@@ -38,6 +39,16 @@ class Refund extends Model
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
+    }
+
+    public function booking(): BelongsTo
+    {
+        return $this->belongsTo(Booking::class);
+    }
+
+    public function invoice(): BelongsTo
+    {
+        return $this->belongsTo(Invoice::class);
     }
 
     public function payment(): BelongsTo

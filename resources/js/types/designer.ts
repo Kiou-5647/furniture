@@ -16,12 +16,15 @@ export interface Designer {
     hourly_rate: string;
     auto_confirm_bookings: boolean;
     is_active: boolean;
-    availabilities?: Record<number, {
-        id: string;
-        day_of_week: number;
-        start_time: string;
-        end_time: string;
-    }>;
+    availabilities?: Record<
+        number,
+        {
+            id: string;
+            day_of_week: number;
+            start_time: string;
+            end_time: string;
+        }
+    >;
     created_at: string;
     updated_at: string;
 }
@@ -51,4 +54,14 @@ export interface DesignerFilterData {
     order_by?: string;
     order_direction?: 'asc' | 'desc' | null;
     per_page?: number;
+}
+
+export type WeeklySlots = Record<number, boolean[]>;
+
+export interface DateAvailability {
+    id: string;
+    date: string;
+    start_hour: number;
+    end_hour: number;
+    is_available: boolean;
 }

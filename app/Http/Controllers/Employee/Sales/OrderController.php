@@ -12,7 +12,9 @@ use App\Data\Sales\CreateOrderData;
 use App\Data\Sales\OrderFilterData;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
+use App\Http\Requests\Fulfillment\StoreShipmentsRequest;
 use App\Http\Requests\Sales\CreateOrderRequest;
+use App\Http\Requests\Sales\StockOptionsRequest;
 use App\Http\Requests\Sales\UpdateOrderStatusRequest;
 use App\Http\Resources\Employee\Sales\OrderResource;
 use App\Models\Fulfillment\ShippingMethod;
@@ -21,7 +23,6 @@ use App\Models\Sales\Order;
 use App\Services\Location\StockLocatorService;
 use App\Services\Sales\OrderService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -134,21 +135,14 @@ class OrderController
         ]);
     }
 
-    public function storeShipments(Request $request, Order $order)
+    public function storeShipments(StoreShipmentsRequest $request, Order $order)
     {
         if ($order->shipments()->exists()) {
             return back()->with('error', 'Đơn hàng đã có đơn vận chuyển.');
         }
 
-        $request->validate([
-            'items' => ['required', 'array'],
-            'items.*.order_item_id' => ['required', 'uuid'],
-            'items.*.location_id' => ['required', 'uuid', 'exists:locations,id'],
-            'items.*.quantity' => ['required', 'integer', 'min:1'],
-        ]);
-
         $shipmentData = [];
-        foreach ($request->input('items') as $itemData) {
+        foreach ($request->validated('items') as $itemData) {
             $shipmentData[] = [
                 'order_item_id' => $itemData['order_item_id'],
                 'location_id' => $itemData['location_id'],
@@ -180,12 +174,8 @@ class OrderController
         ]);
     }
 
-    public function stockOptions(Request $request)
+    public function stockOptions(StockOptionsRequest $request)
     {
-        $request->validate([
-            'variant_id' => ['required', 'uuid'],
-        ]);
-
         $locator = app(StockLocatorService::class);
 
         // Get all locations with stock for this variant
@@ -278,10 +268,6 @@ class OrderController
 
     public function markAsPaid(Request $request, Order $order, MarkOrderAsPaidAction $action)
     {
-        if (! Auth::user()->can('orders.manage')) {
-            return back()->with('error', 'Không đủ quyền hạn!');
-        }
-
         try {
             $employee = $request->user()->employee;
             $action->execute($order, $employee);
