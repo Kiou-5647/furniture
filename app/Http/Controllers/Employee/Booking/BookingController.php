@@ -7,6 +7,7 @@ use App\Actions\Booking\ConfirmBookingAction;
 use App\Actions\Booking\CreateBookingAction;
 use App\Data\Booking\BookingFilterData;
 use App\Data\Booking\CreateBookingData;
+use App\Enums\InvoiceStatus;
 use App\Http\Requests\Booking\CreateBookingRequest;
 use App\Http\Resources\Employee\Booking\BookingResource;
 use App\Models\Booking\Booking;
@@ -14,7 +15,7 @@ use App\Services\Booking\BookingService;
 use App\Services\Booking\DesignServiceService;
 use App\Services\Hr\DesignerService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -44,6 +45,8 @@ class BookingController
 
     public function store(CreateBookingRequest $request, CreateBookingAction $action)
     {
+        Gate::authorize('create', Booking::class);
+
         $data = CreateBookingData::fromRequest($request);
         $booking = $action->execute($data);
 
@@ -74,6 +77,7 @@ class BookingController
 
     public function confirm(Booking $booking, Request $request, ConfirmBookingAction $action)
     {
+        Gate::authorize('confirm', $booking);
         $employee = $request->user()->employee;
 
         $action->execute($booking, $employee);
@@ -83,6 +87,7 @@ class BookingController
 
     public function cancel(Booking $booking, Request $request, CancelBookingAction $action)
     {
+        Gate::authorize('cancel', $booking);
         $employee = $request->user()->employee;
 
         $action->execute($booking, $employee);
@@ -92,9 +97,7 @@ class BookingController
 
     public function destroy(Booking $booking)
     {
-        if (! Auth::user()->can('bookings.delete')) {
-            return back()->with('error', 'Không đủ quyền hạn!');
-        }
+        Gate::authorize('manage', $booking);
 
         $booking->delete();
 
@@ -103,9 +106,7 @@ class BookingController
 
     public function restore(Booking $booking)
     {
-        if (! Auth::user()->can('bookings.restore')) {
-            return back()->with('error', 'Không đủ quyền hạn!');
-        }
+        Gate::authorize('manage', $booking);
 
         $booking->restore();
 
@@ -114,9 +115,7 @@ class BookingController
 
     public function forceDestroy(Booking $booking)
     {
-        if (! Auth::user()->can('bookings.force_delete')) {
-            return back()->with('error', 'Không đủ quyền hạn để xóa vĩnh viễn!');
-        }
+        Gate::authorize('manage', $booking);
 
         $booking->forceDelete();
 
@@ -125,6 +124,8 @@ class BookingController
 
     public function openInvoice(Booking $booking)
     {
+        Gate::authorize('openInvoice', $booking);
+
         $finalInvoice = $booking->finalInvoice;
 
         if (! $finalInvoice) {
@@ -135,7 +136,7 @@ class BookingController
             return back()->with('error', 'Hóa đơn không ở trạng thái nháp.');
         }
 
-        $finalInvoice->status = \App\Enums\InvoiceStatus::Open;
+        $finalInvoice->status = InvoiceStatus::Open;
         $finalInvoice->save();
 
         return back()->with('success', 'Đã mở hóa đơn thanh toán.');

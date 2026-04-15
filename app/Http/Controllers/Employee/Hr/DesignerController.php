@@ -13,7 +13,7 @@ use App\Services\Booking\BookingAvailabilityChecker;
 use App\Services\Booking\DesignerAvailabilityService;
 use App\Services\Hr\DesignerService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -51,6 +51,8 @@ class DesignerController
 
     public function store(StoreDesignerRequest $request, CreateDesignerAction $action)
     {
+        Gate::authorize('create', Designer::class);
+
         $action->execute(
             $request->validated(),
             $request->file('avatar'),
@@ -61,6 +63,8 @@ class DesignerController
 
     public function update(UpdateDesignerRequest $request, Designer $designer, UpdateDesignerAction $action)
     {
+        Gate::authorize('manage', $designer);
+
         $action->execute(
             $designer,
             $request->validated(),
@@ -72,9 +76,7 @@ class DesignerController
 
     public function destroy(Designer $designer)
     {
-        if (! Auth::user()->can('designers.manage')) {
-            return back()->with('error', 'Không đủ quyền hạn!');
-        }
+        Gate::authorize('manage', $designer);
 
         $designer->delete();
 
@@ -83,9 +85,7 @@ class DesignerController
 
     public function restore(Designer $designer)
     {
-        if (! Auth::user()->can('designers.manage')) {
-            return back()->with('error', 'Không đủ quyền hạn!');
-        }
+        Gate::authorize('manage', $designer);
 
         $designer->restore();
 
@@ -103,6 +103,8 @@ class DesignerController
 
     public function updateAvailabilitySlots(Request $request, Designer $designer)
     {
+        Gate::authorize('manage', $designer);
+
         $request->validate([
             'slots' => ['required', 'array'],
             'slots.*.day_of_week' => ['required', 'integer', 'min:0', 'max:6'],

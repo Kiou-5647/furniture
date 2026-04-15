@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { ArrowLeft, Ban, CheckCircle2, MapPin, Package, Truck, User, FileText, DollarSign, RotateCcw } from '@lucide/vue';
+import { ArrowLeft, Ban, CheckCircle2, MapPin, Package, Truck, User, RotateCcw } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import Heading from '@/components/Heading.vue';
 import { Badge } from '@/components/ui/badge';
@@ -20,10 +20,10 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     { title: props.shipment?.shipment_number ?? '...', href: '#' },
 ]);
 
-const canShip = computed(() => props.shipment?.status === 'pending');
-const canDeliver = computed(() => props.shipment?.status === 'shipped');
-const canCancel = computed(() => !['delivered', 'cancelled'].includes(props.shipment?.status ?? ''));
-const canResend = computed(() => props.shipment?.status === 'cancelled' && props.shipment?.order?.status !== 'cancelled');
+const canShip = computed(() => props.shipment?.can_ship);
+const canDeliver = computed(() => props.shipment?.can_deliver);
+const canCancel = computed(() => props.shipment?.can_cancel);
+const canResend = computed(() => props.shipment?.can_resend);
 
 const showReturnDialog = ref(false);
 const returnItem = ref<ShipmentItem | null>(null);

@@ -22,6 +22,7 @@ use App\Http\Controllers\Employee\Sales\RefundController;
 use App\Http\Controllers\Employee\Setting\ActivityLogController;
 use App\Http\Controllers\Employee\Setting\LookupController;
 use App\Http\Controllers\Employee\Setting\LookupNamespaceController;
+use App\Http\Controllers\Employee\Vendor\VendorController;
 use App\Http\Controllers\Payment\VnPayPaymentController;
 use Illuminate\Support\Facades\Route;
 
@@ -345,6 +346,7 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
             // View Group
             Route::middleware(['can:products.view'])->group(function () {
                 Route::get('/', [ProductController::class, 'index'])->name('index');
+                Route::get('/{product}', [ProductController::class, 'show'])->name('show');
             });
 
             // Manage Group
@@ -440,6 +442,13 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
             Route::middleware(['can:inventory.view'])->group(function () {
                 Route::get('/', [StockMovementController::class, 'index'])->name('index');
             });
+        });
+
+        Route::prefix('nha-cung-cap')->name('vendor.')->group(function () {
+            Route::get('/', [VendorController::class, 'index'])->name('index');
+            Route::post('/', [VendorController::class, 'store'])->name('store');
+            Route::put('/{vendor}', [VendorController::class, 'update'])->name('update');
+            Route::delete('/{vendor}', [VendorController::class, 'destroy'])->name('destroy');
         });
     });
 });

@@ -12,6 +12,7 @@ use App\Models\Hr\Department;
 use App\Models\Hr\Employee;
 use App\Services\Hr\DepartmentService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -36,6 +37,8 @@ class DepartmentController
 
     public function store(StoreDepartmentRequest $request, CreateDepartmentAction $action)
     {
+        Gate::authorize('create', Department::class);
+
         $action->execute($request->validated());
 
         return back()->with('success', 'Đã tạo phòng ban.');
@@ -43,6 +46,8 @@ class DepartmentController
 
     public function update(UpdateDepartmentRequest $request, Department $department, UpdateDepartmentAction $action)
     {
+        Gate::authorize('manage', $department);
+
         $action->execute($department, $request->validated());
 
         return back()->with('success', 'Đã cập nhật phòng ban.');
@@ -50,6 +55,8 @@ class DepartmentController
 
     public function destroy(Department $department)
     {
+        Gate::authorize('manage', $department);
+
         $department->delete();
 
         return back()->with('success', 'Đã xóa phòng ban.');

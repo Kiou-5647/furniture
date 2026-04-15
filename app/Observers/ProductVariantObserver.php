@@ -9,22 +9,33 @@ class ProductVariantObserver
 {
     public function saving(ProductVariant $variant): void
     {
+        $product = $variant->product;
+        $productName = $product ? $product->name : '';
+        $productSlug = $product ? Str::slug($product->name) : '';
+
         if (filled($variant->name)) {
             $variant->name = trim($variant->name);
-            $variant->slug = Str::slug($variant->name);
         } else {
-            $product = $variant->product;
-            $productName = $product ? Str::title($product->name) : '';
-            $optionLabels = collect($variant->option_values ?? [])
-                ->map(fn ($v) => Str::title($v))
-                ->implode(' ');
+            $productTitle = $product ? Str::title($product->name) : '';
+            $displayLabel = $variant->swatch_label
+                ?? collect($variant->option_values ?? [])
+                    ->map(fn ($v) => Str::title($v))
+                    ->implode(' ');
 
-            if ($optionLabels) {
-                $variant->name = $productName.' '.$optionLabels;
-            } elseif ($productName) {
-                $variant->name = $productName;
+            if ($displayLabel) {
+                $variant->name = $productTitle.' '.$displayLabel;
+            } elseif ($productTitle) {
+                $variant->name = $productTitle;
             }
-            $variant->slug = Str::slug($variant->name);
+        }
+
+        // Always ensure the slug includes the product prefix for uniqueness and SEO
+        $variantPart = $variant->name ? Str::slug($variant->name) : '';
+        
+        if ($productSlug && $variantPart && $productSlug !== $variantPart) {
+            $variant->slug = $productSlug . '-' . $variantPart;
+        } else {
+            $variant->slug = $productSlug ?: $variantPart;
         }
     }
 

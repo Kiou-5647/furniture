@@ -72,21 +72,7 @@ class OrderController
     public function show(Order $order): Response
     {
         $order = $this->service->getById($order->id);
-
-        // Get stock options for each unique variant in the shipments
-        $variantIds = collect();
-        foreach ($order->shipments as $shipment) {
-            foreach ($shipment->items as $item) {
-                if ($item->orderItem && str_contains($item->orderItem->purchasable_type, 'ProductVariant')) {
-                    $variantIds->push($item->orderItem->purchasable_id);
-                }
-            }
-        }
-
-        $variantStockOptions = [];
-        foreach ($variantIds->unique() as $variantId) {
-            $variantStockOptions[$variantId] = $this->service->getVariantStockOptions($variantId);
-        }
+        $variantStockOptions = $this->service->getOrderVariantStockOptions($order);
 
         return Inertia::render('employee/sales/orders/Show', [
             'order' => new OrderResource($order),
@@ -94,49 +80,26 @@ class OrderController
         ]);
     }
 
-    public function createShipments(Order $order)
+    public function createShipments(CreateShipmentsRequest $request, Order $order, CreateShipmentsAction $action)
     {
-        // Only allow if no shipments exist yet and order is not completed/cancelled
-        if ($order->shipments()->exists()) {
-            return back()->with('error', 'Đơn hàng đã có đơn vận chuyển.');
-        }
+        Gate::authorize('createShipments', $order);
 
-        if (in_array($order->status->value, ['completed', 'cancelled'], true)) {
-            return back()->with('error', 'Không thể tạo đơn vận chuyển cho đơn hàng này.');
-        }
-
-        // Prepaid orders must be paid first
-        if ($order->isPrepaid() && ! $order->paid_at) {
-            return back()->with('error', 'Đơn hàng chưa được thanh toán.');
-        }
-
-        $locator = app(StockLocatorService::class);
-        $itemsWithStock = [];
-
-        foreach ($order->items()->with('purchasable')->get() as $item) {
-            if (str_contains($item->purchasable_type, 'ProductVariant')) {
-                $stockOptions = $locator->findStockForItem(
-                    $item->purchasable_type,
-                    $item->purchasable_id
-                );
-
-                $itemsWithStock[] = [
-                    'id' => $item->id,
-                    'purchasable_name' => $item->purchasable?->name ?? 'Sản phẩm',
-                    'quantity' => $item->quantity,
-                    'stock_options' => $stockOptions->toArray(),
-                ];
-            }
+        try {
+            $action->execute($order);
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
         }
 
         return response()->json([
             'order_id' => $order->id,
-            'items' => $itemsWithStock,
+            'items' => $this->service->getOrderItemsForShipment($order),
         ]);
     }
 
-    public function storeShipments(StoreShipmentsRequest $request, Order $order)
+    public function storeShipments(StoreShipmentsRequest $request, Order $order, CreateShipmentsAction $action)
     {
+        Gate::authorize('storeShipments', $order);
+
         if ($order->shipments()->exists()) {
             return back()->with('error', 'Đơn hàng đã có đơn vận chuyển.');
         }
@@ -150,8 +113,7 @@ class OrderController
             ];
         }
 
-        $createAction = app(CreateShipmentsAction::class);
-        $createAction->executeWithLocations($order, $shipmentData);
+        $action->executeWithLocations($order, $shipmentData);
 
         return back()->with('success', 'Đã tạo đơn vận chuyển.');
     }
@@ -191,6 +153,7 @@ class OrderController
 
     public function store(CreateOrderRequest $request, CreateOrderAction $action)
     {
+        Gate::authorize('create', Order::class);
         $employee = $request->user()->employee;
 
         // Merge store location into request data before creating DTO
@@ -207,6 +170,7 @@ class OrderController
 
     public function updateStatus(UpdateOrderStatusRequest $request, Order $order, UpdateOrderStatusAction $action)
     {
+        Gate::authorize('updateStatus', $order);
         $employee = $request->user()->employee;
         $newStatus = OrderStatus::tryFrom($request->input('status'));
 
@@ -217,6 +181,7 @@ class OrderController
 
     public function cancel(Order $order, Request $request, CancelOrderAction $action)
     {
+        Gate::authorize('cancel', $order);
         $employee = $request->user()->employee;
 
         $action->execute($order, $employee);
@@ -226,6 +191,7 @@ class OrderController
 
     public function complete(Order $order, Request $request, CompleteOrderAction $action)
     {
+        Gate::authorize('complete', $order);
         $employee = $request->user()->employee;
 
         $action->execute($order, $employee);
@@ -235,9 +201,7 @@ class OrderController
 
     public function restore(Order $order)
     {
-        if (! Auth::user()->can('orders.manage')) {
-            return back()->with('error', 'Không đủ quyền hạn!');
-        }
+        Gate::authorize('manage', $order);
 
         $order->restore();
 
@@ -246,9 +210,7 @@ class OrderController
 
     public function destroy(Order $order)
     {
-        if (! Auth::user()->can('orders.manage')) {
-            return back()->with('error', 'Không đủ quyền hạn!');
-        }
+        Gate::authorize('manage', $order);
 
         $order->delete();
 
@@ -257,9 +219,7 @@ class OrderController
 
     public function forceDestroy(Order $order)
     {
-        if (! Auth::user()->can('orders.manage')) {
-            return back()->with('error', 'Không đủ quyền hạn để xóa vĩnh viễn!');
-        }
+        Gate::authorize('manage', $order);
 
         $order->forceDelete();
 
@@ -268,6 +228,7 @@ class OrderController
 
     public function markAsPaid(Request $request, Order $order, MarkOrderAsPaidAction $action)
     {
+        Gate::authorize('markAsPaid', $order);
         try {
             $employee = $request->user()->employee;
             $action->execute($order, $employee);

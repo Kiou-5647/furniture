@@ -10,18 +10,14 @@ use App\Models\Product\Collection;
 use App\Models\Product\Product;
 use App\Models\Setting\LookupNamespace;
 use App\Models\Vendor\Vendor;
-use App\Services\Cache\CacheService;
 use App\Support\CacheKeys;
+use App\Support\CacheTag;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection as EloquentCollection;
 use Illuminate\Support\Facades\Cache;
 
 class ProductService
 {
-    public function __construct(
-        private CacheService $cache,
-    ) {}
-
     public function getStatusOptions(): array
     {
         return ProductStatus::options();
@@ -29,58 +25,47 @@ class ProductService
 
     public function getVendorOptions(): EloquentCollection
     {
-        return Cache::remember(
-            CacheKeys::product('vendors'),
-            CacheKeys::TTL,
-            fn () => Vendor::query()
+        return Cache::tags([CacheTag::Vendors->value])
+            ->remember(CacheTag::Vendors->key('options'), CacheKeys::TTL, fn () => Vendor::query()
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get(['id', 'name'])
                 ->map(fn (Vendor $vendor) => [
                     'id' => $vendor->id,
                     'label' => $vendor->name,
-                ])
-        );
+                ]));
     }
 
     public function getCategoryOptions(): EloquentCollection
     {
-        return Cache::remember(
-            CacheKeys::product('categories'),
-            CacheKeys::TTL,
-            fn () => Category::query()
+        return Cache::tags([CacheTag::Categories->value])
+            ->remember(CacheTag::Categories->key('options'), CacheKeys::TTL, fn () => Category::query()
                 ->where('is_active', true)
                 ->orderBy('display_name')
                 ->get(['id', 'display_name'])
                 ->map(fn (Category $category) => [
                     'id' => $category->id,
                     'label' => $category->display_name,
-                ])
-        );
+                ]));
     }
 
     public function getCollectionOptions(): EloquentCollection
     {
-        return Cache::remember(
-            CacheKeys::product('collections'),
-            CacheKeys::TTL,
-            fn () => Collection::query()
+        return Cache::tags([CacheTag::Collections->value])
+            ->remember(CacheTag::Collections->key('options'), CacheKeys::TTL, fn () => Collection::query()
                 ->where('is_active', true)
                 ->orderBy('display_name')
                 ->get(['id', 'display_name'])
                 ->map(fn (Collection $collection) => [
                     'id' => $collection->id,
                     'label' => $collection->display_name,
-                ])
-        );
+                ]));
     }
 
     public function getLocationOptions(): EloquentCollection
     {
-        return Cache::remember(
-            CacheKeys::inventory('locations'),
-            CacheKeys::TTL,
-            fn () => Location::query()
+        return Cache::tags([CacheTag::Locations->value])
+            ->remember(CacheTag::Locations->key('options'), CacheKeys::TTL, fn () => Location::query()
                 ->where('is_active', true)
                 ->orderBy('type')
                 ->orderBy('name')
@@ -91,17 +76,13 @@ class ProductService
                     'label' => $location->name,
                     'type' => $location->type->value,
                     'address' => $location->getFullAddress(),
-                ])
-        );
+                ]));
     }
 
     public function getVariantOptions(): EloquentCollection
     {
-        return Cache::remember(
-            CacheKeys::product('variant_options'),
-            CacheKeys::TTL,
-            fn () => $this->buildVariantOptions()
-        );
+        return Cache::tags([CacheTag::VariantOptions->value])
+            ->remember(CacheTag::VariantOptions->key('data'), CacheKeys::TTL, fn () => $this->buildVariantOptions());
     }
 
     protected function buildVariantOptions(): EloquentCollection
@@ -129,11 +110,8 @@ class ProductService
 
     public function getFeatureOptions(): array
     {
-        return Cache::remember(
-            CacheKeys::product('feature_options'),
-            CacheKeys::TTL,
-            fn () => $this->buildFeatureOptions()
-        );
+        return Cache::tags([CacheTag::FeatureOptions->value])
+            ->remember(CacheTag::FeatureOptions->key('data'), CacheKeys::TTL, fn () => $this->buildFeatureOptions());
     }
 
     protected function buildFeatureOptions(): array
@@ -156,10 +134,8 @@ class ProductService
 
     public function getSpecNamespaces(): EloquentCollection
     {
-        return Cache::remember(
-            CacheKeys::product('spec_namespaces'),
-            CacheKeys::TTL,
-            fn () => LookupNamespace::query()
+        return Cache::tags([CacheTag::SpecNamespaces->value])
+            ->remember(CacheTag::SpecNamespaces->key('data'), CacheKeys::TTL, fn () => LookupNamespace::query()
                 ->whereNotIn('slug', ['tinh-nang', 'nhom-danh-muc'])
                 ->where('is_active', true)
                 ->orderBy('display_name')
@@ -169,17 +145,13 @@ class ProductService
                     'namespace' => $ns->slug,
                     'label' => $ns->display_name,
                     'for_variants' => $ns->for_variants,
-                ])->values()
-        );
+                ])->values());
     }
 
     public function getSpecLookupOptions(string $namespace): EloquentCollection
     {
-        return Cache::remember(
-            CacheKeys::product("spec_lookup_options.{$namespace}"),
-            CacheKeys::TTL,
-            fn () => $this->buildSpecLookupOptions($namespace)
-        );
+        return Cache::tags([CacheTag::SpecLookupPrefix->value.'.'.$namespace])
+            ->remember(CacheKeys::getFiltersKeys('spec_lookup_options', $namespace), CacheKeys::TTL, fn () => $this->buildSpecLookupOptions($namespace));
     }
 
     protected function buildSpecLookupOptions(string $namespace): EloquentCollection
@@ -205,11 +177,8 @@ class ProductService
 
     public function getAllSpecLookupOptions(): EloquentCollection
     {
-        return Cache::remember(
-            CacheKeys::product('all_spec_lookup_options'),
-            CacheKeys::TTL,
-            fn () => $this->buildAllSpecLookupOptions()
-        );
+        return Cache::tags([CacheTag::AllSpecLookups->value])
+            ->remember(CacheTag::AllSpecLookups->key('data'), CacheKeys::TTL, fn () => $this->buildAllSpecLookupOptions());
     }
 
     protected function buildAllSpecLookupOptions(): EloquentCollection
@@ -260,10 +229,5 @@ class ProductService
             ->when($filter->search, fn ($q) => $q->search($filter->search))
             ->orderBy($filter->order_by ?? 'deleted_at', $filter->order_direction ?? 'desc')
             ->paginate($filter->per_page ?? 15);
-    }
-
-    public function clearCache(): void
-    {
-        $this->cache->flushProducts();
     }
 }

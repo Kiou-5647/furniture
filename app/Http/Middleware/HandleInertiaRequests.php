@@ -2,13 +2,17 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\Product\ShopMenuService;
 use App\Services\Setting\MenuService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
 {
-    public function __construct(protected MenuService $menuService) {}
+    public function __construct(
+        protected MenuService $menuService,
+        protected ShopMenuService $shopMenuService,
+    ) {}
 
     /**
      * The root template that's loaded on the first page visit.
@@ -56,7 +60,9 @@ class HandleInertiaRequests extends Middleware
                 ] : null,
             ],
             'menu' => $this->menuService->getMenu($user),
+            'shopMenu' => $this->shopMenuService->getMenu(),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'query' => (object) $request->query(),
         ];
     }
 }

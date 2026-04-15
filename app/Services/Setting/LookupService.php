@@ -6,25 +6,18 @@ use App\Builders\Setting\LookupBuilder;
 use App\Data\Setting\LookupFilterData;
 use App\Models\Setting\Lookup;
 use App\Models\Setting\LookupNamespace;
-use App\Services\Cache\CacheService;
 use App\Support\CacheKeys;
+use App\Support\CacheTag;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 
 class LookupService
 {
-    public function __construct(
-        private CacheService $cache,
-    ) {}
-
     public function getNamespaces(): Collection
     {
-        return Cache::remember(
-            CacheKeys::lookup('namespaces'),
-            CacheKeys::TTL,
-            fn () => $this->buildNamespaces()
-        );
+        return Cache::tags([CacheTag::LookupNamespaces->value])
+            ->remember(CacheTag::LookupNamespaces->key('data'), CacheKeys::TTL, fn () => $this->buildNamespaces());
     }
 
     protected function buildNamespaces(): Collection
@@ -98,10 +91,8 @@ class LookupService
 
     public function getFilterableNamespaces(): Collection
     {
-        return Cache::remember(
-            CacheKeys::lookup('filterable_namespaces'),
-            CacheKeys::TTL,
-            fn () => LookupNamespace::query()
+        return Cache::tags([CacheTag::FilterableNamespaces->value])
+            ->remember(CacheTag::FilterableNamespaces->key('data'), CacheKeys::TTL, fn () => LookupNamespace::query()
                 ->where('is_filterable', true)
                 ->where('is_active', true)
                 ->orderBy('display_name')
@@ -110,12 +101,6 @@ class LookupService
                     'id' => $ns->id,
                     'slug' => $ns->slug,
                     'label' => $ns->display_name,
-                ])->values()
-        );
-    }
-
-    public function clearCache(): void
-    {
-        $this->cache->flushLookups();
+                ])->values());
     }
 }

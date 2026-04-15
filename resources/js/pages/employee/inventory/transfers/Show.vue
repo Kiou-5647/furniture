@@ -11,7 +11,7 @@ import {
     Calendar,
     FileText,
 } from '@lucide/vue';
-import { getCoreRowModel, useVueTable } from '@tanstack/vue-table';
+import { getCoreRowModel, useVueTable, VisibilityState } from '@tanstack/vue-table';
 import { computed, ref } from 'vue';
 import DataTable from '@/components/custom/data-table/DataTable.vue';
 import ImagePreviewDialog from '@/components/custom/ImagePreviewDialog.vue';
@@ -71,10 +71,12 @@ function openImagePreview(url: string | null | undefined) {
 }
 
 const receiveForm = useForm({
-    items: props.transfer.items.map((item) => ({
-        item_id: item.id,
-        quantity_received: item.quantity_shipped,
-    })),
+    items: Array.isArray(props.transfer.items)
+        ? props.transfer.items.map((item) => ({
+            item_id: item.id,
+            quantity_received: item.quantity_shipped,
+        }))
+        : [],
 });
 
 const receiveTableColumns = computed(() =>
@@ -91,9 +93,13 @@ const receiveTable = useVueTable({
     getCoreRowModel: getCoreRowModel(),
 });
 
+console.info(JSON.stringify(props.transfer.items))
+
 const viewTableColumns = computed(() =>
     getItemColumns(props.transfer.status, openImagePreview, false),
 );
+
+const columnVisibility = ref<VisibilityState>({});
 
 const viewTable = useVueTable({
     get data() {
@@ -101,6 +107,12 @@ const viewTable = useVueTable({
     },
     get columns() {
         return viewTableColumns.value;
+    },
+
+    state: {
+        get columnVisibility() {
+            return columnVisibility.value;
+        },
     },
     getCoreRowModel: getCoreRowModel(),
 });
@@ -379,7 +391,9 @@ function handleCancel() {
                                     v-if="showReceiveForm"
                                     @submit.prevent="handleReceive"
                                 >
-                                    <DataTable :table="receiveTable" />
+                                    <DataTable
+                                        :table="receiveTable"
+                                    />
                                     <div class="mt-4 flex justify-end gap-2">
                                         <Button
                                             type="button"
@@ -400,7 +414,10 @@ function handleCancel() {
                                     </div>
                                 </form>
 
-                                <DataTable v-else :table="viewTable" />
+                                <DataTable
+                                    v-else
+                                    :table="viewTable"
+                                />
                             </CardContent>
                         </Card>
                     </div>

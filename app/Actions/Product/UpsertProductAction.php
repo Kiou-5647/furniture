@@ -60,6 +60,7 @@ class UpsertProductAction
 
         foreach ($variants as $variantData) {
             $variantId = $variantData['id'] ?? null;
+            $swatchLabel = $variantData['swatch_label'] ?? null;
             $stock = Arr::pull($variantData, 'stock', []);
             $primaryImageFile = Arr::pull($variantData, 'primary_image_file', null);
             $hoverImageFile = Arr::pull($variantData, 'hover_image_file', null);
@@ -68,11 +69,26 @@ class UpsertProductAction
             $swatchImageFile = Arr::pull($variantData, 'swatch_image_file', null);
             $removedGalleryIds = Arr::pull($variantData, 'removed_gallery_ids', []);
 
+            $duplicate = ProductVariant::where('product_id', $product->id)
+                ->where('option_values', json_encode($variantData['option_values']))
+                ->where('swatch_label', $swatchLabel)
+                ->where('id', '!=', $variantId) // Don't count the current variant being updated
+                ->exists();
+
+            if ($duplicate) {
+                throw new \Exception("A variant with these options and the label '{$swatchLabel}' already exists.");
+            }
+
             if ($variantId && in_array($variantId, $existingIds)) {
                 $variant = $product->variants()->find($variantId);
-                $variant->update($variantData);
+                $updateData = $variantData;
+                $updateData['swatch_label'] = $swatchLabel;
+
+                $variant->update($updateData);
             } else {
-                $variant = $product->variants()->create($variantData);
+                $createData = $variantData;
+                $createData['swatch_label'] = $swatchLabel;
+                $variant = $product->variants()->create($createData);
             }
 
             $submittedIds[] = $variant->id;

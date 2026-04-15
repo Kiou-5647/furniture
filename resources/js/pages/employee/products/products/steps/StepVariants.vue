@@ -734,12 +734,20 @@ function canAddMoreImages(variant: any) {
                                 class="h-20 resize-none text-sm"
                             />
                         </Field>
-                        <div class="grid grid-cols-3 gap-3">
+                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
                             <Field>
                                 <FieldLabel class="text-sm">SKU</FieldLabel>
                                 <Input
                                     v-model="variant.sku"
                                     placeholder="VD: A3X9K2M1"
+                                    class="text-sm"
+                                />
+                            </Field>
+                            <Field>
+                                <FieldLabel class="text-sm">Nhãn Swatch</FieldLabel>
+                                <Input
+                                    v-model="variant.swatch_label"
+                                    placeholder="VD: Midnight Blue"
                                     class="text-sm"
                                 />
                             </Field>

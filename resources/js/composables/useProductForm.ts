@@ -210,8 +210,8 @@ export function useProductForm(
                                     group.is_filterable === '0'
                                         ? false
                                         : group.is_filterable === '1'
-                                          ? true
-                                          : (group.is_filterable ?? false),
+                                            ? true
+                                            : (group.is_filterable ?? false),
                                 items: group.items ?? [],
                             },
                         ],
@@ -262,6 +262,7 @@ export function useProductForm(
                         weight: v.weight ?? {},
                         dimensions: v.dimensions ?? {},
                         option_values: normalizedOptionValues,
+                        swatch_label: v.swatch_label ?? null,
                         features: v.features ?? [],
                         specifications: v.specifications ?? {},
                         care_instructions: v.care_instructions ?? [],
@@ -411,14 +412,14 @@ export function useProductForm(
             step1Complete
                 ? 'complete'
                 : step1Touched
-                  ? 'incomplete'
-                  : 'untouched',
+                    ? 'incomplete'
+                    : 'untouched',
             hasOptionGroups ? 'complete' : 'untouched',
             hasVariants
                 ? 'complete'
                 : hasOptionGroups
-                  ? 'incomplete'
-                  : 'untouched',
+                    ? 'incomplete'
+                    : 'untouched',
             hasStock ? 'complete' : hasVariants ? 'incomplete' : 'untouched',
         ];
     });
@@ -437,6 +438,19 @@ export function useProductForm(
                 errors.push(`${invalid.length} biến thể thiếu SKU hoặc giá`);
             }
         }
+
+        // Add this to the errors array
+        const duplicates = form.variants.filter((v, i) =>
+            form.variants.some((v2, i2) =>
+                i !== i2 &&
+                JSON.stringify(v.option_values) === JSON.stringify(v2.option_values) &&
+                v.swatch_label === v2.swatch_label
+            )
+        );
+        if (duplicates.length > 0) {
+            errors.push('Có các biến thể bị trùng lặp cả tùy chọn và nhãn swatch');
+        }
+
         return errors;
     });
 
@@ -461,7 +475,10 @@ export function useProductForm(
                 variant.option_values?.[fallbackKey];
             if (val) {
                 const opt = group.options.find((o) => o.value === val);
-                labels.push(opt?.label ?? val);
+                const label = variant.swatch_label && group.is_swatches
+                    ? variant.swatch_label
+                    : (opt?.label ?? val);
+                labels.push(label);
             }
         }
         return labels;
@@ -487,6 +504,7 @@ export function useProductForm(
                 weight: {},
                 dimensions: {},
                 option_values: optionValues,
+                swatch_label: null,
                 specifications: {},
                 care_instructions: [],
                 status: 'active' as const,
@@ -506,13 +524,6 @@ export function useProductForm(
         const combo = { ...newVariantCombo };
         if (Object.values(combo).some((v) => !v)) return;
 
-        const exists = form.variants.some((v) =>
-            form.option_groups.every(
-                (g) => v.option_values?.[g.namespace] === combo[g.namespace],
-            ),
-        );
-        if (exists) return;
-
         form.variants.push({
             sku: Math.random().toString(36).substring(2, 10).toUpperCase(),
             name: null,
@@ -524,6 +535,7 @@ export function useProductForm(
             weight: {},
             dimensions: {},
             option_values: combo,
+            swatch_label: null,
             specifications: {},
             care_instructions: [],
             status: 'active' as const,

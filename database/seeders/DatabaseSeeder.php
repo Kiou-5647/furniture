@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
 
             // Demo data (roles, users, products, inventory)
             DemoDataSeeder::class,
+            VendorSeeder::class,
         ]);
     }
 }

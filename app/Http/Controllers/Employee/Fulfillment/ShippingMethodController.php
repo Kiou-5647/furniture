@@ -11,7 +11,7 @@ use App\Http\Resources\Employee\Fulfillment\ShippingMethodResource;
 use App\Models\Fulfillment\ShippingMethod;
 use App\Services\Fulfillment\ShippingMethodService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -47,6 +47,8 @@ class ShippingMethodController
 
     public function store(StoreShippingMethodRequest $request, UpsertShippingMethodAction $action)
     {
+        Gate::authorize('create', ShippingMethod::class);
+
         $data = CreateShippingMethodData::fromRequest($request);
         $action->execute($data);
 
@@ -55,6 +57,8 @@ class ShippingMethodController
 
     public function update(UpdateShippingMethodRequest $request, ShippingMethod $shippingMethod, UpsertShippingMethodAction $action)
     {
+        Gate::authorize('manage', $shippingMethod);
+
         $data = CreateShippingMethodData::fromRequest($request);
         $action->execute($data, $shippingMethod);
 
@@ -63,9 +67,7 @@ class ShippingMethodController
 
     public function destroy(ShippingMethod $shippingMethod)
     {
-        if (! Auth::user()->can('shipping_methods.manage')) {
-            return back()->with('error', 'Không đủ quyền hạn!');
-        }
+        Gate::authorize('manage', $shippingMethod);
 
         $shippingMethod->delete();
 
@@ -74,9 +76,7 @@ class ShippingMethodController
 
     public function restore(ShippingMethod $shippingMethod)
     {
-        if (! Auth::user()->can('shipping_methods.manage')) {
-            return back()->with('error', 'Không đủ quyền hạn!');
-        }
+        Gate::authorize('manage', $shippingMethod);
 
         $shippingMethod->restore();
 
@@ -85,9 +85,7 @@ class ShippingMethodController
 
     public function forceDestroy(ShippingMethod $shippingMethod)
     {
-        if (! Auth::user()->can('shipping_methods.manage')) {
-            return back()->with('error', 'Không đủ quyền hạn để xóa vĩnh viễn!');
-        }
+        Gate::authorize('manage', $shippingMethod);
 
         $shippingMethod->forceDelete();
 

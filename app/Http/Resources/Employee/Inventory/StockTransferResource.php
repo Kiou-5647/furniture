@@ -7,6 +7,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class StockTransferResource extends JsonResource
 {
+    public static $wrap = false;
+
     public function toArray(Request $request): array
     {
         return [
@@ -35,7 +37,7 @@ class StockTransferResource extends JsonResource
                 'id' => $this->receivedBy?->id,
                 'full_name' => $this->receivedBy?->full_name,
             ]),
-            'items' => StockTransferItemResource::collection($this->whenLoaded('items')),
+            'items' => $this->whenLoaded('items', fn () => StockTransferItemResource::collection($this->items)->resolve()),
             'items_count' => $this->whenCounted('items', $this->items_count),
             'notes' => $this->notes,
             'received_at' => $this->received_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),

@@ -8,6 +8,10 @@ use Illuminate\Database\Seeder;
 
 class LookupSeeder extends Seeder
 {
+    use MediaSeederTrait;
+
+    private string $roomImageBase = 'images/lookups';
+
     public function run(): void
     {
         $this->seedNamespaces();
@@ -71,9 +75,15 @@ class LookupSeeder extends Seeder
         ];
 
         foreach ($groups as $group) {
-            Lookup::updateOrCreate(
+            $lookup = Lookup::updateOrCreate(
                 ['namespace_id' => $nsId, 'slug' => $group['slug']],
                 ['namespace_id' => $nsId, ...$group]
+            );
+
+            $this->attachMedia(
+                $lookup,
+                "{$this->roomImageBase}/nhom-danh-muc/{$group['slug']}.jpg",
+                'image'
             );
         }
         $this->command->info('Seeded category groups');
@@ -90,17 +100,21 @@ class LookupSeeder extends Seeder
             ['slug' => 'phong-khach', 'display_name' => 'Phòng khách'],
             ['slug' => 'phong-ngu', 'display_name' => 'Phòng ngủ'],
             ['slug' => 'phong-an', 'display_name' => 'Phòng ăn'],
-            ['slug' => 'nha-bep', 'display_name' => 'Nhà bếp'],
-            ['slug' => 'phong-tam', 'display_name' => 'Phòng tắm'],
             ['slug' => 'van-phong', 'display_name' => 'Văn phòng'],
-            ['slug' => 'hanh-lang', 'display_name' => 'Hành lang'],
-            ['slug' => 'san-vuon', 'display_name' => 'Sân vườn'],
+            ['slug' => 'ngoai-troi', 'display_name' => 'Ngoài trời'],
+            ['slug' => 'trang-tri', 'display_name' => 'Trang trí'],
         ];
 
         foreach ($rooms as $room) {
-            Lookup::updateOrCreate(
+            $lookup = Lookup::updateOrCreate(
                 ['namespace_id' => $nsId, 'slug' => $room['slug']],
                 ['namespace_id' => $nsId, ...$room]
+            );
+
+            $this->attachMedia(
+                $lookup,
+                "{$this->roomImageBase}/phong/{$room['slug']}.jpg",
+                'image'
             );
         }
         $this->command->info('Seeded rooms');
@@ -152,20 +166,18 @@ class LookupSeeder extends Seeder
             ['slug' => 'cam', 'display_name' => 'Cam', 'metadata' => ['hex_code' => '#FFA500']],
             ['slug' => 'tim', 'display_name' => 'Tím', 'metadata' => ['hex_code' => '#800080']],
             ['slug' => 'hong', 'display_name' => 'Hồng', 'metadata' => ['hex_code' => '#FFC0CB']],
-            ['slug' => 'xanh-ngoc', 'display_name' => 'Xanh ngọc', 'metadata' => ['hex_code' => '#40E0D0']],
-            ['slug' => 'charme-black', 'display_name' => 'Charme Black', 'metadata' => ['hex_code' => '#292929']],
-            ['slug' => 'charme-chocolat', 'display_name' => 'Charme Chocolat', 'metadata' => ['hex_code' => '#452415']],
-            ['slug' => 'charme-green', 'display_name' => 'Charme Green', 'metadata' => ['hex_code' => '#3D3622']],
-            ['slug' => 'charme-tan', 'display_name' => 'Charme Tan', 'metadata' => ['hex_code' => '#B16A3E']],
-            ['slug' => 'olio-green', 'display_name' => 'Olio Green', 'metadata' => ['hex_code' => '#585844']],
-            ['slug' => 'pebble-gray', 'display_name' => 'Pebble Gray', 'metadata' => ['hex_code' => '#9E9F9B']],
-            ['slug' => 'rain-cloud-gray', 'display_name' => 'Rain Cloud Gray', 'metadata' => ['hex_code' => '#B6AFA5']],
         ];
 
         foreach ($colors as $color) {
-            Lookup::updateOrCreate(
+            $lookup = Lookup::updateOrCreate(
                 ['namespace_id' => $nsId, 'slug' => $color['slug']],
                 ['namespace_id' => $nsId, ...$color]
+            );
+
+            $this->attachMedia(
+                $lookup,
+                "{$this->roomImageBase}/mau-sac/{$color['slug']}.png",
+                'image'
             );
         }
         $this->command->info('Seeded colors');

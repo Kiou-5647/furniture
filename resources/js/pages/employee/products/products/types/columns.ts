@@ -5,8 +5,10 @@ import {
     Trash2,
     Package,
     Boxes,
+    Eye,
 } from '@lucide/vue';
 import type { ColumnDef } from '@tanstack/vue-table';
+import { Link } from '@inertiajs/vue3';
 import { h } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,6 +21,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { Product } from '@/types/product';
+import { show } from '@/routes/employee/products/items';
 
 function formatPrice(value: string | number): string {
     const num = typeof value === 'string' ? parseFloat(value) : value;
@@ -64,6 +67,24 @@ export function getColumns(
                                     h(DropdownMenuLabel, () => 'Thao tác'),
                                     h(
                                         DropdownMenuItem,
+                                        {
+                                            onSelect: (e: Event) => e.preventDefault(),
+                                        },
+                                        () => [
+                                            h(Link, {
+                                                href: show({ product: item.id }).url,
+                                                class: 'flex w-full items-center',
+                                            }, {
+                                                default: () => [
+                                                    h(Eye, { class: 'mr-2 h-4 w-4' }),
+                                                    'Xem',
+                                                ],
+                                            }),
+                                        ],
+                                    ),
+                                    h(DropdownMenuSeparator),
+                                    h(
+                                        DropdownMenuItem,
                                         { onClick: () => onEdit(item) },
                                         () => [
                                             h(Pencil, {
@@ -104,7 +125,14 @@ export function getColumns(
 
                 return h('div', { class: 'flex flex-col gap-0.5' }, [
                     h('div', { class: 'flex items-center gap-1.5' }, [
-                        h('span', { class: 'font-medium' }, item.name),
+                        h(
+                            Link,
+                            {
+                                href: show({ product: item.id }).url,
+                                class: 'font-medium hover:underline text-foreground',
+                            },
+                            () => item.name,
+                        ),
                         item.is_featured
                             ? h(Star, {
                                 class: 'h-4 w-4 fill-yellow-400 text-yellow-400 shrink-0',

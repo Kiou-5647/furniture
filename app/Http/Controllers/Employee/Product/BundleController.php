@@ -10,7 +10,7 @@ use App\Http\Resources\Employee\Product\BundleResource;
 use App\Models\Product\Bundle;
 use App\Services\Product\BundleService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -56,6 +56,8 @@ class BundleController
 
     public function store(StoreBundleRequest $request, UpsertBundleAction $action)
     {
+        Gate::authorize('create', Bundle::class);
+
         $action->execute($request->validated());
 
         return back()->with('success', 'Đã thêm gói sản phẩm mới.');
@@ -63,6 +65,8 @@ class BundleController
 
     public function update(UpdateBundleRequest $request, Bundle $bundle, UpsertBundleAction $action)
     {
+        Gate::authorize('manage', $bundle);
+
         $action->execute($request->validated(), $bundle);
 
         return back()->with('success', 'Đã cập nhật gói sản phẩm.');
@@ -70,6 +74,7 @@ class BundleController
 
     public function destroy(Bundle $bundle)
     {
+        Gate::authorize('manage', $bundle);
         $bundle->delete();
 
         return back()->with('success', 'Đã xóa gói sản phẩm.');
@@ -77,9 +82,7 @@ class BundleController
 
     public function restore(Bundle $bundle)
     {
-        if (! Auth::user()->can('bundles.manage')) {
-            return back()->with('error', 'Không đủ quyền hạn!');
-        }
+        Gate::authorize('manage', $bundle);
 
         $bundle->restore();
 
@@ -88,9 +91,7 @@ class BundleController
 
     public function forceDestroy(Bundle $bundle)
     {
-        if (! Auth::user()->can('bundles.manage')) {
-            return back()->with('error', 'Không đủ quyền hạn để xóa vĩnh viễn!');
-        }
+        Gate::authorize('manage', $bundle);
 
         $bundle->forceDelete();
 

@@ -160,6 +160,25 @@ class OrderService
             ]);
     }
 
+    public function getOrderVariantStockOptions(Order $order): array
+    {
+        $variantIds = collect();
+        foreach ($order->shipments as $shipment) {
+            foreach ($shipment->items as $item) {
+                if ($item->orderItem && str_contains($item->orderItem->purchasable_type, 'ProductVariant')) {
+                    $variantIds->push($item->orderItem->purchasable_id);
+                }
+            }
+        }
+
+        $variantStockOptions = [];
+        foreach ($variantIds->unique() as $variantId) {
+            $variantStockOptions[$variantId] = $this->getVariantStockOptions($variantId);
+        }
+
+        return $variantStockOptions;
+    }
+
     /**
      * Get all variants and bundles with stock info for the order catalog.
      */

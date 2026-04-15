@@ -23,6 +23,7 @@ use App\Models\Product\ProductVariant;
 use App\Models\Setting\Lookup;
 use App\Models\Setting\Province;
 use App\Models\Setting\Ward;
+use App\Models\Vendor\Vendor;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -659,5 +660,62 @@ class DemoDataSeeder extends Seeder
         );
 
         $this->command->info('Created 1 designer + 1 design service.');
+    }
+
+    protected function seedVendors(): void
+    {
+        $data = [
+            [
+                'name' => 'Nhà cung cấp Gỗ Việt',
+                'code' => 'VND-001',
+                'contact_name' => 'Ông Nguyễn Văn Gỗ',
+                'email' => 'contact@goviet.com',
+                'phone' => '02431234567',
+                'website' => 'https://goviet.com',
+                'address' => '123 Đường Láng, Đống Đa, Hà Nội',
+                'bank_name' => 'Vietcombank',
+                'bank_account_number' => '10102000123456',
+                'bank_account_holder' => 'Công ty TNHH Gỗ Việt',
+                'is_active' => true,
+                'verified_at' => now(),
+            ],
+            [
+                'name' => 'Nội thất Hiện Đại',
+                'code' => 'VND-002',
+                'contact_name' => 'Bà Trần Thị Hiện',
+                'email' => 'info@hiendai.vn',
+                'phone' => '02839998888',
+                'website' => 'https://hiendai.vn',
+                'address' => '456 Lê Lợi, Quận 1, TP.HCM',
+                'bank_name' => 'Techcombank',
+                'bank_account_number' => '190123456789',
+                'bank_account_holder' => 'Công ty Nội thất Hiện Đại',
+                'is_active' => true,
+                'verified_at' => now(),
+            ],
+            [
+                'name' => 'Xưởng Mộc Đông Dương',
+                'code' => 'VND-003',
+                'contact_name' => 'Ông Lê Văn Mộc',
+                'email' => 'sales@dongduong.com',
+                'phone' => '02514445556',
+                'website' => 'https://dongduong.com',
+                'address' => '789 Quốc lộ 1A, Bình Dương',
+                'bank_name' => 'Agribank',
+                'bank_account_number' => '0123456789012',
+                'bank_account_holder' => 'Xưởng Mộc Đông Dương',
+                'is_active' => false,
+                'verified_at' => null,
+            ],
+        ];
+
+        foreach ($data as $d) {
+            Vendor::firstOrCreate(
+                ['code' => $d['code']],
+                $d
+            );
+        }
+
+        $this->command->info('Created '.count($data).' vendors.');
     }
 }

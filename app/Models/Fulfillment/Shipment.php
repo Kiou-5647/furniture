@@ -2,6 +2,7 @@
 
 namespace App\Models\Fulfillment;
 
+use App\Enums\OrderStatus;
 use App\Enums\ShipmentStatus;
 use App\Models\Hr\Employee;
 use App\Models\Inventory\Location;
@@ -96,5 +97,10 @@ class Shipment extends Model
     public function canBeCancelled(): bool
     {
         return in_array($this->status, [ShipmentStatus::Pending, ShipmentStatus::Shipped], true);
+    }
+
+    public function canBeResent(): bool
+    {
+        return $this->status === ShipmentStatus::Cancelled && $this->order?->status !== OrderStatus::Cancelled;
     }
 }

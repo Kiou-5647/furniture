@@ -69,6 +69,7 @@ return new class extends Migration
             $table->string('status', 20)->default('active');
 
             $table->string('name')->nullable();
+            $table->string('swatch_label')->nullable();
             $table->string('slug', 128)->nullable();
             $table->text('description')->nullable();
 

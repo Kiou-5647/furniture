@@ -6,25 +6,18 @@ use App\Data\Product\CategoryFilterData;
 use App\Models\Product\Category;
 use App\Models\Setting\Lookup;
 use App\Models\Setting\LookupNamespace;
-use App\Services\Cache\CacheService;
 use App\Support\CacheKeys;
+use App\Support\CacheTag;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 
 class CategoryService
 {
-    public function __construct(
-        private CacheService $cache,
-    ) {}
-
     public function getCategoryGroups(): Collection
     {
-        return Cache::remember(
-            CacheKeys::category('groups'),
-            CacheKeys::TTL,
-            fn () => $this->buildCategoryGroups()
-        );
+        return Cache::tags([CacheTag::CategoryGroups->value])
+            ->remember(CacheTag::CategoryGroups->key('data'), CacheKeys::TTL, fn () => $this->buildCategoryGroups());
     }
 
     protected function buildCategoryGroups(): Collection
@@ -52,11 +45,8 @@ class CategoryService
 
     public function getRoomOptions(): Collection
     {
-        return Cache::remember(
-            CacheKeys::category('rooms'),
-            CacheKeys::TTL,
-            fn () => LookupNamespace::where('slug', 'phong')->first()?->activeLookups()->get() ?? collect()
-        );
+        return Cache::tags([CacheTag::CategoryRooms->value])
+            ->remember(CacheTag::CategoryRooms->key('data'), CacheKeys::TTL, fn () => LookupNamespace::where('slug', 'phong')->first()?->activeLookups()->get() ?? collect());
     }
 
     public function getFiltered(CategoryFilterData $filter): LengthAwarePaginator
@@ -84,11 +74,8 @@ class CategoryService
 
     public function getAvailableFilters(string $categorySlug): Collection
     {
-        return Cache::remember(
-            CacheKeys::category("available_filters.{$categorySlug}"),
-            CacheKeys::TTL,
-            fn () => $this->buildAvailableFilters($categorySlug)
-        );
+        return Cache::tags([CacheTag::CategoryFilters->value])
+            ->remember("{$categorySlug}", CacheKeys::TTL, fn () => $this->buildAvailableFilters($categorySlug));
     }
 
     protected function buildAvailableFilters(string $categorySlug): Collection
@@ -117,10 +104,5 @@ class CategoryService
                 'image_url' => $lookup->getFirstMediaUrl('image', 'webp') ?: null,
             ])->values(),
         ])->values();
-    }
-
-    public function clearCache(): void
-    {
-        $this->cache->flushCategories();
     }
 }

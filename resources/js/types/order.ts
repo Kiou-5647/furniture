@@ -121,6 +121,10 @@ export interface Shipment {
     status: string;
     status_label: string;
     status_color: string;
+    can_ship: boolean;
+    can_deliver: boolean;
+    can_cancel: boolean;
+    can_resend: boolean;
     handled_by: {
         full_name: string;
         phone: string | null;

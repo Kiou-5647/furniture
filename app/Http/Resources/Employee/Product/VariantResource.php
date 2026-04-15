@@ -14,6 +14,7 @@ class VariantResource extends JsonResource
             'product_id' => $this->product_id,
             'sku' => $this->sku,
             'name' => $this->name,
+            'swatch_label' => $this->swatch_label,
             'slug' => $this->slug,
             'description' => $this->description,
             'price' => $this->price,
@@ -28,7 +29,7 @@ class VariantResource extends JsonResource
             'status' => $this->status,
             'primary_image_url' => $this->getFirstMediaUrl('primary_image'),
             'hover_image_url' => $this->getFirstMediaUrl('hover_image'),
-            'gallery_urls' => $this->getMedia('gallery')->map(fn ($media) => [
+            'gallery_urls' => $this->getMedia('gallery')->map(fn($media) => [
                 'id' => $media->id,
                 'url' => $media->getUrl(),
                 'thumb_url' => $media->getUrl('thumb'),
@@ -36,7 +37,9 @@ class VariantResource extends JsonResource
             'dimension_image_url' => $this->getFirstMediaUrl('dimension_image'),
             'swatch_image_url' => $this->getFirstMediaUrl('swatch_image'),
             'swatch_image_thumb_url' => $this->getFirstMediaUrl('swatch_image', 'swatch'),
-            'stock' => $this->whenLoaded('inventories', fn () => $this->inventories->map(fn ($inv) => [
+            'in_stock' => $this->getAvailableStock() > 0,
+            'total_stock' => $this->getAvailableStock(),
+            'stock' => $this->whenLoaded('inventories', fn() => $this->inventories->map(fn($inv) => [
                 'location_id' => $inv->location_id,
                 'quantity' => $inv->quantity,
                 'cost_per_unit' => $inv->quantity > 0 && $inv->cost_per_unit > 0

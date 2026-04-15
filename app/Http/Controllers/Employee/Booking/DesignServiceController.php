@@ -10,7 +10,7 @@ use App\Http\Resources\Employee\Booking\DesignServiceResource;
 use App\Models\Booking\DesignService;
 use App\Services\Booking\DesignServiceService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -35,6 +35,8 @@ class DesignServiceController
 
     public function store(StoreDesignServiceRequest $request)
     {
+        Gate::authorize('create', DesignService::class);
+
         DesignService::create($request->validated());
 
         return back()->with('success', 'Đã thêm dịch vụ thiết kế.');
@@ -42,6 +44,8 @@ class DesignServiceController
 
     public function update(UpdateDesignServiceRequest $request, DesignService $service)
     {
+        Gate::authorize('manage', $service);
+
         $service->update($request->validated());
 
         return back()->with('success', 'Đã cập nhật dịch vụ thiết kế.');
@@ -49,9 +53,7 @@ class DesignServiceController
 
     public function destroy(DesignService $service)
     {
-        if (! Auth::user()->can('design_services.manage')) {
-            return back()->with('error', 'Không đủ quyền hạn!');
-        }
+        Gate::authorize('manage', $service);
 
         $service->delete();
 
@@ -60,9 +62,7 @@ class DesignServiceController
 
     public function restore(DesignService $service)
     {
-        if (! Auth::user()->can('design_services.manage')) {
-            return back()->with('error', 'Không đủ quyền hạn!');
-        }
+        Gate::authorize('manage', $service);
 
         $service->restore();
 

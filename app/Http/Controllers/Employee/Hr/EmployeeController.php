@@ -14,7 +14,7 @@ use App\Http\Resources\Employee\Hr\EmployeeResource;
 use App\Models\Hr\Employee;
 use App\Services\Hr\EmployeeService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -52,6 +52,8 @@ class EmployeeController
 
     public function store(CreateEmployeeRequest $request, CreateEmployeeAction $action)
     {
+        Gate::authorize('create', Employee::class);
+
         $data = CreateEmployeeData::fromRequest($request);
         $roles = $request->input('roles', []);
         $permissions = $request->input('permissions', []);
@@ -62,6 +64,8 @@ class EmployeeController
 
     public function update(UpdateEmployeeRequest $request, Employee $employee, UpdateEmployeeAction $action)
     {
+        Gate::authorize('manage', $employee);
+
         $roles = $request->input('roles', []);
         $permissions = $request->input('permissions', []);
         $employee = $action->execute($employee, $request->validated(), $roles, $permissions);
@@ -71,9 +75,7 @@ class EmployeeController
 
     public function destroy(Employee $employee)
     {
-        if (! Auth::user()->can('employees.manage')) {
-            return back()->with('error', 'Không đủ quyền hạn!');
-        }
+        Gate::authorize('manage', $employee);
 
         $employee->user->delete();
 
@@ -82,6 +84,8 @@ class EmployeeController
 
     public function terminate(Employee $employee, Request $request, TerminateEmployeeAction $action)
     {
+        Gate::authorize('terminate', $employee);
+
         $terminationDate = $request->input('termination_date') ? now() : null;
         $action->execute($employee, $terminationDate);
 
@@ -90,6 +94,8 @@ class EmployeeController
 
     public function restore(Employee $employee, RestoreEmployeeAction $action)
     {
+        Gate::authorize('manage', $employee);
+
         $action->execute($employee);
 
         return back()->with('success', 'Đã khôi phục nhân viên.');
@@ -107,9 +113,7 @@ class EmployeeController
 
     public function syncRolesPermissions(Employee $employee, Request $request)
     {
-        if (! Auth::user()->can('roles/manage')) {
-            return back()->with('error', 'Không đủ quyền hạn!');
-        }
+        Gate::authorize('syncPermissions', $employee);
 
         $request->validate([
             'roles' => ['nullable', 'array'],

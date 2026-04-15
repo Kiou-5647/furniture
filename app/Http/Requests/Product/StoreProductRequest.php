@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Product\Bundle;
+namespace App\Http\Requests\Product;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -129,6 +129,7 @@ class StoreProductRequest extends FormRequest
             'variants' => ['nullable', 'array'],
             'variants.*.sku' => ['required_with:variants', 'string', 'max:20', Rule::unique('product_variants', 'sku')],
             'variants.*.price' => ['required_with:variants', 'numeric', 'min:0'],
+            'variants.*.swatch_label' => 'nullable|string|max:255',
             'variants.*.profit_margin_value' => ['nullable', 'numeric', 'min:0'],
             'variants.*.profit_margin_unit' => ['nullable', Rule::in(['fixed', 'percentage'])],
             'variants.*.weight' => ['nullable', 'array'],

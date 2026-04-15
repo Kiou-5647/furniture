@@ -7,21 +7,51 @@ use App\Models\Sales\Order;
 
 class OrderPolicy
 {
-    public function view(User $user, Order $order): bool
+    public function create(User $user): bool
     {
         return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('orders.view');
+            || $user->hasPermissionTo('orders.create');
     }
 
-    public function update(User $user, Order $order): bool
+    public function updateStatus(User $user, Order $order): bool
     {
         return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('orders.update');
+            || $user->hasPermissionTo('orders.update_status');
     }
 
-    public function forceDelete(User $user, Order $order): bool
+    public function cancel(User $user, Order $order): bool
     {
         return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('orders.force_delete');
+            || $user->hasPermissionTo('orders.cancel');
+    }
+
+    public function complete(User $user, Order $order): bool
+    {
+        return $user->hasRole('super_admin')
+            || $user->hasPermissionTo('orders.complete');
+    }
+
+    public function markAsPaid(User $user, Order $order): bool
+    {
+        return $user->hasRole('super_admin')
+            || $user->hasPermissionTo('orders.mark_paid');
+    }
+
+    public function manage(User $user, Order $order): bool
+    {
+        return $user->hasRole('super_admin')
+            || $user->hasPermissionTo('orders.manage');
+    }
+
+    public function createShipments(User $user, Order $order): bool
+    {
+        return $user->hasRole('super_admin')
+            || $user->hasPermissionTo('shipments.create');
+    }
+
+    public function storeShipments(User $user, Order $order): bool
+    {
+        return $user->hasRole('super_admin')
+            || $user->hasPermissionTo('shipments.create');
     }
 }

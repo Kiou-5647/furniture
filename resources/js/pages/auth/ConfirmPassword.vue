@@ -17,7 +17,7 @@ import { store } from '@/routes/password/confirm';
         <Head title="Xác nhận mật khẩu" />
 
         <Form
-            v-bind="store()"
+            v-bind="store.form()"
             reset-on-success
             v-slot="{ errors, processing }"
         >

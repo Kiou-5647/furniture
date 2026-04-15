@@ -6,8 +6,10 @@ use App\Actions\Sales\ProcessPaymentAction;
 use App\Data\Sales\PaymentFilterData;
 use App\Http\Requests\Sales\ProcessPaymentRequest;
 use App\Http\Resources\Employee\Sales\PaymentResource;
+use App\Models\Sales\Payment;
 use App\Services\Sales\PaymentService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -33,6 +35,8 @@ class PaymentController
 
     public function store(ProcessPaymentRequest $request, ProcessPaymentAction $action)
     {
+        Gate::authorize('create', Payment::class);
+
         $payment = $action->execute($request->validated());
 
         return back()->with('success', 'Đã ghi nhận thanh toán.');

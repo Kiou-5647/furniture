@@ -37,6 +37,7 @@ GEMINI.md
 QWEN.md
 .geminiignore
 .opencode
+.openclaw
 .gemini
 .qwen
 .mindmodel
@@ -47,3 +48,11 @@ thoughts
 /_ide_helper*.php
 PROJECT-INSIGHT.md
 VNpay
+HEARTBEAT.md
+IDENTITY.md
+SOUL.md
+TOOLS.md
+USER.md
+MEMORY.md
+docs/
+memory/

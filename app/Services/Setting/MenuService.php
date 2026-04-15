@@ -215,6 +215,12 @@ class MenuService
 
             if ($user->can('inventory.view')) {
                 $inventoryItems[] = [
+                    'title' => 'Nhà cung cấp',
+                    'href' => route('employee.inventory.vendor.index'),
+                    'isActive' => Route::is('employee.vendor.*'),
+                ];
+
+                $inventoryItems[] = [
                     'title' => 'Vị trí kho hàng',
                     'href' => route('employee.inventory.locations.index'),
                     'isActive' => Route::is('employee.inventory.locations.*'),
@@ -237,7 +243,7 @@ class MenuService
                 'title' => 'Kho hàng',
                 'href' => '#',
                 'icon' => 'Warehouse',
-                'isActive' => Route::is('employee.inventory.*'),
+                'isActive' => Route::is('employee.inventory.*') || Route::is('employee.vendor.*'),
                 'items' => $inventoryItems,
             ];
         }

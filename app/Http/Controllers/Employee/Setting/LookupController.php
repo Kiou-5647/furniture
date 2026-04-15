@@ -10,7 +10,7 @@ use App\Http\Resources\Employee\Setting\LookupResource;
 use App\Models\Setting\Lookup;
 use App\Services\Setting\LookupService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -46,6 +46,8 @@ class LookupController
 
     public function store(StoreLookupRequest $request, UpsertLookupAction $action)
     {
+        Gate::authorize('create', Lookup::class);
+
         $action->execute($request->validated());
 
         return back()->with('success', 'Đã thêm tra cứu mới.');
@@ -53,7 +55,8 @@ class LookupController
 
     public function update(UpdateLookupRequest $request, Lookup $lookup, UpsertLookupAction $action)
     {
-        // The Action handles the update
+        Gate::authorize('manage', $lookup);
+
         $action->execute($request->validated(), $lookup);
 
         return back()->with('success', 'Đã cập nhật tra cứu.');
@@ -61,9 +64,7 @@ class LookupController
 
     public function destroy(Lookup $lookup)
     {
-        if (! Auth::user()->can('lookups.manage')) {
-            return back()->with('error', 'Không đủ quyền hạn để xóa tra cứu!');
-        }
+        Gate::authorize('manage', $lookup);
 
         $lookup->delete();
 
@@ -72,9 +73,7 @@ class LookupController
 
     public function restore(Lookup $lookup)
     {
-        if (! Auth::user()->can('lookups.manage')) {
-            return back()->with('error', 'Không đủ quyền hạn để khôi phục tra cứu!');
-        }
+        Gate::authorize('manage', $lookup);
 
         $lookup->restore();
 
@@ -83,9 +82,7 @@ class LookupController
 
     public function forceDestroy(Lookup $lookup)
     {
-        if (! Auth::user()->can('lookups.manage')) {
-            return back()->with('error', 'Không đủ quyền hạn để xóa tra cứu!');
-        }
+        Gate::authorize('manage', $lookup);
 
         $lookup->forceDelete();
 

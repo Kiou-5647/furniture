@@ -20,7 +20,7 @@ import { Button } from '@/components/ui/button';
 import { createLazyComponent } from '@/composables/createLazyComponent';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { cleanQuery, setCookie } from '@/lib/utils';
-import { index, destroy } from '@/routes/employee/products/items';
+import { index, destroy, show } from '@/routes/employee/products/items';
 import type {
     BreadcrumbItem,
     ProductStatus,
@@ -219,6 +219,10 @@ function handleCreate() {
     showFormModal.value = true;
 }
 
+function handleShow(product: Product) {
+    router.visit(show({ product: product.id }).url);
+}
+
 function handleEdit(product: Product) {
     selectedProduct.value = product;
     showFormModal.value = true;
@@ -268,7 +272,7 @@ function performDelete() {
                 :order-direction="filters.order_direction"
                 @reset="resetFilters"
                 @sort="handleSort"
-                @row-click="handleEdit"
+                @row-click="handleShow"
                 @update:page="handlePageChange"
                 @update:page-size="handlePageSizeChange"
             >

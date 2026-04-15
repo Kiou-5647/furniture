@@ -7,6 +7,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class StockTransferItemResource extends JsonResource
 {
+    public static $wrap = false;
+
     public function toArray(Request $request): array
     {
         return [

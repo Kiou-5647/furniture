@@ -3,16 +3,17 @@
 namespace App\Policies;
 
 use App\Models\Auth\User;
+use App\Models\Hr\Department;
 
 class DepartmentPolicy
 {
-    public function view(User $user): bool
+    public function create(User $user): bool
     {
         return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('departments.view');
+            || $user->hasPermissionTo('departments.create');
     }
 
-    public function update(User $user): bool
+    public function manage(User $user, Department $department): bool
     {
         return $user->hasRole('super_admin')
             || $user->hasPermissionTo('departments.manage');

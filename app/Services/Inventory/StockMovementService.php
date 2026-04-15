@@ -8,6 +8,7 @@ use App\Models\Inventory\Location;
 use App\Models\Inventory\StockMovement;
 use App\Models\Product\ProductVariant;
 use App\Support\CacheKeys;
+use App\Support\CacheTag;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Cache;
 
@@ -38,10 +39,8 @@ class StockMovementService
 
     public function getLocationOptions(): array
     {
-        return Cache::remember(
-            CacheKeys::inventory('location_options_simple'),
-            now()->addDay(),
-            fn () => Location::query()
+        return Cache::tags([CacheTag::Locations->value])
+            ->remember(CacheTag::Locations->key('movement_options'), CacheKeys::TTL, fn () => Location::query()
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get(['id', 'code', 'name'])
@@ -49,8 +48,7 @@ class StockMovementService
                     'id' => $location->id,
                     'label' => "{$location->code} - {$location->name}",
                 ])
-                ->toArray()
-        );
+                ->toArray());
     }
 
     public function getVariantOptions(): array

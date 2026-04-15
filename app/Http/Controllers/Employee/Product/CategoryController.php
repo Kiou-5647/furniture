@@ -11,7 +11,7 @@ use App\Models\Product\Category;
 use App\Models\Setting\Lookup;
 use App\Services\Product\CategoryService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -53,6 +53,8 @@ class CategoryController
 
     public function store(StoreCategoryRequest $request, UpsertCategoryAction $action)
     {
+        Gate::authorize('create', Category::class);
+
         $action->execute($request->validated());
 
         return back()->with('success', 'Đã thêm danh mục mới.');
@@ -60,6 +62,8 @@ class CategoryController
 
     public function update(UpdateCategoryRequest $request, Category $category, UpsertCategoryAction $action)
     {
+        Gate::authorize('manage', $category);
+
         $action->execute($request->validated(), $category);
 
         return back()->with('success', 'Đã cập nhật danh mục.');
@@ -67,9 +71,7 @@ class CategoryController
 
     public function restore(Category $category)
     {
-        if (! Auth::user()->can('categories.manage')) {
-            return back()->with('error', 'Không đủ quyền hạn!');
-        }
+        Gate::authorize('manage', $category);
 
         $category->restore();
 
@@ -78,9 +80,7 @@ class CategoryController
 
     public function destroy(Category $category)
     {
-        if (! Auth::user()->can('categories.manage')) {
-            return back()->with('error', 'Không đủ quyền hạn!');
-        }
+        Gate::authorize('manage', $category);
         $category->delete();
 
         return back()->with('success', 'Đã xóa danh mục.');
@@ -88,9 +88,7 @@ class CategoryController
 
     public function forceDestroy(Category $category)
     {
-        if (! Auth::user()->can('categories.manage')) {
-            return back()->with('error', 'Không đủ quyền hạn để xóa danh mục!');
-        }
+        Gate::authorize('manage', $category);
 
         $category->forceDelete();
 

@@ -16,6 +16,7 @@ use App\Models\Inventory\StockTransfer;
 use App\Services\Inventory\StockTransferService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -48,6 +49,8 @@ class StockTransferController
 
     public function store(StoreStockTransferRequest $request, CreateStockTransferAction $action)
     {
+        Gate::authorize('create', StockTransfer::class);
+
         $validated = $request->validated();
 
         $fromLocation = Location::findOrFail($validated['from_location_id']);
@@ -78,6 +81,8 @@ class StockTransferController
 
     public function ship(StockTransfer $transfer, Request $request, ShipStockTransferAction $action)
     {
+        Gate::authorize('ship', $transfer);
+
         $employee = $request->user()->employee;
 
         $action->handle(
@@ -90,6 +95,8 @@ class StockTransferController
 
     public function receive(ReceiveStockTransferRequest $request, StockTransfer $transfer, ReceiveStockTransferAction $action)
     {
+        Gate::authorize('receive', $transfer);
+
         $validated = $request->validated();
         $employee = $request->user()->employee;
 
@@ -104,6 +111,8 @@ class StockTransferController
 
     public function cancel(StockTransfer $transfer, Request $request, CancelStockTransferAction $action)
     {
+        Gate::authorize('cancel', $transfer);
+
         $employee = $request->user()->employee;
 
         $action->handle(

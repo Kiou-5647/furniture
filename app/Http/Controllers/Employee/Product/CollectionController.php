@@ -10,7 +10,7 @@ use App\Http\Resources\Employee\Product\CollectionResource;
 use App\Models\Product\Collection;
 use App\Services\Product\CollectionService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -44,6 +44,8 @@ class CollectionController
 
     public function store(StoreCollectionRequest $request, UpsertCollectionAction $action)
     {
+        Gate::authorize('create', Collection::class);
+
         $action->execute($request->validated());
 
         return back()->with('success', 'Đã thêm bộ sưu tập mới.');
@@ -51,6 +53,8 @@ class CollectionController
 
     public function update(UpdateCollectionRequest $request, Collection $collection, UpsertCollectionAction $action)
     {
+        Gate::authorize('manage', $collection);
+
         $action->execute($request->validated(), $collection);
 
         return back()->with('success', 'Đã cập nhật bộ sưu tập.');
@@ -58,9 +62,7 @@ class CollectionController
 
     public function destroy(Collection $collection)
     {
-        if (! Auth::user()->can('collections.manage')) {
-            return back()->with('error', 'Không đủ quyền hạn!');
-        }
+        Gate::authorize('manage', $collection);
         $collection->delete();
 
         return back()->with('success', 'Đã xóa bộ sưu tập.');
@@ -68,9 +70,7 @@ class CollectionController
 
     public function restore(Collection $collection)
     {
-        if (! Auth::user()->can('collections.manage')) {
-            return back()->with('error', 'Không đủ quyền hạn!');
-        }
+        Gate::authorize('manage', $collection);
 
         $collection->restore();
 
@@ -79,9 +79,7 @@ class CollectionController
 
     public function forceDestroy(Collection $collection)
     {
-        if (! Auth::user()->can('collections.manage')) {
-            return back()->with('error', 'Không đủ quyền hạn!');
-        }
+        Gate::authorize('manage', $collection);
 
         $collection->forceDelete();
 

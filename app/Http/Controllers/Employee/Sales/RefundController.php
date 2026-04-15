@@ -8,6 +8,7 @@ use App\Http\Resources\Employee\Sales\RefundResource;
 use App\Models\Sales\Refund;
 use App\Services\Sales\RefundService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -41,6 +42,7 @@ class RefundController
 
     public function approve(Request $request, Refund $refund, ProcessRefundAction $action)
     {
+        Gate::authorize('approve', $refund);
         $employee = $request->user()->employee;
 
         $action->approve($refund, $employee);
@@ -50,6 +52,7 @@ class RefundController
 
     public function reject(Request $request, Refund $refund, ProcessRefundAction $action)
     {
+        Gate::authorize('reject', $refund);
         $employee = $request->user()->employee;
         $notes = $request->input('notes', '');
 
@@ -60,6 +63,7 @@ class RefundController
 
     public function markProcessing(Request $request, Refund $refund, ProcessRefundAction $action)
     {
+        Gate::authorize('process', $refund);
         $employee = $request->user()->employee;
 
         $action->markProcessing($refund, $employee);

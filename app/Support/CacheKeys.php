@@ -4,35 +4,14 @@ namespace App\Support;
 
 class CacheKeys
 {
-    public const TTL = 86400;
+    public const TTL = 86400; // 24 hours
 
-    public static function product(string $key): string
+    /**
+     * Build a unique cache key for filter-based queries.
+     * Uses MD5 of serialized filter to ensure uniqueness.
+     */
+    public static function getFiltersKeys(string $name, $filter): string
     {
-        return "product.{$key}";
-    }
-
-    public static function category(string $key): string
-    {
-        return "category.{$key}";
-    }
-
-    public static function lookup(string $key): string
-    {
-        return "lookup.{$key}";
-    }
-
-    public static function inventory(string $key): string
-    {
-        return "inventory.{$key}";
-    }
-
-    public static function geodata(string $key): string
-    {
-        return "geodata.{$key}";
-    }
-
-    public static function stockTransfer(string $key): string
-    {
-        return "stock_transfer.{$key}";
+        return $name.':'.md5(serialize($filter));
     }
 }

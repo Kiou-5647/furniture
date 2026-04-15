@@ -11,7 +11,7 @@ use App\Models\Product\Product;
 use App\Services\Product\ProductService;
 use App\Services\Setting\LookupService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -56,8 +56,19 @@ class ProductController
         ]);
     }
 
+    public function show(Product $product): Response
+    {
+        $product->load(['vendor', 'category', 'collection']);
+
+        return Inertia::render('employee/products/products/Show', [
+            'product' => new ProductResource($product),
+        ]);
+    }
+
     public function store(StoreProductRequest $request, UpsertProductAction $action)
     {
+        Gate::authorize('create', Product::class);
+
         $action->execute($request->validated());
 
         return back()->with('success', 'Đã thêm sản phẩm mới.');
@@ -65,6 +76,8 @@ class ProductController
 
     public function update(UpdateProductRequest $request, Product $product, UpsertProductAction $action)
     {
+        Gate::authorize('manage', $product);
+
         $action->execute($request->validated(), $product);
 
         return back()->with('success', 'Đã cập nhật sản phẩm.');
@@ -72,9 +85,7 @@ class ProductController
 
     public function restore(Product $product)
     {
-        if (! Auth::user()->can('products.manage')) {
-            return back()->with('error', 'Không đủ quyền hạn!');
-        }
+        Gate::authorize('manage', $product);
 
         $product->restore();
 
@@ -83,9 +94,7 @@ class ProductController
 
     public function destroy(Product $product)
     {
-        if (! Auth::user()->can('products.manage')) {
-            return back()->with('error', 'Không đủ quyền hạn!');
-        }
+        Gate::authorize('manage', $product);
 
         $product->delete();
 
@@ -94,9 +103,7 @@ class ProductController
 
     public function forceDestroy(Product $product)
     {
-        if (! Auth::user()->can('products.manage')) {
-            return back()->with('error', 'Không đủ quyền hạn để xóa sản phẩm!');
-        }
+        Gate::authorize('manage', $product);
 
         $product->forceDelete();
 

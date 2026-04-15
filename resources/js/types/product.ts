@@ -56,6 +56,7 @@ export interface Product {
     new_arrival_until: string | null;
     variants_count?: number;
     variants?: ProductVariant[];
+    grouped_variants?: GroupedVariantCard[];
     created_at: string;
     updated_at: string;
 }
@@ -76,6 +77,24 @@ export interface OptionItem {
     metadata?: Record<string, any>;
 }
 
+export interface SwatchOption {
+    value: string;
+    label: string;
+    variant_id: string;
+    sku: string;
+    slug: string;
+    price: string;
+    in_stock: boolean;
+    primary_image_url: string | null;
+    swatch_image_url: string | null;
+}
+
+export interface GroupedVariantCard {
+    option_values: Record<string, string>;
+    swatch_options: SwatchOption[];
+    variant_count: number;
+}
+
 export interface MediaItem {
     id: number;
     url: string;
@@ -87,6 +106,7 @@ export interface ProductVariant {
     product_id: string;
     sku: string;
     name: string | null;
+    swatch_label: string | null;
     slug: string | null;
     description: string | null;
     price: string | number;
@@ -111,6 +131,7 @@ export interface ProductVariant {
     swatch_image_thumb_url?: string | null;
     swatch_image_file?: File | null;
     removed_gallery_ids?: number[];
+    in_stock: boolean;
     stock?: VariantStock[];
     created_at: string;
     updated_at: string;

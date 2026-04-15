@@ -7,6 +7,7 @@ use App\Enums\StockTransferStatus;
 use App\Models\Inventory\Location;
 use App\Models\Inventory\StockTransfer;
 use App\Support\CacheKeys;
+use App\Support\CacheTag;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Cache;
 
@@ -47,10 +48,8 @@ class StockTransferService
 
     public function getLocationOptions(): array
     {
-        return Cache::remember(
-            CacheKeys::inventory('location_options_full'),
-            now()->addDay(),
-            fn () => Location::query()
+        return Cache::tags([CacheTag::Locations->value])
+            ->remember(CacheTag::Locations->key('transfer_options'), CacheKeys::TTL, fn () => Location::query()
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get(['id', 'code', 'name', 'type'])
@@ -59,7 +58,6 @@ class StockTransferService
                     'label' => "{$location->code} - {$location->name}",
                     'type' => $location->type->value,
                 ])
-                ->toArray()
-        );
+                ->toArray());
     }
 }

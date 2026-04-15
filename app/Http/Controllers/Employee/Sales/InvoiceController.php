@@ -10,7 +10,7 @@ use App\Http\Resources\Employee\Sales\InvoiceResource;
 use App\Models\Sales\Invoice;
 use App\Services\Sales\InvoiceService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -60,6 +60,8 @@ class InvoiceController
 
     public function store(CreateInvoiceRequest $request, CreateInvoiceAction $action)
     {
+        Gate::authorize('create', Invoice::class);
+
         $data = CreateInvoiceData::fromArray($request->validated());
         $invoice = $action->execute($data);
 
@@ -69,9 +71,7 @@ class InvoiceController
 
     public function destroy(Invoice $invoice)
     {
-        if (! Auth::user()->can('invoices.delete')) {
-            return back()->with('error', 'Không đủ quyền hạn!');
-        }
+        Gate::authorize('manage', $invoice);
 
         $invoice->delete();
 
@@ -80,9 +80,7 @@ class InvoiceController
 
     public function restore(Invoice $invoice)
     {
-        if (! Auth::user()->can('invoices.manage')) {
-            return back()->with('error', 'Không đủ quyền hạn!');
-        }
+        Gate::authorize('manage', $invoice);
 
         $invoice->restore();
 
@@ -91,9 +89,7 @@ class InvoiceController
 
     public function forceDestroy(Invoice $invoice)
     {
-        if (! Auth::user()->can('invoices.force_delete')) {
-            return back()->with('error', 'Không đủ quyền hạn để xóa vĩnh viễn!');
-        }
+        Gate::authorize('manage', $invoice);
 
         $invoice->forceDelete();
 

@@ -7,39 +7,33 @@ use App\Models\Booking\Booking;
 
 class BookingPolicy
 {
-    public function approve(User $user, Booking $booking): bool
-    {
-        if ($user->hasRole('super_admin')) {
-            return true;
-        }
-
-        if ($user->hasPermissionTo('bookings.approve')) {
-            return true;
-        }
-
-        if ($booking->designer) {
-            return $booking->designer->user_id === $user->id
-                || $booking->designer->employee_id === $user->employee?->id;
-        }
-
-        return false;
-    }
-
-    public function view(User $user, Booking $booking): bool
+    public function create(User $user): bool
     {
         return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('bookings.view');
+            || $user->hasPermissionTo('bookings.create');
     }
 
-    public function update(User $user, Booking $booking): bool
+    public function confirm(User $user, Booking $booking): bool
     {
         return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('bookings.update');
+            || $user->hasPermissionTo('bookings.confirm');
     }
 
-    public function delete(User $user, Booking $booking): bool
+    public function cancel(User $user, Booking $booking): bool
     {
         return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('bookings.delete');
+            || $user->hasPermissionTo('bookings.cancel');
+    }
+
+    public function openInvoice(User $user, Booking $booking): bool
+    {
+        return $user->hasRole('super_admin')
+            || $user->hasPermissionTo('bookings.open_invoice');
+    }
+
+    public function manage(User $user, Booking $booking): bool
+    {
+        return $user->hasRole('super_admin')
+            || $user->hasPermissionTo('bookings.manage');
     }
 }

@@ -4,81 +4,96 @@ namespace App\Services\Cache;
 
 use App\Models\Product\Category;
 use App\Models\Setting\LookupNamespace;
+use App\Support\CacheTag;
+use Illuminate\Support\Facades\Cache;
 
 class CacheInvalidator
 {
-    public function __construct(
-        private CacheService $cache,
-    ) {}
-
     public function onLookupChanged(): void
     {
-        $this->cache->flushLookups();
+        CacheTag::Lookups->flush();
+        CacheTag::LookupNamespaces->flush();
     }
 
     public function onLookupNamespaceChanged(?LookupNamespace $namespace = null): void
     {
-        $this->cache->flushLookups();
+        CacheTag::LookupNamespaces->flush();
 
         if ($namespace === null) {
-            $this->cache->flushProducts();
-            $this->cache->flushCategories();
+            CacheTag::Vendors->flush();
+            CacheTag::Categories->flush();
+            CacheTag::CategoryGroups->flush();
+            CacheTag::CategoryRooms->flush();
+            CacheTag::VariantOptions->flush();
+            CacheTag::FeatureOptions->flush();
+            CacheTag::SpecNamespaces->flush();
+            CacheTag::AllSpecLookups->flush();
+            CacheTag::ShopMenu->flush();
 
             return;
         }
 
         if ($namespace->for_variants) {
-            $this->cache->flushVariantOptions();
+            CacheTag::VariantOptions->flush();
         }
 
         if ($namespace->slug === 'tinh-nang') {
-            $this->cache->flushFeatureOptions();
+            CacheTag::FeatureOptions->flush();
         }
 
         if (! in_array($namespace->slug, ['tinh-nang', 'nhom-danh-muc'])) {
-            $this->cache->flushSpecNamespaces();
+            CacheTag::SpecNamespaces->flush();
+            CacheTag::AllSpecLookups->flush();
         }
 
         if ($namespace->slug === 'nhom-danh-muc') {
-            $this->cache->flushCategoryOptions();
+            CacheTag::Categories->flush();
+            CacheTag::CategoryGroups->flush();
         }
 
         if ($namespace->slug === 'phong') {
-            $this->cache->flushRoomOptions();
+            CacheTag::CategoryRooms->flush();
+            CacheTag::ShopMenu->flush();
         }
     }
 
     public function onCategoryChanged(?Category $category = null): void
     {
-        $this->cache->flushCategories();
+        CacheTag::Categories->flush();
+        CacheTag::CategoryGroups->flush();
+        CacheTag::CategoryRooms->flush();
+        CacheTag::ShopMenu->flush();
+        CacheTag::CategoryFilters->flush();
 
         if ($category !== null) {
-            $this->cache->flushCategoryFilters($category->slug);
+            // Flush specific category filter cache by tag prefix
+            Cache::tags([CacheTag::CategoryFilters->value])->flush();
         }
     }
 
     public function onCollectionChanged(): void
     {
-        $this->cache->flushCollectionOptions();
+        CacheTag::Collections->flush();
     }
 
     public function onVendorChanged(): void
     {
-        $this->cache->flushVendorOptions();
+        CacheTag::Vendors->flush();
+        CacheTag::VendorsList->flush();
     }
 
     public function onLocationChanged(): void
     {
-        $this->cache->flushInventory();
+        CacheTag::Locations->flush();
     }
 
     public function onStockTransferChanged(): void
     {
-        $this->cache->flushStockTransfers();
+        // No dedicated tag — transfers are not cached
     }
 
     public function onGeodataChanged(): void
     {
-        $this->cache->flushGeodata();
+        CacheTag::Geodata->flush();
     }
 }

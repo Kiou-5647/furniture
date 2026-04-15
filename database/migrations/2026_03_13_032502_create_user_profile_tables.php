@@ -73,33 +73,24 @@ return new class extends Migration
 
         Schema::create('vendors', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('verified_by')->nullable();
             $table->string('name');
-            $table->string('code', 50)->nullable()->unique();
             $table->string('contact_name')->nullable();
             $table->string('email')->nullable();
             $table->string('phone', 20)->nullable();
             $table->string('website')->nullable();
-            $table->text('webhook_url')->nullable();
-            $table->text('address')->nullable();
+            $table->string('province_code', 2)->nullable();
+            $table->string('ward_code', 5)->nullable();
+            $table->jsonb('address_data')->default('{}');
             $table->text('bank_name')->nullable();
             $table->string('bank_account_number', 100)->nullable();
             $table->string('bank_account_holder')->nullable();
-            $table->jsonb('api_credentials')->nullable();
-            $table->jsonb('shipping_regions')->default('[]');
-            $table->jsonb('tags')->default('[]');
-            $table->integer('payment_terms_days')->default(30);
-            $table->integer('lead_time_days')->default(7);
-            $table->decimal('minimum_order_amount', 15, 2)->default(0);
-            $table->decimal('rating', 3, 2)->nullable();
-            $table->integer('total_orders')->default(0);
-            $table->decimal('total_revenue', 15, 2)->default(0);
             $table->boolean('is_active')->default(true);
-            $table->boolean('is_preferred')->default(false);
             $table->timestamp('verified_at')->nullable();
             $table->timestamps();
             $table->softDeletes();
-            $table->foreign('verified_by')->references('id')->on('employees');
+
+            $table->foreign('province_code')->references('province_code')->on('provinces')->onDelete('set null');
+            $table->foreign('ward_code')->references('ward_code')->on('wards')->onDelete('set null');
         });
 
         DB::statement('CREATE INDEX idx_vendors_active_clean ON vendors(is_active) WHERE is_active = true AND deleted_at IS NULL');

@@ -9,7 +9,7 @@ use App\Http\Resources\Employee\Inventory\LocationResource;
 use App\Models\Inventory\Location;
 use App\Services\Inventory\LocationService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -49,6 +49,8 @@ class LocationController
 
     public function store(StoreLocationRequest $request)
     {
+        Gate::authorize('create', Location::class);
+
         $this->service->create($request->validated());
 
         return back()->with('success', 'Đã thêm vị trí mới.');
@@ -56,6 +58,8 @@ class LocationController
 
     public function update(UpdateLocationRequest $request, Location $location)
     {
+        Gate::authorize('manage', $location);
+
         $this->service->update($location, $request->validated());
 
         return back()->with('success', 'Đã cập nhật vị trí.');
@@ -63,9 +67,7 @@ class LocationController
 
     public function restore(Location $location)
     {
-        if (! Auth::user()->can('inventory.manage')) {
-            return back()->with('error', 'Không đủ quyền hạn!');
-        }
+        Gate::authorize('manage', $location);
 
         $location->restore();
 
@@ -74,9 +76,7 @@ class LocationController
 
     public function destroy(Location $location)
     {
-        if (! Auth::user()->can('inventory.manage')) {
-            return back()->with('error', 'Không đủ quyền hạn!');
-        }
+        Gate::authorize('manage', $location);
 
         if ($location->inventories()->exists()) {
             return back()->with('error', 'Không thể xóa vị trí đang có tồn kho!');
@@ -89,9 +89,7 @@ class LocationController
 
     public function forceDestroy(Location $location)
     {
-        if (! Auth::user()->can('inventory.manage')) {
-            return back()->with('error', 'Không đủ quyền hạn để xóa vĩnh viễn!');
-        }
+        Gate::authorize('manage', $location);
 
         $location->forceDelete();
 

@@ -9,7 +9,7 @@ use App\Http\Resources\Employee\Setting\LookupNamespaceResource;
 use App\Models\Setting\LookupNamespace;
 use App\Services\Setting\LookupNamespaceService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -37,6 +37,8 @@ class LookupNamespaceController
 
     public function store(StoreLookupNamespaceRequest $request)
     {
+        Gate::authorize('create', LookupNamespace::class);
+
         LookupNamespace::create($request->validated());
 
         return back()->with('success', 'Đã thêm danh mục tra cứu mới.');
@@ -44,6 +46,8 @@ class LookupNamespaceController
 
     public function update(UpdateLookupNamespaceRequest $request, LookupNamespace $lookupNamespace)
     {
+        Gate::authorize('manage', $lookupNamespace);
+
         $lookupNamespace->update($request->validated());
 
         return back()->with('success', 'Đã cập nhật danh mục tra cứu.');
@@ -51,9 +55,7 @@ class LookupNamespaceController
 
     public function destroy(LookupNamespace $lookupNamespace)
     {
-        if (! Auth::user()->can('lookups.manage')) {
-            return back()->with('error', 'Không đủ quyền hạn!');
-        }
+        Gate::authorize('manage', $lookupNamespace);
 
         if ($lookupNamespace->is_system) {
             return back()->with('error', 'Không thể xóa danh mục hệ thống!');

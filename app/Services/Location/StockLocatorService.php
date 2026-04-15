@@ -4,6 +4,7 @@ namespace App\Services\Location;
 
 use App\Models\Inventory\Inventory;
 use App\Models\Inventory\Location;
+use App\Models\Product\Bundle;
 use Illuminate\Support\Collection;
 
 class StockLocatorService
@@ -82,6 +83,10 @@ class StockLocatorService
         ?string $excludeLocationId = null,
         ?string $specificLocationId = null
     ): Collection {
+        if ($purchasableType === Bundle::class) {
+            return $this->findStockForBundle($purchasableId, $customerProvinceCode, $excludeLocationId, $specificLocationId);
+        }
+
         // Inventory table uses variant_id directly, not polymorphic
         $query = Inventory::query()
             ->where('variant_id', $purchasableId)
@@ -118,6 +123,92 @@ class StockLocatorService
                 'location_name' => $location->name,
                 'location_code' => $location->code,
                 'available_qty' => $inv->quantity,
+                'distance_priority' => $priority,
+            ];
+        })->filter()->sortBy(['distance_priority' => 'asc']);
+
+        return $results->values();
+    }
+
+    /**
+     * Find locations that can fulfill the entire bundle.
+     */
+    protected function findStockForBundle(
+        string $bundleId,
+        ?string $customerProvinceCode = null,
+        ?string $excludeLocationId = null,
+        ?string $specificLocationId = null
+    ): Collection {
+        $bundle = Bundle::with('contents.product.variants.inventories.location')->find($bundleId);
+        if (! $bundle) {
+            return collect();
+        }
+
+        $locationAvailability = []; // [location_id => min_qty]
+
+        foreach ($bundle->contents as $content) {
+            $product = $content->product;
+            if (! $product) {
+                continue;
+            }
+
+            // Find all variants of this product that have stock
+            $variantStocks = []; // [location_id => total_qty_across_variants]
+            foreach ($product->variants as $variant) {
+                foreach ($variant->inventories as $inv) {
+                    if ($inv->quantity <= 0) {
+                        continue;
+                    }
+                    if ($excludeLocationId && $inv->location_id === $excludeLocationId) {
+                        continue;
+                    }
+                    if ($specificLocationId && $inv->location_id !== $specificLocationId) {
+                        continue;
+                    }
+
+                    $variantStocks[$inv->location_id] = ($variantStocks[$inv->location_id] ?? 0) + $inv->quantity;
+                }
+            }
+
+            // Only keep locations that have at least the required quantity for this component
+            $eligibleLocations = array_filter($variantStocks, fn ($qty) => $qty >= $content->quantity);
+
+            if (empty($eligibleLocations)) {
+                return collect(); // Bundle cannot be fulfilled anywhere
+            }
+
+            if (empty($locationAvailability)) {
+                // First component: initialize availability
+                foreach ($eligibleLocations as $locId => $qty) {
+                    $locationAvailability[$locId] = (int) ($qty / $content->quantity);
+                }
+            } else {
+                // Subsequent components: intersect and update min_qty
+                foreach ($locationAvailability as $locId => $currentMin) {
+                    if (! isset($eligibleLocations[$locId])) {
+                        unset($locationAvailability[$locId]);
+                    } else {
+                        $qtyForThisComponent = (int) ($eligibleLocations[$locId] / $content->quantity);
+                        $locationAvailability[$locId] = min($currentMin, $qtyForThisComponent);
+                    }
+                }
+            }
+        }
+
+        // Transform results into the same format as findStockForItem
+        $results = collect($locationAvailability)->map(function ($minQty, $locId) use ($customerProvinceCode) {
+            $location = Location::find($locId);
+            if (! $location) {
+                return null;
+            }
+
+            $priority = ($customerProvinceCode && $location->province_code === $customerProvinceCode) ? 0 : 1;
+
+            return [
+                'location_id' => $location->id,
+                'location_name' => $location->name,
+                'location_code' => $location->code,
+                'available_qty' => $minQty,
                 'distance_priority' => $priority,
             ];
         })->filter()->sortBy(['distance_priority' => 'asc']);
