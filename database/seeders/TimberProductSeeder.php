@@ -514,7 +514,6 @@ class TimberProductSeeder extends Seeder
                 'difficulty_level' => 'easy',
                 'instructions_url' => null,
             ]),
-            'is_custom_made' => false,
             'warranty_months' => 12,
             'is_featured' => false,
             'is_new_arrival' => true,

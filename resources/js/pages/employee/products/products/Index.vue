@@ -20,7 +20,7 @@ import { Button } from '@/components/ui/button';
 import { createLazyComponent } from '@/composables/createLazyComponent';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { cleanQuery, setCookie } from '@/lib/utils';
-import { index, destroy, show } from '@/routes/employee/products/items';
+import { index, destroy, show, create, edit } from '@/routes/employee/products/items';
 import type {
     BreadcrumbItem,
     ProductStatus,
@@ -33,10 +33,6 @@ import type {
     ProductPagination,
 } from '@/types/product';
 import { getColumns } from './types/columns';
-
-const ProductFormModal = createLazyComponent(
-    () => import('./components/ProductFormModal.vue'),
-);
 
 const props = defineProps<{
     statusOptions: { value: string; label: string; color: string }[];
@@ -59,7 +55,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const activeColumns = computed(() => getColumns(handleEdit, confirmDelete));
 
-const showFormModal = ref(false);
 const showDeleteDialog = ref(false);
 const selectedProduct = ref<Product | null>(null);
 const isActuallyLoading = ref(true);
@@ -215,8 +210,7 @@ function resetFilters() {
 }
 
 function handleCreate() {
-    selectedProduct.value = null;
-    showFormModal.value = true;
+    router.visit(create().url)
 }
 
 function handleShow(product: Product) {
@@ -224,8 +218,7 @@ function handleShow(product: Product) {
 }
 
 function handleEdit(product: Product) {
-    selectedProduct.value = product;
-    showFormModal.value = true;
+    router.visit(edit(product).url)
 }
 
 function confirmDelete(product: Product) {
@@ -313,22 +306,6 @@ function performDelete() {
                 </template>
             </DataTableGroup>
         </div>
-
-        <ProductFormModal
-            v-if="showFormModal"
-            :open="showFormModal"
-            :product="selectedProduct"
-            :vendor-options="vendorOptions"
-            :category-options="categoryOptions"
-            :collection-options="collectionOptions"
-            :location-options="locationOptions"
-            :variant-options="variantOptions"
-            :feature-options="featureOptions"
-            :spec-namespaces="specNamespaces"
-            :all-spec-lookup-options="allSpecLookupOptions"
-            :lookup-namespaces="lookupNamespaces"
-            @close="showFormModal = false"
-        />
 
         <DeleteConfirmation
             v-model:open="showDeleteDialog"

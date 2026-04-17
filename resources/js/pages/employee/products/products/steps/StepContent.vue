@@ -622,14 +622,6 @@ function setSpecGroupWithLabel(ns: string) {
                 />
                 <Label for="is_featured">Nổi bật</Label>
             </div>
-            <div class="flex items-center gap-2">
-                <Switch
-                    id="is_custom_made"
-                    v-model="ctx.form.is_custom_made"
-                    class="h-4 w-7"
-                />
-                <Label for="is_custom_made">Sản phẩm đặt theo yêu cầu</Label>
-            </div>
         </div>
 
         <!-- Content Section -->

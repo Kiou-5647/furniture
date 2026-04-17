@@ -129,7 +129,6 @@ export interface ProductFormContext {
 
 export function useProductForm(
     product: Product | null,
-    open: boolean,
     variantOptions: LookupOptionGroup[],
     featureOptions: LookupOptionItem[],
     allSpecLookupOptions: Record<string, SpecLookupOption[]>,
@@ -160,7 +159,6 @@ export function useProductForm(
         warranty_months: 12 as number | null,
         is_featured: false,
         is_new_arrival: true,
-        is_custom_made: false,
         published_date: '',
         new_arrival_until: '',
         variants: [] as Partial<ProductVariant>[],
@@ -189,7 +187,7 @@ export function useProductForm(
     watch(
         () => product,
         (newProduct) => {
-            if (newProduct && open) {
+            if (newProduct) {
                 form.vendor_id = newProduct.vendor_id;
                 form.category_id = newProduct.category_id;
                 form.collection_id = newProduct.collection_id;
@@ -233,7 +231,6 @@ export function useProductForm(
                 form.warranty_months = newProduct.warranty_months;
                 form.is_featured = newProduct.is_featured;
                 form.is_new_arrival = newProduct.is_new_arrival;
-                form.is_custom_made = newProduct.is_custom_made;
                 form.published_date = newProduct.published_date ?? '';
                 form.new_arrival_until = newProduct.new_arrival_until ?? '';
                 const optionGroups = newProduct.option_groups ?? [];
@@ -274,8 +271,7 @@ export function useProductForm(
                         gallery_urls: v.gallery_urls ?? [],
                         dimension_image_url: v.dimension_image_url ?? null,
                         swatch_image_url: v.swatch_image_url ?? null,
-                        swatch_image_thumb_url:
-                            v.swatch_image_thumb_url ?? null,
+                        swatch_image_thumb_url: v.swatch_image_thumb_url ?? null,
                         primary_image_file: null,
                         hover_image_file: null,
                         gallery_files: [],
@@ -286,8 +282,9 @@ export function useProductForm(
                         created_at: v.created_at,
                         updated_at: v.updated_at,
                     };
-                });
-            } else if (!newProduct && open) {
+                },
+            );
+            } else if (!newProduct) {
                 form.reset();
                 form.status = 'draft';
                 form.assembly_info = {
@@ -314,13 +311,6 @@ export function useProductForm(
             );
         },
         { deep: true },
-    );
-
-    watch(
-        () => form.name,
-        () => {
-            // No auto-slugify since slug is removed
-        },
     );
 
     watch(
@@ -891,7 +881,6 @@ export function useProductForm(
         form.status = 'draft';
         form.warranty_months = 12;
         form.is_new_arrival = true;
-        form.is_custom_made = false;
         form.assembly_info = {
             required: false,
             estimated_minutes: null,

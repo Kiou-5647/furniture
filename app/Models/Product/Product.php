@@ -360,10 +360,6 @@ class Product extends Model
 
     public function isInStock(): bool
     {
-        if ($this->is_custom_made) {
-            return $this->status === ProductStatus::Published;
-        }
-
         return $this->getAvailableStock() > 0;
     }
 

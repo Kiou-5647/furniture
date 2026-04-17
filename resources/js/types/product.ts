@@ -51,7 +51,6 @@ export interface Product {
     max_price: string;
     is_featured: boolean;
     is_new_arrival: boolean;
-    is_custom_made: boolean;
     published_date: string | null;
     new_arrival_until: string | null;
     variants_count?: number;

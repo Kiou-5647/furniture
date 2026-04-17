@@ -427,6 +427,7 @@ function cancelPriceUpdate() {
 }
 
 defineExpose({ checkPriceAndSubmit });
+console.info(JSON.stringify(ctx.form.variants.stock))
 </script>
 
 <template>

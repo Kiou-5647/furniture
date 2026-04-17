@@ -342,11 +342,13 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
             });
         });
 
-        Route::prefix('san-pham')->name('items.')->group(function () {
+        Route::prefix('')->name('items.')->group(function () {
             // View Group
             Route::middleware(['can:products.view'])->group(function () {
                 Route::get('/', [ProductController::class, 'index'])->name('index');
+                Route::get('/tao-san-pham', [ProductController::class, 'create'])->name('create');
                 Route::get('/{product}', [ProductController::class, 'show'])->name('show');
+                Route::get('/chinh-sua/{product}', [ProductController::class, 'edit'])->name('edit');
             });
 
             // Manage Group

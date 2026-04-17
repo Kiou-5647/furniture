@@ -77,10 +77,6 @@ function formatPrice(value: string | number): string {
                             <dd class="font-medium">{{ product.vendor?.name ?? '—' }}</dd>
                         </div>
                         <Separator />
-                        <div class="flex justify-between">
-                            <dt class="text-muted-foreground">Sản phẩm tùy chỉnh</dt>
-                            <dd class="font-medium">{{ product.is_custom_made ? 'Có' : 'Không' }}</dd>
-                        </div>
                     </dl>
                 </div>
 

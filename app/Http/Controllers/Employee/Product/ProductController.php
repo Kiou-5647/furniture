@@ -37,10 +37,45 @@ class ProductController
             'specNamespaces' => $this->service->getSpecNamespaces(),
             'allSpecLookupOptions' => $this->service->getAllSpecLookupOptions(),
             'lookupNamespaces' => $this->lookupService->getNamespaces(),
-            'products' => Inertia::defer(fn () => ProductResource::collection(
+            'products' => Inertia::defer(fn() => ProductResource::collection(
                 $this->service->getFiltered($filter)
             )),
             'filters' => $filter,
+        ]);
+    }
+
+    public function create(): Response
+    {
+        return Inertia::render('employee/products/products/CreateOrEdit', [
+            'product' => null,
+            'vendorOptions' => $this->service->getVendorOptions(),
+            'categoryOptions' => $this->service->getCategoryOptions(),
+            'collectionOptions' => $this->service->getCollectionOptions(),
+            'locationOptions' => $this->service->getLocationOptions(),
+            'variantOptions' => $this->service->getVariantOptions(),
+            'featureOptions' => $this->service->getFeatureOptions(),
+            'specNamespaces' => $this->service->getSpecNamespaces(),
+            'allSpecLookupOptions' => $this->service->getAllSpecLookupOptions(),
+            'lookupNamespaces' => $this->lookupService->getNamespaces(),
+        ]);
+    }
+
+    public function edit(Product $product): Response
+    {
+        $product->load(['variants']);
+        $product->variants->load(['inventories']);
+
+        return Inertia::render('employee/products/products/CreateOrEdit', [
+            'product' => new ProductResource($product),
+            'vendorOptions' => $this->service->getVendorOptions(),
+            'categoryOptions' => $this->service->getCategoryOptions(),
+            'collectionOptions' => $this->service->getCollectionOptions(),
+            'locationOptions' => $this->service->getLocationOptions(),
+            'variantOptions' => $this->service->getVariantOptions(),
+            'featureOptions' => $this->service->getFeatureOptions(),
+            'specNamespaces' => $this->service->getSpecNamespaces(),
+            'allSpecLookupOptions' => $this->service->getAllSpecLookupOptions(),
+            'lookupNamespaces' => $this->lookupService->getNamespaces(),
         ]);
     }
 
@@ -49,7 +84,7 @@ class ProductController
         $filter = ProductFilterData::fromRequest($request);
 
         return Inertia::render('employee/products/products/Trash', [
-            'products' => Inertia::defer(fn () => ProductResource::collection(
+            'products' => Inertia::defer(fn() => ProductResource::collection(
                 $this->service->getTrashedFiltered($filter)
             )),
             'filters' => $filter,

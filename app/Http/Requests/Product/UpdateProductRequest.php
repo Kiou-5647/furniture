@@ -124,7 +124,6 @@ class UpdateProductRequest extends FormRequest
             'warranty_months' => ['nullable', 'integer', 'min:1'],
             'is_featured' => ['boolean'],
             'is_new_arrival' => ['boolean'],
-            'is_custom_made' => ['boolean'],
             'published_date' => ['nullable', 'date'],
             'new_arrival_until' => ['nullable', 'date', 'after_or_equal:today'],
             'variants' => ['nullable', 'array'],

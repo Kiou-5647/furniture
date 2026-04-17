@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
-import { CheckCircle2, AlertCircle } from '@lucide/vue';
-import { computed, provide, ref, watch } from 'vue';
+import { AlertCircle, ArrowLeft, CheckCircle2 } from '@lucide/vue';
+import { StepperIndicator } from 'reka-ui';
+import { provide, ref, watch, computed } from 'vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,10 +13,8 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Separator } from '@/components/ui/separator';
 import {
     Stepper,
-    StepperIndicator,
     StepperItem,
     StepperSeparator,
     StepperTitle,
@@ -27,12 +26,14 @@ import type {
     LookupOptionGroup,
     LookupOptionItem,
 } from '@/composables/useProductForm';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { index } from '@/routes/employee/products/items';
 import type { SpecNamespace, SpecLookupOption } from '@/types';
 import type { Product } from '@/types/product';
-import StepContent from '../steps/StepContent.vue';
-import StepOptions from '../steps/StepOptions.vue';
-import StepStock from '../steps/StepStock.vue';
-import StepVariants from '../steps/StepVariants.vue';
+import StepContent from './steps/StepContent.vue';
+import StepOptions from './steps/StepOptions.vue';
+import StepStock from './steps/StepStock.vue';
+import StepVariants from './steps/StepVariants.vue';
 
 const LookupFormModal = createLazyComponent(
     () =>
@@ -40,7 +41,6 @@ const LookupFormModal = createLazyComponent(
 );
 
 const props = defineProps<{
-    open: boolean;
     product: Product | null;
     vendorOptions: { id: string; label: string }[];
     categoryOptions: { id: string; label: string }[];
@@ -59,15 +59,12 @@ const props = defineProps<{
     lookupNamespaces: { id: string | null; slug: string; label: string }[];
 }>();
 
-const emit = defineEmits(['close']);
-
 const ctx = useProductForm(
     props.product,
-    props.open,
     props.variantOptions,
     props.featureOptions,
     props.allSpecLookupOptions,
-    emit,
+    () => router.visit(index()),
 );
 
 provide('productForm', ctx);
@@ -104,8 +101,7 @@ const hasUnsavedChanges = computed(() => {
         ctx.form.variants.length > 0 ||
         ctx.form.features.length > 0 ||
         ctx.form.care_instructions.length > 0 ||
-        Object.keys(ctx.form.specifications).length > 0 ||
-        ctx.form.is_custom_made
+        Object.keys(ctx.form.specifications).length > 0
     );
 });
 
@@ -113,13 +109,13 @@ function requestClose() {
     if (hasUnsavedChanges.value) {
         showConfirmClose.value = true;
     } else {
-        ctx.closeModal();
+        router.visit(index().url);
     }
 }
 
 function confirmClose() {
     showConfirmClose.value = false;
-    ctx.closeModal();
+    router.visit(index().url);
 }
 
 function handleOpenLookupForm(namespace: string) {
@@ -128,7 +124,7 @@ function handleOpenLookupForm(namespace: string) {
 }
 
 function handleSubmit() {
-    console.info(ctx.form.variants)
+    console.info(ctx.form.variants);
     if (stockStepRef.value?.checkPriceAndSubmit) {
         stockStepRef.value.checkPriceAndSubmit();
     } else {
@@ -165,27 +161,30 @@ function handleLookupFormClosed() {
 </script>
 
 <template>
-    <Dialog :open="open" @update:open="(val) => !val && requestClose()">
-        <DialogContent
-            class="flex max-h-[95vh] w-[90vw] max-w-7xl flex-col gap-0 overflow-hidden p-0 sm:max-w-5xl"
+    <AppLayout>
+        <div
+            class="flex flex-col gap-0 overflow-hidden p-0"
         >
-            <DialogHeader class="px-5 pt-4">
-                <DialogTitle class="text-2xl">{{
-                    product ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới'
-                }}</DialogTitle>
-                <DialogDescription class="text-md">
-                    {{
-                        product
-                            ? 'Cập nhật thông tin, biến thể và hình ảnh.'
-                            : 'Tạo sản phẩm mới với đầy đủ thông tin.'
-                    }}
-                </DialogDescription>
-            </DialogHeader>
-
-            <Separator class="mt-2" />
-
-            <!-- Mobile: Horizontal Stepper -->
-            <div class="border-b px-4 py-3 md:hidden">
+            <div class="my-3 ml-4 gap-6 flex items-center justify-start">
+                <Button variant="outline" class="w-8 h-8" @click="requestClose()">
+                    <ArrowLeft class="w-4 h-4"/>
+                </Button>
+                <div>
+                    <h1 class="text-2xl font-bold">
+                        {{
+                            product ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới'
+                        }}
+                    </h1>
+                    <p class="text-muted-foreground">
+                        {{
+                            product
+                                ? 'Cập nhật thông tin, biến thể và hình ảnh.'
+                                : 'Tạo sản phẩm mới với đầy đủ thông tin.'
+                        }}
+                    </p>
+                </div>
+            </div>
+            <div class="border-b border-t px-4 py-3 md:hidden">
                 <Stepper
                     v-model="ctx.currentStep"
                     class="flex w-full items-center justify-between"
@@ -280,9 +279,7 @@ function handleLookupFormClosed() {
                     </StepperItem>
                 </Stepper>
             </div>
-
-            <div class="flex flex-1 overflow-hidden">
-                <!-- Desktop: Vertical Stepper Sidebar -->
+            <div class="flex flex-1 gap-6 md:border-t overflow-hidden">
                 <div
                     class="hidden w-40 shrink-0 flex-col border-r px-4 py-4 md:flex"
                 >
@@ -385,9 +382,7 @@ function handleLookupFormClosed() {
                         </StepperItem>
                     </Stepper>
                 </div>
-
-                <!-- Content Area -->
-                <div class="flex-1 overflow-y-auto px-5 py-4">
+                <div class="flex-1 px-4 py-4">
                     <form @submit.prevent="ctx.submit" class="h-full">
                         <StepContent
                             v-show="ctx.currentStep === 1"
@@ -418,65 +413,74 @@ function handleLookupFormClosed() {
                         />
                     </form>
                 </div>
-            </div>
-
-            <Separator />
-
-            <DialogFooter class="px-5 py-3">
-                <Button variant="outline" size="sm" @click="requestClose()">
-                    Hủy
-                </Button>
-                <Button
-                    v-if="ctx.currentStep > 1"
-                    variant="outline"
-                    size="sm"
-                    @click="ctx.prevStep()"
+                <div
+                    class="fixed right-0 bottom-0 left-0 flex justify-end gap-3 border-t bg-background p-4"
                 >
-                    Quay lại
-                </Button>
-                <Button
-                    v-if="ctx.currentStep < ctx.steps.length"
-                    size="sm"
-                    @click="ctx.nextStep()"
-                >
-                    Tiếp theo
-                </Button>
-                <template v-else>
-                    <Alert
-                        v-if="!ctx.isValid && ctx.validationErrors.length > 0"
-                        variant="destructive"
-                        class="mr-auto px-3 py-2"
-                    >
-                        <AlertCircle class="h-3.5 w-3.5" />
-                        <AlertTitle class="text-xs">
-                            Thiếu thông tin bắt buộc
-                        </AlertTitle>
-                        <AlertDescription class="text-xs">
-                            <ul class="mt-1 ml-4 list-disc">
-                                <li
-                                    v-for="(err, i) in ctx.validationErrors"
-                                    :key="i"
-                                >
-                                    {{ err }}
-                                </li>
-                            </ul>
-                        </AlertDescription>
-                    </Alert>
+                    <Button variant="outline" size="sm" @click="requestClose()">
+                        Hủy
+                    </Button>
                     <Button
-                        v-if="ctx.isValid"
+                        v-if="ctx.currentStep > 1"
+                        variant="outline"
                         size="sm"
-                        @click="handleSubmit()"
+                        @click="ctx.prevStep()"
                     >
-                        {{ product ? 'Cập nhật' : 'Tạo sản phẩm' }}
+                        Quay lại
                     </Button>
-                    <Button v-else size="sm" disabled>
-                        {{ product ? 'Cập nhật' : 'Tạo sản phẩm' }}
+                    <Button
+                        v-if="ctx.currentStep < ctx.steps.length"
+                        size="sm"
+                        @click="ctx.nextStep()"
+                    >
+                        Tiếp theo
                     </Button>
-                </template>
-            </DialogFooter>
-        </DialogContent>
-    </Dialog>
-
+                    <template v-else>
+                        <Alert
+                            v-if="
+                                !ctx.isValid && ctx.validationErrors.length > 0
+                            "
+                            variant="destructive"
+                            class="mr-auto px-3 py-2"
+                        >
+                            <AlertCircle class="h-3.5 w-3.5" />
+                            <AlertTitle class="text-xs">
+                                Thiếu thông tin bắt buộc
+                            </AlertTitle>
+                            <AlertDescription class="text-xs">
+                                <ul class="mt-1 ml-4 list-disc">
+                                    <li
+                                        v-for="(err, i) in ctx.validationErrors"
+                                        :key="i"
+                                    >
+                                        {{ err }}
+                                    </li>
+                                </ul>
+                            </AlertDescription>
+                        </Alert>
+                        <Button
+                            v-if="ctx.isValid"
+                            size="sm"
+                            @click="handleSubmit()"
+                        >
+                            {{ product ? 'Cập nhật' : 'Tạo sản phẩm' }}
+                        </Button>
+                        <Button v-else size="sm" disabled>
+                            {{ product ? 'Cập nhật' : 'Tạo sản phẩm' }}
+                        </Button>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </AppLayout>
+    <LookupFormModal
+        v-if="showLookupForm"
+        :open="showLookupForm"
+        :namespace_id="lookupNamespaceId"
+        :display_namespace="lookupDisplayNamespace"
+        :lookup="null"
+        :namespaces="lookupNamespaces"
+        @close="handleLookupFormClosed"
+    />
     <Dialog :open="showConfirmClose" @update:open="showConfirmClose = $event">
         <DialogContent class="sm:max-w-[425px]">
             <DialogHeader>
@@ -490,20 +494,10 @@ function handleLookupFormClosed() {
                 <Button variant="outline" @click="showConfirmClose = false">
                     Tiếp tục chỉnh sửa
                 </Button>
-                <Button variant="destructive" @click="confirmClose">
+                <Button variant="destructive" @click="confirmClose()">
                     Đóng và xóa thay đổi
                 </Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>
-
-    <LookupFormModal
-        v-if="showLookupForm"
-        :open="showLookupForm"
-        :namespace_id="lookupNamespaceId"
-        :display_namespace="lookupDisplayNamespace"
-        :lookup="null"
-        :namespaces="lookupNamespaces"
-        @close="handleLookupFormClosed"
-    />
 </template>

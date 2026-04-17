@@ -195,7 +195,7 @@ class DemoDataSeeder extends Seeder
             }
         }
 
-        $this->command->info('Created '.count($rolePermissions).' roles.');
+        $this->command->info('Created ' . count($rolePermissions) . ' roles.');
     }
 
     // ── Locations ──────────────────────────────────────────────────────────
@@ -229,7 +229,7 @@ class DemoDataSeeder extends Seeder
             );
         }
 
-        $this->command->info('Created '.count($data).' locations.');
+        $this->command->info('Created ' . count($data) . ' locations.');
     }
 
     // ── Departments ────────────────────────────────────────────────────────
@@ -286,7 +286,7 @@ class DemoDataSeeder extends Seeder
                 ['user_id' => $user->id],
                 [
                     'full_name' => $d['full_name'],
-                    'phone' => '090'.rand(1000000, 9999999),
+                    'phone' => '090' . rand(1000000, 9999999),
                     'department_id' => $d['dept'],
                     'location_id' => $d['loc'],
                     'hire_date' => now()->subMonths(rand(3, 24)),
@@ -294,7 +294,7 @@ class DemoDataSeeder extends Seeder
             );
         }
 
-        $this->command->info('Created '.count($data).' employees.');
+        $this->command->info('Created ' . count($data) . ' employees.');
     }
 
     // ── Customers ──────────────────────────────────────────────────────────
@@ -345,7 +345,7 @@ class DemoDataSeeder extends Seeder
             );
         }
 
-        $this->command->info('Created '.count($data).' customers.');
+        $this->command->info('Created ' . count($data) . ' customers.');
     }
 
     // ── Categories ─────────────────────────────────────────────────────────
@@ -473,7 +473,6 @@ class DemoDataSeeder extends Seeder
                     'max_price' => collect($prod['variants'])->max('price'),
                     'is_featured' => $idx % 3 === 0,
                     'is_new_arrival' => $idx % 4 === 0,
-                    'is_custom_made' => false,
                     'warranty_months' => 12,
                 ]
             );
@@ -513,7 +512,7 @@ class DemoDataSeeder extends Seeder
             }
         }
 
-        $this->command->info('Created '.count($products).' products with variants & inventory.');
+        $this->command->info('Created ' . count($products) . ' products with variants & inventory.');
     }
 
     // ── Ghế Timber inventory ──────────────────────────────────────────────
@@ -577,7 +576,7 @@ class DemoDataSeeder extends Seeder
                 [
                     'name' => $b['name'],
                     'slug' => Str::slug($b['name']),
-                    'description' => 'Gói sản phẩm '.$b['name'],
+                    'description' => 'Gói sản phẩm ' . $b['name'],
                     'discount_type' => $b['discount_type'],
                     'discount_value' => $b['discount_value'],
                     'is_active' => true,
@@ -639,7 +638,7 @@ class DemoDataSeeder extends Seeder
                     'user_id' => $emp->user_id,
                     'employee_id' => $emp->id,
                     'full_name' => $emp->full_name,
-                    'phone' => '090'.rand(1000000, 9999999),
+                    'phone' => '090' . rand(1000000, 9999999),
                     'hourly_rate' => 500000,
                     'auto_confirm_bookings' => false,
                     'is_active' => true,
@@ -716,6 +715,6 @@ class DemoDataSeeder extends Seeder
             );
         }
 
-        $this->command->info('Created '.count($data).' vendors.');
+        $this->command->info('Created ' . count($data) . ' vendors.');
     }
 }

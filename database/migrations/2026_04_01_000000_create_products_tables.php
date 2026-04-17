@@ -28,8 +28,6 @@ return new class extends Migration
             $table->jsonb('care_instructions')->default('[]');
             $table->jsonb('assembly_info')->default('{}');
 
-            $table->boolean('is_custom_made')->default(false);
-
             $table->integer('warranty_months')->nullable();
             $table->unsignedInteger('views_count')->default(0)->check('view_count >= 0');
             $table->unsignedInteger('reviews_count')->default(0)->check('review_count >= 0');

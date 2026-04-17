@@ -46,7 +46,6 @@ class ProductResource extends JsonResource
             'max_price' => $this->max_price,
             'is_featured' => $this->is_featured,
             'is_new_arrival' => $this->is_new_arrival,
-            'is_custom_made' => $this->is_custom_made,
             'published_date' => $this->published_date?->format('d/m/Y'),
             'new_arrival_until' => $this->new_arrival_until?->format('d/m/Y'),
             'variants_count' => $this->whenCounted('variants', $this->variants_count),

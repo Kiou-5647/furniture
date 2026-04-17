@@ -108,10 +108,6 @@ class ProductVariant extends Model implements HasMedia
 
     public function isInStock(): bool
     {
-        if ($this->product && $this->product->is_custom_made) {
-            return $this->status === 'active';
-        }
-
         return $this->getAvailableStock() > 0;
     }
 
@@ -164,10 +160,6 @@ class ProductVariant extends Model implements HasMedia
 
     public function isSellable(): bool
     {
-        if ($this->is_custom_made) {
-            return $this->status === 'active';
-        }
-
         $hasStock = $this->getAvailableStock() > 0;
         $hasCost = $this->getAverageCostPerUnit() !== null && $this->getAverageCostPerUnit() > 0;
 

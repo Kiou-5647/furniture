@@ -33,11 +33,6 @@ class RecordStockMovementAction
             throw new \InvalidArgumentException('Số lượng phải lớn hơn 0');
         }
 
-        $product = $variant->product;
-        if ($product && $product->is_custom_made) {
-            throw new \InvalidArgumentException('Sản phẩm custom-made không áp dụng quản lý tồn kho');
-        }
-
         return DB::transaction(function () use ($variant, $location, $type, $quantity, $notes, $performedBy, $referenceType, $referenceId, $costPerUnit, $forceUpdatePrice) {
             $inventory = Inventory::where('variant_id', $variant->id)
                 ->where('location_id', $location->id)
