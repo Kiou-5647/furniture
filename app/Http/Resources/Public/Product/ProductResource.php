@@ -37,7 +37,11 @@ class ProductResource extends JsonResource
             ]),
             'name' => $this->name,
             'slug' => $this->slug,
-            'variants' => ProductVariantSwatchResource::collection($this->whenLoaded('variants')),
+            'option_groups' => $this->option_groups ?? [],
+            'views_count' => $this->views_count ?? 0,
+            'reviews_count' => $this->reviews_count ?? 0,
+            'average_rating' => $this->average_rating ?? 0,
+            'variants' => ProductVariantResource::collection($this->whenLoaded('variants')),
             'grouped_variants' => $this->getGroupedVariantOptions(),
         ];
     }

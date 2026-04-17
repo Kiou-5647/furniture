@@ -520,9 +520,9 @@ class TimberProductSeeder extends Seeder
             'is_new_arrival' => true,
             'published_date' => null,
             'new_arrival_until' => null,
-            'view_count' => 0,
-            'review_count' => 0,
-            'average_rating' => null,
+            'views_count' => 0,
+            'reviews_count' => 0,
+            'average_rating' => 0,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -574,27 +574,27 @@ class TimberProductSeeder extends Seeder
 
         // Primary
         if (isset($images['primary'])) {
-            $this->addMediaToVariant($variant, $disk, $basePath.'/'.$images['primary'], 'primary_image');
+            $this->addMediaToVariant($variant, $disk, $basePath . '/' . $images['primary'], 'primary_image');
         }
 
         // Hover
         if (isset($images['hover'])) {
-            $this->addMediaToVariant($variant, $disk, $basePath.'/'.$images['hover'], 'hover_image');
+            $this->addMediaToVariant($variant, $disk, $basePath . '/' . $images['hover'], 'hover_image');
         }
 
         // Gallery
         foreach ($images['gallery'] as $file) {
-            $this->addMediaToVariant($variant, $disk, $basePath.'/'.$file, 'gallery');
+            $this->addMediaToVariant($variant, $disk, $basePath . '/' . $file, 'gallery');
         }
 
         // Dimension
         if (isset($images['dimension'])) {
-            $this->addMediaToVariant($variant, $disk, $basePath.'/'.$images['dimension'], 'dimension_image');
+            $this->addMediaToVariant($variant, $disk, $basePath . '/' . $images['dimension'], 'dimension_image');
         }
 
         // Swatch
         if (isset($images['swatch'])) {
-            $this->addMediaToVariant($variant, $disk, $basePath.'/'.$images['swatch'], 'swatch_image');
+            $this->addMediaToVariant($variant, $disk, $basePath . '/' . $images['swatch'], 'swatch_image');
         }
     }
 

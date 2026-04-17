@@ -3,10 +3,14 @@
 namespace App\Models\Product;
 
 use App\Builders\Product\BundleBuilder;
+use App\Models\Customer\Review;
+use App\Models\Product\BundleContent;
+use App\Models\Product\Product;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
@@ -27,6 +31,9 @@ class Bundle extends Model implements HasMedia
         return [
             'discount_value' => 'decimal:2',
             'is_active' => 'boolean',
+            'views_count' => 'integer',
+            'reviews_count' => 'integer',
+            'average_rating' => 'decimal:2',
         ];
     }
 
@@ -41,7 +48,7 @@ class Bundle extends Model implements HasMedia
             ->logOnly(['name', 'discount_type', 'discount_value', 'is_active'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
-            ->setDescriptionForEvent(fn (string $eventName) => "Bundle {$eventName}");
+            ->setDescriptionForEvent(fn(string $eventName) => "Bundle {$eventName}");
     }
 
     public function contents(): HasMany
@@ -59,6 +66,11 @@ class Bundle extends Model implements HasMedia
             'id',
             'product_id'
         );
+    }
+
+    public function reviews(): MorphMany
+    {
+        return $this->morphMany(Review::class, 'reviewable');
     }
 
     public function calculateBundlePrice(): float
@@ -86,6 +98,6 @@ class Bundle extends Model implements HasMedia
             return false;
         }
 
-        return $this->contents->every(fn (BundleContent $content) => $content->product !== null);
+        return $this->contents->every(fn(BundleContent $content) => $content->product !== null);
     }
 }

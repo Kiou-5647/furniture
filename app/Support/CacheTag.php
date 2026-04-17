@@ -30,29 +30,32 @@ enum CacheTag: string
     case SpecLookupPrefix = 'product.spec_lookup_options';
     case ShopMenu = 'product.shop_menu';
 
-    // === Category domain ===
+        // === Category domain ===
     case CategoryGroups = 'category.groups';
     case CategoryRooms = 'category.rooms';
     case CategoryFilters = 'category.filters';
 
-    // === Lookup domain ===
+        // === Lookup domain ===
     case Lookups = 'lookups';
     case LookupNamespaces = 'lookup_namespaces';
     case FilterableNamespaces = 'filterable_namespaces';
 
-    // === Inventory domain ===
+        // === Inventory domain ===
     case Locations = 'locations';
     case LocationOptionsSimple = 'location_options_simple';
     case LocationOptionsFull = 'location_options_full';
 
-    // === Vendor domain ===
+        // === Vendor domain ===
     case VendorsList = 'vendors_list';
 
-    // === Stock transfer domain ===
+        // === Stock transfer domain ===
     case StockTransfers = 'stock_transfers';
 
-    // === Geodata domain ===
+        // === Geodata domain ===
     case Geodata = 'geodata';
+
+        // === Shopping domain ===
+    case ProductViews = 'product.views';
 
     /**
      * Flush ALL keys with this tag.
@@ -79,11 +82,11 @@ enum CacheTag: string
         $tag = $this->value;
         // For Redis: use SCAN + DEL pattern
         if (config('cache.default') === 'redis') {
-            $fullPrefix = config('cache.prefix').":{$tag}.{$prefix}";
-            $pattern = $fullPrefix.'*';
+            $fullPrefix = config('cache.prefix') . ":{$tag}.{$prefix}";
+            $pattern = $fullPrefix . '*';
             $keys = Redis::keys($pattern);
             foreach ($keys as $key) {
-                Cache::forget(str_replace(config('cache.prefix').':', '', $key));
+                Cache::forget(str_replace(config('cache.prefix') . ':', '', $key));
             }
         }
         // For non-Redis, we can't do prefix matching, so flush the whole tag

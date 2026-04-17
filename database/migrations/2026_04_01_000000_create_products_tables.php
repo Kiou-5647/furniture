@@ -31,9 +31,9 @@ return new class extends Migration
             $table->boolean('is_custom_made')->default(false);
 
             $table->integer('warranty_months')->nullable();
-            $table->integer('view_count')->default(0)->check('view_count >= 0');
-            $table->unsignedInteger('review_count')->default(0);
-            $table->decimal('average_rating', 3, 2)->nullable();
+            $table->unsignedInteger('views_count')->default(0)->check('view_count >= 0');
+            $table->unsignedInteger('reviews_count')->default(0)->check('review_count >= 0');
+            $table->decimal('average_rating', 3, 2)->default(0.0);
 
             $table->boolean('is_featured')->default(false);
             $table->boolean('is_new_arrival')->default(false);
@@ -60,6 +60,8 @@ return new class extends Migration
         DB::statement('CREATE INDEX idx_products_max_price ON products (max_price) WHERE deleted_at IS NULL');
         DB::statement('CREATE INDEX idx_products_is_featured ON products (is_featured) WHERE deleted_at IS NULL AND is_featured = true');
         DB::statement('CREATE INDEX idx_products_is_new_arrival ON products (is_new_arrival) WHERE deleted_at IS NULL AND is_new_arrival = true');
+        DB::statement('CREATE INDEX idx_products_views_published ON products (views_count DESC) WHERE status = \'published\' AND deleted_at IS NULL');
+        DB::statement('CREATE INDEX idx_products_rating_published ON products (average_rating DESC) WHERE status = \'published\' AND deleted_at IS NULL');
 
         Schema::create('product_variants', function (Blueprint $table) {
             $table->uuid('id')->primary();
@@ -84,6 +86,10 @@ return new class extends Migration
             $table->jsonb('specifications')->default('{}');
             $table->jsonb('care_instructions')->default('[]');
 
+            $table->unsignedInteger('views_count')->default(0)->check('view_count >= 0');
+            $table->unsignedInteger('reviews_count')->default(0)->check('review_count >= 0');
+            $table->decimal('average_rating', 3, 2)->default(0.0);
+
             $table->timestamps();
             $table->softDeletes();
         });
@@ -92,6 +98,8 @@ return new class extends Migration
         DB::statement('CREATE INDEX idx_variants_deleted ON product_variants (deleted_at) WHERE deleted_at IS NOT NULL');
         DB::statement('CREATE INDEX idx_variants_status ON product_variants (status) WHERE deleted_at IS NULL');
         DB::statement('CREATE INDEX idx_variants_price ON product_variants (price) WHERE deleted_at IS NULL');
+        DB::statement('CREATE INDEX idx_variants_views_published ON product_variants (views_count DESC) WHERE deleted_at IS NULL');
+        DB::statement('CREATE INDEX idx_variants_rating_published ON product_variants (average_rating DESC) WHERE deleted_at IS NULL');
         DB::statement('CREATE UNIQUE INDEX unq_variants_sku_active ON product_variants (sku) WHERE deleted_at IS NULL');
     }
 

@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Booking\Booking;
+use App\Models\Customer\Review;
 use App\Models\Fulfillment\Shipment;
 use App\Models\Fulfillment\ShipmentItem;
 use App\Models\Inventory\Location;
@@ -27,6 +28,7 @@ use App\Observers\LocationObserver;
 use App\Observers\OrderObserver;
 use App\Observers\ProductObserver;
 use App\Observers\ProductVariantObserver;
+use App\Observers\ReviewObserver;
 use App\Observers\ShipmentItemObserver;
 use App\Observers\ShipmentObserver;
 use Carbon\CarbonImmutable;
@@ -59,13 +61,13 @@ class AppServiceProvider extends ServiceProvider
         );
 
         Password::defaults(
-            fn (): ?Password => app()->isProduction()
+            fn(): ?Password => app()->isProduction()
                 ? Password::min(12)
-                    ->mixedCase()
-                    ->letters()
-                    ->numbers()
-                    ->symbols()
-                    ->uncompromised()
+                ->mixedCase()
+                ->letters()
+                ->numbers()
+                ->symbols()
+                ->uncompromised()
                 : null,
         );
     }
@@ -98,5 +100,6 @@ class AppServiceProvider extends ServiceProvider
         Booking::observe(BookingObserver::class);
         Invoice::observe(InvoiceObserver::class);
         Order::observe(OrderObserver::class);
+        Review::observe(ReviewObserver::class);
     }
 }

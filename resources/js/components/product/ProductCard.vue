@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { Star, ImageOff } from '@lucide/vue';
+import { ImageOff } from '@lucide/vue';
 import { Heart } from 'lucide-vue-next';
 import { computed, ref, onMounted } from 'vue';
 import type { Product, SwatchOption } from '@/types/product';
+import StarRating from '../custom/StarRating.vue';
 
 const props = defineProps<{
     product: Product;
@@ -14,26 +15,20 @@ const cards = computed(() => props.product.grouped_variants ?? []);
 const hasCards = computed(() => cards.value.length > 0);
 const cardIdx = computed(() => props.cardIndex ?? 0);
 
-// Use the specified card, or first if not specified
 const activeCard = computed(() =>
     hasCards.value ? (cards.value[cardIdx.value] ?? null) : null,
 );
 
-// Track the SPECIFIC variant ID for visual updates (images/price)
 const selectedVariantId = ref<string | null>(null);
 
 // Rename from selectSwatch to previewSwatch
 function previewSwatch(swatch: SwatchOption) {
-    // ONLY update the local ID.
-    // This triggers the computed displayImage and displayPrice to update instantly.
     selectedVariantId.value = swatch.variant_id;
 }
 
-// Sync with URL on load and when filters change
 const initializeSelection = () => {
     if (!activeCard.value) {
         if (!activeCard.value) {
-            // If no swatches, just use the first variant ID if it exists
             selectedVariantId.value = props.product.variants?.[0]?.id ?? null;
             return;
         }
@@ -43,7 +38,6 @@ const initializeSelection = () => {
     const colorFilter = urlParams.get('mau-sac');
 
     if (colorFilter) {
-        // Find the first variant matching the filter to set the initial visual state
         const matchingSwatch = activeCard.value.swatch_options.find(
             (s) => s.value === colorFilter,
         );
@@ -51,7 +45,6 @@ const initializeSelection = () => {
             selectedVariantId.value = matchingSwatch.variant_id;
         }
     } else {
-        // Default to first swatch if no filter is present
         selectedVariantId.value =
             activeCard.value.swatch_options[0]?.variant_id ?? null;
     }
@@ -79,6 +72,7 @@ const currentSwatch = computed<SwatchOption | null>(() => {
             label: firstVariant.name || 'Default',
             variant_id: firstVariant.id,
             price: firstVariant.price,
+            sale_price: firstVariant.sale_price,
             in_stock: firstVariant.in_stock ?? false,
             primary_image_url: firstVariant.primary_image_url,
             swatch_image_url: firstVariant.swatch_image_url,
@@ -89,9 +83,12 @@ const currentSwatch = computed<SwatchOption | null>(() => {
 
     return null;
 });
+const displayName = computed(() => {
+    const variant = currentSwatch.value;
 
+    return `${props.product.name} ${variant?.name ?? variant?.name ?? ''}`;
+});
 const displayImage = computed(() => currentSwatch.value?.primary_image_url);
-const displayPrice = computed(() => Number(currentSwatch.value?.price));
 
 function formatPrice(value: number): string {
     return value?.toLocaleString('vi-VN') ?? '0';
@@ -102,6 +99,7 @@ function productUrl(): string {
 
     return `/san-pham/${currentSwatch.value.sku}/${currentSwatch.value.slug}`;
 }
+console.info(currentSwatch)
 </script>
 
 <template>
@@ -140,28 +138,31 @@ function productUrl(): string {
                 <h3
                     class="line-clamp-2 text-sm font-medium text-zinc-900 transition-colors hover:text-zinc-600"
                 >
-                    {{ product.name }}
+                    {{ displayName }}
                 </h3>
             </Link>
 
             <!-- Price -->
             <div class="flex items-baseline gap-2">
-                <span class="text-base font-bold text-zinc-900">
-                    {{ formatPrice(displayPrice) }}đ
+                <!-- Show sale price in orange if it exists -->
+                <span v-if="currentSwatch?.sale_price" class="text-base font-bold text-orange-500">
+                    {{ formatPrice(Number(currentSwatch.sale_price)) }}đ
+                </span>
+
+                <!-- Show base price. If sale_price exists, strike it through and make it gray -->
+                <span :class="currentSwatch?.sale_price ? 'text-sm text-zinc-400 line-through' : 'text-base font-bold text-zinc-900'">
+                    {{ formatPrice(Number(currentSwatch?.price)) }}đ
                 </span>
             </div>
 
             <!-- Rating -->
-            <div
-                v-if="product.average_rating"
-                class="flex items-center gap-1 text-xs text-zinc-500"
-            >
-                <Star class="h-3 w-3 fill-amber-400 text-amber-400" />
-                <span
-                    >{{ product.average_rating }} ({{
-                        product.review_count
-                    }})</span
-                >
+            <div v-if="product.average_rating" class="py-1">
+                <StarRating
+                    :rating="product.average_rating"
+                    :count="product.review_count ?? 0"
+                    show-count
+                    size="h-5 w-5"
+                />
             </div>
 
             <!-- Color Swatches (only show if swatch options exist) -->

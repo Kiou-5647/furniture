@@ -12,29 +12,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('settings', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->string('namespace', 50);
-            $table->string('key', 100);
-            $table->jsonb('value')->nullable();
-            $table->text('description')->nullable();
-            $table->boolean('is_system')->default(false);
-            $table->timestamps();
-
-            $table->unique(['namespace', 'key']);
-            $table->index('key');
-        });
-        DB::statement('CREATE INDEX idx_settings_system ON settings(is_system) WHERE is_system = true');
-
-        Schema::create('positions', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->string('name')->unique();
-            $table->string('code', 50)->unique();
-            $table->text('description')->nullable();
-            $table->boolean('is_system')->default(false);
-            $table->timestamps();
-        });
-
         Schema::create('lookup_namespaces', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('slug', 64)->unique();

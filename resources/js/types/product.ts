@@ -82,8 +82,10 @@ export interface SwatchOption {
     label: string;
     variant_id: string;
     sku: string;
+    name: string;
     slug: string;
-    price: string;
+    price: string | number;
+    sale_price: string | number;
     in_stock: boolean;
     primary_image_url: string | null;
     swatch_image_url: string | null;
@@ -110,6 +112,7 @@ export interface ProductVariant {
     slug: string | null;
     description: string | null;
     price: string | number;
+    sale_price: string | number;
     profit_margin_value: string | number | null;
     profit_margin_unit: 'fixed' | 'percentage';
     weight: Record<string, any>;

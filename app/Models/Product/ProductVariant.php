@@ -2,6 +2,7 @@
 
 namespace App\Models\Product;
 
+use App\Models\Customer\Review;
 use App\Models\Inventory\Inventory;
 use App\Models\Inventory\StockMovement;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -9,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
@@ -27,6 +29,7 @@ class ProductVariant extends Model implements HasMedia
     {
         return [
             'price' => 'decimal:2',
+            'sale_price' => 'decimal:2',
             'profit_margin_value' => 'decimal:2',
             'profit_margin_unit' => 'string',
             'weight' => 'array',
@@ -35,6 +38,9 @@ class ProductVariant extends Model implements HasMedia
             'features' => 'array',
             'specifications' => 'array',
             'care_instructions' => 'array',
+            'views_count' => 'integer',
+            'reviews_count' => 'integer',
+            'average_rating' => 'decimal:2',
         ];
     }
 
@@ -67,7 +73,7 @@ class ProductVariant extends Model implements HasMedia
             ->logOnly(['sku', 'name', 'slug', 'price', 'profit_margin_value', 'profit_margin_unit', 'status'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
-            ->setDescriptionForEvent(fn (string $eventName) => "Product variant {$eventName}");
+            ->setDescriptionForEvent(fn(string $eventName) => "Product variant {$eventName}");
     }
 
     public function product(): BelongsTo
@@ -83,6 +89,11 @@ class ProductVariant extends Model implements HasMedia
     public function stockMovements(): HasMany
     {
         return $this->hasMany(StockMovement::class, 'variant_id');
+    }
+
+    public function reviews(): MorphMany
+    {
+        return $this->morphMany(Review::class, 'reviewable');
     }
 
     public function getTotalStock(): int

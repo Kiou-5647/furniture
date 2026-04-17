@@ -20,8 +20,10 @@ class ProductVariantResource extends JsonResource
             'id' => $this->id,
             'sku' => $this->sku,
             'slug' => $this->slug,
-            'price' => $this->price,
             'name' => $this->name,
+            'swatch_label' => $this->swatch_label ?? '',
+            'price' => $this->price,
+            'sale_price' => $this->sale_price,
             'in_stock' => $this->getAvailableStock() > 0,
             'images' => [
                 'primary' => [

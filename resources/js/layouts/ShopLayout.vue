@@ -260,7 +260,7 @@ interface ShopMenuRoom {
         </div>
 
         <!-- Page Content -->
-        <main class="@container">
+        <main class="@container px-6">
             <slot />
         </main>
 

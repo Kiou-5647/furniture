@@ -1,4 +1,4 @@
-import type { GroupedVariantCard } from "../product";
+import type { GroupedVariantCard, OptionGroup } from "../product";
 
 export interface Product {
     id: string;
@@ -26,6 +26,10 @@ export interface Product {
         name: string;
         slug: string;
     };
+    option_groups: OptionGroup[];
+    views_count: number;
+    reviews_count: number;
+    average_rating: number;
     variants: ProductVariant[];
     grouped_variants: GroupedVariantCard[];
 }
@@ -33,19 +37,21 @@ export interface Product {
 export interface ProductVariant {
     id: string;
     sku: string;
-    slug: string;
-    price: string | number;
     name: string;
+    slug: string;
+    swatch_label?: string;
+    price: string | number;
+    sale_price: string | number;
     in_stock: boolean;
     images: VariantGallery
 }
 
 export interface VariantGallery {
     primary: GalleryImage,
-    hover: GalleryImage,
-    dimension: GalleryImage,
-    swatch: GalleryImage,
-    gallery: GalleryImage[]
+    hover?: GalleryImage,
+    dimension?: GalleryImage,
+    swatch?: GalleryImage,
+    gallery?: GalleryImage[]
 
 }
 

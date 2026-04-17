@@ -371,6 +371,7 @@ function copyVariantData(variant: any) {
         name: variant.name,
         description: variant.description,
         price: variant.price,
+        sale_price: variant.sale_price,
         profit_margin_value: variant.profit_margin_value,
         profit_margin_unit: variant.profit_margin_unit,
         weight: { ...variant.weight },
@@ -395,6 +396,7 @@ function pasteVariantData(variantIndex: number) {
         variant.name ||
         variant.description ||
         variant.price ||
+        variant.sale_price ||
         variant.profit_margin_value;
 
     if (
@@ -408,6 +410,7 @@ function pasteVariantData(variantIndex: number) {
         name: copiedVariantData.value.name,
         description: copiedVariantData.value.description,
         price: copiedVariantData.value.price,
+        sale_price: copiedVariantData.value.sale_price,
         profit_margin_value: copiedVariantData.value.profit_margin_value,
         profit_margin_unit: copiedVariantData.value.profit_margin_unit,
         weight: JSON.parse(JSON.stringify(copiedVariantData.value.weight)),
@@ -446,6 +449,7 @@ function openAutoCreateDialog() {
             slug: null,
             description: null,
             price: '',
+            sale_price: '',
             profit_margin_value: null,
             profit_margin_unit: 'fixed' as const,
             weight: {},
@@ -744,7 +748,9 @@ function canAddMoreImages(variant: any) {
                                 />
                             </Field>
                             <Field>
-                                <FieldLabel class="text-sm">Nhãn Swatch</FieldLabel>
+                                <FieldLabel class="text-sm"
+                                    >Nhãn Swatch</FieldLabel
+                                >
                                 <Input
                                     v-model="variant.swatch_label"
                                     placeholder="VD: Midnight Blue"
@@ -787,6 +793,17 @@ function canAddMoreImages(variant: any) {
                                     v-model="variant.price"
                                     placeholder="0"
                                     class="text-sm"
+                                />
+                            </Field>
+                            <Field>
+                                <FieldLabel class="text-sm"
+                                    >Giảm còn
+                                </FieldLabel>
+                                <Input
+                                    v-model="variant.sale_price"
+                                    placeholder="0"
+                                    class="text-sm"
+                                    v-on.stop="console.info(JSON.stringify(variant))"
                                 />
                             </Field>
                             <Field>
