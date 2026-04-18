@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Product;
+namespace App\Services\Public;
 
 use App\Models\Product\Category;
 use App\Models\Setting\Lookup;
@@ -9,6 +9,7 @@ use App\Support\CacheKeys;
 use App\Support\CacheTag;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class ShopMenuService
 {
@@ -18,7 +19,7 @@ class ShopMenuService
     public function getRooms(): Collection
     {
         return Cache::tags([CacheTag::CategoryRooms->value])
-            ->remember(CacheTag::CategoryRooms->key('shop_rooms'), CacheKeys::TTL, fn () => $this->buildRooms());
+            ->remember(CacheTag::CategoryRooms->key('shop_rooms'), CacheKeys::TTL, fn() => $this->buildRooms());
     }
 
     protected function buildRooms(): Collection
@@ -28,14 +29,20 @@ class ShopMenuService
             return collect();
         }
 
-        $categories = Category::where('is_active', true)->pluck('room_id')->countBy();
+        // Use a query to count categories per room via the pivot table
+        $counts = DB::table('category_room_placement')
+            ->join('categories', 'category_room_placement.category_id', '=', 'categories.id')
+            ->where('categories.is_active', true)
+            ->select('room_id', DB::raw('count(*) as total'))
+            ->groupBy('room_id')
+            ->pluck('total', 'room_id');
 
-        return $roomNs->activeLookups()->get()->map(function (Lookup $room) use ($categories) {
+        return $roomNs->activeLookups()->get()->map(function (Lookup $room) use ($counts) {
             return [
                 'id' => $room->id,
                 'label' => $room->display_name,
                 'slug' => $room->slug,
-                'count' => $categories[$room->id] ?? 0,
+                'count' => $counts[$room->id] ?? 0,
                 'image_url' => $room->getFirstMediaUrl('image', 'webp') ?: null,
             ];
         });
@@ -44,7 +51,7 @@ class ShopMenuService
     public function getMenu(): Collection
     {
         return Cache::tags([CacheTag::ShopMenu->value])
-            ->remember(CacheTag::ShopMenu->key('data'), CacheKeys::TTL, fn () => $this->buildMenu());
+            ->remember(CacheTag::ShopMenu->key('data'), CacheKeys::TTL, fn() => $this->buildMenu());
     }
 
     protected function buildMenu(): Collection
@@ -54,20 +61,17 @@ class ShopMenuService
             return collect();
         }
 
-        // Load all active rooms
         $rooms = $roomNs->activeLookups()->get();
 
-        // Load categories with their room and group
         $categories = Category::where('is_active', true)
-            ->with(['room', 'group'])
+            ->with(['rooms', 'group'])
             ->orderBy('display_name')
             ->get();
 
-        // Build hierarchy
         return $rooms->map(function (Lookup $room) use ($categories) {
-            $roomCategories = $categories->filter(fn (Category $c) => $c->room_id === $room->id);
+            // FIX: Check if the room ID exists within the category's rooms collection
+            $roomCategories = $categories->filter(fn(Category $c) => $c->rooms->contains('id', $room->id));
 
-            // Group categories by their group lookup
             $grouped = $roomCategories->groupBy('group_id');
 
             $groups = $grouped->map(function (Collection $cats, $groupId) use ($roomCategories) {
@@ -77,7 +81,7 @@ class ShopMenuService
                         'id' => null,
                         'label' => 'Khác',
                         'slug' => 'other',
-                        'categories' => $cats->map(fn ($c) => [
+                        'categories' => $cats->map(fn($c) => [
                             'id' => $c->id,
                             'label' => $c->display_name,
                             'slug' => $c->slug,
@@ -89,7 +93,7 @@ class ShopMenuService
                     'id' => $group->id,
                     'label' => $group->display_name,
                     'slug' => $group->slug,
-                    'categories' => $cats->map(fn ($c) => [
+                    'categories' => $cats->map(fn($c) => [
                         'id' => $c->id,
                         'label' => $c->display_name,
                         'slug' => $c->slug,

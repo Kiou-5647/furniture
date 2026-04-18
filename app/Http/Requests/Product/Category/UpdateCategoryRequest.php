@@ -36,7 +36,8 @@ class UpdateCategoryRequest extends FormRequest
         return [
             'group_id' => ['required', 'exists:lookups,id'],
             'product_type' => ['required', Rule::enum(ProductType::class)],
-            'room_id' => ['nullable', 'exists:lookups,id'],
+            'room_ids' => ['nullable', 'array'],
+            'room_ids.*' => ['exists:lookups,id'],
             'display_name' => ['required', 'string', 'max:255'],
             'slug' => [
                 'required',
@@ -49,7 +50,6 @@ class UpdateCategoryRequest extends FormRequest
             'description' => ['nullable', 'string'],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'is_active' => ['boolean'],
-            'metadata' => ['nullable', 'array'],
         ];
     }
 

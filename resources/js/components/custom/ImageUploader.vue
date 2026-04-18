@@ -30,63 +30,52 @@ const fileInput = useTemplateRef<HTMLInputElement>('fileInput');
 const removedByUser = ref(false);
 const objectUrl = ref<string | null>(null);
 
-const aspectClasses = computed(
-    () =>
-        ({
-            square: 'aspect-square',
-            wide: 'aspect-[4/3]',
-            banner: 'aspect-[3/1]',
-        })[props.aspectRatio],
-);
+const aspectClasses = computed(() => ({
+    square: 'aspect-square',
+    wide: 'aspect-[4/3]',
+    banner: 'aspect-[3/1]',
+})[props.aspectRatio]);
 
-const defaultHints = computed(
-    () =>
-        ({
-            square: '1:1 hoặc 4:3',
-            wide: '4:3 hoặc 16:9',
-            banner: '3:1',
-        })[props.aspectRatio],
-);
+const defaultHints = computed(() => ({
+    square: '1:1 hoặc 4:3',
+    wide: '4:3 hoặc 16:9',
+    banner: '3:1',
+})[props.aspectRatio]);
 
-const displayHint = computed(
-    () => props.hint || `${defaultHints.value} · Max ${props.maxSizeMb}MB`,
-);
+const displayHint = computed(() => props.hint || `${defaultHints.value} · Max ${props.maxSizeMb}MB`);
 
 const effectivePreviewUrl = computed(() => {
+    // If user clicked X, show nothing, even if there is a backend URL or a File
     if (removedByUser.value) return null;
-    if (props.modelValue) {
-        if (objectUrl.value) return objectUrl.value;
-        return URL.createObjectURL(props.modelValue);
+
+    // Priority 1: Local File object (ObjectURL)
+    if (props.modelValue instanceof File) {
+        return objectUrl.value;
     }
+
+    // Priority 2: Existing URL from Backend
     return props.previewUrl ?? null;
 });
 
+// Only one watcher to manage the memory of the ObjectURL
 watch(
     () => props.modelValue,
-    (newFile, oldFile) => {
-        if (newFile) {
-            removedByUser.value = false;
-            if (oldFile && objectUrl.value) {
-                URL.revokeObjectURL(objectUrl.value);
-            }
-            objectUrl.value = URL.createObjectURL(newFile);
-        } else if (oldFile && objectUrl.value) {
+    (newFile) => {
+        if (objectUrl.value) {
             URL.revokeObjectURL(objectUrl.value);
             objectUrl.value = null;
         }
+
+        if (newFile instanceof File) {
+            removedByUser.value = false;
+            objectUrl.value = URL.createObjectURL(newFile);
+        }
     },
+    { immediate: true }
 );
 
-watch(effectivePreviewUrl, (newUrl) => {
-    if (props.modelValue && newUrl) {
-        objectUrl.value = newUrl;
-    }
-});
-
 onBeforeUnmount(() => {
-    if (objectUrl.value) {
-        URL.revokeObjectURL(objectUrl.value);
-    }
+    if (objectUrl.value) URL.revokeObjectURL(objectUrl.value);
 });
 
 function onFileSelect(event: Event) {
@@ -104,6 +93,8 @@ function onFileSelect(event: Event) {
         emit('error', `File quá lớn (tối đa ${props.maxSizeMb}MB)`);
         return;
     }
+    // Reset the "removed" state immediately when a new file is picked
+    removedByUser.value = false;
 
     emit('update:modelValue', file);
     target.value = '';

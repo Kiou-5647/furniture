@@ -31,4 +31,15 @@ class CategoryBuilder extends Builder
                 ->orWhere('slug', 'ilike', "%{$search}%");
         });
     }
+
+    public function inRooms(array $roomIds): self
+    {
+        if (empty($roomIds)) {
+            return $this;
+        }
+
+        return $this->whereHas('rooms', function ($query) use ($roomIds) {
+            $query->whereIn('lookups.id', $roomIds);
+        });
+    }
 }

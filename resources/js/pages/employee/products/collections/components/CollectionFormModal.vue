@@ -145,7 +145,7 @@ function closeModal() {
                                 >Ảnh đại diện</FieldLabel
                             >
                             <ImageUploader
-                                v-model="form.image"
+                            :model-value="form.image"
                                 :preview-url="imagePreviewUrl"
                                 aspect-ratio="square"
                             />
@@ -156,7 +156,7 @@ function closeModal() {
                                 >Banner</FieldLabel
                             >
                             <ImageUploader
-                                v-model="form.banner"
+                            :model-value="form.banner"
                                 :preview-url="bannerPreviewUrl"
                                 aspect-ratio="wide"
                             />
@@ -243,7 +243,7 @@ function closeModal() {
                                     >Ảnh đại diện</FieldLabel
                                 >
                                 <ImageUploader
-                                    v-model="form.image"
+                                :model-value="form.image"
                                     :preview-url="imagePreviewUrl"
                                     aspect-ratio="square"
                                     class="w-60 justify-self-center"
@@ -254,7 +254,7 @@ function closeModal() {
                                     >Banner</FieldLabel
                                 >
                                 <ImageUploader
-                                    v-model="form.banner"
+                                :model-value="form.banner"
                                     :preview-url="bannerPreviewUrl"
                                     aspect-ratio="wide"
                                 />

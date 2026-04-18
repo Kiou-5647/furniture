@@ -15,7 +15,7 @@ trait MediaSeederTrait
      * @param  string  $collection  The Spatie MediaLibrary collection name (e.g., 'primary_image').
      * @param  string  $disk  The storage disk to use (default: 'local').
      */
-    protected function attachMedia(Model $model, string $path, string $collection = 'default', string $disk = 'local'): void
+    protected function attachMedia(Model $model, string $path, string $collection = 'image', string $disk = 'local'): void
     {
         $storage = Storage::disk($disk);
 

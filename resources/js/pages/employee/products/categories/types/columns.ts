@@ -35,9 +35,9 @@ export function getColumns(
             cell: ({ row }) => {
                 const item = row.original;
                 return h('div', { class: 'flex items-center gap-3' }, [
-                    item.image_thumb_url
+                    item.image_url
                         ? h('img', {
-                              src: item.image_thumb_url,
+                              src: item.image_thumb_url ?? item.image_url,
                               class: 'w-12 h-8 rounded-md object-cover border shadow-sm cursor-zoom-in hover:scale-105 transition-all shrink-0',
                               onClick: (event: MouseEvent) => {
                                   event.stopPropagation();
@@ -112,6 +112,34 @@ export function getColumns(
                     { variant: 'secondary', class: 'text-xs' },
                     () => row.original.product_type_label,
                 ),
+        },
+        {
+            id: 'rooms',
+            header: 'Phòng',
+            size: 180,
+            enableSorting: false,
+            enableHiding: true,
+            meta: { align: 'center' },
+            cell: ({ row }) => {
+                const rooms = row.original.rooms ?? [];
+                const visibleRooms = rooms.slice(0, 2);
+                const remainingCount = rooms.length - visibleRooms.length;
+
+                return h('div', { class: 'flex items-center justify-center gap-1 flex-wrap' }, [
+                    ...visibleRooms.map(room =>
+                        h(Badge, {
+                            variant: 'secondary',
+                            class: 'text-[10px] px-1 py-0'
+                        }, () => room.display_name)
+                    ),
+                    remainingCount > 0
+                        ? h(Badge, {
+                            variant: 'outline',
+                            class: 'text-[10px] px-1 py-0 bg-muted'
+                        }, () => `+${remainingCount}`)
+                        : null,
+                ]);
+            },
         },
         {
             accessorKey: 'is_active',

@@ -1,17 +1,47 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3';
 import { parseDate } from '@internationalized/date';
-import { CalendarIcon, Loader2, Mail, MapPin, Phone, User, Users } from '@lucide/vue';
+import {
+    CalendarIcon,
+    Loader2,
+    Mail,
+    MapPin,
+    Phone,
+    User,
+    Users,
+} from '@lucide/vue';
 import { ref, watch } from 'vue';
 import ImageUploader from '@/components/custom/ImageUploader.vue';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Field, FieldContent, FieldError, FieldLabel } from '@/components/ui/field';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import {
+    Field,
+    FieldContent,
+    FieldError,
+    FieldLabel,
+} from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { store, update } from '@/routes/employee/hr/employees';
@@ -69,7 +99,9 @@ watch(
             form.phone = newEmp.phone ?? undefined;
             form.department_id = newEmp.department?.id ?? undefined;
             form.location_id = newEmp.location_id ?? undefined;
-            form.hire_date = parseHireDate(newEmp.hire_date)?.toISOString().split('T')[0] ?? '';
+            form.hire_date =
+                parseHireDate(newEmp.hire_date)?.toISOString().split('T')[0] ??
+                '';
             form.is_active = newEmp.user?.is_active ?? true;
             selectedRoles.value = newEmp.user?.roles ?? [];
             selectedPermissions.value = newEmp.user?.permissions ?? [];
@@ -99,12 +131,18 @@ function submit() {
     if (props.employee) {
         form.put(update(props.employee).url, {
             preserveScroll: true,
-            onSuccess: () => { emit('refresh'); closeModal(); },
+            onSuccess: () => {
+                emit('refresh');
+                closeModal();
+            },
         });
     } else {
         form.post(store().url, {
             preserveScroll: true,
-            onSuccess: () => { emit('refresh'); closeModal(); },
+            onSuccess: () => {
+                emit('refresh');
+                closeModal();
+            },
         });
     }
 }
@@ -135,10 +173,16 @@ function toggleRole(roleId: string) {
         selectedRoles.value.splice(idx, 1);
         const remaining = new Set<string>();
         selectedRoles.value.forEach((role) => {
-            (props.rolePermissions[role] ?? []).forEach((p) => remaining.add(p));
+            (props.rolePermissions[role] ?? []).forEach((p) =>
+                remaining.add(p),
+            );
         });
-        const manualPerms = selectedPermissions.value.filter((p) => !perms.includes(p));
-        selectedPermissions.value = [...new Set([...remaining, ...manualPerms])];
+        const manualPerms = selectedPermissions.value.filter(
+            (p) => !perms.includes(p),
+        );
+        selectedPermissions.value = [
+            ...new Set([...remaining, ...manualPerms]),
+        ];
     }
 }
 
@@ -186,7 +230,7 @@ function clearAll() {
                     <!-- Left: Avatar -->
                     <div class="hidden sm:block">
                         <ImageUploader
-                            v-model="form.avatar"
+                            :model-value="form.avatar"
                             :preview-url="avatarPreview"
                             aspect-ratio="square"
                             label="Chọn ảnh"
@@ -199,7 +243,7 @@ function clearAll() {
                         <!-- Mobile Avatar -->
                         <div class="sm:hidden">
                             <ImageUploader
-                                v-model="form.avatar"
+                                :model-value="form.avatar"
                                 :preview-url="avatarPreview"
                                 aspect-ratio="square"
                                 label="Chọn ảnh"
@@ -210,7 +254,9 @@ function clearAll() {
                         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <Field>
                                 <FieldLabel>
-                                    <User class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                                    <User
+                                        class="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                                    />
                                     Tên đăng nhập
                                     <span class="text-destructive">*</span>
                                 </FieldLabel>
@@ -235,7 +281,9 @@ function clearAll() {
                                         placeholder="Nguyễn Văn A"
                                         class="w-full"
                                     />
-                                    <FieldError :errors="[form.errors.full_name]" />
+                                    <FieldError
+                                        :errors="[form.errors.full_name]"
+                                    />
                                 </FieldContent>
                             </Field>
                         </div>
@@ -243,7 +291,9 @@ function clearAll() {
                         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <Field>
                                 <FieldLabel>
-                                    <Mail class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                                    <Mail
+                                        class="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                                    />
                                     Email
                                     <span class="text-destructive">*</span>
                                 </FieldLabel>
@@ -260,7 +310,9 @@ function clearAll() {
 
                             <Field>
                                 <FieldLabel>
-                                    <Phone class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                                    <Phone
+                                        class="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                                    />
                                     Số điện thoại
                                 </FieldLabel>
                                 <FieldContent>
@@ -277,13 +329,17 @@ function clearAll() {
                         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <Field>
                                 <FieldLabel>
-                                    <Users class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                                    <Users
+                                        class="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                                    />
                                     Phòng ban
                                 </FieldLabel>
                                 <FieldContent>
                                     <Select v-model="form.department_id">
                                         <SelectTrigger class="w-full">
-                                            <SelectValue placeholder="Chọn phòng ban..." />
+                                            <SelectValue
+                                                placeholder="Chọn phòng ban..."
+                                            />
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem
@@ -295,19 +351,25 @@ function clearAll() {
                                             </SelectItem>
                                         </SelectContent>
                                     </Select>
-                                    <FieldError :errors="[form.errors.department_id]" />
+                                    <FieldError
+                                        :errors="[form.errors.department_id]"
+                                    />
                                 </FieldContent>
                             </Field>
 
                             <Field>
                                 <FieldLabel>
-                                    <MapPin class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                                    <MapPin
+                                        class="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                                    />
                                     Cửa hàng
                                 </FieldLabel>
                                 <FieldContent>
                                     <Select v-model="form.location_id">
                                         <SelectTrigger class="w-full">
-                                            <SelectValue placeholder="Chọn cửa hàng..." />
+                                            <SelectValue
+                                                placeholder="Chọn cửa hàng..."
+                                            />
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem
@@ -319,7 +381,9 @@ function clearAll() {
                                             </SelectItem>
                                         </SelectContent>
                                     </Select>
-                                    <FieldError :errors="[form.errors.location_id]" />
+                                    <FieldError
+                                        :errors="[form.errors.location_id]"
+                                    />
                                 </FieldContent>
                             </Field>
 
@@ -331,29 +395,55 @@ function clearAll() {
                                             <PopoverTrigger as-child>
                                                 <Button
                                                     variant="outline"
-                                                    :class="cn(
-                                                        'w-full justify-start text-left font-normal',
-                                                        !form.hire_date && 'text-muted-foreground',
-                                                    )"
+                                                    :class="
+                                                        cn(
+                                                            'w-full justify-start text-left font-normal',
+                                                            !form.hire_date &&
+                                                                'text-muted-foreground',
+                                                        )
+                                                    "
                                                 >
-                                                    <CalendarIcon class="mr-2 h-4 w-4" />
-                                                    {{ form.hire_date || 'Chọn ngày' }}
+                                                    <CalendarIcon
+                                                        class="mr-2 h-4 w-4"
+                                                    />
+                                                    {{
+                                                        form.hire_date ||
+                                                        'Chọn ngày'
+                                                    }}
                                                 </Button>
                                             </PopoverTrigger>
-                                            <PopoverContent class="w-auto p-0" align="start">
+                                            <PopoverContent
+                                                class="w-auto p-0"
+                                                align="start"
+                                            >
                                                 <Calendar
-                                                    :model-value="form.hire_date ? parseDate(form.hire_date) : undefined"
-                                                    @update:model-value="(date) => {
-                                                        form.hire_date = date ? date.toString() : '';
-                                                        close();
-                                                    }"
-                                                    :default-placeholder="undefined"
+                                                    :model-value="
+                                                        form.hire_date
+                                                            ? parseDate(
+                                                                  form.hire_date,
+                                                              )
+                                                            : undefined
+                                                    "
+                                                    @update:model-value="
+                                                        (date) => {
+                                                            form.hire_date =
+                                                                date
+                                                                    ? date.toString()
+                                                                    : '';
+                                                            close();
+                                                        }
+                                                    "
+                                                    :default-placeholder="
+                                                        undefined
+                                                    "
                                                     layout="month-and-year"
                                                 />
                                             </PopoverContent>
                                         </template>
                                     </Popover>
-                                    <FieldError :errors="[form.errors.hire_date]" />
+                                    <FieldError
+                                        :errors="[form.errors.hire_date]"
+                                    />
                                 </FieldContent>
                             </Field>
                         </div>
@@ -363,7 +453,9 @@ function clearAll() {
                             @click="showRoleSection = !showRoleSection"
                         >
                             <div class="space-y-0.5">
-                                <Label class="text-base">Vai trò & Quyền hạn</Label>
+                                <Label class="text-base"
+                                    >Vai trò & Quyền hạn</Label
+                                >
                                 <p class="text-sm text-muted-foreground">
                                     {{
                                         showRoleSection
@@ -372,11 +464,7 @@ function clearAll() {
                                     }}
                                 </p>
                             </div>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                            >
+                            <Button type="button" variant="outline" size="sm">
                                 {{ showRoleSection ? 'Ẩn' : 'Mở' }}
                             </Button>
                         </div>
@@ -398,13 +486,20 @@ function clearAll() {
                                         Xóa tất cả
                                     </Button>
                                 </div>
-                                <p class="mb-2 text-xs text-muted-foreground">Chọn vai trò làm gợi ý, quyền hạn phải cấp thủ công</p>
+                                <p class="mb-2 text-xs text-muted-foreground">
+                                    Chọn vai trò làm gợi ý, quyền hạn phải cấp
+                                    thủ công
+                                </p>
                                 <div class="flex flex-wrap gap-2">
                                     <Button
                                         v-for="role in roleOptions"
                                         :key="role.id"
                                         type="button"
-                                        :variant="selectedRoles.includes(role.id) ? 'default' : 'outline'"
+                                        :variant="
+                                            selectedRoles.includes(role.id)
+                                                ? 'default'
+                                                : 'outline'
+                                        "
                                         size="sm"
                                         @click="toggleRole(role.id)"
                                     >
@@ -415,7 +510,9 @@ function clearAll() {
 
                             <div>
                                 <div class="flex items-center justify-between">
-                                    <h4 class="text-sm font-medium">Quyền hạn</h4>
+                                    <h4 class="text-sm font-medium">
+                                        Quyền hạn
+                                    </h4>
                                     <Button
                                         type="button"
                                         variant="ghost"
@@ -426,13 +523,21 @@ function clearAll() {
                                         Đặt lại
                                     </Button>
                                 </div>
-                                <p class="mb-2 text-xs text-muted-foreground">Cấp quyền thủ công, vai trò chỉ để tham khảo</p>
+                                <p class="mb-2 text-xs text-muted-foreground">
+                                    Cấp quyền thủ công, vai trò chỉ để tham khảo
+                                </p>
                                 <div class="flex flex-wrap gap-2">
                                     <Button
                                         v-for="perm in permissionOptions"
                                         :key="perm.id"
                                         type="button"
-                                        :variant="selectedPermissions.includes(perm.id) ? 'default' : 'outline'"
+                                        :variant="
+                                            selectedPermissions.includes(
+                                                perm.id,
+                                            )
+                                                ? 'default'
+                                                : 'outline'
+                                        "
                                         class="text-xs"
                                         @click="togglePermission(perm.id)"
                                     >
@@ -441,9 +546,17 @@ function clearAll() {
                                 </div>
                             </div>
 
-                            <div class="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
-                                Vai trò: <span class="font-medium text-foreground">{{ selectedRoles.length }}</span>
-                                · Quyền: <span class="font-medium text-foreground">{{ selectedPermissions.length }}</span>
+                            <div
+                                class="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground"
+                            >
+                                Vai trò:
+                                <span class="font-medium text-foreground">{{
+                                    selectedRoles.length
+                                }}</span>
+                                · Quyền:
+                                <span class="font-medium text-foreground">{{
+                                    selectedPermissions.length
+                                }}</span>
                             </div>
                         </div>
 

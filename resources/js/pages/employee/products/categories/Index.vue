@@ -11,6 +11,7 @@ import {
 } from '@lucide/vue';
 import { capitalize, debounce } from 'lodash';
 import { computed, ref, watch } from 'vue';
+import DataTableFacetedFilter from '@/components/custom/data-table/DataTableFacetedFilter.vue';
 import DataTableGroup from '@/components/custom/data-table/DataTableGroup.vue';
 import DataTableSingleFilter from '@/components/custom/data-table/DataTableSingleFilter.vue';
 import DeleteConfirmation from '@/components/custom/DeleteConfirmation.vue';
@@ -63,6 +64,13 @@ const activeColumns = computed(() =>
     ),
 );
 
+const mappedRoomOptions = computed(() => {
+    return props.roomOptions.map(room => ({
+        label: room.display_name,
+        value: room.id,
+    }));
+});
+
 // State
 const showFormModal = ref(false);
 const showDeleteDialog = ref(false);
@@ -84,6 +92,8 @@ const selectedGroup = ref(
     props.categoryGroups.find((n) => n.group_id === props.currentGroup),
 );
 
+const selectedRooms = ref(props.filters.room_ids ?? []);
+
 // Faceted Filter: Product Types
 const selectedType = ref(props.filters.product_type ?? null);
 
@@ -103,13 +113,14 @@ const selectedStatus = ref(props.filters.is_active ?? undefined);
 
 // Filtering Logic (Debounced)
 const updateSearch = debounce(() => {
-    const { group_id, ...restFilters } = props.filters;
+    const { ...restFilters } = props.filters; // Removed currentGroup destructuring
 
     const rawQuery = {
         ...restFilters,
         search: search.value,
         product_type: selectedType.value ?? undefined,
         is_active: selectedStatus.value ?? undefined,
+        room_ids: selectedRooms.value.join(','), // Ensure it's a comma-separated string for the backend
         page: 1,
     };
 
@@ -123,6 +134,7 @@ const updateSearch = debounce(() => {
 // Watchers
 watch(search, (val) => val !== (props.filters.search ?? '') && updateSearch());
 watch(selectedType, () => updateSearch());
+watch(selectedRooms, () => updateSearch());
 
 watch(
     () => props.categories,
@@ -235,12 +247,8 @@ function handlePreviewImage(url: string) {
             </div>
 
             <div class="@container">
-                <div
-                    class="flex flex-col gap-2 @lg:flex-row @lg:items-start"
-                >
-                    <Card
-                        class="hidden @lg:flex w-full shrink-0 @lg:w-65"
-                    >
+                <div class="flex flex-col gap-2 @lg:flex-row @lg:items-start">
+                    <Card class="hidden w-full shrink-0 @lg:flex @lg:w-65">
                         <CardHeader>
                             <CardTitle class="text-lg font-medium text-primary"
                                 >Nhóm danh mục</CardTitle
@@ -326,9 +334,7 @@ function handlePreviewImage(url: string) {
                     </div>
 
                     <!-- MAIN TABLE -->
-                    <div
-                        class="w-full min-w-0 flex-1"
-                    >
+                    <div class="w-full min-w-0 flex-1">
                         <DataTableGroup
                             v-model:search="search"
                             :is-actually-loading="isActuallyLoading"
@@ -360,6 +366,12 @@ function handlePreviewImage(url: string) {
                                     :options="typeOptions"
                                     icon_location="end"
                                 />
+                                <DataTableFacetedFilter
+                                    title="Phòng"
+                                    v-model="selectedRooms"
+                                    :options="mappedRoomOptions"
+                                    icon_location="end"
+                                />
                             </template>
                         </DataTableGroup>
                     </div>
@@ -372,7 +384,7 @@ function handlePreviewImage(url: string) {
             v-if="showFormModal"
             :open="showFormModal"
             :category-groups="categoryGroups"
-            :room-options="roomOptions"
+            :room-options="mappedRoomOptions"
             :category="selectedCategory"
             @close="showFormModal = false"
             @delete="confirmDelete"

@@ -1,3 +1,4 @@
+import { Link } from '@inertiajs/vue3';
 import {
     MoreHorizontal,
     Pencil,
@@ -8,7 +9,6 @@ import {
     Eye,
 } from '@lucide/vue';
 import type { ColumnDef } from '@tanstack/vue-table';
-import { Link } from '@inertiajs/vue3';
 import { h } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,8 +20,8 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import type { Product } from '@/types/product';
 import { show } from '@/routes/employee/products/items';
+import type { Product } from '@/types/product';
 
 function formatPrice(value: string | number): string {
     const num = typeof value === 'string' ? parseFloat(value) : value;
@@ -38,82 +38,6 @@ export function getColumns(
     onDelete: (product: Product) => void,
 ): ColumnDef<Product>[] {
     return [
-        {
-            id: 'actions',
-            header: 'Thao tác',
-            size: 60,
-            enableSorting: false,
-            enableHiding: false,
-            meta: { align: 'center' },
-            cell: ({ row }) => {
-                const item = row.original;
-                return h(
-                    DropdownMenu,
-                    {},
-                    {
-                        default: () => [
-                            h(DropdownMenuTrigger, { asChild: true }, () =>
-                                h(
-                                    Button,
-                                    { variant: 'ghost', class: 'h-8 w-8 p-0' },
-                                    () =>
-                                        h(MoreHorizontal, { class: 'h-4 w-4' }),
-                                ),
-                            ),
-                            h(
-                                DropdownMenuContent,
-                                { align: 'end', class: 'w-45' },
-                                () => [
-                                    h(DropdownMenuLabel, () => 'Thao tác'),
-                                    h(
-                                        DropdownMenuItem,
-                                        {
-                                            onSelect: (e: Event) => e.preventDefault(),
-                                        },
-                                        () => [
-                                            h(Link, {
-                                                href: show({ product: item.id }).url,
-                                                class: 'flex w-full items-center',
-                                            }, {
-                                                default: () => [
-                                                    h(Eye, { class: 'mr-2 h-4 w-4' }),
-                                                    'Xem',
-                                                ],
-                                            }),
-                                        ],
-                                    ),
-                                    h(DropdownMenuSeparator),
-                                    h(
-                                        DropdownMenuItem,
-                                        { onClick: () => onEdit(item) },
-                                        () => [
-                                            h(Pencil, {
-                                                class: 'mr-2 h-4 w-4',
-                                            }),
-                                            'Sửa',
-                                        ],
-                                    ),
-                                    h(DropdownMenuSeparator),
-                                    h(
-                                        DropdownMenuItem,
-                                        {
-                                            class: 'text-destructive',
-                                            onClick: () => onDelete(item),
-                                        },
-                                        () => [
-                                            h(Trash2, {
-                                                class: 'mr-2 h-4 w-4',
-                                            }),
-                                            'Xóa',
-                                        ],
-                                    ),
-                                ],
-                            ),
-                        ],
-                    },
-                );
-            },
-        },
         {
             accessorKey: 'name',
             header: 'Sản phẩm',
@@ -366,5 +290,81 @@ export function getColumns(
                     row.original.updated_at,
                 ),
         },
+        {
+            id: 'actions',
+            header: 'Thao tác',
+            size: 60,
+            enableSorting: false,
+            enableHiding: false,
+            meta: { align: 'center' },
+            cell: ({ row }) => {
+                const item = row.original;
+                return h(
+                    DropdownMenu,
+                    {},
+                    {
+                        default: () => [
+                            h(DropdownMenuTrigger, { asChild: true }, () =>
+                                h(
+                                    Button,
+                                    { variant: 'ghost', class: 'h-8 w-8 p-0' },
+                                    () =>
+                                        h(MoreHorizontal, { class: 'h-4 w-4' }),
+                                ),
+                            ),
+                            h(
+                                DropdownMenuContent,
+                                { align: 'end', class: 'w-45' },
+                                () => [
+                                    h(DropdownMenuLabel, () => 'Thao tác'),
+                                    h(
+                                        DropdownMenuItem,
+                                        {
+                                            onSelect: (e: Event) => e.preventDefault(),
+                                        },
+                                        () => [
+                                            h(Link, {
+                                                href: show({ product: item.id }).url,
+                                                class: 'flex w-full items-center',
+                                            }, {
+                                                default: () => [
+                                                    h(Eye, { class: 'mr-2 h-4 w-4' }),
+                                                    'Xem',
+                                                ],
+                                            }),
+                                        ],
+                                    ),
+                                    h(DropdownMenuSeparator),
+                                    h(
+                                        DropdownMenuItem,
+                                        { onClick: () => onEdit(item) },
+                                        () => [
+                                            h(Pencil, {
+                                                class: 'mr-2 h-4 w-4',
+                                            }),
+                                            'Sửa',
+                                        ],
+                                    ),
+                                    h(DropdownMenuSeparator),
+                                    h(
+                                        DropdownMenuItem,
+                                        {
+                                            class: 'text-destructive',
+                                            onClick: () => onDelete(item),
+                                        },
+                                        () => [
+                                            h(Trash2, {
+                                                class: 'mr-2 h-4 w-4',
+                                            }),
+                                            'Xóa',
+                                        ],
+                                    ),
+                                ],
+                            ),
+                        ],
+                    },
+                );
+            },
+        }
     ];
 }

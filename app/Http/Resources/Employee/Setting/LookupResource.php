@@ -18,7 +18,7 @@ class LookupResource extends JsonResource
             'display_name' => $this->display_name,
             'slug' => $this->slug,
             'description' => $this->description,
-            'image_url' => $this->getFirstMediaUrl('image'),
+            'image_url' => $this->getFirstMediaUrl('image', 'webp') ?? $this->getFirstMediaUrl('image'),
             'image_thumb_url' => $this->getFirstMediaUrl('image', 'thumb'),
 
             'is_active' => $this->is_active,

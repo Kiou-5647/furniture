@@ -14,6 +14,7 @@ import {
 } from '@lucide/vue';
 import { computed, watch } from 'vue';
 import ImageUploader from '@/components/custom/ImageUploader.vue';
+import MultiSelect from '@/components/custom/MultiSelect.vue';
 import StatusToggle from '@/components/custom/StatusToggle.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -54,16 +55,17 @@ const props = defineProps<{
 
 const emit = defineEmits(['close', 'delete']);
 
+console.info(JSON.stringify(props.category));
+
 const form = useForm({
     group_id: null as string | null,
-    room_id: null as string | null,
+    room_ids: null as string[] | null,
     product_type: 'noi-that' as ProductType,
     slug: '',
     display_name: '',
     description: '',
     is_active: true,
     image: null as File | null,
-    metadata: {},
 });
 
 const typeOptions = [
@@ -78,7 +80,7 @@ watch(
     (newCategory) => {
         if (newCategory && props.open) {
             form.group_id = newCategory.group_id;
-            form.room_id = newCategory.room_id ?? null;
+            form.room_ids = newCategory.rooms?.map(r => r.id) ?? [];
             form.product_type = newCategory.product_type;
             form.slug = newCategory.slug;
             form.display_name = newCategory.display_name;
@@ -149,10 +151,6 @@ const selectedGroupLabel = computed(() => {
     return g?.label;
 });
 
-const selectedRoomLabel = computed(() => {
-    const r = props.roomOptions.find((r) => r.id === form.room_id);
-    return r?.display_name;
-});
 </script>
 
 <template>
@@ -199,7 +197,7 @@ const selectedRoomLabel = computed(() => {
                             >Hình ảnh</FieldLabel
                         >
                         <ImageUploader
-                            v-model="form.image"
+                            :model-value="form.image"
                             :preview-url="previewUrl"
                             aspect-ratio="square"
                         />
@@ -346,33 +344,14 @@ const selectedRoomLabel = computed(() => {
                                     Phòng
                                 </FieldLabel>
                                 <FieldContent>
-                                    <Select v-model="form.room_id">
-                                        <SelectTrigger class="w-full">
-                                            <SelectValue
-                                                :placeholder="
-                                                    selectedRoomLabel ||
-                                                    'Chọn phòng...'
-                                                "
-                                            />
-                                        </SelectTrigger>
-                                        <SelectContent
-                                            position="popper"
-                                            :side-offset="4"
-                                        >
-                                            <SelectItem :value="null"
-                                                >Không có</SelectItem
-                                            >
-                                            <SelectItem
-                                                v-for="r in roomOptions"
-                                                :key="r.id"
-                                                :value="r.id"
-                                            >
-                                                {{ r.display_name }}
-                                            </SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                    <MultiSelect
+                                        title="Phòng"
+                                        :options="roomOptions"
+                                        v-model="form.room_ids!"
+                                        placeholder="Thêm phòng..."
+                                    />
                                     <FieldError
-                                        :errors="[form.errors.room_id]"
+                                        :errors="[form.errors.room_ids]"
                                     />
                                 </FieldContent>
                             </Field>
@@ -399,7 +378,7 @@ const selectedRoomLabel = computed(() => {
                                 >Hình ảnh</FieldLabel
                             >
                             <ImageUploader
-                                v-model="form.image"
+                                :model-value="form.image"
                                 :preview-url="previewUrl"
                                 aspect-ratio="square"
                                 hint="4:3 hoặc 1:1 · Max 2MB"

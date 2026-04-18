@@ -6,8 +6,7 @@ export interface Category {
     group_id: string;
     group?: Lookup;
 
-    room_id: string | null;
-    room?: Lookup;
+    rooms: Lookup[];
 
     product_type: ProductType;
     product_type_label: string;
@@ -19,7 +18,6 @@ export interface Category {
     image_thumb_url?: string;
 
     is_active: boolean;
-    metadata: Record<string, any> | null;
 
     created_at: string;
     updated_at: string;
@@ -63,6 +61,7 @@ export interface CategoryPagination {
 
 export interface CategoryFilterData {
     group_id?: string | null;
+    room_ids?: string[] | null;
     product_type?: ProductType | null;
     search?: string;
     is_active?: boolean | null;

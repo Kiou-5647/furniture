@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Services\Product\ShopMenuService;
+use App\Services\Public\ShopMenuService;
 use App\Services\Setting\MenuService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;

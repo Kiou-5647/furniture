@@ -34,7 +34,8 @@ class StoreCategoryRequest extends FormRequest
         return [
             'group_id' => ['required', 'exists:lookups,id'],
             'product_type' => ['required', Rule::enum(ProductType::class)],
-            'room_id' => ['nullable', 'exists:lookups,id'],
+            'room_ids' => ['nullable', 'array'],
+            'room_ids.*' => ['exists:lookups,id'],
             'display_name' => ['required', 'string', 'max:255'],
             'slug' => [
                 'required',
@@ -45,7 +46,6 @@ class StoreCategoryRequest extends FormRequest
             'description' => ['nullable', 'string'],
             'is_active' => ['boolean'],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
-            'metadata' => ['nullable', 'array'],
         ];
     }
 

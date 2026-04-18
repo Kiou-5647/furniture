@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { ImageOff } from '@lucide/vue';
+import { ImageOff, ShoppingCart } from '@lucide/vue';
 import { Heart } from 'lucide-vue-next';
 import { computed, ref, onMounted } from 'vue';
 import type { Product, SwatchOption } from '@/types/product';
 import StarRating from '../custom/StarRating.vue';
+import { Button } from '../ui/button';
 
 const props = defineProps<{
     product: Product;
@@ -99,13 +100,13 @@ function productUrl(): string {
 
     return `/san-pham/${currentSwatch.value.sku}/${currentSwatch.value.slug}`;
 }
-console.info(currentSwatch)
+console.info(currentSwatch);
 </script>
 
 <template>
-    <div class="product-item overflow-hidden rounded-lg border bg-white">
+    <div class="product-item overflow-hidden rounded-lg border">
         <!-- Product Image -->
-        <div class="relative aspect-square overflow-hidden bg-zinc-100">
+        <div class="relative aspect-square overflow-hidden">
             <Link :href="productUrl()" class="block h-full w-full">
                 <img
                     v-if="displayImage"
@@ -116,28 +117,26 @@ console.info(currentSwatch)
                 />
                 <div
                     v-else
-                    class="flex h-full w-full items-center justify-center text-zinc-300"
+                    class="flex h-full w-full items-center justify-center"
                 >
                     <ImageOff class="h-12 w-12" />
                 </div>
             </Link>
 
             <!-- Wishlist -->
-            <button
-                class="absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 transition-colors hover:bg-white"
+            <Button
+                class="absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-full transition-colors"
             >
                 <span class="sr-only">Yêu thích</span>
                 <Heart class="h-5 w-5" />
-            </button>
+            </Button>
         </div>
 
         <!-- Product Details -->
         <div class="space-y-2 p-3">
             <!-- Product Name -->
             <Link :href="productUrl()" class="block">
-                <h3
-                    class="line-clamp-2 text-sm font-medium text-zinc-900 transition-colors hover:text-zinc-600"
-                >
+                <h3 class="transition-color line-clamp-2 text-sm font-medium">
                     {{ displayName }}
                 </h3>
             </Link>
@@ -145,12 +144,21 @@ console.info(currentSwatch)
             <!-- Price -->
             <div class="flex items-baseline gap-2">
                 <!-- Show sale price in orange if it exists -->
-                <span v-if="currentSwatch?.sale_price" class="text-base font-bold text-orange-500">
+                <span
+                    v-if="currentSwatch?.sale_price"
+                    class="text-base font-bold text-orange-500"
+                >
                     {{ formatPrice(Number(currentSwatch.sale_price)) }}đ
                 </span>
 
                 <!-- Show base price. If sale_price exists, strike it through and make it gray -->
-                <span :class="currentSwatch?.sale_price ? 'text-sm text-zinc-400 line-through' : 'text-base font-bold text-zinc-900'">
+                <span
+                    :class="
+                        currentSwatch?.sale_price
+                            ? 'text-smline-through'
+                            : 'text-base font-bold'
+                    "
+                >
                     {{ formatPrice(Number(currentSwatch?.price)) }}đ
                 </span>
             </div>
@@ -182,8 +190,8 @@ console.info(currentSwatch)
                     class="h-7 w-7 overflow-hidden rounded-md border-2 transition-all"
                     :class="
                         selectedVariantId === swatch.variant_id
-                            ? 'border-zinc-900 ring-1 ring-zinc-900/20'
-                            : 'border-transparent hover:border-zinc-300'
+                            ? 'border-zinc-900 ring-1 ring-zinc-900/20 dark:border-zinc-100 dark:ring-zinc-100/20'
+                            : 'border-transparent hover:border-zinc-300 dark:hover:border-zinc-700'
                     "
                     @mouseenter="previewSwatch(swatch)"
                 >
@@ -198,11 +206,15 @@ console.info(currentSwatch)
             </div>
 
             <!-- Add to Cart -->
-            <button
-                class="w-full rounded-md border border-zinc-200 py-2 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
+            <Button
+                variant="outline"
+                :class="[
+                    'w-full rounded-md border-gray-400 py-2 text-sm font-medium transition-colors',
+                ]"
             >
                 Thêm vào giỏ hàng
-            </button>
+                <ShoppingCart />
+            </Button>
         </div>
     </div>
 </template>

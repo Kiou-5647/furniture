@@ -168,7 +168,7 @@ const isColorNamespace = computed(() => currentNamespace.value === 'mau-sac');
                             >Hình ảnh</FieldLabel
                         >
                         <ImageUploader
-                            v-model="form.image"
+                            :model-value="form.image"
                             :preview-url="previewUrl"
                             aspect-ratio="square"
                         />
@@ -362,17 +362,19 @@ const isColorNamespace = computed(() => currentNamespace.value === 'mau-sac');
                                 >Hình ảnh</FieldLabel
                             >
                             <ImageUploader
-                                v-model="form.image"
+                                :model-value="form.image"
                                 :preview-url="previewUrl"
                                 aspect-ratio="square"
                                 class="mt-2 w-60 justify-self-center"
                             />
                         </div>
 
-                        <div :class="[
-                            'flex gap-3',
-                            isColorNamespace! ? '' : 'sm:hidden'
-                            ]">
+                        <div
+                            :class="[
+                                'flex gap-3',
+                                isColorNamespace! ? '' : 'sm:hidden',
+                            ]"
+                        >
                             <StatusToggle
                                 v-model="form.is_active"
                                 label="Kích hoạt"

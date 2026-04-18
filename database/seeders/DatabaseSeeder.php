@@ -12,13 +12,21 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            // Foundational data (must run first)
-            GeodataSeeder::class,      // Provinces & wards
-            LookupSeeder::class,       // Lookups: groups, rooms, styles, colors, materials, etc.
-
-            // Demo data (roles, users, products, inventory)
-            DemoDataSeeder::class,
+            RolesAndPermissionsSeeder::class,
+            GeodataSeeder::class,
+            LocationSeeder::class,
+            DepartmentSeeder::class,
+            EmployeeSeeder::class,
+            DesignerSeeder::class,
+            CustomerSeeder::class,
             VendorSeeder::class,
+            LookupSeeder::class,
+            CategorySeeder::class,
+            CollectionSeeder::class,
+            TimberProductSeeder::class,
+            VendorSeeder::class,
+            InventorySeeder::class,
+            ShippingMethodSeeder::class,
         ]);
     }
 }

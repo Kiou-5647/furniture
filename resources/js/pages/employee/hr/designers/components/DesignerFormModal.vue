@@ -438,7 +438,7 @@ function closeModal() {
                     <form @submit.prevent="submit" class="space-y-4">
                         <div class="flex items-center gap-4">
                             <ImageUploader
-                                v-model="form.avatar"
+                                :model-value="form.avatar"
                                 :preview-url="avatarPreview"
                                 aspect-ratio="square"
                                 label="Ảnh đại diện"

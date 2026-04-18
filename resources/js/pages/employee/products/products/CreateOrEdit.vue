@@ -163,11 +163,19 @@ function handleLookupFormClosed() {
 <template>
     <AppLayout>
         <div
-            class="flex flex-col gap-0 overflow-hidden p-0"
+            class="relative flex flex-col overflow-hidden"
+            style="height: calc(100vh - 80px)"
         >
-            <div class="my-3 ml-4 gap-6 flex items-center justify-start">
-                <Button variant="outline" class="w-8 h-8" @click="requestClose()">
-                    <ArrowLeft class="w-4 h-4"/>
+            <!-- HEADER -->
+            <div
+                class="flex shrink-0 items-center justify-start gap-6 px-4 py-3"
+            >
+                <Button
+                    variant="outline"
+                    class="h-8 w-8"
+                    @click="requestClose()"
+                >
+                    <ArrowLeft class="h-4 w-4" />
                 </Button>
                 <div>
                     <h1 class="text-2xl font-bold">
@@ -184,7 +192,8 @@ function handleLookupFormClosed() {
                     </p>
                 </div>
             </div>
-            <div class="border-b border-t px-4 py-3 md:hidden">
+            <!-- MOBILE STEPPER -->
+            <div class="shrink-0 border-t border-b px-4 py-3 md:hidden">
                 <Stepper
                     v-model="ctx.currentStep"
                     class="flex w-full items-center justify-between"
@@ -279,9 +288,10 @@ function handleLookupFormClosed() {
                     </StepperItem>
                 </Stepper>
             </div>
-            <div class="flex flex-1 gap-6 md:border-t overflow-hidden">
+            <!-- MIDDLE -->
+            <div class="flex min-h-0 flex-1 overflow-hidden border-t">
                 <div
-                    class="hidden w-40 shrink-0 flex-col border-r px-4 py-4 md:flex"
+                    class="hidden w-40 shrink-0 flex-col overflow-hidden border-r px-4 py-4 md:flex"
                 >
                     <Stepper
                         v-model="ctx.currentStep"
@@ -382,7 +392,7 @@ function handleLookupFormClosed() {
                         </StepperItem>
                     </Stepper>
                 </div>
-                <div class="flex-1 px-4 py-4">
+                <div class="flex-1 overflow-y-auto px-4 py-4">
                     <form @submit.prevent="ctx.submit" class="h-full">
                         <StepContent
                             v-show="ctx.currentStep === 1"
@@ -413,62 +423,61 @@ function handleLookupFormClosed() {
                         />
                     </form>
                 </div>
-                <div
-                    class="fixed right-0 bottom-0 left-0 flex justify-end gap-3 border-t bg-background p-4"
+            </div>
+            <!-- FOOTER -->
+            <div
+                class="flex shrink-0 justify-end gap-3 border-t bg-background p-4"
+            >
+                <Button variant="outline" size="sm" @click="requestClose()">
+                    Hủy
+                </Button>
+                <Button
+                    v-if="ctx.currentStep > 1"
+                    variant="outline"
+                    size="sm"
+                    @click="ctx.prevStep()"
                 >
-                    <Button variant="outline" size="sm" @click="requestClose()">
-                        Hủy
-                    </Button>
-                    <Button
-                        v-if="ctx.currentStep > 1"
-                        variant="outline"
-                        size="sm"
-                        @click="ctx.prevStep()"
+                    Quay lại
+                </Button>
+                <Button
+                    v-if="ctx.currentStep < ctx.steps.length"
+                    size="sm"
+                    @click="ctx.nextStep()"
+                >
+                    Tiếp theo
+                </Button>
+                <template v-else>
+                    <Alert
+                        v-if="!ctx.isValid && ctx.validationErrors.length > 0"
+                        variant="destructive"
+                        class="mr-auto px-3 py-2"
                     >
-                        Quay lại
-                    </Button>
+                        <AlertCircle class="h-3.5 w-3.5" />
+                        <AlertTitle class="text-xs">
+                            Thiếu thông tin bắt buộc
+                        </AlertTitle>
+                        <AlertDescription class="text-xs">
+                            <ul class="mt-1 ml-4 list-disc">
+                                <li
+                                    v-for="(err, i) in ctx.validationErrors"
+                                    :key="i"
+                                >
+                                    {{ err }}
+                                </li>
+                            </ul>
+                        </AlertDescription>
+                    </Alert>
                     <Button
-                        v-if="ctx.currentStep < ctx.steps.length"
+                        v-if="ctx.isValid"
                         size="sm"
-                        @click="ctx.nextStep()"
+                        @click="handleSubmit()"
                     >
-                        Tiếp theo
+                        {{ product ? 'Cập nhật' : 'Tạo sản phẩm' }}
                     </Button>
-                    <template v-else>
-                        <Alert
-                            v-if="
-                                !ctx.isValid && ctx.validationErrors.length > 0
-                            "
-                            variant="destructive"
-                            class="mr-auto px-3 py-2"
-                        >
-                            <AlertCircle class="h-3.5 w-3.5" />
-                            <AlertTitle class="text-xs">
-                                Thiếu thông tin bắt buộc
-                            </AlertTitle>
-                            <AlertDescription class="text-xs">
-                                <ul class="mt-1 ml-4 list-disc">
-                                    <li
-                                        v-for="(err, i) in ctx.validationErrors"
-                                        :key="i"
-                                    >
-                                        {{ err }}
-                                    </li>
-                                </ul>
-                            </AlertDescription>
-                        </Alert>
-                        <Button
-                            v-if="ctx.isValid"
-                            size="sm"
-                            @click="handleSubmit()"
-                        >
-                            {{ product ? 'Cập nhật' : 'Tạo sản phẩm' }}
-                        </Button>
-                        <Button v-else size="sm" disabled>
-                            {{ product ? 'Cập nhật' : 'Tạo sản phẩm' }}
-                        </Button>
-                    </template>
-                </div>
+                    <Button v-else size="sm" disabled>
+                        {{ product ? 'Cập nhật' : 'Tạo sản phẩm' }}
+                    </Button>
+                </template>
             </div>
         </div>
     </AppLayout>

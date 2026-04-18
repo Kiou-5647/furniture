@@ -403,7 +403,7 @@ class TimberProductSeeder extends Seeder
 
     public function run(): void
     {
-        $categoryId = DB::table('categories')->where('slug', 'sofas')->value('id');
+        $categoryId = DB::table('categories')->where('slug', 'ghe-sofa')->value('id');
         $collectionId = DB::table('collections')->where('slug', 'timber')->value('id');
 
         if (! $categoryId) {

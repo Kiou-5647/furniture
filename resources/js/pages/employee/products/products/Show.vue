@@ -180,7 +180,7 @@ function formatPrice(value: string | number): string {
                     <div
                         v-for="(feature, i) in product.features"
                         :key="i"
-                        class="rounded-md bg-zinc-50 p-3 text-sm"
+                        class="rounded-md p-3 text-sm"
                     >
                         <p class="font-medium">{{ feature.display_name }}</p>
                         <p v-if="feature.description" class="mt-1 text-muted-foreground text-xs">

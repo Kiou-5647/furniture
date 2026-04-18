@@ -31,7 +31,6 @@ class Category extends Model implements HasMedia
     {
         return [
             'product_type' => ProductType::class,
-            'metadata' => 'array',
             'filterable_specs' => 'array',
             'is_active' => 'boolean',
         ];
@@ -42,9 +41,9 @@ class Category extends Model implements HasMedia
         return $this->belongsTo(Lookup::class, 'group_id');
     }
 
-    public function room()
+    public function rooms()
     {
-        return $this->belongsTo(Lookup::class, 'room_id');
+        return $this->belongsToMany(Lookup::class, 'category_room_placement', 'category_id', 'room_id');
     }
 
     public function newEloquentBuilder($query): CategoryBuilder
@@ -71,9 +70,9 @@ class Category extends Model implements HasMedia
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['group_id', 'product_type', 'display_name', 'slug', 'description', 'is_active', 'metadata'])
+            ->logOnly(['group_id', 'product_type', 'display_name', 'slug', 'description', 'is_active'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
-            ->setDescriptionForEvent(fn (string $eventName) => "Category {$eventName}");
+            ->setDescriptionForEvent(fn(string $eventName) => "Category {$eventName}");
     }
 }
