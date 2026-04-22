@@ -2,11 +2,13 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\Product\ProductVariant;
+use App\Enums\UserType;
 use App\Models\Product\Bundle;
+use App\Models\Product\ProductVariant;
 use App\Services\Analytics\ViewTrackingService;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Symfony\Component\HttpFoundation\Response;
 
 class TrackProductView
@@ -22,28 +24,48 @@ class TrackProductView
         if ($response->getStatusCode() === 200) {
             $user = $request->user();
 
-            if ($user && $user->user_type === 'customer') {
-                // 1. Check if it's a Product Variant (via SKU)
-                $sku = $request->route('sku');
-                if ($sku) {
-                    $variantId = ProductVariant::where('sku', $sku)->value('id');
-                    if ($variantId) {
-                        $this->viewTracker->incrementView($variantId, ProductVariant::class);
-                        return $response;
-                    }
-                }
+            // GUARD: Only allow Guests (no user) or Customers.
+            if ($user && $user->user_type !== UserType::Customer) {
+                return $response;
+            }
 
-                // 2. Check if it's a Bundle (via Slug)
+            $targetId = null;
+            $targetClass = null;
+
+            $sku = $request->route('sku');
+            if ($sku) {
+                $targetId = ProductVariant::where('sku', $sku)->value('id');
+                $targetClass = ProductVariant::class;
+            } else {
                 $bundleSlug = $request->route('bundle_slug');
                 if ($bundleSlug) {
-                    $bundleId = Bundle::where('slug', $bundleSlug)->value('id');
-                    if ($bundleId) {
-                        $this->viewTracker->incrementView($bundleId, Bundle::class);
-                    }
+                    $targetId = Bundle::where('slug', $bundleSlug)->value('id');
+                    $targetClass = Bundle::class;
                 }
+            }
+
+            if ($targetId && $this->shouldTrackView($request, $user, $targetId)) {
+                $this->viewTracker->incrementView($targetId, $targetClass);
             }
         }
 
         return $response;
+    }
+
+    protected function shouldTrackView(Request $request, $user, $targetId): bool
+    {
+        // Authenticated customers use their ID, guests use their session ID
+        $viewerId = $user ? "user_{$user->id}" : "guest_{$request->getSession()->getId()}";
+
+        $cacheKey = "product_view_{$viewerId}_{$targetId}";
+
+        if (Cache::has($cacheKey)) {
+            return false;
+        }
+
+        // Throttle changed to 3 hours for more dynamic tracking
+        Cache::put($cacheKey, true, now()->addHours(3));
+
+        return true;
     }
 }

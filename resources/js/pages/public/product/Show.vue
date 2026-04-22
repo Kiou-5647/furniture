@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
-import { computed, onMounted, ref } from 'vue';
+import { Head, router } from '@inertiajs/vue3';
+import { ShoppingCart } from '@lucide/vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import StarRating from '@/components/custom/StarRating.vue';
-import ReviewForm from '@/components/product/ReviewForm.vue';
+import Heading from '@/components/Heading.vue';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import {
     Carousel,
@@ -13,38 +15,42 @@ import {
     CarouselPrevious,
 } from '@/components/ui/carousel';
 import type { UnwrapRefCarouselApi as CarouselApi } from '@/components/ui/carousel/interface';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import ShopLayout from '@/layouts/ShopLayout.vue';
 import { formatPrice } from '@/lib/utils';
 import type { BreadcrumbItem } from '@/types';
-import type { Product, ProductVariant } from '@/types/public/product';
+import { AssemblyDifficultyLabels } from '@/types';
+import type { Feature, ProductPage } from '@/types/public/product';
 
 const props = defineProps<{
-    product: Product;
-    activeVariant: ProductVariant;
+    product_page: ProductPage;
 }>();
 
-const selectedVariantId = ref<string>(props.activeVariant.id);
-
-const currentVariant = computed(() => {
-    return (
-        props.product.variants.find((v) => v.id === selectedVariantId.value) ??
-        props.product.variants[0]
-    );
-});
+// --- COMPUTED ---
+const activeVariant = computed(() => props.product_page.active_variant);
 
 const displayName = computed(() => {
-    const v = currentVariant.value;
+    return `${props.product_page.name} ${activeVariant.value.name || activeVariant.value.swatch_label || ''}`.trim();
+});
 
-    return `${props.product.name} ${v?.name ?? v?.swatch_label ?? ''}`.trim();
+const availableSwatches = computed(() => {
+    return props.product_page.variants.filter((v) => {
+        return props.product_page.option_groups
+            .filter((g) => !g.is_swatches)
+            .every(
+                (g) =>
+                    v.option_values[g.namespace] ===
+                    activeVariant.value.option_values[g.namespace],
+            );
+    });
 });
 
 const allImages = computed(() => {
-    const images = currentVariant.value?.images;
-    if (!images) return [];
-
+    const images = activeVariant.value.images;
     const list: { full: string; thumb: string; label: string }[] = [];
+
     if (images.primary)
         list.push({
             full: images.primary.full,
@@ -78,41 +84,43 @@ const allImages = computed(() => {
             thumb: images.swatch.thumb || images.swatch.full,
             label: '',
         });
-
     return list;
 });
 
-// --- SELECTOR LOGIC ---
-const selections = ref<Record<string, string>>({});
-
-const activeCard = computed(() => {
-    const cards = props.product.grouped_variants ?? [];
-    return (
-        cards.find((card) =>
-            Object.entries(card.option_values).every(
-                ([key, value]) => selections.value[key] === value,
-            ),
-        ) ??
-        cards[0] ??
-        null
-    );
-});
-
-function selectOption(namespace: string, value: string) {
-    selections.value[namespace] = value;
-    // When a base option changes, we find the first available variant in the new card
-    if (activeCard.value?.swatch_options?.length) {
-        selectedVariantId.value = activeCard.value.swatch_options[0].variant_id;
-    }
+// --- NAVIGATION ---
+function navigateToVariant(sku: string, slug: string) {
+    router.visit(`/san-pham/${sku}/${slug}`);
 }
 
-function selectSwatch(variantId: string) {
-    selectedVariantId.value = variantId;
+function navigateViaMap(namespace: string, value: string) {
+    const url = props.product_page.navigation_map[namespace]?.[value];
+    if (url) router.visit(url);
 }
 
 // --- CAROUSEL LOGIC ---
 const selectedImageIndex = ref(0);
 const carouselApi = ref<CarouselApi | null>(null);
+
+const isMobile = ref(false);
+
+const updateScreenSize = () => {
+    isMobile.value = window.innerWidth < 1024; // 1024px is Tailwind's @lg
+};
+
+onMounted(() => {
+    updateScreenSize();
+    window.addEventListener('resize', updateScreenSize);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('resize', updateScreenSize);
+});
+
+const selectedFeature = ref();
+
+function openFeature(feature: Feature) {
+    selectedFeature.value = feature;
+}
 
 function onInitCarousel(api: CarouselApi) {
     carouselApi.value = api;
@@ -126,279 +134,342 @@ function selectImage(index: number) {
     carouselApi.value?.scrollTo(index);
 }
 
-const breadcrumbs = computed(() => {
+const breadcrumbs = computed((): BreadcrumbItem[] => {
     const items: BreadcrumbItem[] = [{ title: 'Trang chủ', href: '/' }];
-    if (props.product.category) {
-        const cat = props.product.category;
+    const cat = props.product_page.category;
+    if (cat) {
         items.push({
             title: cat.product_type.name,
             href: `/san-pham?loai=${cat.product_type.slug}`,
         });
-        if (cat.room)
-            items.push({
-                title: cat.room.name,
-                href: `/san-pham?phong=${cat.room.slug}`,
-            });
-        if (cat.group)
-            items.push({
-                title: cat.group.name,
-                href: `/san-//pham?nhom=${cat.group.slug}`,
-            });
-        items.push({
-            title: cat.name,
-            href: `/san-//pham?danh-muc=${cat.slug}`,
-        });
+        // Room/Group logic can be added back here if provided in the resource
+        items.push({ title: cat.name, href: `/san-pham?danh-muc=${cat.slug}` });
     }
-    const variantSuffix = currentVariant.value?.name
-        ? ` ${currentVariant.value.name}`
-        : ` (${currentVariant.value?.sku})`;
-    items.push({ title: `${props.product.name}${variantSuffix}`, href: '' });
+    if (!isMobile.value) {
+        items.push({ title: displayName.value, href: '' });
+    } else {
+        items.push({ title: '', href: '' });
+    }
     return items;
 });
 
-onMounted(() => {
-    // 1. Handle the non-swatch selections first
-    if (activeCard.value) {
-        // Copy the option_values from the first card into the selections state
-        // This ensures the "pills" are highlighted on first load
-        selections.value = { ...activeCard.value.option_values };
-    }
 
-    // 2. Handle the variant/swatch selection
-    // If there's a URL filter, use it, otherwise use the first variant of the active card
-    const urlParams = new URLSearchParams(window.location.search);
-    const colorFilter = urlParams.get('mau-sac');
-
-    if (colorFilter && activeCard.value) {
-        const matchingSwatch = activeCard.value.swatch_options.find(
-            (s) => s.value === colorFilter,
-        );
-        if (matchingSwatch) {
-            selectedVariantId.value = matchingSwatch.variant_id;
-        }
-    } else if (activeCard.value?.swatch_options?.length) {
-        // Default to first swatch in the active card
-        selectedVariantId.value = activeCard.value.swatch_options[0].variant_id;
-    } else {
-        // Fallback to first variant of the product
-        selectedVariantId.value = props.product.variants?.[0]?.id ?? null;
-    }
-});
+console.info(props.product_page.featured_highlights)
+console.info(props.product_page.plain_features)
 </script>
 
 <template>
-    <Head :title="product.name" />
+
+    <Head :title="product_page.name" />
     <ShopLayout>
-        <div class="mx-auto max-w-[1600px] px-4 py-6">
-            <Breadcrumbs :breadcrumbs="breadcrumbs" class="mb-6" />
-            <div class="grid grid-cols-1 gap-12 @lg:grid-cols-2">
+        <div class="mx-auto flex max-w-[1600px] flex-col items-center justify-center px-4 py-6">
+            <Breadcrumbs :breadcrumbs="breadcrumbs" class="mb-3 @lg:mb-6 self-start" />
+            <div class="grid max-w-[1200px] grid-cols-1 items-start gap-3 @lg:gap-12 @lg:grid-cols-12">
+                <div class="flex flex-col @lg:hidden">
+                    <h1 class="text-lg font-bold">{{ displayName }}</h1>
+                    <div class="text-md font-semibold">
+                        <span v-if="activeVariant.sale_price" class="text-orange-500">{{
+                            formatPrice(Number(activeVariant.sale_price))
+                        }}</span>
+                        <span :class="activeVariant.sale_price
+                            ? 'text-md ml-2 text-zinc-400 line-through'
+                            : 'text-zinc-900'
+                            ">
+                            {{ formatPrice(Number(activeVariant.price)) }}
+                        </span>
+                    </div>
+                    <StarRating :rating="activeVariant.average_rating" :count="activeVariant.reviews_count" show-count
+                        size="w-4 h-4" class="text-xs" />
+                </div>
                 <!-- Left Side: Image Gallery -->
-                <div class="flex flex-col gap-4 select-none">
-                    <Carousel
-                        class="w-full"
-                        :opts="{ loop: true }"
-                        @init-api="onInitCarousel"
-                    >
-                        <CarouselContent>
-                            <CarouselItem
-                                v-for="(img, idx) in allImages"
-                                :key="idx"
-                            >
-                                <div
-                                    class="aspect-square overflow-hidden rounded-xl bg-zinc-100"
-                                >
-                                    <img
-                                        v-if="
+                <div class="select-none @lg:sticky @lg:top-20 @lg:col-span-7">
+                    <div class="flex flex-col gap-4">
+                        <Carousel class="w-full" :opts="{ loop: true }" @init-api="onInitCarousel">
+                            <CarouselContent>
+                                <CarouselItem v-for="(img, idx) in allImages" :key="idx">
+                                    <div class="aspect-square overflow-hidden rounded-xl bg-zinc-100">
+                                        <img v-if="
                                             Math.abs(
                                                 selectedImageIndex - idx,
                                             ) <= 1
-                                        "
-                                        :src="img.full"
-                                        :alt="img.label"
-                                        class="h-full w-full object-cover"
-                                    />
-                                    <div
-                                        v-else
-                                        class="flex h-full w-full items-center justify-center text-zinc-300"
-                                    >
-                                        Loading...
+                                        " :src="img.full" :alt="img.label" class="h-full w-full object-cover" />
+                                        <div v-else
+                                            class="flex h-full w-full items-center justify-center text-zinc-300">
+                                            Loading...
+                                        </div>
                                     </div>
-                                </div>
-                            </CarouselItem>
-                        </CarouselContent>
-                        <CarouselPrevious class="left-2" />
-                        <CarouselNext class="right-2" />
-                    </Carousel>
+                                </CarouselItem>
+                            </CarouselContent>
+                            <CarouselPrevious class="left-2" />
+                            <CarouselNext class="right-2" />
+                        </Carousel>
 
-                    <div class="flex flex-wrap justify-start gap-2">
-                        <button
-                            v-for="(img, idx) in allImages"
-                            :key="idx"
-                            @click="selectImage(idx)"
-                            class="relative h-16 w-16 overflow-hidden rounded-md border-2 transition-all"
-                            :class="
-                                selectedImageIndex === idx
+                        <div class="flex flex-wrap justify-start gap-2">
+                            <button v-for="(img, idx) in allImages" :key="idx" @click="selectImage(idx)"
+                                class="relative h-10 w-10 overflow-hidden rounded-md border-2 transition-all @lg:h-12 @lg:w-12"
+                                :class="selectedImageIndex === idx
                                     ? 'border-zinc-900 ring-2 ring-zinc-900/20'
                                     : 'border-transparent hover:border-zinc-300'
-                            "
-                        >
-                            <img
-                                :src="img.thumb"
-                                :alt="img.label"
-                                loading="lazy"
-                                class="h-full w-full object-cover"
-                            />
-                        </button>
+                                    ">
+                                <img :src="img.thumb" :alt="img.label" loading="lazy"
+                                    class="h-full w-full object-cover" />
+                            </button>
+                        </div>
+                    </div>
+                    <div v-if="product_page.featured_highlights.length" class="mt-8 flex flex-col gap-4">
+                        <Heading title="Đặc trưng"></Heading>
+                        <div class="flex gap-4">
+                            <div v-for="(feature, idx) in product_page.featured_highlights" :key="idx"
+                                @click="openFeature(feature)"
+                                class="group cursor-pointer rounded-xl border bg-white p-2 text-center transition-all hover:border-orange-400 hover:shadow-sm">
+                                <div class="mb-2 flex justify-center">
+                                    <img :src="feature.image" class="w-20 h-20 @lg:h-30 @lg:w-30 object-contain"
+                                        :alt="feature.name" />
+                                </div>
+                                <span
+                                    class="text-md font-bold text-zinc-700 group-hover:text-orange-400 transition-colors">
+                                    {{ feature.name }}
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Right Side: Product Info -->
-                <div class="flex flex-col gap-2 select-none">
-                    <h1 class="text-3xl font-bold">{{ displayName }}</h1>
-                    <div class="text-2xl font-semibold">
-                        <span
-                            v-if="currentVariant?.sale_price"
-                            class="text-orange-500"
-                        >
-                            {{
-                                formatPrice(Number(currentVariant.sale_price))
-                            }}đ
-                        </span>
-                        <span
-                            :class="
-                                currentVariant?.sale_price
-                                    ? 'ml-2 text-lg text-zinc-400 line-through'
-                                    : 'text-zinc-900'
-                            "
-                        >
-                            {{ formatPrice(Number(currentVariant?.price)) }}đ
-                        </span>
+                <div class="flex flex-col gap-2 select-none @lg:col-span-5">
+                    <div class="hidden @lg:block">
+                        <h1 class="text-lg font-bold">{{ displayName }}</h1>
+                        <div class="text-md font-semibold">
+                            <span v-if="activeVariant.sale_price" class="text-orange-500">{{
+                                formatPrice(Number(activeVariant.sale_price))
+                            }}</span>
+                            <span :class="activeVariant.sale_price
+                                ? 'text-md ml-2 text-zinc-400 line-through'
+                                : 'text-zinc-900'
+                                ">
+                                {{ formatPrice(Number(activeVariant.price)) }}
+                            </span>
+                        </div>
+                        <StarRating :rating="activeVariant.average_rating" :count="activeVariant.reviews_count"
+                            show-count size="w-4 h-4" class="text-xs" />
                     </div>
-                    <StarRating
-                        :rating="product.average_rating"
-                        :count="product.reviews_count"
-                        show-count
-                        size="w-5 h-5"
-                    />
-                    <Separator class="my-6" />
 
-                    <div class="space-y-6 border-zinc-100">
-                        <div
-                            v-for="group in props.product.option_groups.filter(
-                                (g) => !g.is_swatches,
-                            )"
-                            :key="group.namespace"
-                            class="space-y-3"
-                        >
-                            <Label
-                                class="text-sm font-bold text-zinc-700 @lg:text-lg"
-                                >{{ group.name }}</Label
-                            >
+                    <Separator class="my-3" />
+
+                    <div class="space-y-6">
+                        <!-- Non-Swatch Options (Pills) -->
+                        <div v-for="group in product_page.option_groups.filter(
+                            (g) => !g.is_swatches,
+                        )" :key="group.namespace" class="space-y-3">
+                            <Label class="@lg:text-md text-sm font-bold text-zinc-700">{{ group.name }}</Label>
                             <div class="flex flex-wrap gap-2">
-                                <button
-                                    v-for="opt in group.options"
-                                    :key="opt.value"
-                                    @click="
-                                        selectOption(group.namespace, opt.value)
+                                <button v-for="opt in group.options" :key="opt.value" @click="
+                                    navigateViaMap(
+                                        group.namespace,
+                                        opt.value,
+                                    )
                                     "
-                                    class="@lg:text-md min-w-32 rounded-full border-1 px-4 py-1 text-sm font-extrabold transition-all"
-                                    :class="
-                                        selections[group.namespace] ===
-                                        opt.value
-                                            ? 'border-3 border-orange-100 text-orange-400'
-                                            : 'border-zinc-20 text-zinc-600 hover:border-orange-400'
-                                    "
-                                >
+                                    class="@lg:text-md rounded-full border-1 px-4 py-1 text-sm font-extrabold transition-all @lg:min-w-fit"
+                                    :class="activeVariant.option_values[
+                                        group.namespace
+                                    ] === opt.value
+                                        ? 'border-3 border-orange-400 text-orange-400'
+                                        : 'border-zinc-20 text-zinc-600 hover:border-orange-400'
+                                        ">
                                     {{ opt.label }}
                                 </button>
                             </div>
-                            <Separator class="mt-5" />
                         </div>
 
-                        <div
-                            v-if="activeCard?.swatch_options?.length"
-                            class="space-y-3"
-                        >
-                            <Label
-                                class="text-sm font-bold text-zinc-700 @lg:text-lg"
-                                >{{
-                                    props.product.option_groups.find(
+                        <!-- Swatch Options (Direct Variant Navigation) -->
+                        <div v-if="availableSwatches.length" class="space-y-3">
+                            <Label class="@lg:text-md text-sm font-bold text-zinc-700">
+                                {{
+                                    product_page.option_groups.find(
                                         (g) => g.is_swatches,
                                     )?.name
                                 }}:
                                 <span class="font-normal">{{
-                                    currentVariant.swatch_label
-                                }}</span>
+                                    activeVariant.swatch_label
+                                    }}</span>
                             </Label>
                             <div class="flex flex-wrap gap-3">
-                                <button
-                                    v-for="swatch in activeCard.swatch_options"
-                                    :key="swatch.variant_id"
-                                    @click="selectSwatch(swatch.variant_id)"
-                                    class="group relative h-10 w-10 rounded-full border-2 p-0.5 transition-all"
-                                    :class="
-                                        selectedVariantId === swatch.variant_id
-                                            ? 'border-3 border-orange-400'
-                                            : 'border-transparent hover:border-orange-400'
-                                    "
-                                >
-                                    <img
-                                        :src="swatch.swatch_image_url!"
-                                        loading="lazy"
-                                        class="h-full w-full rounded-full object-center"
-                                    />
+                                <button v-for="swatch in availableSwatches" :key="swatch.id" @click="
+                                    navigateToVariant(
+                                        swatch.sku,
+                                        swatch.slug,
+                                    )
+                                    " class="group relative h-8 w-8 rounded-full border-2 p-0.5 transition-all" :class="activeVariant.id === swatch.id
+                                        ? 'border-3 border-orange-400'
+                                        : 'border-transparent hover:border-orange-400'
+                                        ">
+                                    <img :src="swatch.images.swatch.full" loading="lazy"
+                                        class="h-full w-full rounded-full object-center" />
                                     <span
-                                        class="absolute -bottom-8 left-1/2 z-50 -translate-x-1/2 scale-0 rounded bg-zinc-800 px-2 py-1 text-sm whitespace-nowrap text-white transition-transform group-hover:scale-100"
-                                    >
-                                        {{ swatch.label }}
+                                        class="absolute -bottom-8 left-1/2 z-50 -translate-x-1/2 scale-0 rounded bg-zinc-800 px-2 py-1 text-sm whitespace-nowrap text-white transition-transform group-hover:scale-100">
+                                        {{ swatch.swatch_label }}
                                     </span>
                                 </button>
                             </div>
                             <Separator class="mt-5" />
                         </div>
                     </div>
-                    <div class="flex gap-4">
+                    <div class="flex items-center gap-4">
                         <Button
-                            class="mt-5 h-12 flex-1 rounded-full border-none bg-orange-400 text-base font-semibold text-white hover:bg-orange-400"
-                            :disabled="!currentVariant?.in_stock"
-                        >
+                            class="h-10 flex-1 rounded-full border-none bg-orange-400 text-base font-semibold text-white hover:bg-orange-300"
+                            :disabled="!activeVariant.in_stock">
                             {{
-                                currentVariant?.in_stock
+                                activeVariant.in_stock
                                     ? 'Thêm vào giỏ hàng'
                                     : 'Hết hàng'
                             }}
                         </Button>
+
+                        <Button variant="ghost" class="h-10 w-10 rounded-full border">
+                            <ShoppingCart class="h-8 w-8" />
+                        </Button>
                     </div>
-                </div>
-            </div>
+                    <span class="text-sm text-orange-400">Đã bán: {{ product_page.active_variant.sales_count }}</span>
+                    <div class="mt-8 space-y-4">
+                        <div class="space-y-4">
+                            <h3 class="text-md font-bold">Mô tả sản phẩm</h3>
+                            <p class="font-sans leading-relaxed whitespace-pre-line text-zinc-600">
+                                {{ activeVariant.description }}
+                            </p>
+                        </div>
+                        <Accordion type="multiple" collapsible class="w-full space-y-4">
+                            <AccordionItem value="details"
+                                class="border rounded-xl px-4 bg-white transition-all hover:border-orange-200">
+                                <AccordionTrigger class="hover:no-underline">
+                                    <span class="text-md font-bold text-zinc-800">Đặc trưng sản phẩm</span>
+                                </AccordionTrigger>
+                                <AccordionContent class="pb-6">
+                                    <div class="grid grid-cols-1 gap-y-4">
+                                        <!-- Merge Linked Features and Plain Features into one list -->
+                                        <template
+                                            v-for="(feature, idx) in [...product_page.featured_highlights, ...product_page.plain_features]"
+                                            :key="idx">
+                                            <div
+                                                class="grid grid-cols-1 @sm:grid-cols-[160px_1fr] gap-2 @sm:gap-6 py-2 border-b border-zinc-50 last:border-0">
+                                                <div class="text-sm font-bold text-zinc-700">
+                                                    {{ feature.name }}
+                                                </div>
+                                                <div class="text-sm text-zinc-600 leading-relaxed">
+                                                    {{ feature.description }}
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </AccordionContent>
+                            </AccordionItem>
+                            <AccordionItem value="specs"
+                                class="border rounded-xl px-4 bg-white transition-all hover:border-orange-200">
+                                <AccordionTrigger class="hover:no-underline">
+                                    <span class="text-md font-bold text-zinc-800">Thông số kỹ thuật</span>
+                                </AccordionTrigger>
+                                <AccordionContent class="pb-6">
+                                    <div class="grid grid-cols-1 gap-y-4">
+                                        <!-- Loop through categories (e.g., "Chất liệu", "Kích thước") -->
+                                        <div v-for="(categoryName, index) in Object.keys(product_page.specifications)"
+                                            :key="categoryName" class="space-y-3">
+                                            <div class="text-sm font-bold mb-3 text-zinc-900">
+                                                {{ categoryName }}:
+                                            </div>
 
-            <div class="mt-12 grid grid-cols-1 gap-12 @lg:grid-cols-3">
-                <!-- Review Submission -->
-                <div class="@lg:col-span-1">
-                    <ReviewForm
-                        :reviewable-id="currentVariant?.id ?? ''"
-                        :reviewable-type="
-                            currentVariant?.id
-                                ? 'App\\\\Models\\\\Product\\\\ProductVariant'
-                                : ''
-                        "
-                    />
-                </div>
+                                            <div class="grid grid-cols-1 gap-y-2">
+                                                <!-- Loop through items within that category -->
+                                                <div v-for="(item, idx) in product_page.specifications[categoryName].items"
+                                                    :key="idx" class="grid grid-cols-1" :class="item.description != '' && item.description != null ?
+                                                        `@sm:grid-cols-[120px_1fr]` : ``">
+                                                    <div class="text-sm font-semibold text-zinc-700">
+                                                        {{ item.display_name }}
+                                                    </div>
 
-                <!-- Review List (Placeholder for now) -->
-                <div class="space-y-6 @lg:col-span-2">
-                    <h2 class="text-2xl font-bold">Customer Reviews</h2>
-                    <div
-                        class="flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-300 py-12 text-center"
-                    >
-                        <p class="text-zinc-500">
-                            No reviews yet. Be the first to review this product!
-                        </p>
+                                                    <div v-if="item.description"
+                                                        class="text-sm text-zinc-600 leading-relaxed">
+                                                        {{ item.description || '' }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <Separator
+                                                v-if="index < Object.keys(product_page.specifications).length - 1" />
+                                        </div>
+                                    </div>
+                                </AccordionContent>
+                            </AccordionItem>
+                            <AccordionItem value="care-assembly"
+                                class="border rounded-xl px-4 bg-white transition-all hover:border-orange-200">
+                                <AccordionTrigger class="hover:no-underline">
+                                    <span class="text-md font-bold text-zinc-800">Bảo quản & Lắp ráp</span>
+                                </AccordionTrigger>
+                                <AccordionContent class="pb-6 space-y-6">
+                                    <!-- Care Information -->
+                                    <div v-if="product_page.care_information.length" class="space-y-2">
+                                        <div class="text-sm font-bold text-zinc-900">Hướng dẫn bảo quản:</div>
+                                        <ul class="list-disc list-inside text-sm text-zinc-600 space-y-1">
+                                            <li v-for="(tip, idx) in product_page.care_information" :key="idx">
+                                                {{ tip }}
+                                            </li>
+                                        </ul>
+                                    </div>
+
+                                    <!-- Assembly Information -->
+                                    <div v-if="product_page.assembly_information.required" class="space-y-3 pt-4 border-t border-zinc-50">
+                                        <div class="text-sm font-bold text-zinc-900">Hướng dẫn lắp ráp:</div>
+
+                                        <div class="grid grid-cols-2 gap-4 text-sm">
+                                            <div class="flex flex-col">
+                                                <span class="text-zinc-500 text-xs">Thời gian ước tính</span>
+                                                <span class="font-semibold text-zinc-700">
+                                                    {{ product_page.assembly_information.estimated_minutes || 'N/A' }} phút
+                                                </span>
+                                            </div>
+                                            <div class="flex flex-col">
+                                                <span class="text-zinc-500 text-xs">Mức độ khó</span>
+                                                <span class="font-semibold text-zinc-700">
+                                                    {{ AssemblyDifficultyLabels[product_page.assembly_information.difficulty_level as keyof typeof AssemblyDifficultyLabels] || 'N/A' }}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div v-if="product_page.assembly_information.additional_info" class="text-sm text-zinc-600 leading-relaxed">
+                                            {{ product_page.assembly_information.additional_info }}
+                                        </div>
+
+                                        <Button
+                                            v-if="product_page.assembly_information.manual_url"
+                                            variant="outline"
+                                            size="sm"
+                                            class="w-fit rounded-full border-orange-200 text-orange-600 hover:bg-orange-50"
+                                            :href="product_page.assembly_information.manual_url"
+                                            target="_blank"
+                                        >
+                                            Tải hướng dẫn lắp ráp (PDF)
+                                        </Button>
+                                    </div>
+                                </AccordionContent>
+                            </AccordionItem>
+                        </Accordion>
                     </div>
                 </div>
             </div>
         </div>
         <Separator />
     </ShopLayout>
+    <Dialog :open="!!selectedFeature" @update:open="selectedFeature = null">
+        <DialogContent class="sm:max-w-md">
+            <DialogHeader>
+                <div class="flex flex-col items-center gap-4">
+                    <!-- Show the icon again in the dialog for visual continuity -->
+                    <img v-if="selectedFeature?.image" :src="selectedFeature.image"
+                        class="h-30 w-30 rounded-lg object-cover" />
+                    <DialogTitle class="text-xl">{{ selectedFeature?.name }}</DialogTitle>
+                    <DialogDescription />
+                </div>
+            </DialogHeader>
+            <div class="text-zinc-600 text-center leading-relaxed">
+                {{ selectedFeature?.description }}
+            </div>
+        </DialogContent>
+    </Dialog>
 </template>
-<style scoped></style>

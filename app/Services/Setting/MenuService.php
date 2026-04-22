@@ -273,9 +273,9 @@ class MenuService
         return [
             [
                 'title' => 'Bảng điều khiển',
-                'url' => route('dashboard'),
+                'url' => route('customer.dashboard'),
                 'icon' => 'LayoutGrid',
-                'isActive' => Route::is('dashboard'),
+                'isActive' => Route::is('customer.dashboard'),
             ],
         ];
     }

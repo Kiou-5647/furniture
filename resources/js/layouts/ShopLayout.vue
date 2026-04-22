@@ -3,6 +3,7 @@ import { Link, usePage } from '@inertiajs/vue3';
 import { ShoppingCart, Search, Menu, X, LogOut, LayoutGrid } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
+import CartDrawer from '@/components/custom/public/CartDrawer.vue';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,11 +23,21 @@ import {
 } from '@/components/ui/navigation-menu';
 import { getInitials } from '@/composables/useInitials';
 import { home, login, logout } from '@/routes';
+import { dashboard as customerDashboard } from '@/routes/customer';
+import { dashboard as employeeDashboard } from '@/routes/employee';
+import { useCartStore } from '@/stores/cart';
 
 const page = usePage();
-const auth = computed(() => page.props.auth as { user: { name: string; email: string; avatar_url?: string | null } } | null);
+const auth = computed(() => page.props.auth);
 const shopMenu = computed(() => (page.props.shopMenu ?? []) as ShopMenuRoom[]);
+const dashboard = computed(() => {
+    if (auth.value?.user.type == 'employee') {
+        return employeeDashboard().url;
+    }
+    return customerDashboard().url;
+})
 const showMobileMenu = ref(false);
+const { openDrawer, itemCount } = useCartStore()
 
 interface ShopMenuCategory {
     id: string;
@@ -65,11 +76,8 @@ interface ShopMenuRoom {
                 <div class="hidden md:flex flex-1 max-w-md mx-8">
                     <div class="relative w-full">
                         <Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
-                        <input
-                            type="text"
-                            placeholder="Tìm sản phẩm..."
-                            class="w-full h-9 pl-9 pr-4 rounded-lg border border-zinc-200 bg-zinc-50 text-sm placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-900 transition-all"
-                        />
+                        <input type="text" placeholder="Tìm sản phẩm..."
+                            class="w-full h-9 pl-9 pr-4 rounded-lg border border-zinc-200 bg-zinc-50 text-sm placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-900 transition-all" />
                     </div>
                 </div>
 
@@ -81,9 +89,11 @@ interface ShopMenuRoom {
                     </Button>
 
                     <!-- Cart -->
-                    <Button variant="ghost" size="icon" class="relative h-9 w-9">
+                    <Button v-if="auth" variant="ghost" @click="openDrawer" size="icon" class="relative h-9 w-9">
                         <ShoppingCart class="h-4 w-4 text-zinc-500" />
-                        <span class="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-zinc-900 text-[10px] font-medium text-white flex items-center justify-center">0</span>
+                        <span v-if="itemCount > 0" class="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                            {{ itemCount }}
+                        </span>
                     </Button>
 
                     <!-- User Menu -->
@@ -91,7 +101,8 @@ interface ShopMenuRoom {
                         <DropdownMenuTrigger as-child>
                             <Button variant="ghost" size="icon" class="h-9 w-9 rounded-full">
                                 <Avatar class="h-7 w-7">
-                                    <AvatarImage v-if="auth.user.avatar_url" :src="auth.user.avatar_url" :alt="auth.user.name" />
+                                    <AvatarImage v-if="auth.user.avatar_url" :src="auth.user.avatar_url"
+                                        :alt="auth.user.name" />
                                     <AvatarFallback class="bg-zinc-200 text-xs font-medium text-zinc-700">
                                         {{ getInitials(auth.user.name) }}
                                     </AvatarFallback>
@@ -105,14 +116,15 @@ interface ShopMenuRoom {
                             </div>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem as-child>
-                                <Link :href="'/dashboard'" class="cursor-pointer flex items-center gap-2">
+                                <Link :href="dashboard" class="cursor-pointer flex items-center gap-2">
                                     <LayoutGrid class="h-4 w-4" />
                                     Bảng điều khiển
                                 </Link>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem as-child>
-                                <Link :href="logout().url" method="post" as="button" class="cursor-pointer flex items-center gap-2 text-red-600">
+                                <Link :href="logout().url" method="post" as="button"
+                                    class="cursor-pointer flex items-center gap-2 text-red-600">
                                     <LogOut class="h-4 w-4" />
                                     Đăng xuất
                                 </Link>
@@ -135,38 +147,37 @@ interface ShopMenuRoom {
                     <NavigationMenuList class="gap-0">
                         <!-- Products (all) -->
                         <NavigationMenuItem>
-                            <Link :href="'/san-pham'" class="group inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium text-zinc-700 hover:text-zinc-900 hover:bg-zinc-50 transition-colors">
+                            <Link :href="'/san-pham'"
+                                class="group inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium text-zinc-700 hover:text-zinc-900 hover:bg-zinc-50 transition-colors">
                                 Tất cả sản phẩm
                             </Link>
                         </NavigationMenuItem>
 
                         <!-- Rooms with dropdown -->
                         <NavigationMenuItem v-for="room in shopMenu" :key="room.id">
-                            <NavigationMenuTrigger class="text-sm font-medium text-zinc-700 hover:text-zinc-900 hover:bg-zinc-50 data-[state=open]:bg-zinc-50 data-[state=open]:text-zinc-900 px-4">
+                            <NavigationMenuTrigger
+                                class="text-sm font-medium text-zinc-700 hover:text-zinc-900 hover:bg-zinc-50 data-[state=open]:bg-zinc-50 data-[state=open]:text-zinc-900 px-4">
                                 {{ room.label }}
                             </NavigationMenuTrigger>
                             <NavigationMenuContent>
                                 <div class="flex w-fit gap-6 p-6 max-h-[50vh]">
                                     <!-- Room Image (Left) -->
-                                    <div v-if="room.image_url" class="h-[40vh] aspect-square shrink-0 overflow-hidden rounded-lg bg-zinc-100">
-                                        <img
-                                            :src="room.image_url"
-                                            :alt="room.label"
-                                            class="h-full w-full object-cover"
-                                        />
+                                    <div v-if="room.image_url"
+                                        class="h-[40vh] aspect-square shrink-0 overflow-hidden rounded-lg bg-zinc-100">
+                                        <img :src="room.image_url" :alt="room.label"
+                                            class="h-full w-full object-cover" />
                                     </div>
 
                                     <!-- Groups (Right) -->
                                     <div class="flex flex-1 gap-8">
-                                        <div v-for="group in room.groups" :key="group.id ?? 'other'" class="min-w-0 flex-1">
+                                        <div v-for="group in room.groups" :key="group.id ?? 'other'"
+                                            class="min-w-0 flex-1">
                                             <h4 class="text-sm font-semibold text-zinc-900 mb-3">{{ group.label }}</h4>
                                             <ul class="space-y-1.5">
                                                 <li v-for="cat in group.categories" :key="cat.id">
                                                     <NavigationMenuLink as-child>
-                                                        <Link
-                                                            :href="`/san-pham?danh-muc=${cat.slug}`"
-                                                            class="block w-36 rounded-md px-2 py-1 text-sm text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 transition-colors"
-                                                        >
+                                                        <Link :href="`/san-pham?danh-muc=${cat.slug}`"
+                                                            class="block w-36 rounded-md px-2 py-1 text-sm text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 transition-colors">
                                                             {{ cat.label }}
                                                         </Link>
                                                     </NavigationMenuLink>
@@ -185,52 +196,36 @@ interface ShopMenuRoom {
         <!-- Mobile Menu -->
         <div v-if="showMobileMenu" class="lg:hidden border-b bg-white">
             <div class="px-4 py-4 space-y-1 max-h-[70vh] overflow-y-auto">
-                <Link
-                    href="/san-pham"
+                <Link href="/san-pham"
                     class="block px-3 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-50 rounded-lg"
-                    @click="showMobileMenu = false"
-                >
+                    @click="showMobileMenu = false">
                     Tất cả sản phẩm
                 </Link>
                 <div v-for="room in shopMenu" :key="room.id" class="pt-2">
                     <p class="px-3 text-xs font-semibold text-zinc-400 uppercase tracking-wider">{{ room.label }}</p>
                     <div v-for="group in room.groups" :key="group.id ?? 'other'" class="mt-2">
                         <p class="px-3 text-sm font-medium text-zinc-700">{{ group.label }}</p>
-                        <Link
-                            v-for="cat in group.categories"
-                            :key="cat.id"
-                            :href="`/san-pham?danh-muc=${cat.slug}`"
+                        <Link v-for="cat in group.categories" :key="cat.id" :href="`/san-pham?danh-muc=${cat.slug}`"
                             class="block px-6 py-1.5 text-sm text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 rounded-lg"
-                            @click="showMobileMenu = false"
-                        >
+                            @click="showMobileMenu = false">
                             {{ cat.label }}
                         </Link>
                     </div>
                 </div>
                 <div class="pt-4 border-t">
-                    <Link
-                        v-if="auth?.user"
-                        :href="'/dashboard'"
+                    <Link v-if="auth?.user" :href="dashboard"
                         class="block px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 rounded-lg"
-                        @click="showMobileMenu = false"
-                    >
+                        @click="showMobileMenu = false">
                         Bảng điều khiển
                     </Link>
-                    <Link
-                        v-if="auth?.user"
-                        :href="logout().url"
-                        method="post"
+                    <Link v-if="auth?.user" :href="logout().url" method="post"
                         class="block px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg"
-                        @click="showMobileMenu = false"
-                    >
+                        @click="showMobileMenu = false">
                         Đăng xuất
                     </Link>
-                    <Link
-                        v-else
-                        :href="'/login'"
+                    <Link v-else :href="'/login'"
                         class="block px-3 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-50 rounded-lg"
-                        @click="showMobileMenu = false"
-                    >
+                        @click="showMobileMenu = false">
                         Đăng nhập
                     </Link>
                 </div>
@@ -240,19 +235,17 @@ interface ShopMenuRoom {
         <!-- Mobile Category Bar -->
         <div class="lg:hidden border-b bg-white overflow-x-auto">
             <div class="flex items-center gap-1 px-4 py-2 min-w-max">
-                <Link href="/san-pham" class="shrink-0 px-3 py-1.5 text-xs font-medium text-zinc-700 bg-zinc-100 rounded-full">Tất cả</Link>
+                <Link href="/san-pham"
+                    class="shrink-0 px-3 py-1.5 text-xs font-medium text-zinc-700 bg-zinc-100 rounded-full">Tất cả
+                </Link>
                 <template v-for="room in shopMenu" :key="room.id">
-                    <button
-                        @click="showMobileMenu = !showMobileMenu"
-                        class="shrink-0 px-3 py-1.5 text-xs font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 rounded-full transition-colors"
-                    >
+                    <button @click="showMobileMenu = !showMobileMenu"
+                        class="shrink-0 px-3 py-1.5 text-xs font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 rounded-full transition-colors">
                         {{ room.label }}
                     </button>
                 </template>
-                <button
-                    class="ml-auto shrink-0 h-8 w-8 flex items-center justify-center"
-                    @click="showMobileMenu = !showMobileMenu"
-                >
+                <button class="ml-auto shrink-0 h-8 w-8 flex items-center justify-center"
+                    @click="showMobileMenu = !showMobileMenu">
                     <Menu v-if="!showMobileMenu" class="h-4 w-4 text-zinc-500" />
                     <X v-else class="h-4 w-4 text-zinc-500" />
                 </button>
@@ -272,7 +265,8 @@ interface ShopMenuRoom {
                         <h3 class="text-sm font-semibold text-zinc-900">Sản phẩm</h3>
                         <ul class="mt-4 space-y-2 text-sm text-zinc-500">
                             <li v-for="room in shopMenu" :key="room.id">
-                                <Link :href="`/san-pham?phong=${room.slug}`" class="hover:text-zinc-900">{{ room.label }}</Link>
+                                <Link :href="`/san-pham?phong=${room.slug}`" class="hover:text-zinc-900">{{ room.label
+                                    }}</Link>
                             </li>
                         </ul>
                     </div>
@@ -309,4 +303,5 @@ interface ShopMenuRoom {
             </div>
         </footer>
     </div>
+    <CartDrawer />
 </template>

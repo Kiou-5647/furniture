@@ -5,6 +5,10 @@ namespace App\Models\Product;
 use App\Builders\Product\ProductBuilder;
 use App\Enums\ProductStatus;
 use App\Models\Inventory\Inventory;
+use App\Models\Product\BundleContent;
+use App\Models\Product\Category;
+use App\Models\Product\ProductCard;
+use App\Models\Product\ProductVariant;
 use App\Models\Vendor\Vendor;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,6 +19,8 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
 /**
  * @method static ProductBuilder|Product query()
@@ -27,9 +33,9 @@ use Spatie\Activitylog\Support\LogOptions;
  * @method static ProductBuilder|Product featured()
  * @method static ProductBuilder|Product newArrivals()
  */
-class Product extends Model
+class Product extends Model implements HasMedia
 {
-    use HasFactory, HasUuids, LogsActivity, SoftDeletes;
+    use HasFactory, HasUuids, LogsActivity, SoftDeletes, InteractsWithMedia;
 
     protected $table = 'products';
 
@@ -46,6 +52,7 @@ class Product extends Model
             'search_keywords' => 'array',
             'warranty_months' => 'integer',
             'views_count' => 'integer',
+            'sales_count' => 'integer',
             'reviews_count' => 'integer',
             'average_rating' => 'decimal:2',
             'min_price' => 'decimal:2',
@@ -61,6 +68,11 @@ class Product extends Model
     public function newEloquentBuilder($query): ProductBuilder
     {
         return new ProductBuilder($query);
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('manual_file')->singleFile();
     }
 
     public function getActivitylogOptions(): LogOptions
@@ -92,6 +104,11 @@ class Product extends Model
         return $this->hasMany(ProductVariant::class);
     }
 
+    public function productCards(): HasMany
+    {
+        return $this->hasMany(ProductCard::class);
+    }
+
     public function bundleContents(): HasMany
     {
         return $this->hasMany(BundleContent::class);
@@ -105,247 +122,6 @@ class Product extends Model
     public function totalInventory(): HasManyThrough
     {
         return $this->hasManyThrough(Inventory::class, ProductVariant::class);
-    }
-
-    /**
-     * Resolve the active variant based on optional filter values.
-     * Falls back to the first available variant.
-     *
-     * @param  array<string, string>  $filters  e.g. ['chat-lieu' => 'da', 'mau-sac' => 'charme-tan']
-     */
-    public function getResolvedVariant(array $filters = []): ?ProductVariant
-    {
-        $variants = $this->variants()->with(['inventories'])->get();
-
-        // Try to find exact match for all filters
-        if (! empty($filters)) {
-            $match = $variants->first(function ($v) use ($filters) {
-                foreach ($filters as $namespace => $value) {
-                    if (($v->option_values[$namespace] ?? null) !== $value) {
-                        return false;
-                    }
-                }
-
-                return true;
-            });
-
-            if ($match) {
-                return $match;
-            }
-        }
-
-        // Fall back: return the first variant that matches any filter partially,
-        // or the very first variant
-        if (! empty($filters)) {
-            $partial = $variants->first(fn($v) => collect($filters)->every(
-                fn($val, $ns) => ($v->option_values[$ns] ?? null) === $val,
-            ));
-            if ($partial) {
-                return $partial;
-            }
-        }
-
-        return $variants->first();
-    }
-
-    /**
-     * Build a serializable variant payload for the storefront card.
-     */
-    public function variantToPayload(ProductVariant $variant): array
-    {
-        return [
-            'id' => $variant->id,
-            'sku' => $variant->sku,
-            'slug' => $variant->slug,
-            'name' => $variant->name,
-            'price' => $variant->price,
-            'sale_price' => $variant->sale_price,
-            'option_values' => $variant->option_values,
-            'in_stock' => $variant->getAvailableStock() > 0,
-            'primary_image_url' => $variant->getFirstMediaUrl('primary_image', 'webp') ?: null,
-            'thumbnail_url' => $variant->getFirstMediaUrl('primary_image', 'thumb') ?: null,
-            'swatch_image_url' => $variant->getFirstMediaUrl('swatch_image', 'thumb') ?: null,
-        ];
-    }
-
-    /**
-     * Get variants grouped into displayable product cards.
-     *
-     * Handles 3 scenarios:
-     * 1. Both non-swatches + swatches → Multiple cards with nested swatches
-     * 2. Only swatches → Single card with all swatch options
-     * 3. Only non-swatches → All combinations as cards (e.g., 2 materials × 2 sizes = 4 cards)
-     *
-     * Return format:
-     * [
-     *   [
-     *     'option_values' => ['chat-lieu' => 'da', 'kich-thuoc' => 'S'],
-     *     'swatch_options' => [...],
-     *     'variant_count' => 4,
-     *   ],
-     *   ...
-     * ]
-     */
-    public function getGroupedVariantOptions(): array
-    {
-        $groups = $this->option_groups ?? [];
-        $swatchGroup = collect($groups)->firstWhere('is_swatches', true);
-        $nonSwatchGroups = collect($groups)->filter(fn($g) => ! $g['is_swatches'])->values();
-        $variants = $this->variants()->with(['inventories'])->get();
-        $swatchNamespace = $swatchGroup['namespace'] ?? null;
-
-        // Scenario 2: Only swatches, no non-swatches groups
-        // → Return single card with all swatch options
-        if ($nonSwatchGroups->isEmpty() && $swatchGroup) {
-            return $this->buildSwatchesOnlyCard($variants, $swatchGroup, $swatchNamespace);
-        }
-
-        // Scenario 1 & 3: Non-swatches groups exist
-        // → Build all combinations of non-swatches options
-        $combinations = $this->buildCombinations($nonSwatchGroups->toArray());
-
-        return array_map(function (array $combo) use ($variants, $swatchGroup, $swatchNamespace) {
-            // Find variants matching this exact non-swatches combination
-            $matchingVariants = $this->filterVariantsByOptions($variants, $combo);
-
-            // If no swatch group, return card with variant count only (Scenario 3)
-            if (! $swatchGroup || $swatchNamespace === null) {
-                return [
-                    'option_values' => $combo,
-                    'swatch_options' => [],
-                    'variant_count' => $matchingVariants->count(),
-                ];
-            }
-
-            // Build swatch options from matching variants (Scenario 1)
-            $swatchOptions = $this->buildSwatchOptions($matchingVariants, $swatchGroup, $swatchNamespace);
-
-            return [
-                'option_values' => $combo,
-                'swatch_options' => $swatchOptions,
-                'variant_count' => count($swatchOptions),
-            ];
-        }, $combinations);
-    }
-
-    /**
-     * Build a single card for products with only swatches options.
-     */
-    protected function buildSwatchesOnlyCard(object $variants, array $swatchGroup, ?string $swatchNamespace): array
-    {
-        if ($swatchNamespace === null) {
-            return [[
-                'option_values' => [],
-                'swatch_options' => [],
-                'variant_count' => 0,
-            ]];
-        }
-
-        $swatchOptions = collect($swatchGroup['options'])
-            ->map(function (array $opt) use ($variants, $swatchNamespace) {
-                $variant = $variants->first(
-                    fn($v) => ($v->option_values[$swatchNamespace] ?? null) === $opt['value']
-                );
-
-                if (! $variant) {
-                    return null;
-                }
-
-                return [
-                    'value' => $opt['value'],
-                    'label' => $opt['label'],
-                    'variant_id' => $variant->id,
-                    'sku' => $variant->sku,
-                    'name' => $variant->name,
-                    'slug' => $variant->slug,
-                    'price' => $variant->price,
-                    'sale_price' => $variant->sale_price,
-                    'in_stock' => $variant->getAvailableStock() > 0,
-                    'primary_image_url' => $variant->getFirstMediaUrl('primary_image', 'webp') ?: null,
-                    'swatch_image_url' => $variant->getFirstMediaUrl('swatch_image', 'thumb') ?: null,
-                ];
-            })
-            ->filter()
-            ->values()
-            ->toArray();
-
-        return [[
-            'option_values' => [],
-            'swatch_options' => $swatchOptions,
-            'variant_count' => count($swatchOptions),
-        ]];
-    }
-
-    /**
-     * Filter variants by a set of option values.
-     */
-    protected function filterVariantsByOptions(object $variants, array $filters): object
-    {
-        return $variants->filter(function (ProductVariant $v) use ($filters) {
-            foreach ($filters as $ns => $val) {
-                if (($v->option_values[$ns] ?? null) !== $val) {
-                    return false;
-                }
-            }
-
-            return true;
-        });
-    }
-
-    /**
-     * Build swatch options from matching variants.
-     */
-    protected function buildSwatchOptions(object $matchingVariants, array $swatchGroup, string $swatchNamespace): array
-    {
-        return $matchingVariants->map(function (ProductVariant $variant) use ($swatchGroup, $swatchNamespace) {
-            $genericValue = $variant->option_values[$swatchNamespace] ?? null;
-
-            $genericOption = collect($swatchGroup['options'])->firstWhere('value', $genericValue);
-
-            return [
-                'value' => $genericValue,
-                'label' => $variant->swatch_label ?? ($genericOption['label'] ?? 'Unknown'),
-                'variant_id' => $variant->id,
-                'sku' => $variant->sku,
-                'name' => $variant->name,
-                'slug' => $variant->slug,
-                'price' => $variant->price,
-                'sale_price' => $variant->sale_price,
-                'in_stock' => $variant->getAvailableStock() > 0,
-                'primary_image_url' => $variant->getFirstMediaUrl('primary_image', 'webp') ?: null,
-                'swatch_image_url' => $variant->getFirstMediaUrl('swatch_image', 'thumb') ?: null,
-            ];
-        })->filter()->values()->toArray();
-    }
-
-    /**
-     * Build all combinations of non-swatches option values.
-     */
-    protected function buildCombinations(array $groups): array
-    {
-        if (empty($groups)) {
-            return [];
-        }
-
-        // Start with first group's options
-        $result = [];
-        foreach ($groups[0]['options'] as $opt) {
-            $result[] = [$groups[0]['namespace'] => $opt['value']];
-        }
-
-        // Cross-product with remaining groups
-        for ($i = 1; $i < count($groups); $i++) {
-            $group = $groups[$i];
-            $next = [];
-            foreach ($result as $existing) {
-                foreach ($group['options'] as $opt) {
-                    $next[] = [...$existing, $group['namespace'] => $opt['value']];
-                }
-            }
-            $result = $next;
-        }
-
-        return $result;
     }
 
     public function getTotalStock(): int
@@ -366,5 +142,25 @@ class Product extends Model
     public function requiresAssembly(): bool
     {
         return ($this->assembly_info['required'] ?? false) === true;
+    }
+
+    public function syncSalesCount(): void
+    {
+        $this->update([
+            'sales_count' => $this->variants()->sum('sales_count')
+        ]);
+    }
+
+    public function syncMetricsFromVariants(): void
+    {
+        $metrics = $this->variants()
+            ->selectRaw('SUM(views_count) as total_views, SUM(reviews_count) as total_reviews, AVG(average_rating) as avg_rating')
+            ->first();
+
+        $this->update([
+            'views_count' => $metrics->total_views ?? 0,
+            'reviews_count' => $metrics->total_reviews ?? 0,
+            'average_rating' => $metrics->avg_rating ?? 0,
+        ]);
     }
 }

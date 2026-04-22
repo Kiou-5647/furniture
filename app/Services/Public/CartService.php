@@ -1,22 +1,18 @@
 <?php
 
-namespace App\Services\Customer;
+namespace App\Services\Public;
 
-use App\Data\Customer\CartItemData;
-use App\Data\Customer\CartTotalsData;
+use App\Data\Public\CartTotalsData;
 use App\Data\Product\BundleFilterData;
 use App\Models\Auth\User;
-use App\Models\Customer\Cart;
-use App\Models\Customer\CartItem;
-use App\Models\Product\Bundle;
-use App\Models\Product\Product;
+use App\Models\Public\Cart;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class CartService
 {
-    public function getOrCreateForUser(User $user): Cart
+    public function getOrCreateForUser(?User $user, ?string $sessionId = null): Cart
     {
-        return Cart::getOrCreateForUser($user);
+        return Cart::getOrCreate($user, $sessionId);
     }
 
     public function getCartWithItems(Cart $cart): Cart
@@ -92,37 +88,5 @@ class CartService
             ->with(['user', 'items'])
             ->orderBy($filter->order_by, $filter->order_direction)
             ->paginate($filter->per_page);
-    }
-
-    public function addItem(Cart $cart, CartItemData $itemData): CartItem
-    {
-        $purchasableClass = $itemData->purchasable_type;
-        $purchasable = $purchasableClass::findOrFail($itemData->purchasable_id);
-
-        $price = match (true) {
-            $purchasable instanceof Product => $purchasable->min_price,
-            $purchasable instanceof Bundle => $purchasable->calculateBundlePrice(),
-            default => 0,
-        };
-
-        $existingItem = $cart->items()
-            ->where('purchasable_type', $itemData->purchasable_type)
-            ->where('purchasable_id', $itemData->purchasable_id)
-            ->where('configuration', json_encode($itemData->configuration))
-            ->first();
-
-        if ($existingItem) {
-            $existingItem->increment('quantity', $itemData->quantity);
-
-            return $existingItem;
-        }
-
-        return $cart->items()->create([
-            'purchasable_type' => $itemData->purchasable_type,
-            'purchasable_id' => $itemData->purchasable_id,
-            'quantity' => $itemData->quantity,
-            'unit_price' => $price,
-            'configuration' => $itemData->configuration,
-        ]);
     }
 }

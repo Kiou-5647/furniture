@@ -124,7 +124,6 @@ function handleOpenLookupForm(namespace: string) {
 }
 
 function handleSubmit() {
-    console.info(ctx.form.variants);
     if (stockStepRef.value?.checkPriceAndSubmit) {
         stockStepRef.value.checkPriceAndSubmit();
     } else {
@@ -193,7 +192,7 @@ function handleLookupFormClosed() {
                 </div>
             </div>
             <!-- MOBILE STEPPER -->
-            <div class="shrink-0 border-t border-b px-4 py-3 md:hidden">
+            <div class="shrink-0 border-t border-b px-4 py-3 lg:hidden">
                 <Stepper
                     v-model="ctx.currentStep"
                     class="flex w-full items-center justify-between"
@@ -264,7 +263,7 @@ function handleLookupFormClosed() {
                                         class="h-3 w-3"
                                         :class="
                                             state === 'active'
-                                                ? 'text-foreground'
+                                                ? 'text-background'
                                                 : 'text-muted-foreground'
                                         "
                                     />
@@ -291,11 +290,11 @@ function handleLookupFormClosed() {
             <!-- MIDDLE -->
             <div class="flex min-h-0 flex-1 overflow-hidden border-t">
                 <div
-                    class="hidden w-40 shrink-0 flex-col overflow-hidden border-r px-4 py-4 md:flex"
+                    class="hidden w-40 flex-col overflow-hidden border-r px-4 py-4 lg:flex"
                 >
                     <Stepper
                         v-model="ctx.currentStep"
-                        class="flex w-full flex-col justify-start gap-10"
+                        class="flex w-full flex-col gap-10"
                         orientation="vertical"
                         :linear="false"
                     >
@@ -368,7 +367,7 @@ function handleLookupFormClosed() {
                                             class="h-3.5 w-3.5"
                                             :class="
                                                 state === 'active'
-                                                    ? 'text-foreground'
+                                                    ? 'text-background'
                                                     : 'text-muted-foreground'
                                             "
                                         />
@@ -376,7 +375,7 @@ function handleLookupFormClosed() {
                                 </Button>
                             </StepperTrigger>
                             <StepperTitle
-                                class="text-[10px] leading-tight font-medium"
+                                class="text-md leading-tight font-medium"
                                 :class="{
                                     'text-green-600 dark:text-green-500':
                                         ctx.stepStates[i] === 'complete',

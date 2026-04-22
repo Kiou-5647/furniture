@@ -18,6 +18,53 @@ use Illuminate\Support\Facades\Cache;
 
 class ProductService
 {
+    public function getFiltered(ProductFilterData $filter): LengthAwarePaginator
+    {
+        return Product::query()
+            ->with(['vendor', 'category', 'collection', 'variants.inventories'])
+            ->when($filter->vendor_id, fn($q) => $q->where('vendor_id', $filter->vendor_id))
+            ->when($filter->category_id, fn($q) => $q->where('category_id', $filter->category_id))
+            ->when($filter->collection_id, fn($q) => $q->where('collection_id', $filter->collection_id))
+            ->when($filter->status, fn($q) => $q->byStatus($filter->status))
+            ->when(! is_null($filter->is_featured), fn($q) => $q->where('is_featured', $filter->is_featured))
+            ->when(! is_null($filter->is_new_arrival), fn($q) => $q->where('is_new_arrival', $filter->is_new_arrival))
+            ->when($filter->search, fn($q) => $q->search($filter->search))
+            ->orderBy($filter->order_by ?? 'created_at', $filter->order_direction ?? 'desc')
+            ->paginate($filter->per_page ?? 15);
+    }
+
+    public function getTrashedFiltered(ProductFilterData $filter): LengthAwarePaginator
+    {
+        return Product::onlyTrashed()
+            ->with(['vendor', 'category'])
+            ->when($filter->vendor_id, fn($q) => $q->where('vendor_id', $filter->vendor_id))
+            ->when($filter->category_id, fn($q) => $q->where('category_id', $filter->category_id))
+            ->when($filter->search, fn($q) => $q->search($filter->search))
+            ->orderBy($filter->order_by ?? 'deleted_at', $filter->order_direction ?? 'desc')
+            ->paginate($filter->per_page ?? 15);
+    }
+
+    /**
+     * Returns the materialized cards for a product so the employee
+     * can see exactly how it is grouped on the storefront.
+     */
+    public function getProductCardAudit(Product $product): array
+    {
+        return $product->productCards()
+            ->with(['options', 'variants'])
+            ->get()
+            ->map(fn($card) => [
+                'card_id' => $card->id,
+                'metrics' => [
+                    'views' => $card->views_count,
+                    'rating' => $card->average_rating,
+                ],
+                'non_swatch_options' => $card->options->pluck('slug', 'namespace'),
+                'variant_count' => $card->variants()->count(),
+                'variants' => $card->variants->pluck('sku'),
+            ])->toArray();
+    }
+
     public function getStatusOptions(): array
     {
         return ProductStatus::options();
@@ -26,11 +73,11 @@ class ProductService
     public function getVendorOptions(): EloquentCollection
     {
         return Cache::tags([CacheTag::Vendors->value])
-            ->remember(CacheTag::Vendors->key('options'), CacheKeys::TTL, fn () => Vendor::query()
+            ->remember(CacheTag::Vendors->key('options'), CacheKeys::TTL, fn() => Vendor::query()
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get(['id', 'name'])
-                ->map(fn (Vendor $vendor) => [
+                ->map(fn(Vendor $vendor) => [
                     'id' => $vendor->id,
                     'label' => $vendor->name,
                 ]));
@@ -39,11 +86,11 @@ class ProductService
     public function getCategoryOptions(): EloquentCollection
     {
         return Cache::tags([CacheTag::Categories->value])
-            ->remember(CacheTag::Categories->key('options'), CacheKeys::TTL, fn () => Category::query()
+            ->remember(CacheTag::Categories->key('options'), CacheKeys::TTL, fn() => Category::query()
                 ->where('is_active', true)
                 ->orderBy('display_name')
                 ->get(['id', 'display_name'])
-                ->map(fn (Category $category) => [
+                ->map(fn(Category $category) => [
                     'id' => $category->id,
                     'label' => $category->display_name,
                 ]));
@@ -52,11 +99,11 @@ class ProductService
     public function getCollectionOptions(): EloquentCollection
     {
         return Cache::tags([CacheTag::Collections->value])
-            ->remember(CacheTag::Collections->key('options'), CacheKeys::TTL, fn () => Collection::query()
+            ->remember(CacheTag::Collections->key('options'), CacheKeys::TTL, fn() => Collection::query()
                 ->where('is_active', true)
                 ->orderBy('display_name')
                 ->get(['id', 'display_name'])
-                ->map(fn (Collection $collection) => [
+                ->map(fn(Collection $collection) => [
                     'id' => $collection->id,
                     'label' => $collection->display_name,
                 ]));
@@ -65,12 +112,12 @@ class ProductService
     public function getLocationOptions(): EloquentCollection
     {
         return Cache::tags([CacheTag::Locations->value])
-            ->remember(CacheTag::Locations->key('options'), CacheKeys::TTL, fn () => Location::query()
+            ->remember(CacheTag::Locations->key('options'), CacheKeys::TTL, fn() => Location::query()
                 ->where('is_active', true)
                 ->orderBy('type')
                 ->orderBy('name')
                 ->get(['id', 'code', 'name', 'type', 'address_data', 'province_name', 'ward_name'])
-                ->map(fn (Location $location) => [
+                ->map(fn(Location $location) => [
                     'id' => $location->id,
                     'code' => $location->code,
                     'label' => $location->name,
@@ -82,7 +129,7 @@ class ProductService
     public function getVariantOptions(): EloquentCollection
     {
         return Cache::tags([CacheTag::VariantOptions->value])
-            ->remember(CacheTag::VariantOptions->key('data'), CacheKeys::TTL, fn () => $this->buildVariantOptions());
+            ->remember(CacheTag::VariantOptions->key('data'), CacheKeys::TTL, fn() => $this->buildVariantOptions());
     }
 
     protected function buildVariantOptions(): EloquentCollection
@@ -90,14 +137,14 @@ class ProductService
         $namespaces = LookupNamespace::query()
             ->where('for_variants', true)
             ->where('is_active', true)
-            ->with(['activeLookups' => fn ($q) => $q->orderBy('display_name')])
+            ->with(['activeLookups' => fn($q) => $q->orderBy('display_name')])
             ->get();
 
-        return $namespaces->map(fn ($ns) => [
+        return $namespaces->map(fn($ns) => [
             'id' => $ns->id,
             'label' => $ns->display_name,
             'namespace' => $ns->slug,
-            'options' => $ns->activeLookups->map(fn ($lookup) => [
+            'options' => $ns->activeLookups->map(fn($lookup) => [
                 'id' => $lookup->id,
                 'slug' => $lookup->slug,
                 'label' => $lookup->display_name,
@@ -111,7 +158,7 @@ class ProductService
     public function getFeatureOptions(): array
     {
         return Cache::tags([CacheTag::FeatureOptions->value])
-            ->remember(CacheTag::FeatureOptions->key('data'), CacheKeys::TTL, fn () => $this->buildFeatureOptions());
+            ->remember(CacheTag::FeatureOptions->key('data'), CacheKeys::TTL, fn() => $this->buildFeatureOptions());
     }
 
     protected function buildFeatureOptions(): array
@@ -123,11 +170,12 @@ class ProductService
 
         return $ns->activeLookups()
             ->orderBy('display_name')
-            ->get(['id', 'slug', 'display_name', 'metadata'])
-            ->map(fn ($lookup) => [
+            ->get(['id', 'slug', 'display_name', 'description', 'metadata'])
+            ->map(fn($lookup) => [
                 'id' => $lookup->id,
                 'slug' => $lookup->slug,
                 'label' => $lookup->display_name,
+                'description' => $lookup->description,
                 'metadata' => $lookup->metadata ?? [],
             ])->values()->toArray();
     }
@@ -135,12 +183,12 @@ class ProductService
     public function getSpecNamespaces(): EloquentCollection
     {
         return Cache::tags([CacheTag::SpecNamespaces->value])
-            ->remember(CacheTag::SpecNamespaces->key('data'), CacheKeys::TTL, fn () => LookupNamespace::query()
+            ->remember(CacheTag::SpecNamespaces->key('data'), CacheKeys::TTL, fn() => LookupNamespace::query()
                 ->whereNotIn('slug', ['tinh-nang', 'nhom-danh-muc'])
                 ->where('is_active', true)
                 ->orderBy('display_name')
                 ->get(['id', 'slug', 'display_name', 'for_variants'])
-                ->map(fn ($ns) => [
+                ->map(fn($ns) => [
                     'id' => $ns->id,
                     'namespace' => $ns->slug,
                     'label' => $ns->display_name,
@@ -150,8 +198,8 @@ class ProductService
 
     public function getSpecLookupOptions(string $namespace): EloquentCollection
     {
-        return Cache::tags([CacheTag::SpecLookupPrefix->value.'.'.$namespace])
-            ->remember(CacheKeys::getFiltersKeys('spec_lookup_options', $namespace), CacheKeys::TTL, fn () => $this->buildSpecLookupOptions($namespace));
+        return Cache::tags([CacheTag::SpecLookupPrefix->value . '.' . $namespace])
+            ->remember(CacheKeys::getFiltersKeys('spec_lookup_options', $namespace), CacheKeys::TTL, fn() => $this->buildSpecLookupOptions($namespace));
     }
 
     protected function buildSpecLookupOptions(string $namespace): EloquentCollection
@@ -164,7 +212,7 @@ class ProductService
         return $ns->activeLookups()
             ->orderBy('display_name')
             ->get(['id', 'slug', 'display_name', 'metadata', 'description'])
-            ->map(fn ($lookup) => [
+            ->map(fn($lookup) => [
                 'id' => $lookup->id,
                 'slug' => $lookup->slug,
                 'label' => $lookup->display_name,
@@ -178,7 +226,7 @@ class ProductService
     public function getAllSpecLookupOptions(): EloquentCollection
     {
         return Cache::tags([CacheTag::AllSpecLookups->value])
-            ->remember(CacheTag::AllSpecLookups->key('data'), CacheKeys::TTL, fn () => $this->buildAllSpecLookupOptions());
+            ->remember(CacheTag::AllSpecLookups->key('data'), CacheKeys::TTL, fn() => $this->buildAllSpecLookupOptions());
     }
 
     protected function buildAllSpecLookupOptions(): EloquentCollection
@@ -186,12 +234,12 @@ class ProductService
         $namespaces = LookupNamespace::query()
             ->whereNotIn('slug', ['tinh-nang', 'nhom-danh-muc'])
             ->where('is_active', true)
-            ->with(['activeLookups' => fn ($q) => $q->orderBy('display_name')])
+            ->with(['activeLookups' => fn($q) => $q->orderBy('display_name')])
             ->get();
 
         $result = [];
         foreach ($namespaces as $ns) {
-            $result[$ns->slug] = $ns->activeLookups->map(fn ($lookup) => [
+            $result[$ns->slug] = $ns->activeLookups->map(fn($lookup) => [
                 'id' => $lookup->id,
                 'slug' => $lookup->slug,
                 'label' => $lookup->display_name,
@@ -203,31 +251,5 @@ class ProductService
         }
 
         return collect($result);
-    }
-
-    public function getFiltered(ProductFilterData $filter): LengthAwarePaginator
-    {
-        return Product::query()
-            ->with(['vendor', 'category', 'collection', 'variants.inventories'])
-            ->when($filter->vendor_id, fn ($q) => $q->where('vendor_id', $filter->vendor_id))
-            ->when($filter->category_id, fn ($q) => $q->where('category_id', $filter->category_id))
-            ->when($filter->collection_id, fn ($q) => $q->where('collection_id', $filter->collection_id))
-            ->when($filter->status, fn ($q) => $q->byStatus($filter->status))
-            ->when(! is_null($filter->is_featured), fn ($q) => $q->where('is_featured', $filter->is_featured))
-            ->when(! is_null($filter->is_new_arrival), fn ($q) => $q->where('is_new_arrival', $filter->is_new_arrival))
-            ->when($filter->search, fn ($q) => $q->search($filter->search))
-            ->orderBy($filter->order_by ?? 'created_at', $filter->order_direction ?? 'desc')
-            ->paginate($filter->per_page ?? 15);
-    }
-
-    public function getTrashedFiltered(ProductFilterData $filter): LengthAwarePaginator
-    {
-        return Product::onlyTrashed()
-            ->with(['vendor', 'category'])
-            ->when($filter->vendor_id, fn ($q) => $q->where('vendor_id', $filter->vendor_id))
-            ->when($filter->category_id, fn ($q) => $q->where('category_id', $filter->category_id))
-            ->when($filter->search, fn ($q) => $q->search($filter->search))
-            ->orderBy($filter->order_by ?? 'deleted_at', $filter->order_direction ?? 'desc')
-            ->paginate($filter->per_page ?? 15);
     }
 }

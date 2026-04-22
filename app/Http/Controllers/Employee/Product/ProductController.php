@@ -93,7 +93,13 @@ class ProductController
 
     public function show(Product $product): Response
     {
-        $product->load(['vendor', 'category', 'collection']);
+        $product->load([
+            'productCards.variants',
+            'productCards.options',
+            'variants',
+            'category',
+            'collection'
+        ]);
 
         return Inertia::render('employee/products/products/Show', [
             'product' => new ProductResource($product),

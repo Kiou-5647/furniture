@@ -35,7 +35,8 @@ import UserMenuContent from '@/components/UserMenuContent.vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { getInitials } from '@/composables/useInitials';
 import { toUrl } from '@/lib/utils';
-import { dashboard } from '@/routes';
+import { dashboard as customerDashboard } from '@/routes/customer';
+import { dashboard as employeeDashboard } from '@/routes/employee';
 import type { BreadcrumbItem, NavItem } from '@/types';
 
 type Props = {
@@ -50,13 +51,20 @@ const page = usePage();
 const auth = computed(() => page.props.auth);
 const { isCurrentUrl, whenCurrentUrl } = useCurrentUrl();
 
+const dashboard = computed(() => {
+    if (auth.value.user.type == 'employee') {
+        return employeeDashboard().url;
+    }
+    return customerDashboard().url;
+})
+
 const activeItemStyles =
     'text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100';
 
 const mainNavItems: NavItem[] = [
     {
         title: 'Bảng điều khiển',
-        href: dashboard(),
+        href: dashboard.value,
         icon: LayoutGrid,
     },
 ];
@@ -146,7 +154,7 @@ const rightNavItems: NavItem[] = [
                     </Sheet>
                 </div>
 
-                <Link :href="dashboard()" class="flex items-center gap-x-2">
+                <Link :href="dashboard" class="flex items-center gap-x-2">
                     <AppLogo />
                 </Link>
 

@@ -13,11 +13,18 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
+import { dashboard as customerDashboard } from '@/routes/customer';
+import { dashboard as employeeDashboard } from '@/routes/employee';
 import type { NavItem } from '@/types';
 import DynamicNavMain from './DynamicNavMain.vue';
 
 const page = usePage();
+const dashboard = computed(() => {
+    if (page.props.auth?.user.type == 'employee') {
+        return employeeDashboard().url;
+    }
+    return customerDashboard().url;
+})
 const menu = computed(() => (page.props.menu as NavItem[]) || []);
 
 </script>
@@ -28,7 +35,7 @@ const menu = computed(() => (page.props.menu as NavItem[]) || []);
             <SidebarMenu>
                 <SidebarMenuItem>
                     <SidebarMenuButton size="lg" as-child>
-                        <Link :href="dashboard()">
+                        <Link :href="dashboard">
                             <AppLogo />
                         </Link>
                     </SidebarMenuButton>

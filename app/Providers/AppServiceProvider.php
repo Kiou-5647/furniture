@@ -33,8 +33,11 @@ use App\Observers\ShipmentItemObserver;
 use App\Observers\ShipmentObserver;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -50,6 +53,21 @@ class AppServiceProvider extends ServiceProvider
         Model::unguard();
         $this->configureDefaults();
         $this->registerObservers();
+
+
+        Validator::extend('morph_exists', function ($attribute, $value, $parameters, $validator) {
+            if (! $type = Arr::get($validator->getData(), $parameters[0], false)) {
+                return false;
+            }
+
+            $type = Relation::getMorphedModel($type) ?? $type;
+
+            if (!class_exists($type)) {
+                return false;
+            }
+
+            return resolve($type)->where('id', $value)->exists();
+        });
     }
 
     protected function configureDefaults(): void

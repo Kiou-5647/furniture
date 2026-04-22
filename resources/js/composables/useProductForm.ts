@@ -150,11 +150,11 @@ export function useProductForm(
         option_groups: [] as OptionGroup[],
         assembly_info: {
             required: false,
-            estimated_minutes: null as number | null,
-            price: null as number | null,
-            instructions_url: '',
+            estimated_minutes: 0,
             difficulty_level: 'easy',
             additional_information: '',
+            manual_url: '',
+            manual_file: null,
         },
         warranty_months: 12 as number | null,
         is_featured: false,
@@ -217,16 +217,16 @@ export function useProductForm(
                 ) as ProductSpecifications;
                 form.option_groups = newProduct.option_groups ?? [];
                 form.assembly_info = {
-                    required: newProduct.assembly_info?.required ?? false,
+                    required:
+                        newProduct.assembly_info?.required ?? false,
                     estimated_minutes:
-                        newProduct.assembly_info?.estimated_minutes ?? null,
-                    price: newProduct.assembly_info?.price ?? null,
-                    instructions_url:
-                        newProduct.assembly_info?.instructions_url ?? '',
+                        newProduct.assembly_info?.estimated_minutes ?? 0,
                     difficulty_level:
                         newProduct.assembly_info?.difficulty_level ?? 'easy',
                     additional_information:
                         newProduct.assembly_info?.additional_information ?? '',
+                    manual_url: newProduct.assembly_info?.manual_url,
+                    manual_file: null,
                 };
                 form.warranty_months = newProduct.warranty_months;
                 form.is_featured = newProduct.is_featured;
@@ -283,17 +283,17 @@ export function useProductForm(
                         updated_at: v.updated_at,
                     };
                 },
-            );
+                );
             } else if (!newProduct) {
                 form.reset();
                 form.status = 'draft';
                 form.assembly_info = {
                     required: false,
-                    estimated_minutes: null,
-                    price: null,
-                    instructions_url: '',
+                    estimated_minutes: 0,
                     difficulty_level: 'easy',
                     additional_information: '',
+                    manual_url: '',
+                    manual_file: null,
                 };
                 newArrivalMonths.value = null;
             }
@@ -863,9 +863,11 @@ export function useProductForm(
     function submit() {
         if (!isValid.value) return;
 
+        console.info(product?.assembly_info)
+
         const url = product ? update(product).url : store().url;
         const method = product ? 'put' : 'post';
-        form[method](url, { onSuccess: () => closeModal() });
+        form[method](url, { onSuccess: () => closeModal(), onError: (errors) => console.error(errors) });
     }
 
     function handleFinalSubmit() {
@@ -883,11 +885,11 @@ export function useProductForm(
         form.is_new_arrival = true;
         form.assembly_info = {
             required: false,
-            estimated_minutes: null,
-            price: null,
-            instructions_url: '',
+            estimated_minutes: 0,
             difficulty_level: 'easy',
             additional_information: '',
+            manual_url: '',
+            manual_file: null,
         };
         newArrivalMonths.value = null;
         currentStep.value = 1;

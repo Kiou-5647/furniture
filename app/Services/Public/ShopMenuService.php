@@ -9,7 +9,6 @@ use App\Support\CacheKeys;
 use App\Support\CacheTag;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 
 class ShopMenuService
 {
@@ -29,20 +28,11 @@ class ShopMenuService
             return collect();
         }
 
-        // Use a query to count categories per room via the pivot table
-        $counts = DB::table('category_room_placement')
-            ->join('categories', 'category_room_placement.category_id', '=', 'categories.id')
-            ->where('categories.is_active', true)
-            ->select('room_id', DB::raw('count(*) as total'))
-            ->groupBy('room_id')
-            ->pluck('total', 'room_id');
-
-        return $roomNs->activeLookups()->get()->map(function (Lookup $room) use ($counts) {
+        return $roomNs->activeLookups()->get()->map(function (Lookup $room) {
             return [
                 'id' => $room->id,
                 'label' => $room->display_name,
                 'slug' => $room->slug,
-                'count' => $counts[$room->id] ?? 0,
                 'image_url' => $room->getFirstMediaUrl('image', 'webp') ?: null,
             ];
         });

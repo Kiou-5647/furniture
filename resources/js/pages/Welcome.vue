@@ -10,15 +10,20 @@ import {
     CarouselPrevious,
 } from '@/components/ui/carousel';
 import ShopLayout from '@/layouts/ShopLayout.vue';
+import ProductSection from '@/layouts/storefront/ProductSection.vue';
 
 defineProps<{
     rooms: {
         id: string;
         label: string;
         slug: string;
-        count: number;
         image_url: string | null;
     }[];
+    sections: Record<string, {
+        title: string;
+        cards: any[];
+        moreUrl: string;
+    }>;
 }>();
 
 const features = [
@@ -27,20 +32,42 @@ const features = [
     { icon: Headphones, title: 'Hỗ trợ 24/7', desc: 'Tư vấn miễn phí' },
     { icon: RotateCcw, title: 'Đổi trả dễ dàng', desc: 'Trong 30 ngày' },
 ];
+
+/**
+ * Map the section keys from the backend to specific UI layouts.
+ * This keeps the Welcome.vue clean and allows the backend
+ * to control the data, while the frontend controls the presentation.
+ */
+const getLayoutForKey = (key: string) => {
+  const layoutMap: Record<string, 'grid' | 'carousel'> = {
+    topSellers: 'carousel',
+    newArrivals: 'grid',
+    allProducts: 'grid',
+  };
+  return layoutMap[key] || 'grid';
+};
+
+const getLayoutPropsForKey = (key: string) => {
+  const propsMap: Record<string, any> = {
+    newArrivals: { cols: 4 },
+    allProducts: { cols: 5 }, // Show more per row for the "All" section
+    topSellers: {}, // Carousel doesn't use cols
+  };
+  return propsMap[key] || {};
+};
+
 </script>
 
 <template>
+
     <Head title="Nội Thất - Kiến tạo không gian sống" />
     <ShopLayout>
         <!-- Hero Section -->
         <section class="relative select-none overflow-hidden">
             <div class="absolute inset-0">
-                <img
-                    :src="heroImage"
-                    alt="Nội thất sang trọng"
-                    class="h-full w-full object-cover"
-                />
-                <div class="absolute inset-0 bg-gradient-to-r from-black/70 via-black/60 to-black/30 sm:to-transparent" />
+                <img :src="heroImage" alt="Nội thất sang trọng" class="h-full w-full object-cover" />
+                <div
+                    class="absolute inset-0 bg-gradient-to-r from-black/70 via-black/60 to-black/30 sm:to-transparent" />
             </div>
             <div class="relative mx-auto max-w-7xl px-4 py-32 sm:px-6 lg:px-8 lg:py-40">
                 <div class="max-w-xl">
@@ -52,17 +79,13 @@ const features = [
                         Biến ngôi nhà của bạn thành không gian sống lý tưởng.
                     </p>
                     <div class="mt-8 flex flex-wrap gap-4">
-                        <Link
-                            href="/san-pham"
-                            class="inline-flex items-center gap-2 rounded-lg bg-white px-6 py-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-100 transition-colors"
-                        >
+                        <Link href="/san-pham"
+                            class="inline-flex items-center gap-2 rounded-lg bg-white px-6 py-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-100 transition-colors">
                             Khám phá ngay
                             <ArrowRight class="h-4 w-4" />
                         </Link>
-                        <Link
-                            href="/khuyen-mai"
-                            class="inline-flex items-center gap-2 rounded-lg border border-white/30 px-6 py-3 text-sm font-semibold text-white backdrop-blur-sm hover:bg-white/10 transition-colors"
-                        >
+                        <Link href="/khuyen-mai"
+                            class="inline-flex items-center gap-2 rounded-lg border border-white/30 px-6 py-3 text-sm font-semibold text-white backdrop-blur-sm hover:bg-white/10 transition-colors">
                             Khuyến mãi
                         </Link>
                     </div>
@@ -73,11 +96,7 @@ const features = [
         <!-- Features Bar -->
         <section class="border-b bg-zinc-50">
             <div class="ml-6 grid max-w-7xl grid-cols-2 gap-6 px-4 py-8 sm:mx-auto sm:px-6 lg:grid-cols-4 lg:px-8">
-                <div
-                    v-for="f in features"
-                    :key="f.title"
-                    class="flex items-center gap-3"
-                >
+                <div v-for="f in features" :key="f.title" class="flex items-center gap-3">
                     <component :is="f.icon" class="h-5 w-5 shrink-0 text-zinc-500" />
                     <div>
                         <p class="text-sm font-medium text-zinc-900">{{ f.title }}</p>
@@ -91,40 +110,28 @@ const features = [
         <section class="select-none mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
             <div class="mb-10">
                 <h2 class="text-2xl font-bold tracking-tight text-zinc-900">Khám phá theo không gian</h2>
-                <p class="mt-2 text-sm text-zinc-500">Tìm kiếm nội thất phù hợp cho từng phòng trong ngôi nhà của bạn</p>
+                <p class="mt-2 text-sm text-zinc-500">Tìm kiếm nội thất phù hợp cho từng phòng trong ngôi nhà của bạn
+                </p>
             </div>
-            <Carousel
-                :opts="{
-                    align: 'start',
-                    loop: true
-                }"
-                class="w-full"
-            >
+            <Carousel :opts="{
+                align: 'start',
+                loop: true
+            }" class="w-full">
                 <CarouselContent class="-ml-4">
-                    <CarouselItem
-                        v-for="room in rooms"
-                        :key="room.id"
-                        class="basis-1/2 sm:basis-1/3 lg:basis-1/4"
-                    >
-                        <Link
-                            :href="`/san-pham?phong=${room.slug}`"
-                            class="group block overflow-hidden rounded-xl bg-zinc-100"
-                        >
+                    <CarouselItem v-for="room in rooms" :key="room.id" class="basis-1/2 sm:basis-1/3 lg:basis-1/4">
+                        <Link :href="`/san-pham?phong=${room.slug}`"
+                            class="group block overflow-hidden rounded-xl bg-zinc-100">
                             <div class="relative aspect-square overflow-hidden">
-                                <img
-                                    v-if="room.image_url"
-                                    :src="room.image_url"
-                                    :alt="room.label"
-                                    class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                />
+                                <img v-if="room.image_url" :src="room.image_url" :alt="room.label"
+                                    class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                                 <div v-else class="flex h-full w-full items-center justify-center bg-zinc-200">
                                     <span class="text-2xl font-bold text-zinc-400">{{ room.label.charAt(0) }}</span>
                                 </div>
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-80 transition-opacity group-hover:opacity-90" />
+                                <div
+                                    class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-80 transition-opacity group-hover:opacity-90" />
                             </div>
                             <div class="relative -mt-24 p-5">
                                 <h3 class="text-md font-semibold text-white sm:text-lg">{{ room.label }}</h3>
-                                <p class="text-xs text-white/70 sm:text-sm">{{ room.count }} sản phẩm</p>
                             </div>
                         </Link>
                     </CarouselItem>
@@ -133,6 +140,18 @@ const features = [
                 <CarouselNext class="right-2 w-6 h-6 sm:w-8 sm:h-8 sm:flex" />
             </Carousel>
         </section>
+
+        <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 space-y-20">
+            <ProductSection
+                v-for="(section, key) in sections"
+                :key="key"
+                :title="section.title"
+                :cards="section.cards"
+                :more-url="section.moreUrl"
+                :layout="getLayoutForKey(key)"
+                :layout-props="getLayoutPropsForKey(key)"
+            />
+        </div>
 
         <!-- CTA Banner -->
         <section class="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
@@ -149,10 +168,8 @@ const features = [
                         Đội ngũ kiến trúc sư giàu kinh nghiệm sẵn sàng tư vấn và thiết kế
                         không gian sống phù hợp với phong cách của bạn.
                     </p>
-                    <Link
-                        href="/dat-lich"
-                        class="mt-8 inline-flex items-center gap-2 rounded-lg bg-white px-6 py-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-100 transition-colors"
-                    >
+                    <Link href="/dat-lich"
+                        class="mt-8 inline-flex items-center gap-2 rounded-lg bg-white px-6 py-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-100 transition-colors">
                         Đặt lịch tư vấn
                         <ArrowRight class="h-4 w-4" />
                     </Link>
@@ -161,3 +178,10 @@ const features = [
         </section>
     </ShopLayout>
 </template>
+
+<style scoped>
+/* Ensure smooth transitions between sections */
+.space-y-20 > * + * {
+  margin-top: 5rem;
+}
+</style>

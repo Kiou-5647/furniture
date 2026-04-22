@@ -16,6 +16,7 @@ class LookupSeeder extends Seeder
     {
         $this->seedNamespaces();
         $this->seedCategoryGroups();
+        $this->seedSubCategories();
         $this->seedRooms();
         $this->seedStyles();
         $this->seedColors();
@@ -30,6 +31,7 @@ class LookupSeeder extends Seeder
     {
         $namespaces = [
             ['slug' => 'nhom-danh-muc', 'display_name' => 'Nhóm danh mục', 'for_variants' => false, 'is_system' => true],
+            ['slug' => 'danh-muc-phu', 'display_name' => 'Danh mục phụ', 'for_variants' => true, 'is_system' => true],
             ['slug' => 'phong', 'display_name' => 'Phòng', 'for_variants' => false, 'is_system' => true],
             ['slug' => 'phong-cach', 'display_name' => 'Phong cách', 'for_variants' => false, 'is_system' => true],
             ['slug' => 'mau-sac', 'display_name' => 'Màu sắc', 'for_variants' => true, 'is_system' => true],
@@ -83,6 +85,33 @@ class LookupSeeder extends Seeder
             $this->attachMedia(
                 $lookup,
                 "{$this->roomImageBase}/nhom-danh-muc/{$group['slug']}.jpg",
+                'image'
+            );
+        }
+        $this->command->info('Seeded category groups');
+    }
+
+    protected function seedSubCategories(): void
+    {
+        $nsId = $this->getNamespaceId('danh-muc-phu');
+        if (! $nsId) {
+            return;
+        }
+
+        $subCats = [
+            ['slug' => 'ghe-sofa', 'display_name' => 'Ghế Sofa', 'description' => 'Các loại ghế sofa'],
+            ['slug' => 'ghe-doi', 'display_name' => 'Ghế đôi', 'description' => 'Các loại ghế đôi'],
+        ];
+
+        foreach ($subCats as $sub) {
+            $lookup = Lookup::updateOrCreate(
+                ['namespace_id' => $nsId, 'slug' => $sub['slug']],
+                ['namespace_id' => $nsId, ...$sub]
+            );
+
+            $this->attachMedia(
+                $lookup,
+                "{$this->roomImageBase}/danh-muc-phu/{$sub['slug']}.jpg",
                 'image'
             );
         }
@@ -191,31 +220,23 @@ class LookupSeeder extends Seeder
         }
 
         $features = [
-            ['slug' => 'co-dien-hoa', 'display_name' => 'Cổ điển hóa'],
-            ['slug' => 'dong-canh', 'display_name' => 'Động cảnh'],
-            ['slug' => 'chong-tham-nuoc', 'display_name' => 'Chống thấm nước'],
-            ['slug' => 'chong-uy-tinh', 'display_name' => 'Chống ẩm ướt'],
-            ['slug' => 'de-thao', 'display_name' => 'Dễ tháo lắp'],
-            ['slug' => 'de-ve-sinh', 'display_name' => 'Dễ vệ sinh'],
-            ['slug' => 'dien-tich-nho-gon', 'display_name' => 'Diện tích nhỏ gọn'],
-            ['slug' => 'do-cung-cao', 'display_name' => 'Độ cứng cao'],
-            ['slug' => 'doi-bong', 'display_name' => 'Đổi bóng'],
-            ['slug' => 'ghe-xoay', 'display_name' => 'Ghế xoay'],
-            ['slug' => 'loai-xoay', 'display_name' => 'Loại xoay'],
-            ['slug' => 'mau-sac-doc', 'display_name' => 'Màu sắc độc đáo'],
-            ['slug' => 'nap-an', 'display_name' => 'Nắp âm'],
-            ['slug' => 'nen-dien', 'display_name' => 'Nền điện'],
-            ['slug' => 'noi-that-sang-trong', 'display_name' => 'Nội thất sang trọng'],
-            ['slug' => 'tai-nang-doc', 'display_name' => 'Tái tạo độc đáo'],
-            ['slug' => 'tiet-kiem-dien', 'display_name' => 'Tiết kiệm điện'],
-            ['slug' => 'tieu-thuc-pt', 'display_name' => 'Tiêu thụ ít điện'],
-            ['slug' => 'tich-hop-sang', 'display_name' => 'Tích hợp sẵn'],
+            ['slug' => 'dao-chieu', 'display_name' => 'Đảo chiều', 'description' => 'Bộ sofa này có thêm phần ghế dài ở bên phải – hoặc bên trái! Bạn có thể lựa chọn bất cứ lúc nào: di chuyển phần ghế dài có thể đảo chiều sang một bên tháng này và bên kia tháng sau, tùy thuộc vào nhu cầu bố trí và tần suất bạn muốn thay đổi không gian. Với tùy chọn ghế dài có thể đảo chiều, bạn sẽ có nhiều tự do hơn trong việc trang trí phòng khách.'],
+            ['slug' => 'tay-don', 'display_name' => 'Tay đòn', 'description' => 'Với kiểu dáng hiện đại, ghế sofa tay vịn thẳng giúp giữ cho phong cách của bạn luôn thanh lịch. Chúng cũng là giải pháp tiết kiệm không gian tuyệt vời, chiếm ít diện tích hơn và giúp bạn dễ dàng sắp xếp bố cục nội thất hơn.'],
+            ['slug' => 'khong-gian-hep', 'display_name' => 'Không gian hẹp', 'description' => 'Với kiểu dáng thanh lịch, thiết kế này hòa hợp hoàn hảo với những không gian nhỏ. Kích thước nhỏ gọn đồng nghĩa với nhiều khả năng phối hợp hơn – nhiều cách hơn để sắp xếp, đặt và trang trí mà không cần lo lắng về kích thước hay sự phù hợp.'],
+            ['slug' => 'ghe-sau', 'display_name' => 'Ghế sâu', 'description' => 'Thiết kế ghế sâu này mang lại nhiều không gian hơn để bạn duỗi chân khi thư giãn. So với ghế nông, ghế sâu có đệm lớn hơn, cho phép người cao ngồi thoải mái – và người ở mọi chiều cao đều có thể ngả lưng hoặc cuộn tròn người theo ý muốn.'],
+            ['slug' => 'hang-qua-kho', 'display_name' => 'Hàng quá khổ', 'description' => 'Do kích thước lớn của mặt hàng này, chúng tôi đặc biệt khuyến nghị bạn xem lại Hướng dẫn Giao hàng Thành công của chúng tôi để tránh các vấn đề có thể xảy ra khi giao hàng.'],
         ];
 
         foreach ($features as $feature) {
-            Lookup::updateOrCreate(
+            $lookup = Lookup::updateOrCreate(
                 ['namespace_id' => $nsId, 'slug' => $feature['slug']],
                 ['namespace_id' => $nsId, ...$feature]
+            );
+
+            $this->attachMedia(
+                $lookup,
+                "{$this->roomImageBase}/tinh-nang/{$feature['slug']}.jpg",
+                'image'
             );
         }
         $this->command->info('Seeded features');
@@ -229,24 +250,20 @@ class LookupSeeder extends Seeder
         }
 
         $materials = [
+            ['slug' => 'vai', 'display_name' => 'Vải'],
+            ['slug' => 'da', 'display_name' => 'Da'],
             ['slug' => 'go', 'display_name' => 'Gỗ'],
             ['slug' => 'go-cong-nghiep', 'display_name' => 'Gỗ công nghiệp'],
             ['slug' => 'go-tu-nhien', 'display_name' => 'Gỗ tự nhiên'],
+            ['slug' => 'go-oai', 'display_name' => 'Gỗ óc chó'],
+            ['slug' => 'go-soi', 'display_name' => 'Gỗ sồi'],
+            ['slug' => 'go-huong', 'display_name' => 'Gỗ hương'],
             ['slug' => 'mdf', 'display_name' => 'MDF'],
-            ['slug' => 'melamine', 'display_name' => 'Melamine'],
-            ['slug' => 'vai', 'display_name' => 'Vải'],
-            ['slug' => 'da', 'display_name' => 'Da'],
-            ['slug' => 'da-cam-tuoi', 'display_name' => 'Da cam tươi'],
-            ['slug' => 'simili', 'display_name' => 'Simili'],
             ['slug' => 'nhom', 'display_name' => 'Nhôm'],
             ['slug' => 'thep', 'display_name' => 'Thép'],
             ['slug' => 'inox', 'display_name' => 'Inox'],
             ['slug' => 'kinh', 'display_name' => 'Kính'],
             ['slug' => 'nhua', 'display_name' => 'Nhựa'],
-            ['slug' => 'mam', 'display_name' => 'Mắm'],
-            ['slug' => 'go-oai', 'display_name' => 'Gỗ óc chó'],
-            ['slug' => 'go-sung', 'display_name' => 'Gỗ sồi'],
-            ['slug' => 'go-huong', 'display_name' => 'Gỗ hương'],
         ];
 
         foreach ($materials as $material) {

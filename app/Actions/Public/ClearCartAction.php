@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Actions\Customer;
+namespace App\Actions\Public;
 
-use App\Models\Customer\Cart;
+use App\Models\Public\Cart;
 
 class ClearCartAction
 {

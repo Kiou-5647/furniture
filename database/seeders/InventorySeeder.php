@@ -24,15 +24,14 @@ class InventorySeeder extends Seeder
             return;
         }
 
-        // [RT-001, RT-002, WH-001, WH-002] per variant
         $stock = [
-            [10, 8, 25, 15],   // Pebble Gray
-            [5, 3, 12, 0],     // Charme Chocolat
-            [7, 5, 20, 10],    // Charme Green
-            [0, 0, 30, 18],    // Olio Green — NO stores
-            [6, 4, 15, 8],     // Charme Tan
-            [12, 10, 35, 22],  // Rain Cloud Gray
-            [0, 0, 0, 0],      // Charme Black — OOS
+            [10, 8, 25, 15],
+            [5, 3, 12, 0],
+            [7, 5, 20, 10],
+            [0, 0, 30, 18],
+            [6, 4, 15, 8],
+            [12, 10, 35, 22],
+            [0, 0, 0, 0],
         ];
 
         $locations = Location::where('is_active', true)->orderBy('code')->get();

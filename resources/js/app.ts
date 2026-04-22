@@ -3,9 +3,18 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import type { DefineComponent } from 'vue';
 import { createApp, h } from 'vue';
 import '../css/app.css';
+import 'vue-sonner/style.css';
+import { toast } from 'vue-sonner';
 import { initializeTheme } from '@/composables/useAppearance';
+import Sonner from './components/ui/sonner/Sonner.vue';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+
+function getErrorMessage(error: unknown): string {
+    if (error instanceof Error) return error.message;
+    if (typeof error === 'string') return error;
+    return 'An unexpected error occurred.';
+}
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
@@ -15,14 +24,45 @@ createInertiaApp({
             import.meta.glob<DefineComponent>('./pages/**/*.vue'),
         ),
     setup({ el, App, props, plugin }) {
-        createApp({ render: () => h(App, props) })
-            .use(plugin)
-            .mount(el);
+        // 2. Change the render function to return a wrapper containing BOTH the App and Sonner
+        const app = createApp({
+            render: () => h('div', [
+                h(App, props), // The main Inertia application
+                h(Sonner, { position: 'top-center'})      // The global toast anchor (mounted once at the root)
+            ])
+        });
+
+        app.config.errorHandler = (err, instance, info) => {
+            console.error('Global Vue Error:', err, info);
+            toast.error('Application Error', {
+                description: getErrorMessage(err),
+            });
+        };
+
+        app.use(plugin).mount(el);
     },
     progress: {
         color: '#4B5563',
     },
 });
+
+window.addEventListener('unhandledrejection', (event) => {
+    console.error('Unhandled Promise Rejection:', event.reason);
+
+    toast.error('Async Error', {
+        description: getErrorMessage(event.reason), // ✅ Now type-safe
+    });
+});
+
+window.onerror = function (message, source, lineno, colno, error) {
+    console.error('Window Error:', message, source, lineno, colno, error);
+
+    toast.error('Runtime Error', {
+        description: getErrorMessage(error || message), // ✅ Now type-safe
+    });
+
+    return false;
+};
 
 // This will set light / dark mode on page load...
 initializeTheme();

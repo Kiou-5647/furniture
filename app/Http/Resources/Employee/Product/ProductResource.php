@@ -2,6 +2,8 @@
 
 namespace App\Http\Resources\Employee\Product;
 
+use App\Http\Resources\Employee\Product\VariantResource;
+use App\Http\Resources\Public\Product\ProductCardResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -11,6 +13,8 @@ class ProductResource extends JsonResource
 
     public function toArray(Request $request): array
     {
+
+
         return [
             'id' => $this->id,
             'vendor_id' => $this->vendor_id,
@@ -37,7 +41,7 @@ class ProductResource extends JsonResource
             'specifications' => $this->specifications ?? [],
             'option_groups' => $this->option_groups ?? [],
             'filterable_options' => $this->filterable_options ?? [],
-            'assembly_info' => $this->assembly_info ?? [],
+            'assembly_info' => array_merge($this->assembly_info ?? [], ['manual_url' => $this->getFirstMediaUrl('manual_file') ?? '']),
             'warranty_months' => $this->warranty_months,
             'view_count' => $this->view_count,
             'review_count' => $this->review_count,
@@ -50,7 +54,7 @@ class ProductResource extends JsonResource
             'new_arrival_until' => $this->new_arrival_until?->format('d/m/Y'),
             'variants_count' => $this->whenCounted('variants', $this->variants_count),
             'variants' => VariantResource::collection($this->variants),
-            'grouped_variants' => $this->getGroupedVariantOptions(),
+            'product_cards' => ProductCardResource::collection($this->whenLoaded('productCards')),
             'created_at' => $this->created_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
             'updated_at' => $this->updated_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
         ];

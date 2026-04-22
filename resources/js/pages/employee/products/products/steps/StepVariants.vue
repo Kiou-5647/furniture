@@ -803,7 +803,6 @@ function canAddMoreImages(variant: any) {
                                     v-model="variant.sale_price"
                                     placeholder="0"
                                     class="text-sm"
-                                    v-on.stop="console.info(JSON.stringify(variant))"
                                 />
                             </Field>
                             <Field>

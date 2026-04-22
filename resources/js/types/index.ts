@@ -26,3 +26,9 @@ export type ProductStatus =
 export type VariantStatus = 'active' | 'inactive';
 export type AssemblyDifficulty = 'easy' | 'medium' | 'hard';
 export type LocationType = 'warehouse' | 'retail' | 'vendor';
+
+export const AssemblyDifficultyLabels: Record<AssemblyDifficulty, string> = {
+    easy: 'Dễ',
+    medium: 'Trung bình',
+    hard: 'Khó'
+}

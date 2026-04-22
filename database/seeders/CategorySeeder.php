@@ -26,7 +26,7 @@ class CategorySeeder extends Seeder
         $groupSeatings = Lookup::firstWhere('slug', 'ghe-ngoi');
         foreach (
             [
-                ['display_name' => 'Ghế sofa', 'slug' => 'ghe-sofa', 'rooms' => ['phong-khach', 'van-phong']],
+                ['display_name' => 'Ghế sofa & ghế đôi', 'slug' => 'ghe-sofa-va-ghe-doi', 'rooms' => ['phong-khach', 'van-phong']],
                 ['display_name' => 'Ghế sofa góc', 'slug' => 'ghe-sofa-goc', 'rooms' => ['phong-khach', 'van-phong']],
                 ['display_name' => 'Ghế đôi', 'slug' => 'ghe-doi', 'rooms' => ['phong-khach', 'phong-ngu']],
                 ['display_name' => 'Ghế ăn', 'slug' => 'ghe-an', 'rooms' => ['phong-an']],

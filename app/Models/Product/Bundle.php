@@ -3,10 +3,12 @@
 namespace App\Models\Product;
 
 use App\Builders\Product\BundleBuilder;
+use App\Models\Public\CartItem;
 use App\Models\Customer\Review;
 use App\Models\Product\BundleContent;
 use App\Models\Product\Product;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
@@ -22,7 +24,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  */
 class Bundle extends Model implements HasMedia
 {
-    use HasUuids, InteractsWithMedia, LogsActivity, SoftDeletes;
+    use HasFactory, HasUuids, InteractsWithMedia, LogsActivity, SoftDeletes;
 
     protected $table = 'bundles';
 
@@ -56,6 +58,16 @@ class Bundle extends Model implements HasMedia
         return $this->hasMany(BundleContent::class);
     }
 
+    public function cartItems(): MorphMany
+    {
+        return $this->morphMany(CartItem::class, 'purchasable');
+    }
+
+    public function reviews(): MorphMany
+    {
+        return $this->morphMany(Review::class, 'reviewable');
+    }
+
     public function products(): HasManyThrough
     {
         return $this->hasManyThrough(
@@ -66,11 +78,6 @@ class Bundle extends Model implements HasMedia
             'id',
             'product_id'
         );
-    }
-
-    public function reviews(): MorphMany
-    {
-        return $this->morphMany(Review::class, 'reviewable');
     }
 
     public function calculateBundlePrice(): float

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\Customer;
+namespace App\Models\Public;
 
 use App\Builders\Customer\CartBuilder;
 use App\Enums\CartStatus;
@@ -46,15 +46,25 @@ class Cart extends Model
         return $this->hasMany(CartItem::class)->with('purchasable');
     }
 
-    public static function getOrCreateForUser(User $user): Cart
+    public static function getOrCreate(?User $user = null, ?string $sessionId = null): Cart
     {
-        return Cart::query()
-            ->forUser($user)
-            ->open()
-            ->first() ?? Cart::create([
-                'user_id' => $user->id,
+        $query = Cart::query()->open();
+
+        if ($user) {
+            $query->where('user_id', $user->id);
+        } elseif ($sessionId) {
+            $query->where('session_id', $sessionId);
+        } else {
+            return Cart::create([
                 'status' => CartStatus::Open,
             ]);
+        }
+
+        return $query->first() ?? Cart::create([
+            'user_id' => $user?->id,
+            'session_id' => $sessionId,
+            'status' => CartStatus::Open,
+        ]);
     }
 
     public function calculateTotal(): float

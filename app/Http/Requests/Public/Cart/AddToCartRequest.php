@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Customer;
+namespace App\Http\Requests\Public\Cart;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -9,17 +9,17 @@ class AddToCartRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() !== null;
+        return true;
     }
 
     public function rules(): array
     {
         return [
             'purchasable_type' => ['required', Rule::in([
-                'App\\Models\\Product\\Product',
+                'App\\Models\\Product\\ProductVariant',
                 'App\\Models\\Product\\Bundle',
             ])],
-            'purchasable_id' => ['required', 'uuid'],
+            'purchasable_id' => ['required', 'string', 'morph_exists:purchasable_type'],
             'quantity' => ['required', 'integer', 'min:1'],
             'configuration' => ['nullable', 'array'],
         ];

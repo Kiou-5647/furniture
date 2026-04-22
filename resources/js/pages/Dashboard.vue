@@ -1,14 +1,24 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import PlaceholderPattern from '@/components/PlaceholderPattern.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { dashboard } from '@/routes';
+import { dashboard as customerDashboard } from '@/routes/customer';
+import { dashboard as employeeDashboard } from '@/routes/employee';
 import type { BreadcrumbItem } from '@/types';
+
+const page = usePage();
+const dashboard = computed(() => {
+    if (page.props.auth?.user.type == 'employee') {
+        return employeeDashboard().url;
+    }
+    return customerDashboard().url;
+})
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Bảng điều khiển',
-        href: dashboard(),
+        href: dashboard.value,
     },
 ];
 </script>

@@ -39,7 +39,7 @@ class CustomerSeeder extends Seeder
                 ['email' => $d['email']],
                 [
                     'type' => 'customer',
-                    'name' => Str::slug($d['full_name'], '_'),
+                    'name' => $d['full_name'],
                     'password' => Hash::make('password'),
                     'is_active' => true,
                     'is_verified' => true,

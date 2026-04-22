@@ -2,9 +2,12 @@
 
 namespace App\Models\Product;
 
+use App\Models\Public\CartItem;
 use App\Models\Customer\Review;
 use App\Models\Inventory\Inventory;
 use App\Models\Inventory\StockMovement;
+use App\Models\Product\Product;
+use App\Models\Product\ProductCard;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -39,6 +42,7 @@ class ProductVariant extends Model implements HasMedia
             'specifications' => 'array',
             'care_instructions' => 'array',
             'views_count' => 'integer',
+            'sales_count' => 'integer',
             'reviews_count' => 'integer',
             'average_rating' => 'decimal:2',
         ];
@@ -63,6 +67,7 @@ class ProductVariant extends Model implements HasMedia
             ->format('webp')
             ->width(1200);
         $this->addMediaConversion('swatch')
+            ->performOnCollections('swatch_image')
             ->fit(Fit::Contain, 60, 60)
             ->optimize();
     }
@@ -81,6 +86,11 @@ class ProductVariant extends Model implements HasMedia
         return $this->belongsTo(Product::class);
     }
 
+    public function productCard(): BelongsTo
+    {
+        return $this->belongsTo(ProductCard::class);
+    }
+
     public function inventories(): HasMany
     {
         return $this->hasMany(Inventory::class, 'variant_id');
@@ -89,6 +99,11 @@ class ProductVariant extends Model implements HasMedia
     public function stockMovements(): HasMany
     {
         return $this->hasMany(StockMovement::class, 'variant_id');
+    }
+
+    public function cartItems(): MorphMany
+    {
+        return $this->morphMany(CartItem::class, 'purchasable');
     }
 
     public function reviews(): MorphMany

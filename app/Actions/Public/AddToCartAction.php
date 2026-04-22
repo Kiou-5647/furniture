@@ -1,28 +1,28 @@
 <?php
 
-namespace App\Actions\Customer;
+namespace App\Actions\Public;
 
-use App\Data\Customer\CartItemData;
-use App\Models\Customer\Cart;
-use App\Models\Customer\CartItem;
+use App\Data\Public\CartItemData;
+use App\Models\Public\Cart;
+use App\Models\Public\CartItem;
 use App\Models\Product\Bundle;
-use App\Models\Product\Product;
+use App\Models\Product\ProductVariant;
 
 class AddToCartAction
 {
     public function execute(Cart $cart, CartItemData $itemData): CartItem
     {
         $purchasableClass = $itemData->purchasable_type;
-
-        /** @var Product|Bundle $purchasable */
         $purchasable = $purchasableClass::findOrFail($itemData->purchasable_id);
 
+        // Price is derived from the Variant or the Bundle's calculation logic
         $price = match (true) {
-            $purchasable instanceof Product => $purchasable->min_price,
-            $purchasable instanceof Bundle => $purchasable->calculateBundlePrice(),
+            $purchasable instanceof ProductVariant => (float) ($purchasable->sale_price ?? $purchasable->price),
+            $purchasable instanceof Bundle => (float) $purchasable->calculateBundlePrice(),
             default => 0,
         };
 
+        // Check for existing item with same variant/bundle AND same bundle configuration
         $existingItem = $cart->items()
             ->where('purchasable_type', $itemData->purchasable_type)
             ->where('purchasable_id', $itemData->purchasable_id)
@@ -30,8 +30,11 @@ class AddToCartAction
             ->first();
 
         if ($existingItem) {
-            $existingItem->increment('quantity', $itemData->quantity);
+            if ($existingItem->unit_price != $price) {
+                $existingItem->update(['unit_price' => $price]);
+            }
 
+            $existingItem->increment('quantity', $itemData->quantity);
             return $existingItem;
         }
 

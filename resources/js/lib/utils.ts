@@ -32,6 +32,7 @@ export function slugify(str: string): string {
     slug = slug.replace(/[úùủũụưứừửữự]/g, 'u');
     slug = slug.replace(/[ýỳỷỹỵ]/g, 'y');
     slug = slug.replace(/đ/g, 'd');
+    slug = slug.replace(/&/g, 'va');
 
     return slug
         .replace(/[^a-z0-9\s-]/g, '')

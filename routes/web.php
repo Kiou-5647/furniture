@@ -1,19 +1,34 @@
 <?php
 
+use App\Http\Controllers\Public\CartController;
+use App\Http\Controllers\Customer\ReviewController;
 use App\Http\Controllers\Payment\VnPayReturnController;
+use App\Http\Controllers\Public\ProductController;
 use App\Http\Controllers\Public\WelcomeController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [WelcomeController::class, '__invoke'])->name('home');
 
-Route::get('/san-pham/{sku}/{variant_slug}', [App\Http\Controllers\Public\ProductController::class, 'show'])
-    ->middleware('track.product.view')
-    ->name('public.products.show');
-
-Route::middleware(['auth', 'verified', 'user_type:customer'])->group(function () {
-    Route::inertia('dashboard', 'Dashboard')->name('dashboard');
-    Route::post('/reviews', [App\Http\Controllers\Customer\ReviewController::class, 'store'])->name('customer.reviews.store');
+Route::prefix('gio-hang')->group(function () {
+    Route::get('/', [CartController::class, 'index'])->name('cart.index');
+    Route::get('/data', [CartController::class, 'data'])->name('cart.data');
+    Route::post('/', [CartController::class, 'store'])->name('cart.store');
+    Route::patch('/{itemId}', [CartController::class, 'update'])->name('cart.update');
+    Route::delete('/{itemId}', [CartController::class, 'destroy'])->name('cart.destroy');
+    Route::delete('/clear', [CartController::class, 'clear'])->name('cart.clear');
 });
+
+Route::get('/san-pham', [ProductController::class, 'index'])->name('products.index');
+Route::get('/san-pham/{sku}/{variant_slug}', [ProductController::class, 'show'])
+    ->middleware('track.product.view')
+    ->name('products.show');
+
+Route::middleware(['auth', 'verified', 'user_type:customer'])->name('customer.')->group(function () {
+    Route::inertia('dashboard', 'Dashboard')->name('dashboard');
+    Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+});
+
+
 
 /**
  * VNPay payment routes (public - called by VNPay gateway)

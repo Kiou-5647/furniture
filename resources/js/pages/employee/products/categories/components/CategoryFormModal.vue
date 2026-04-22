@@ -55,8 +55,6 @@ const props = defineProps<{
 
 const emit = defineEmits(['close', 'delete']);
 
-console.info(JSON.stringify(props.category));
-
 const form = useForm({
     group_id: null as string | null,
     room_ids: null as string[] | null,
@@ -347,7 +345,7 @@ const selectedGroupLabel = computed(() => {
                                     <MultiSelect
                                         title="Phòng"
                                         :options="roomOptions"
-                                        v-model="form.room_ids!"
+                                        :model-value="form.room_ids ?? []"
                                         placeholder="Thêm phòng..."
                                     />
                                     <FieldError

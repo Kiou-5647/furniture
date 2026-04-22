@@ -116,10 +116,10 @@ class StoreProductRequest extends FormRequest
             'filterable_options' => ['nullable', 'array'],
             'assembly_info' => ['nullable', 'array'],
             'assembly_info.required' => ['boolean'],
-            'assembly_info.estimated_minutes' => ['nullable', 'integer', 'min:1'],
-            'assembly_info.price' => ['nullable', 'numeric', 'min:0'],
-            'assembly_info.instructions_url' => ['nullable', 'url'],
+            'assembly_info.estimated_minutes' => ['nullable', 'integer', 'min:0'],
+            'assembly_info.additional_information' => ['nullable', 'string'],
             'assembly_info.difficulty_level' => ['nullable', Rule::in(['easy', 'medium', 'hard'])],
+            'assembly_info.manual_file' => ['nullable', 'file', 'mimes:pdf', 'max:20480'],
             'warranty_months' => ['nullable', 'integer', 'min:1'],
             'is_featured' => ['boolean'],
             'is_new_arrival' => ['boolean'],
@@ -140,7 +140,28 @@ class StoreProductRequest extends FormRequest
             'variants.*.dimensions.width' => ['required_with:variants.*.dimensions', 'numeric', 'min:0'],
             'variants.*.dimensions.height' => ['required_with:variants.*.dimensions', 'numeric', 'min:0'],
             'variants.*.dimensions.unit' => ['required_with:variants.*.dimensions', Rule::in(['mm', 'cm', 'm', 'inch', 'ft'])],
-            'variants.*.option_values' => ['nullable', 'array'],
+            'variants.*.option_values' => [
+                'nullable',
+                'array',
+                function ($attribute, $value, $fail) {
+                    $index = explode('.', $attribute)[1];
+                    $groups = $this->input('option_groups', []);
+
+                    // Identify which namespaces SHOULD be present (non-swatches)
+                    $requiredNamespaces = collect($groups)
+                        ->filter(fn($g) => !($g['is_swatches'] ?? false))
+                        ->pluck('namespace')
+                        ->toArray();
+
+                    if (empty($requiredNamespaces)) return;
+
+                    foreach ($requiredNamespaces as $ns) {
+                        if (!isset($value[$ns]) || empty($value[$ns])) {
+                            $fail("Biến thể #" . ($index + 1) . " thiếu giá trị cho tùy chọn: {$ns}.");
+                        }
+                    }
+                }
+            ],
             'variants.*.features' => ['nullable', 'array'],
             'variants.*.features.*.lookup_slug' => ['nullable', 'string'],
             'variants.*.features.*.display_name' => ['required', 'string'],

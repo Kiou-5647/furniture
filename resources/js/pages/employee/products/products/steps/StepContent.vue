@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { usePage } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import { parseDate } from '@internationalized/date';
 import {
     X,
@@ -271,6 +271,8 @@ function setSpecGroupWithLabel(ns: string) {
     const nsObj = props.specNamespaces.find((n) => n.namespace === ns);
     ctx.setSpecGroupNamespace!(ns, nsObj!.label);
 }
+
+console.info(ctx.form.assembly_info)
 </script>
 
 <template>
@@ -1209,10 +1211,10 @@ function setSpecGroupWithLabel(ns: string) {
                     </Field>
 
                     <template v-if="ctx.form.assembly_info.required">
-                        <div class="grid grid-cols-2 gap-3">
-                            <Field>
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                            <Field class="flex flex-col">
                                 <FieldLabel
-                                    >Thời gian ước tính (phút)</FieldLabel
+                                    >Thời gian (phút)</FieldLabel
                                 >
                                 <Input
                                     :model-value="
@@ -1228,25 +1230,7 @@ function setSpecGroupWithLabel(ns: string) {
                                     placeholder="30"
                                 />
                             </Field>
-                            <Field>
-                                <FieldLabel>Giá lắp ráp</FieldLabel>
-                                <Input
-                                    :model-value="
-                                        ctx.form.assembly_info.price ?? ''
-                                    "
-                                    @update:model-value="
-                                        ctx.form.assembly_info.price = $event
-                                            ? Number($event)
-                                            : null
-                                    "
-                                    type="number"
-                                    min="0"
-                                    placeholder="0"
-                                />
-                            </Field>
-                        </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <Field>
+                            <Field class="flex flex-col">
                                 <FieldLabel>Mức độ khó</FieldLabel>
                                 <Select
                                     v-model="
@@ -1267,14 +1251,37 @@ function setSpecGroupWithLabel(ns: string) {
                                     </SelectContent>
                                 </Select>
                             </Field>
-                            <Field>
-                                <FieldLabel>Link hướng dẫn (URL)</FieldLabel>
-                                <Input
-                                    v-model="
-                                        ctx.form.assembly_info.instructions_url
-                                    "
-                                    placeholder="https://..."
-                                />
+                            <Field class="flex col-span-2">
+                                <FieldLabel>Tài liệu hướng dẫn (PDF)</FieldLabel>
+                                <FieldContent class="space-y-2">
+                                    <div class="flex items-center gap-3">
+                                        <Input
+                                            type="file"
+                                            accept="application/pdf"
+                                            @change="ctx.form.assembly_info.manual_file = $event.target.files[0]"
+                                            class="text-sm"
+                                        />
+                                        <!-- Show the existing URL if we are in Edit mode -->
+                                        <div v-if="ctx.form.assembly_info?.manual_url" class="flex items-center gap-2">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                class="h-6 w-6 p-0 text-destructive"
+                                                @click="ctx.form.assembly_info.manual_url = null"
+                                            >
+                                                <X class="h-3 w-3" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                    <p v-if="!ctx.form.assembly_info.manual_url" class="text-[10px] text-muted-foreground mt-1">
+                                        Vui lòng tải lên tệp PDF hướng dẫn lắp đặt.
+                                    </p>
+                                    <a :href="ctx.form.assembly_info.manual_url" target="_blank" rel="noopener noreferrer">
+                                        <span class="text-xs text-muted-foreground truncate max-w-full">
+                                            {{ ctx.form.assembly_info.manual_url }}
+                                        </span>
+                                    </a>
+                                </FieldContent>
                             </Field>
                         </div>
                         <Field>

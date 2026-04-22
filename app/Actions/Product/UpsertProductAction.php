@@ -27,6 +27,7 @@ class UpsertProductAction
     {
         $variants = Arr::pull($data, 'variants', []);
         $forceUpdatePrice = Arr::pull($data, '_force_update_price', false);
+        $assemblyInfo = Arr::pull($data, 'assembly_info', []);
         $user = Auth::guard('web')->user();
         $performedBy = $user?->employee;
 
@@ -37,6 +38,12 @@ class UpsertProductAction
                 $product->update($data);
             } else {
                 $product = Product::create($data);
+            }
+
+            $manualFile = Arr::pull($assemblyInfo, 'manual_file', null);
+            if ($manualFile instanceof UploadedFile) {
+                $product->clearMediaCollection('manual_file');
+                $product->addMedia($manualFile)->toMediaCollection('manual_file');
             }
 
             $this->syncVariants($product, $variants, $forceUpdatePrice, $performedBy);

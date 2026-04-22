@@ -1,13 +1,6 @@
 import type { ProductSpecifications, SpecItem } from './lookup';
+import type { ProductCard } from './public/product';
 import type { AssemblyDifficulty, ProductStatus, VariantStatus } from '.';
-
-export interface VariantStock {
-    location_id: string;
-    quantity: number;
-    cost_per_unit: number | null;
-    movement_type?: string;
-    movement_notes?: string;
-}
 
 export interface Product {
     id: string;
@@ -38,10 +31,10 @@ export interface Product {
     assembly_info: {
         required?: boolean;
         estimated_minutes?: number;
-        price?: number;
-        instructions_url?: string;
         difficulty_level?: AssemblyDifficulty;
         additional_information?: string;
+        manual_url: string;
+        manual_file: File | null;
     };
     warranty_months: number | null;
     view_count: number;
@@ -55,9 +48,41 @@ export interface Product {
     new_arrival_until: string | null;
     variants_count?: number;
     variants?: ProductVariant[];
-    grouped_variants?: GroupedVariantCard[];
+    product_cards?: ProductCard[];
     created_at: string;
     updated_at: string;
+}
+
+export interface ProductPagination {
+    data: Product[];
+    meta: {
+        current_page: number;
+        from: number;
+        last_page: number;
+        path: string;
+        per_page: number;
+        to: number;
+        total: number;
+    };
+    links: {
+        first: string;
+        last: string;
+        prev: string;
+        next: string;
+    };
+}
+
+export interface ProductFilterData {
+    vendor_id?: string | null;
+    category_id?: string | null;
+    collection_id?: string | null;
+    status?: ProductStatus | null;
+    is_featured?: boolean | null;
+    is_new_arrival?: boolean | null;
+    search?: string;
+    order_by?: string;
+    order_direction?: 'asc' | 'desc' | null;
+    per_page?: number;
 }
 
 export interface OptionGroup {
@@ -88,12 +113,6 @@ export interface SwatchOption {
     in_stock: boolean;
     primary_image_url: string | null;
     swatch_image_url: string | null;
-}
-
-export interface GroupedVariantCard {
-    option_values: Record<string, string>;
-    swatch_options: SwatchOption[];
-    variant_count: number;
 }
 
 export interface MediaItem {
@@ -139,34 +158,12 @@ export interface ProductVariant {
     updated_at: string;
 }
 
-export interface ProductPagination {
-    data: Product[];
-    meta: {
-        current_page: number;
-        from: number;
-        last_page: number;
-        path: string;
-        per_page: number;
-        to: number;
-        total: number;
-    };
-    links: {
-        first: string;
-        last: string;
-        prev: string;
-        next: string;
-    };
+export interface VariantStock {
+    location_id: string;
+    quantity: number;
+    cost_per_unit: number | null;
+    movement_type?: string;
+    movement_notes?: string;
 }
 
-export interface ProductFilterData {
-    vendor_id?: string | null;
-    category_id?: string | null;
-    collection_id?: string | null;
-    status?: ProductStatus | null;
-    is_featured?: boolean | null;
-    is_new_arrival?: boolean | null;
-    search?: string;
-    order_by?: string;
-    order_direction?: 'asc' | 'desc' | null;
-    per_page?: number;
-}
+

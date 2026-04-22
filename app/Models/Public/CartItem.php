@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Models\Customer;
+namespace App\Models\Public;
 
 use App\Models\Product\Bundle;
-use App\Models\Product\Product;
+use App\Models\Product\ProductVariant;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -41,25 +41,23 @@ class CartItem extends Model
 
     public function syncPriceFromPurchasable(): void
     {
-        $price = match (get_class($this->purchasable)) {
-            Product::class => $this->purchasable->min_price,
-            Bundle::class => $this->purchasable->calculateBundlePrice(),
+        $price = match (true) {
+            $this->purchasable instanceof ProductVariant => (float) $this->purchasable->price,
+            $this->purchasable instanceof Bundle => (float) $this->purchasable->calculateBundlePrice(),
             default => $this->unit_price,
         };
 
-        if ($price !== null && (float) $this->unit_price !== (float) $price) {
+        if ((float) $this->unit_price !== (float) $price) {
             $this->updateQuietly(['unit_price' => $price]);
         }
     }
 
     public function validateAvailability(): bool
     {
-        if (! $this->purchasable) {
-            return false;
-        }
+        if (! $this->purchasable) return false;
 
-        if ($this->purchasable instanceof Product) {
-            return $this->purchasable->status !== 'archived';
+        if ($this->purchasable instanceof ProductVariant) {
+            return $this->purchasable->isInStock() && $this->purchasable->status === 'published';
         }
 
         if ($this->purchasable instanceof Bundle) {
