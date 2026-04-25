@@ -23,6 +23,9 @@ Route::get('/san-pham/{sku}/{variant_slug}', [ProductController::class, 'show'])
     ->middleware('track.product.view')
     ->name('products.show');
 
+Route::get('/goi-san-pham/{bundle:slug}', [App\Http\Controllers\Public\BundleController::class, 'show'])
+    ->name('bundles.show');
+
 Route::middleware(['auth', 'verified', 'user_type:customer'])->name('customer.')->group(function () {
     Route::inertia('dashboard', 'Dashboard')->name('dashboard');
     Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');

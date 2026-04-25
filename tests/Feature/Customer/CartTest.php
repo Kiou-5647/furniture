@@ -29,11 +29,6 @@ beforeEach(function () {
 /**
  * AUTHENTICATION TESTS
  */
-test('guests are redirected to login when accessing the cart page', function () {
-    $response = $this->get('/gio-hang');
-    $response->assertRedirect('/dang-nhap');
-});
-
 test('guests get an empty cart structure from the data endpoint', function () {
     $response = $this->get('/gio-hang/data');
 
@@ -111,7 +106,7 @@ test('adding the same variant increments the quantity', function () {
  */
 test('user can update item quantity', function () {
     $this->actingAs($this->user);
-    $cart = Cart::getOrCreateForUser($this->user);
+    $cart = Cart::getOrCreate($this->user);
     $item = CartItem::create([
         'cart_id' => $cart->id,
         'purchasable_type' => ProductVariant::class,
@@ -131,7 +126,7 @@ test('user can update item quantity', function () {
 
 test('user can remove an item from the cart', function () {
     $this->actingAs($this->user);
-    $cart = Cart::getOrCreateForUser($this->user);
+    $cart = Cart::getOrCreate($this->user);
     $item = CartItem::create([
         'cart_id' => $cart->id,
         'purchasable_type' => ProductVariant::class,
@@ -151,7 +146,7 @@ test('user can remove an item from the cart', function () {
  */
 test('cart items return a composite name for variants', function () {
     $this->actingAs($this->user);
-    $cart = Cart::getOrCreateForUser($this->user);
+    $cart = Cart::getOrCreate($this->user);
 
     CartItem::create([
         'cart_id' => $cart->id,

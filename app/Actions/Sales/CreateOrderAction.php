@@ -26,7 +26,7 @@ class CreateOrderAction
         try {
             // Validate items and resolve source locations
             $validatedItems = $this->validateAndResolveItems($data);
-            $totalAmount = collect($validatedItems)->sum(fn ($item) => $item['unit_price'] * $item['quantity']);
+            $totalAmount = collect($validatedItems)->sum(fn($item) => $item['unit_price'] * $item['quantity']);
             $totalItems = collect($validatedItems)->sum('quantity');
             $shippingCost = (float) ($data->shipping_cost ?? 0);
             $grandTotal = $totalAmount + $shippingCost;
@@ -150,7 +150,7 @@ class CreateOrderAction
 
                     $storeStock = $stockOptions->firstWhere('location_id', $data->store_location_id);
                     if (! $storeStock || $storeStock['available_qty'] <= 0) {
-                        throw new \RuntimeException('Sản phẩm "'.$purchasable->name.'" hết hàng tại cửa hàng.');
+                        throw new \RuntimeException('Sản phẩm "' . $purchasable->name . '" hết hàng tại cửa hàng.');
                     }
 
                     $sourceLocationId = $data->store_location_id;
@@ -180,34 +180,47 @@ class CreateOrderAction
      */
     protected function validateBundleAvailability(Bundle $bundle, array $item, bool $isShipping, ?string $storeLocationId, ?string $customerProvinceCode): void
     {
+        $config = $item['configuration'] ?? [];
+
+        if (empty($config)) {
+            throw new \RuntimeException('Gói sản phẩm "' . $bundle->name . '" thiếu thông tin tùy chọn phiên bản.');
+        }
+
         foreach ($bundle->contents as $content) {
-            $product = $content->product;
-            if (! $product) {
-                throw new \RuntimeException('Gói sản phẩm "'.$bundle->name.'" có sản phẩm không hợp lệ.');
+            $variantId = $config[$content->id] ?? null;
+
+            if (!$variantId) {
+                throw new \RuntimeException('Gói sản phẩm "' . $bundle->name . '" chưa chọn phiên bản cho sản phẩm ' . $content->productCard->product->name);
             }
+
+            $requiredQty = $content->quantity * $item['quantity'];
 
             if ($isShipping) {
-                // Check if ANY variant of this product has stock somewhere
-                $hasStock = $product->variants()
-                    ->whereHas('inventories', fn ($q) => $q->where('quantity', '>', 0))
-                    ->exists();
+                // Check if the SPECIFIC selected variant has enough stock anywhere in the system
+                $hasStock = $this->stockLocator->findStockForItem(
+                    'App\\Models\\Product\\ProductVariant',
+                    $variantId
+                )->sum('available_qty') >= $requiredQty;
 
-                if (! $hasStock) {
-                    throw new \RuntimeException('Sản phẩm "'.$product->name.'" trong gói "'.$bundle->name.'" hết hàng trên toàn hệ thống.');
+                if (!$hasStock) {
+                    throw new \RuntimeException("Phiên bản đã chọn của sản phẩm '{$content->productCard->product->name}' trong gói '{$bundle->name}' đã hết hàng.");
                 }
             } elseif ($storeLocationId) {
-                // In-store: check if ANY variant has stock at store location
-                $hasStock = $product->variants()
-                    ->whereHas('inventories', fn ($q) => $q
-                        ->where('location_id', $storeLocationId)
-                        ->where('quantity', '>', 0))
-                    ->exists();
+                // In-store: check if the SPECIFIC selected variant has enough stock at the store location
+                $stockOptions = $this->stockLocator->findStockForItem(
+                    'App\\Models\\Product\\ProductVariant',
+                    $variantId,
+                    null,
+                    null,
+                    $storeLocationId
+                );
 
-                if (! $hasStock) {
-                    throw new \RuntimeException('Sản phẩm "'.$product->name.'" trong gói "'.$bundle->name.'" hết hàng tại cửa hàng.');
+                $storeStock = $stockOptions->firstWhere('location_id', $storeLocationId);
+
+                if (!$storeStock || $storeStock['available_qty'] < $requiredQty) {
+                    throw new \RuntimeException("Phiên bản đã chọn của sản phẩm '{$content->productCard->product->name}' trong gói '{$bundle->name}' hết hàng tại cửa hàng.");
                 }
             }
-            // Online without shipping — no stock check yet
         }
     }
 

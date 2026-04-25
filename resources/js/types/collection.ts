@@ -9,7 +9,6 @@ export interface Collection {
     banner_thumb_url?: string;
     is_active: boolean;
     is_featured: boolean;
-    metadata: Record<string, any> | null;
     created_at: string;
     updated_at: string;
 }

@@ -75,19 +75,16 @@ class OrderStockDeductionService
     ): void {
         DB::transaction(function () use ($shipment, $performedBy) {
             foreach ($shipment->items as $shipmentItem) {
-                $sourceLocation = $shipmentItem->sourceLocation
+                $sourceLocation = $shipment->originLocation
                     ?? $shipmentItem->orderItem?->sourceLocation;
                 if (! $sourceLocation) {
                     continue;
                 }
 
-                $orderItem = $shipmentItem->orderItem;
-                if (! $orderItem) {
-                    continue;
-                }
+                $findId = $shipmentItem->variant_id ?? $shipmentItem->orderItem?->purchasable_id;
 
                 /** @var ProductVariant $variant */
-                $variant = ProductVariant::find($orderItem->purchasable_id);
+                $variant = ProductVariant::find($findId);
                 if (! $variant) {
                     continue;
                 }
@@ -97,7 +94,7 @@ class OrderStockDeductionService
                     location: $sourceLocation,
                     type: StockMovementType::Sell,
                     quantity: $shipmentItem->quantity_shipped,
-                    notes: 'Shipment '.$shipment->shipment_number,
+                    notes: 'Shipment ' . $shipment->shipment_number,
                     performedBy: $performedBy,
                     referenceType: Shipment::class,
                     referenceId: $shipment->id,
@@ -115,7 +112,7 @@ class OrderStockDeductionService
     ): void {
         DB::transaction(function () use ($shipment, $performedBy) {
             foreach ($shipment->items as $shipmentItem) {
-                $this->restoreSingleShipmentItem($shipmentItem, $shipment, 'Shipment '.$shipment->shipment_number.' cancelled', $performedBy);
+                $this->restoreSingleShipmentItem($shipmentItem, $shipment, 'Shipment ' . $shipment->shipment_number . ' cancelled', $performedBy);
             }
         });
     }
@@ -132,7 +129,7 @@ class OrderStockDeductionService
             $this->restoreSingleShipmentItem(
                 $shipmentItem,
                 $shipmentItem->shipment,
-                'Item returned'.($reason ? ': '.$reason : ''),
+                'Item returned' . ($reason ? ': ' . $reason : ''),
                 $performedBy
             );
         });
@@ -150,13 +147,11 @@ class OrderStockDeductionService
             return;
         }
 
-        $orderItem = $shipmentItem->orderItem;
-        if (! $orderItem) {
-            return;
-        }
+        $findId = $shipmentItem->variant_id ?? $shipmentItem->orderItem?->purchasable_id;
+
 
         /** @var ProductVariant $variant */
-        $variant = ProductVariant::find($orderItem->purchasable_id);
+        $variant = ProductVariant::find($findId);
         if (! $variant) {
             return;
         }
@@ -186,7 +181,7 @@ class OrderStockDeductionService
                 location: $location,
                 type: StockMovementType::Sell,
                 quantity: $qty,
-                notes: 'Order '.$order->order_number,
+                notes: 'Order ' . $order->order_number,
                 performedBy: $performedBy,
                 referenceType: Order::class,
                 referenceId: $order->id,
@@ -206,7 +201,7 @@ class OrderStockDeductionService
                 location: $location,
                 type: StockMovementType::Return,
                 quantity: $qty,
-                notes: 'Order '.$order->order_number.' cancelled',
+                notes: 'Order ' . $order->order_number . ' cancelled',
                 performedBy: $performedBy,
                 referenceType: Order::class,
                 referenceId: $order->id,

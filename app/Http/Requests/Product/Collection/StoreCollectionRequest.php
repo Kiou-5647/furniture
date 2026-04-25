@@ -43,7 +43,6 @@ class StoreCollectionRequest extends FormRequest
             'is_featured' => ['boolean'],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'banner' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
-            'metadata' => ['nullable', 'array'],
         ];
     }
 

@@ -20,7 +20,6 @@ class CollectionResource extends JsonResource
             'banner_thumb_url' => $this->getFirstMediaUrl('banner', 'thumb'),
             'is_active' => $this->is_active,
             'is_featured' => $this->is_featured,
-            'metadata' => $this->metadata ?? [],
             'created_at' => $this->created_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
             'updated_at' => $this->updated_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
         ];

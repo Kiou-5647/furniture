@@ -17,7 +17,6 @@ import DataTableSingleFilter from '@/components/custom/data-table/DataTableSingl
 import DeleteConfirmation from '@/components/custom/DeleteConfirmation.vue';
 import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
-import { createLazyComponent } from '@/composables/createLazyComponent';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { cleanQuery, setCookie } from '@/lib/utils';
 import { index, destroy, show, create, edit } from '@/routes/employee/products/items';
@@ -210,7 +209,7 @@ function resetFilters() {
 }
 
 function handleCreate() {
-    router.visit(create().url)
+    router.get(create())
 }
 
 function handleShow(product: Product) {

@@ -30,7 +30,6 @@ class Collection extends Model implements HasMedia
         return [
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
-            'metadata' => 'array',
         ];
     }
 

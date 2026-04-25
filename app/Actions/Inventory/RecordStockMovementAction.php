@@ -10,6 +10,7 @@ use App\Models\Inventory\StockMovement;
 use App\Models\Product\ProductVariant;
 use App\Services\Product\PriceProtectionService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class RecordStockMovementAction
 {
@@ -32,6 +33,8 @@ class RecordStockMovementAction
         if ($quantity === 0) {
             throw new \InvalidArgumentException('Số lượng phải lớn hơn 0');
         }
+
+        Log::info('Start stock records');
 
         return DB::transaction(function () use ($variant, $location, $type, $quantity, $notes, $performedBy, $referenceType, $referenceId, $costPerUnit, $forceUpdatePrice) {
             $inventory = Inventory::where('variant_id', $variant->id)

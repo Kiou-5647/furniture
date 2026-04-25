@@ -41,7 +41,6 @@ const form = useForm({
     is_featured: false,
     image: null as File | null,
     banner: null as File | null,
-    metadata: {},
 });
 
 watch(

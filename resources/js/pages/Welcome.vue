@@ -50,8 +50,8 @@ const getLayoutForKey = (key: string) => {
 const getLayoutPropsForKey = (key: string) => {
   const propsMap: Record<string, any> = {
     newArrivals: { cols: 4 },
-    allProducts: { cols: 5 }, // Show more per row for the "All" section
-    topSellers: {}, // Carousel doesn't use cols
+    allProducts: { cols: 4 },
+    topSellers: {},
   };
   return propsMap[key] || {};
 };

@@ -14,7 +14,7 @@ class CreateShipmentsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'order_id' => ['required', 'uuid', 'exists:orders,id'],
+            'order_id' => ['nullable', 'uuid', 'exists:orders,id'],
         ];
     }
 }

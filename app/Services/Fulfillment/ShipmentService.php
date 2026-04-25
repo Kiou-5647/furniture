@@ -12,10 +12,10 @@ class ShipmentService
     public function getFiltered(ShipmentFilterData $filter): LengthAwarePaginator
     {
         return Shipment::query()
-            ->with(['order', 'originLocation', 'shippingMethod', 'handledBy', 'items.sourceLocation'])
-            ->when($filter->order_id, fn ($q) => $q->where('order_id', $filter->order_id))
-            ->when($filter->status, fn ($q) => $q->where('status', $filter->status))
-            ->when($filter->search, fn ($q) => $q->where('shipment_number', 'ilike', "%{$filter->search}%"))
+            ->with(['order', 'originLocation', 'shippingMethod', 'handledBy', 'items'])
+            ->when($filter->order_id, fn($q) => $q->where('order_id', $filter->order_id))
+            ->when($filter->status, fn($q) => $q->where('status', $filter->status))
+            ->when($filter->search, fn($q) => $q->where('shipment_number', 'ilike', "%{$filter->search}%"))
             ->orderBy($filter->order_by, $filter->order_direction)
             ->paginate($filter->per_page);
     }
@@ -24,7 +24,7 @@ class ShipmentService
     {
         return Shipment::onlyTrashed()
             ->with(['order'])
-            ->when($filter->search, fn ($q) => $q->where('shipment_number', 'ilike', "%{$filter->search}%"))
+            ->when($filter->search, fn($q) => $q->where('shipment_number', 'ilike', "%{$filter->search}%"))
             ->orderBy($filter->order_by ?? 'deleted_at', $filter->order_direction ?? 'desc')
             ->paginate($filter->per_page);
     }
@@ -37,7 +37,7 @@ class ShipmentService
             'shippingMethod',
             'handledBy',
             'items.orderItem.purchasable',
-            'items.sourceLocation',
+            'items.variant',
         ])->findOrFail($id);
     }
 

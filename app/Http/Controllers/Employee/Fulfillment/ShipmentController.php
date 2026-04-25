@@ -8,9 +8,7 @@ use App\Actions\Fulfillment\DeliverShipmentAction;
 use App\Actions\Fulfillment\ResendShipmentAction;
 use App\Actions\Fulfillment\ReturnShipmentItemAction;
 use App\Actions\Fulfillment\ShipShipmentAction;
-use App\Actions\Fulfillment\UpdateShipmentItemLocationAction;
 use App\Data\Fulfillment\ShipmentFilterData;
-use App\Http\Requests\Fulfillment\UpdateShipmentItemLocationRequest;
 use App\Http\Resources\Employee\Fulfillment\ShipmentResource;
 use App\Models\Fulfillment\Shipment;
 use App\Models\Fulfillment\ShipmentItem;
@@ -25,7 +23,7 @@ use Inertia\Response;
 class ShipmentController
 {
     public function __construct(
-        private ShipmentService $service,
+        private ShipmentService $shipmentService,
     ) {}
 
     public function index(Request $request): Response
@@ -33,9 +31,9 @@ class ShipmentController
         $filter = ShipmentFilterData::fromRequest($request);
 
         return Inertia::render('employee/fulfillment/shipments/Index', [
-            'statusOptions' => $this->service->getStatusOptions(),
-            'shipments' => Inertia::defer(fn () => ShipmentResource::collection(
-                $this->service->getFiltered($filter)
+            'statusOptions' => $this->shipmentService->getStatusOptions(),
+            'shipments' => Inertia::defer(fn() => ShipmentResource::collection(
+                $this->shipmentService->getFiltered($filter)
             )),
             'filters' => $filter,
         ]);
@@ -46,8 +44,8 @@ class ShipmentController
         $filter = ShipmentFilterData::fromRequest($request);
 
         return Inertia::render('employee/fulfillment/shipments/Trash', [
-            'shipments' => Inertia::defer(fn () => ShipmentResource::collection(
-                $this->service->getTrashedFiltered($filter)
+            'shipments' => Inertia::defer(fn() => ShipmentResource::collection(
+                $this->shipmentService->getTrashedFiltered($filter)
             )),
             'filters' => $filter,
         ]);
@@ -55,7 +53,7 @@ class ShipmentController
 
     public function show(Shipment $shipment): Response
     {
-        $shipment = $this->service->getById($shipment->id);
+        $shipment = $this->shipmentService->getById($shipment->id);
 
         return Inertia::render('employee/fulfillment/shipments/Show', [
             'shipment' => new ShipmentResource($shipment),
@@ -152,19 +150,6 @@ class ShipmentController
         }
 
         return back()->with('success', 'Đã đánh dấu trả hàng.');
-    }
-
-    public function updateItemLocation(Shipment $shipment, ShipmentItem $shipmentItem, UpdateShipmentItemLocationRequest $request, UpdateShipmentItemLocationAction $action)
-    {
-        Gate::authorize('updateLocation', $shipment);
-
-        try {
-            $action->execute($shipment, $shipmentItem, $request->validated());
-        } catch (\InvalidArgumentException|\RuntimeException $e) {
-            return back()->with('error', $e->getMessage());
-        }
-
-        return back()->with('success', 'Đã cập nhật nguồn kho.');
     }
 
     public function destroy(Shipment $shipment)

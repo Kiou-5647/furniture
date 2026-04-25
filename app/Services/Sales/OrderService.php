@@ -13,6 +13,7 @@ use App\Models\Sales\Order;
 use App\Services\Location\StockLocatorService;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 class OrderService
 {
@@ -24,11 +25,11 @@ class OrderService
 
         return Order::query()
             ->with(['customer.customer', 'acceptedBy', 'items.sourceLocation', 'storeLocation'])
-            ->when($filter->customer_id, fn ($q) => $q->byCustomerId($filter->customer_id))
-            ->when($filter->status, fn ($q) => $q->byStatus($filter->status))
-            ->when($filter->source, fn ($q) => $q->bySource($filter->source))
-            ->when($filter->store_location_id, fn ($q) => $q->byStoreLocation($filter->store_location_id))
-            ->when($filter->search, fn ($q) => $q->search($filter->search))
+            ->when($filter->customer_id, fn($q) => $q->byCustomerId($filter->customer_id))
+            ->when($filter->status, fn($q) => $q->byStatus($filter->status))
+            ->when($filter->source, fn($q) => $q->bySource($filter->source))
+            ->when($filter->store_location_id, fn($q) => $q->byStoreLocation($filter->store_location_id))
+            ->when($filter->search, fn($q) => $q->search($filter->search))
             ->orderBy($orderBy, $orderDirection)
             ->paginate($filter->per_page);
     }
@@ -37,8 +38,8 @@ class OrderService
     {
         return Order::onlyTrashed()
             ->with(['customer.customer', 'acceptedBy'])
-            ->when($filter->customer_id, fn ($q) => $q->byCustomerId($filter->customer_id))
-            ->when($filter->search, fn ($q) => $q->search($filter->search))
+            ->when($filter->customer_id, fn($q) => $q->byCustomerId($filter->customer_id))
+            ->when($filter->search, fn($q) => $q->search($filter->search))
             ->orderBy($filter->order_by ?? 'deleted_at', $filter->order_direction ?? 'desc')
             ->paginate($filter->per_page);
     }
@@ -53,7 +54,7 @@ class OrderService
             'storeLocation',
             'shippingMethod',
             'shipments.items.orderItem.purchasable',
-            'shipments.items.sourceLocation',
+            'shipments.items.variant',
             'shipments.originLocation',
             'shipments.shippingMethod',
             'shipments.handledBy',
@@ -117,13 +118,13 @@ class OrderService
     {
         return Product::query()
             ->where('status', 'published')
-            ->with(['variants' => fn ($q) => $q->where('status', 'active')->orderBy('price')])
+            ->with(['variants' => fn($q) => $q->where('status', 'active')->orderBy('price')])
             ->orderBy('name')
             ->get(['id', 'name'])
-            ->map(fn ($p) => [
+            ->map(fn($p) => [
                 'id' => $p->id,
                 'name' => $p->name,
-                'variants' => $p->variants->map(fn ($v) => [
+                'variants' => $p->variants->map(fn($v) => [
                     'id' => $v->id,
                     'name' => $v->name,
                     'sku' => $v->sku,
@@ -139,7 +140,7 @@ class OrderService
             ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name', 'discount_value', 'discount_type'])
-            ->map(fn ($b) => [
+            ->map(fn($b) => [
                 'id' => $b->id,
                 'name' => $b->name,
                 'price' => $b->calculateBundlePrice(),
@@ -154,9 +155,9 @@ class OrderService
             ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name', 'code'])
-            ->map(fn ($loc) => [
+            ->map(fn($loc) => [
                 'id' => $loc->id,
-                'label' => $loc->name.' ('.$loc->code.')',
+                'label' => $loc->name . ' (' . $loc->code . ')',
             ]);
     }
 
@@ -189,7 +190,7 @@ class OrderService
         // Get all variants with stock at store and total stock
         $variants = ProductVariant::query()
             ->where('status', 'active')
-            ->whereHas('product', fn ($q) => $q->where('status', 'published'))
+            ->whereHas('product', fn($q) => $q->where('status', 'published'))
             ->with(['product:id,name'])
             ->get();
 
@@ -206,7 +207,7 @@ class OrderService
 
             $items[] = [
                 'id' => $variant->id,
-                'name' => $variant->product?->name.' — '.$variant->name,
+                'name' => $variant->product?->name . ' — ' . $variant->name,
                 'sku' => $variant->sku,
                 'price' => $variant->price,
                 'stock_at_store' => $stockAtStore,
@@ -227,19 +228,20 @@ class OrderService
             $availableSystemWide = true;
 
             foreach ($bundle->contents as $content) {
-                $product = $content->product;
-                if (! $product) {
+                $productCard = $content->productCard;
+                if (! $productCard) {
                     $availableAtStore = false;
                     $availableSystemWide = false;
-
                     continue;
                 }
 
+                // 1. Check if ANY variant of this product has stock at the specific store
                 $hasStockAtStore = $locationId
-                    ? $product->variants->some(fn ($v) => $v->inventories->where('location_id', $locationId)->sum('quantity') > 0)
+                    ? $productCard->variants->some(fn($v) => $v->inventories->where('location_id', $locationId)->sum('quantity') > 0)
                     : false;
 
-                $hasStockTotal = $product->variants->some(fn ($v) => $v->inventories->sum('quantity') > 0);
+                // 2. Check if ANY variant has stock anywhere in the system
+                $hasStockTotal = $productCard->variants->some(fn($v) => $v->inventories->sum('quantity') > 0);
 
                 if (! $hasStockAtStore) {
                     $availableAtStore = false;
@@ -272,25 +274,92 @@ class OrderService
     {
         $bundles = Bundle::query()
             ->where('is_active', true)
-            ->with(['contents.product.variants' => fn ($q) => $q->where('status', 'active')])
+            ->with(['contents.productCard.variants' => fn($q) => $q->where('status', 'active')])
             ->get();
 
         $result = [];
         foreach ($bundles as $bundle) {
-            $result[$bundle->id] = $bundle->contents->map(fn ($c) => [
-                'product_id' => $c->product_id,
-                'product_name' => $c->product?->name ?? 'Unknown',
+            $result[$bundle->id] = $bundle->contents->map(fn($c) => [
+                'id' => $c->id,
+                'product_card_id' => $c->productCard?->id,
+                'product_name' => $c->productCard?->product?->name ?? 'Unknown',
                 'quantity' => $c->quantity,
-                'variants' => $c->product?->variants->map(fn ($v) => [
+                'variants' => $c->productCard?->variants->map(fn($v) => [
                     'id' => $v->id,
-                    'name' => $v->name,
                     'sku' => $v->sku,
+                    'slug' => $v->slug,
+                    'name' => $v->name,
+                    'swatch_label' => $v->swatch_label,
                     'price' => $v->price,
-                    'image_url' => $v->getFirstMediaUrl('primary_image') ?: null,
+                    'sale_price' => $v->sale_price,
+                    'in_stock' => $v->getAvailableStock() > 0,
+                    'primary_image_url' => $v->getFirstMediaUrl('primary_image'),
+                    'swatch_image_url' => $v->getFirstMediaUrl('swatch_image', 'swatch')
                 ])->values()->toArray() ?? [],
             ])->values()->toArray();
         }
 
         return $result;
+    }
+
+    public function getOrderItemsForShipment(Order $order): array
+    {
+        $shippableItems = [];
+
+        Log::info('Start get order items!');
+
+        foreach ($order->items as $item) {
+            if ($item->purchasable_type === 'App\\Models\\Product\\Bundle') {
+                $bundle = \App\Models\Product\Bundle::find($item->purchasable_id);
+                $config = $item->configuration;
+
+                // Ensure bundle exists and config is actually an array
+                if (!$bundle || !is_array($config)) {
+                    Log::warning("config is not array");
+                    continue;
+                }
+
+                foreach ($bundle->contents as $content) {
+                    $variantId = $config[$content->id] ?? null;
+
+                    if ($variantId) {
+                        $variant = \App\Models\Product\ProductVariant::find($variantId);
+
+                        // If the variant was deleted but is still in the bundle config,
+                        // we must skip it to avoid a 500 error.
+                        if (!$variant) continue;
+
+                        $shippableItems[] = [
+                            'bundle_name' => $bundle->name,
+                            'order_item_id' => $item->id,
+                            'variant_id' => $variant->id,
+                            'sku' => $variant->sku,
+                            'name' => $variant->product->name . ' ' . $variant->name,
+                            'quantity' => (int)($content->quantity * $item->quantity),
+                            'is_bundle_component' => true,
+                            'stock_options' => $this->getVariantStockOptions($variant->id),
+                        ];
+                    }
+                }
+            } else {
+                $variant = \App\Models\Product\ProductVariant::find($item->purchasable_id);
+                if (!$variant) continue;
+
+                $shippableItems[] = [
+                    'bundle_name' => null,
+                    'order_item_id' => $item->id,
+                    'variant_id' => $variant->id,
+                    'sku' => $variant->sku,
+                    'name' => $variant->product->name . ' ' . $variant->name,
+                    'quantity' => (int)$item->quantity,
+                    'is_bundle_component' => false,
+                    'stock_options' => $this->getVariantStockOptions($variant->id),
+                ];
+            }
+        }
+
+        Log::info('Sent!', $shippableItems);
+
+        return $shippableItems;
     }
 }

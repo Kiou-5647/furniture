@@ -270,7 +270,7 @@ export function getColumns(
                             {
                                 class: 'text-[10px] text-muted-foreground tabular-nums',
                             },
-                            `Xuất bản ${new Date(published_date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: '2-digit' })}`,
+                            `Xuất bản ${published_date}`,
                         )
                         : null,
                 ]);

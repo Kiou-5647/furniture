@@ -574,7 +574,7 @@ class TimberProductSeeder extends Seeder
         ],
         [
             'sku' => '4MANGOWK',
-            'name' => 'đôi bọc vải 90" - Olio Green',
+            'name' => 'đôi bọc vải 66.5" - Olio Green',
             'slug' => 'ghe-timber-doi-boc-vai-665-olio-green',
             'description' => 'Hãy tưởng tượng thế này: bạn vừa thức dậy. Người yêu của bạn vừa trở về từ quán cà phê với hai ly latte trên tay. Bạn di chuyển đến ghế sofa và thả mình vào sự êm ái rộng lớn của nó — không ai làm đổ đồ uống. Đó chính là giấc mơ cuối tuần lý tưởng (ngay cả vào thứ Hai). Đó cũng chính là điều chúng tôi gọi là một buổi sáng hoàn hảo cùng Timber.',
             'price' => 10990000,
@@ -629,7 +629,7 @@ class TimberProductSeeder extends Seeder
         ],
         [
             'sku' => 'NAVJLW5O',
-            'name' => 'đôi bọc vải 90" - Rain Cloud Gray',
+            'name' => 'đôi bọc vải 66.5" - Rain Cloud Gray',
             'slug' => 'ghe-timber-doi-boc-vai-665-rain-cloud-gray',
             'description' => 'Hãy tưởng tượng thế này: bạn vừa thức dậy. Người yêu của bạn vừa trở về từ quán cà phê với hai ly latte trên tay. Bạn di chuyển đến ghế sofa và thả mình vào sự êm ái rộng lớn của nó — không ai làm đổ đồ uống. Đó chính là giấc mơ cuối tuần lý tưởng (ngay cả vào thứ Hai). Đó cũng chính là điều chúng tôi gọi là một buổi sáng hoàn hảo cùng Timber.',
             'price' => 10990000,
@@ -815,7 +815,7 @@ class TimberProductSeeder extends Seeder
             ]),
             'warranty_months' => 12,
             'is_featured' => false,
-            'is_new_arrival' => true,
+            'is_new_arrival' => false,
             'published_date' => null,
             'new_arrival_until' => null,
             'views_count' => 0,

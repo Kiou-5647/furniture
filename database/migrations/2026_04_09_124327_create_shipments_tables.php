@@ -44,6 +44,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->foreignUuid('shipment_id')->constrained('shipments')->onDelete('cascade');
             $table->foreignUuid('order_item_id')->constrained('order_items')->onDelete('cascade');
+            $table->foreignUuid('variant_id')->nullable()->constrained('product_variants')->onDelete('cascade');
             $table->integer('quantity_shipped')->default(0);
             $table->timestamps();
         });

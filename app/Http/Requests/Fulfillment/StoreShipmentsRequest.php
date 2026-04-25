@@ -18,6 +18,7 @@ class StoreShipmentsRequest extends FormRequest
             'items.*.order_item_id' => ['required', 'uuid'],
             'items.*.location_id' => ['required', 'uuid', 'exists:locations,id'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
+            'items.*.variant_id' => ['required', 'uuid', 'exists:product_variants,id']
         ];
     }
 

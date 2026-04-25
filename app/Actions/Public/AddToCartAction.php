@@ -18,7 +18,7 @@ class AddToCartAction
         // Price is derived from the Variant or the Bundle's calculation logic
         $price = match (true) {
             $purchasable instanceof ProductVariant => (float) ($purchasable->sale_price ?? $purchasable->price),
-            $purchasable instanceof Bundle => (float) $purchasable->calculateBundlePrice(),
+            $purchasable instanceof Bundle => (float) $purchasable->calculateBundlePrice($itemData->configuration),
             default => 0,
         };
 

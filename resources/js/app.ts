@@ -50,7 +50,7 @@ window.addEventListener('unhandledrejection', (event) => {
     console.error('Unhandled Promise Rejection:', event.reason);
 
     toast.error('Async Error', {
-        description: getErrorMessage(event.reason), // ✅ Now type-safe
+        description: getErrorMessage(event.reason),
     });
 });
 
@@ -58,7 +58,7 @@ window.onerror = function (message, source, lineno, colno, error) {
     console.error('Window Error:', message, source, lineno, colno, error);
 
     toast.error('Runtime Error', {
-        description: getErrorMessage(error || message), // ✅ Now type-safe
+        description: getErrorMessage(error || message),
     });
 
     return false;

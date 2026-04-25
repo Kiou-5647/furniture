@@ -97,6 +97,14 @@ class MenuService
                 ];
             }
 
+            if ($user->can('bundles.view')) {
+                $productItems[] = [
+                    'title' => 'Gói sản phẩm',
+                    'href' => route('employee.products.bundles.index'),
+                    'isActive' => Route::is('employee.products.bundles.*'),
+                ];
+            }
+
             $menu[] = [
                 'title' => 'Sản phẩm',
                 'href' => '#',

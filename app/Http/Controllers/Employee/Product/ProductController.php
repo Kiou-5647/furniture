@@ -8,6 +8,7 @@ use App\Http\Requests\Product\StoreProductRequest;
 use App\Http\Requests\Product\UpdateProductRequest;
 use App\Http\Resources\Employee\Product\ProductResource;
 use App\Models\Product\Product;
+use App\Models\Product\ProductCard;
 use App\Services\Product\ProductService;
 use App\Services\Setting\LookupService;
 use Illuminate\Http\Request;
@@ -42,6 +43,48 @@ class ProductController
             )),
             'filters' => $filter,
         ]);
+    }
+
+    public function searchCards(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $search = $request->query('q');
+
+        $cards = ProductCard::query()
+            ->where(function ($query) use ($search) {
+                $query->whereHas(
+                    'product',
+                    fn($q) =>
+                    $q->where('name', 'ilike', "%{$search}%")
+                )
+                    ->orWhereHas(
+                        'variants',
+                        fn($q) =>
+                        $q->where('name', 'ilike', "%{$search}%")
+                            ->orWhere('sku', 'ilike', "%{$search}%")
+                    );
+            })
+            ->with([
+                'product:id,name',
+                'variants' => fn($q) => $q->orderBy('created_at')
+            ])
+            ->limit(10)
+            ->get()
+            ->map(fn($card) => [
+                'id' => $card->id,
+                'product_name' => $card->product->name,
+                'variants' => $card->variants->map(fn($v) => [
+                    'id' => $v->id,
+                    'name' => $v->name,
+                    'sku' => $v->sku,
+                    'price' => $v->price,
+                    'sale_price' => $v->sale_price,
+                    'primary_image' => $v->getFirstMediaUrl('primary_image'),
+                    'hover_image' => $v->getFirstMediaUrl('hover_image'),
+                    'swatch_image' => $v->getFirstMediaUrl('swatch_image'),
+                ]),
+            ]);
+
+        return response()->json($cards);
     }
 
     public function create(): Response

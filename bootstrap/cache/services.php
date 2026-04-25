@@ -43,10 +43,11 @@
     39 => 'Spatie\\Activitylog\\ActivitylogServiceProvider',
     40 => 'Spatie\\MediaLibrary\\MediaLibraryServiceProvider',
     41 => 'Spatie\\Permission\\PermissionServiceProvider',
-    42 => 'App\\Providers\\AppServiceProvider',
-    43 => 'App\\Providers\\AuthServiceProvider',
-    44 => 'App\\Providers\\FortifyServiceProvider',
-    45 => 'App\\Providers\\HorizonServiceProvider',
+    42 => 'Spatie\\LaravelSettings\\LaravelSettingsServiceProvider',
+    43 => 'App\\Providers\\AppServiceProvider',
+    44 => 'App\\Providers\\AuthServiceProvider',
+    45 => 'App\\Providers\\FortifyServiceProvider',
+    46 => 'App\\Providers\\HorizonServiceProvider',
   ),
   'eager' => 
   array (
@@ -76,10 +77,11 @@
     23 => 'Spatie\\Activitylog\\ActivitylogServiceProvider',
     24 => 'Spatie\\MediaLibrary\\MediaLibraryServiceProvider',
     25 => 'Spatie\\Permission\\PermissionServiceProvider',
-    26 => 'App\\Providers\\AppServiceProvider',
-    27 => 'App\\Providers\\AuthServiceProvider',
-    28 => 'App\\Providers\\FortifyServiceProvider',
-    29 => 'App\\Providers\\HorizonServiceProvider',
+    26 => 'Spatie\\LaravelSettings\\LaravelSettingsServiceProvider',
+    27 => 'App\\Providers\\AppServiceProvider',
+    28 => 'App\\Providers\\AuthServiceProvider',
+    29 => 'App\\Providers\\FortifyServiceProvider',
+    30 => 'App\\Providers\\HorizonServiceProvider',
   ),
   'deferred' => 
   array (

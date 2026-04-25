@@ -3,7 +3,8 @@
 namespace App\Models\Fulfillment;
 
 use App\Enums\ShipmentStatus;
-use App\Models\Inventory\Location;
+use App\Models\Fulfillment\Shipment;
+use App\Models\Product\ProductVariant;
 use App\Models\Sales\OrderItem;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
@@ -30,13 +31,13 @@ class ShipmentItem extends Model
         return $this->belongsTo(Shipment::class);
     }
 
+    public function variant(): BelongsTo
+    {
+        return $this->belongsTo(ProductVariant::class, 'variant_id');
+    }
+
     public function orderItem(): BelongsTo
     {
         return $this->belongsTo(OrderItem::class);
-    }
-
-    public function sourceLocation(): BelongsTo
-    {
-        return $this->belongsTo(Location::class, 'source_location_id');
     }
 }

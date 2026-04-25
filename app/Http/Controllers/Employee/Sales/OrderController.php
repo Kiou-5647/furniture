@@ -23,6 +23,7 @@ use App\Models\Sales\Order;
 use App\Services\Location\StockLocatorService;
 use App\Services\Sales\OrderService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -50,7 +51,7 @@ class OrderController
             'employeeLocationName' => $employeeLocationId
                 ? (Location::find($employeeLocationId)?->name)
                 : null,
-            'orders' => Inertia::defer(fn () => OrderResource::collection(
+            'orders' => Inertia::defer(fn() => OrderResource::collection(
                 $this->service->getFiltered($filter)
             )),
             'filters' => $filter,
@@ -62,7 +63,7 @@ class OrderController
         $filter = OrderFilterData::fromRequest($request);
 
         return Inertia::render('employee/sales/orders/Trash', [
-            'orders' => Inertia::defer(fn () => OrderResource::collection(
+            'orders' => Inertia::defer(fn() => OrderResource::collection(
                 $this->service->getTrashedFiltered($filter)
             )),
             'filters' => $filter,
@@ -80,7 +81,7 @@ class OrderController
         ]);
     }
 
-    public function createShipments(CreateShipmentsRequest $request, Order $order, CreateShipmentsAction $action)
+    public function createShipments(Order $order, CreateShipmentsAction $action)
     {
         Gate::authorize('createShipments', $order);
 
@@ -110,6 +111,7 @@ class OrderController
                 'order_item_id' => $itemData['order_item_id'],
                 'location_id' => $itemData['location_id'],
                 'quantity' => $itemData['quantity'],
+                'variant_id' => $itemData['variant_id']
             ];
         }
 

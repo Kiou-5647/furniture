@@ -299,6 +299,31 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
      * Products routes
      */
     Route::prefix('san-pham')->name('products.')->group(function () {
+        Route::prefix('')->name('items.')->group(function () {
+            Route::middleware(['can:products.view'])->group(function () {
+                Route::get('/', [ProductController::class, 'index'])->name('index');
+                Route::get('cards/search', [ProductController::class, 'searchCards'])->name('product-cards.search');
+            });
+
+            Route::middleware(['can:products.manage'])->group(function () {
+                Route::get('/chinh-sua/{product}', [ProductController::class, 'edit'])->name('edit');
+                Route::get('/tao-san-pham', [ProductController::class, 'create'])->name('create');
+                Route::post('/', [ProductController::class, 'store'])->name('store');
+                Route::put('/{product}', [ProductController::class, 'update'])->name('update');
+                Route::delete('/{product}', [ProductController::class, 'destroy'])->name('destroy');
+
+                // Soft Delete / Trash Sub-group
+                Route::prefix('thung-rac')->name('trash.')->group(function () {
+                    Route::get('/', [ProductController::class, 'trash'])->name('index');
+                    Route::post('/{product}/restore', [ProductController::class, 'restore'])->name('restore')->withTrashed();
+                    Route::delete('/{product}/force', [ProductController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
+                });
+            });
+            Route::middleware(['can:products.view'])->group(function () {
+                Route::get('/{product}', [ProductController::class, 'show'])->name('show');
+            });
+        });
+
         // Categories routes
         Route::prefix('danh-muc')->name('categories.')->group(function () {
             // View Group
@@ -342,39 +367,15 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
             });
         });
 
-        Route::prefix('')->name('items.')->group(function () {
-            // View Group
-            Route::middleware(['can:products.view'])->group(function () {
-                Route::get('/', [ProductController::class, 'index'])->name('index');
-                Route::get('/tao-san-pham', [ProductController::class, 'create'])->name('create');
-                Route::get('/{product}', [ProductController::class, 'show'])->name('show');
-                Route::get('/chinh-sua/{product}', [ProductController::class, 'edit'])->name('edit');
-            });
-
-            // Manage Group
-            Route::middleware(['can:products.manage'])->group(function () {
-                Route::post('/', [ProductController::class, 'store'])->name('store');
-                Route::put('/{product}', [ProductController::class, 'update'])->name('update');
-                Route::delete('/{product}', [ProductController::class, 'destroy'])->name('destroy');
-
-                // Soft Delete / Trash Sub-group
-                Route::prefix('thung-rac')->name('trash.')->group(function () {
-                    Route::get('/', [ProductController::class, 'trash'])->name('index');
-                    Route::post('/{product}/restore', [ProductController::class, 'restore'])->name('restore')->withTrashed();
-                    Route::delete('/{product}/force', [ProductController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
-                });
-            });
-        });
-
         Route::prefix('goi-san-pham')->name('bundles.')->group(function () {
-            // View Group
             Route::middleware(['can:bundles.view'])->group(function () {
                 Route::get('/', [BundleController::class, 'index'])->name('index');
-                Route::get('/{bundle}', [BundleController::class, 'show'])->name('show');
             });
 
             // Manage Group
             Route::middleware(['can:bundles.manage'])->group(function () {
+                Route::get('/tao-goi-san-pham', [BundleController::class, 'create'])->name('create');
+                Route::get('/chinh-sua/{bundle}', [BundleController::class, 'edit'])->name('edit');
                 Route::post('/', [BundleController::class, 'store'])->name('store');
                 Route::put('/{bundle}', [BundleController::class, 'update'])->name('update');
                 Route::delete('/{bundle}', [BundleController::class, 'destroy'])->name('destroy');

@@ -3,10 +3,8 @@
 namespace App\Models\Product;
 
 use App\Builders\Product\BundleBuilder;
-use App\Models\Public\CartItem;
-use App\Models\Customer\Review;
 use App\Models\Product\BundleContent;
-use App\Models\Product\Product;
+use App\Models\Public\CartItem;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -18,6 +16,7 @@ use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * @method static \App\Builders\Product\BundleBuilder|Bundle query()
@@ -33,9 +32,6 @@ class Bundle extends Model implements HasMedia
         return [
             'discount_value' => 'decimal:2',
             'is_active' => 'boolean',
-            'views_count' => 'integer',
-            'reviews_count' => 'integer',
-            'average_rating' => 'decimal:2',
         ];
     }
 
@@ -53,6 +49,24 @@ class Bundle extends Model implements HasMedia
             ->setDescriptionForEvent(fn(string $eventName) => "Bundle {$eventName}");
     }
 
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('primary_image')->singleFile();
+        $this->addMediaCollection('hover_image')->singleFile();
+        $this->addMediaCollection('gallery')->onlyKeepLatest(10);
+    }
+
+    public function registerMediaConversions(?Media $media = null): void
+    {
+        $this->addMediaConversion('thumb')
+            ->width(400)
+            ->height(400)
+            ->sharpen(10);
+        $this->addMediaConversion('webp')
+            ->format('webp')
+            ->width(1200);
+    }
+
     public function contents(): HasMany
     {
         return $this->hasMany(BundleContent::class);
@@ -63,31 +77,41 @@ class Bundle extends Model implements HasMedia
         return $this->morphMany(CartItem::class, 'purchasable');
     }
 
-    public function reviews(): MorphMany
-    {
-        return $this->morphMany(Review::class, 'reviewable');
-    }
-
-    public function products(): HasManyThrough
+    public function productCards(): HasManyThrough
     {
         return $this->hasManyThrough(
-            Product::class,
+            ProductCard::class,
             BundleContent::class,
             'bundle_id',
+            'product_card_id',
             'id',
-            'id',
-            'product_id'
+            'id'
         );
     }
 
-    public function calculateBundlePrice(): float
+    public function calculateBundlePrice(?array $configuration = null): float
     {
         $individualTotal = 0.0;
 
         foreach ($this->contents as $content) {
-            $product = $content->product;
-            if ($product) {
-                $individualTotal += (float) $product->min_price * $content->quantity;
+            $card = $content->productCard;
+            if (!$card) continue;
+
+            if ($configuration && isset($configuration[$content->id])) {
+                // TRANSACTIONAL: User has picked a specific variant
+                $variantId = $configuration[$content->id];
+                $variant = $card->variants()->find($variantId);
+
+                // Use sale_price if available, otherwise base price
+                $price = $variant ? ($variant->sale_price ?? $variant->price) : 0;
+                $individualTotal += (float) $price * $content->quantity;
+            } else {
+                // MARKETING: No selection yet, use the cheapest option for "Starting from" price
+                $minEffectivePrice = $card->variants()
+                    ->selectRaw('MIN(COALESCE(sale_price, price)) as min_price')
+                    ->value('min_price') ?? 0;
+
+                $individualTotal += (float) $minEffectivePrice * $content->quantity;
             }
         }
 
@@ -105,6 +129,6 @@ class Bundle extends Model implements HasMedia
             return false;
         }
 
-        return $this->contents->every(fn(BundleContent $content) => $content->product !== null);
+        return $this->contents->every(fn(BundleContent $content) => $content->productCard !== null);
     }
 }

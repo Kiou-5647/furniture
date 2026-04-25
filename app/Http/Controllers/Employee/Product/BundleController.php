@@ -25,31 +25,30 @@ class BundleController
         $filter = BundleFilterData::fromRequest($request);
 
         return Inertia::render('employee/products/bundles/Index', [
-            'discountTypeOptions' => $this->service->getDiscountTypeOptions(),
-            'bundles' => Inertia::defer(fn () => BundleResource::collection(
+            'bundles' => Inertia::defer(fn() => BundleResource::collection(
                 $this->service->getFiltered($filter)
             )),
             'filters' => $filter,
         ]);
     }
 
-    public function trash(Request $request): Response
+    public function create(): Response
     {
-        $filter = BundleFilterData::fromRequest($request);
-
-        return Inertia::render('employee/products/bundles/Trash', [
-            'bundles' => Inertia::defer(fn () => BundleResource::collection(
-                $this->service->getTrashedFiltered($filter)
-            )),
-            'filters' => $filter,
+        return Inertia::render('employee/products/bundles/CreateOrEdit', [
+            'bundle' => null,
         ]);
     }
 
-    public function show(Bundle $bundle): Response
+    public function edit(Bundle $bundle): Response
     {
-        $bundle = $this->service->getById($bundle->id);
+        Gate::authorize('view', $bundle);
 
-        return Inertia::render('employee/products/bundles/Show', [
+        $bundle->load([
+            'contents.productCard' => fn($q) => $q->with('product'),
+            'contents.productCard.variants'
+        ]);
+
+        return Inertia::render('employee/products/bundles/CreateOrEdit', [
             'bundle' => new BundleResource($bundle),
         ]);
     }
@@ -72,12 +71,17 @@ class BundleController
         return back()->with('success', 'Đã cập nhật gói sản phẩm.');
     }
 
-    public function destroy(Bundle $bundle)
+    public function trash(Request $request): Response
     {
-        Gate::authorize('manage', $bundle);
-        $bundle->delete();
+        // Assuming you add a getTrashedFiltered to BundleService to match ProductController
+        $filter = BundleFilterData::fromRequest($request);
 
-        return back()->with('success', 'Đã xóa gói sản phẩm.');
+        return Inertia::render('employee/products/bundles/Trash', [
+            'bundles' => Inertia::defer(fn() => BundleResource::collection(
+                $this->service->getTrashedFiltered($filter)
+            )),
+            'filters' => $filter,
+        ]);
     }
 
     public function restore(Bundle $bundle)
@@ -87,6 +91,15 @@ class BundleController
         $bundle->restore();
 
         return back()->with('success', 'Đã khôi phục gói sản phẩm.');
+    }
+
+    public function destroy(Bundle $bundle)
+    {
+        Gate::authorize('manage', $bundle);
+
+        $bundle->delete();
+
+        return back()->with('success', 'Đã xóa gói sản phẩm.');
     }
 
     public function forceDestroy(Bundle $bundle)

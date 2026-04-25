@@ -90,7 +90,7 @@ class CreateShipmentsAction
                     ShipmentItem::create([
                         'shipment_id' => $shipment->id,
                         'order_item_id' => $item['order_item_id'],
-                        'source_location_id' => $locId,
+                        'variant_id' => $item['variant_id'] ?? null,
                         'quantity_shipped' => $item['quantity'],
                     ]);
                 }

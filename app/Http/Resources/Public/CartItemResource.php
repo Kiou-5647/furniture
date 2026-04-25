@@ -14,6 +14,7 @@ class CartItemResource extends JsonResource
     {
         $name = 'Unknown Item';
         $image = null;
+        $selectedVariants = null;
 
         if ($this->purchasable instanceof ProductVariant) {
             $name = "{$this->purchasable->product->name} - {$this->purchasable->name}";
@@ -21,6 +22,29 @@ class CartItemResource extends JsonResource
         } elseif ($this->purchasable instanceof Bundle) {
             $name = $this->purchasable->name;
             $image = $this->purchasable->getFirstMediaUrl('primary_image', 'thumb');
+
+            if ($this->configuration) {
+                $selectedVariants = [];
+                foreach ($this->purchasable->contents as $content) {
+                    $variantId = $this->configuration[$content->id] ?? null;
+                    if ($variantId) {
+                        /** @var \App\Models\Product\ProductVariant $variant */
+                        $variant = ProductVariant::find($variantId);
+                        if ($variant) {
+                            $selectedVariants[] = [
+                                'id' => $variant->id,
+                                'name' => $variant->product->name . ' ' . $variant->name,
+                                'label' => $variant->swatch_label,
+                                'sku' => $variant->sku,
+                                'price' => $variant->price,
+                                'sale_price' => $variant->sale_price,
+                                'quantity' => $content->quantity,
+                                'image_url' => $variant->getFirstMediaUrl('primary_image', 'thumb'),
+                            ];
+                        }
+                    }
+                }
+            }
         }
 
         return [
@@ -31,6 +55,8 @@ class CartItemResource extends JsonResource
             'subtotal' => (float) $this->getSubtotal(),
             'configuration' => $this->configuration,
             'image_url' => $image,
+            'purchasable_type' => $this->purchasable_type,
+            'selected_variants' => $selectedVariants,
         ];
     }
 }

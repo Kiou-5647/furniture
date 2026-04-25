@@ -3,50 +3,64 @@
 namespace App\Services\Product;
 
 use App\Data\Product\BundleFilterData;
-use App\Enums\BundleDiscountType;
 use App\Models\Product\Bundle;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class BundleService
 {
     public function getFiltered(BundleFilterData $filter): LengthAwarePaginator
     {
-        return Bundle::query()
-            ->when($filter->search, fn ($q) => $q->search($filter->search))
-            ->when($filter->is_active !== null, fn ($q) => $q->where('is_active', $filter->is_active))
-            ->with(['contents.product'])
-            ->orderBy($filter->order_by, $filter->order_direction)
+        $paginator = Bundle::query()
+            ->with('contents.productCard')
+            ->filterBy($filter)
+            ->sortBy($filter->order_by ?? 'created_at', $filter->order_direction ?? 'desc')
             ->paginate($filter->per_page);
+
+        $paginator->getCollection()->transform(function ($bundle) {
+            $bundle->is_available = $this->isAvailable($bundle);
+            return $bundle;
+        });
+
+        return $paginator;
     }
 
     public function getTrashedFiltered(BundleFilterData $filter): LengthAwarePaginator
     {
-        return Bundle::onlyTrashed()
-            ->when($filter->search, fn ($q) => $q->search($filter->search))
-            ->orderBy($filter->order_by ?? 'deleted_at', $filter->order_direction ?? 'desc')
+        $paginator = Bundle::onlyTrashed()
+            ->with('contents.productCard')
+            ->filterBy($filter)
+            ->sortBy($filter->order_by ?? 'created_at', $filter->order_direction ?? 'desc')
             ->paginate($filter->per_page);
+
+        $paginator->getCollection()->transform(function ($bundle) {
+            $bundle->is_available = $this->isAvailable($bundle);
+            return $bundle;
+        });
+
+        return $paginator;
     }
 
-    public function getById(string $id): Bundle
+    public function isAvailable(Bundle $bundle, ?string $locationId = null): bool
     {
-        return Bundle::with(['contents.product'])->findOrFail($id);
-    }
+        if ($bundle->contents->isEmpty()) {
+            return false;
+        }
 
-    public function getActiveOptions(): Collection
-    {
-        return Bundle::query()
-            ->active()
-            ->orderBy('name')
-            ->get(['id', 'name'])
-            ->map(fn (Bundle $bundle) => [
-                'id' => $bundle->id,
-                'label' => $bundle->name,
-            ]);
-    }
+        foreach ($bundle->contents as $content) {
+            $card = $content->productCard;
+            if (!$card) return false;
 
-    public function getDiscountTypeOptions(): array
-    {
-        return BundleDiscountType::options();
+            $hasStock = $card->variants()
+                ->whereHas('inventories', function ($q) use ($locationId) {
+                    $q->where('quantity', '>', 0);
+                    if ($locationId) {
+                        $q->where('location_id', $locationId);
+                    }
+                })->exists();
+
+            if (!$hasStock) return false;
+        }
+
+        return true;
     }
 }

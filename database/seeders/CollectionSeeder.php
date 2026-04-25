@@ -19,7 +19,7 @@ class CollectionSeeder extends Seeder
     {
         Collection::firstOrCreate(
             ['slug' => 'timber'],
-            ['display_name' => 'Timber', 'description' => 'Bộ sưu tập Ghế Timber', 'is_active' => true, 'metadata' => []]
+            ['display_name' => 'Timber', 'description' => 'Bộ sưu tập Ghế Timber', 'is_active' => true]
         );
 
         $this->command->info('Created Timber collection.');

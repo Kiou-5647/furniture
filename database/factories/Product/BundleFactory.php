@@ -19,9 +19,6 @@ class BundleFactory extends Factory
             'discount_type' => fake()->randomElement(['percentage', 'fixed_amount', 'fixed_price']),
             'discount_value' => fake()->randomFloat(2, 5, 50),
             'is_active' => true,
-            'views_count' => fake()->numberBetween(0, 1000),
-            'reviews_count' => fake()->numberBetween(0, 100),
-            'average_rating' => fake()->randomFloat(2, 0, 5),
         ];
     }
 }

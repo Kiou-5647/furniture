@@ -15,7 +15,7 @@ class EnsureUserType
      */
     public function handle(Request $request, Closure $next, string $type): Response
     {
-        if ($request->user()?->type->value !== $type) {
+        if ($request->user()?->type->value !== $type || !$request->user()->is_active) {
             abort(403, 'Unauthorized access.');
         }
 

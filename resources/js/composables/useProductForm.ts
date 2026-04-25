@@ -158,7 +158,7 @@ export function useProductForm(
         },
         warranty_months: 12 as number | null,
         is_featured: false,
-        is_new_arrival: true,
+        is_new_arrival: false,
         published_date: '',
         new_arrival_until: '',
         variants: [] as Partial<ProductVariant>[],
@@ -345,9 +345,18 @@ export function useProductForm(
                 date.setMonth(date.getMonth() + newArrivalMonths.value);
                 form.new_arrival_until = date.toISOString().split('T')[0];
             } else if (status !== 'published') {
-                form.new_arrival_until = '';
+                form.is_new_arrival = false;
             }
         },
+    );
+
+    watch(
+        () => form.new_arrival_until,
+        (date) => {
+            // Product is a "new arrival" if and only if it has a valid end date
+            form.is_new_arrival = !!date;
+        },
+        { immediate: true },
     );
 
     const selectedVariantOptions = computed(() => {
@@ -882,7 +891,7 @@ export function useProductForm(
         form.clearErrors();
         form.status = 'draft';
         form.warranty_months = 12;
-        form.is_new_arrival = true;
+        form.is_new_arrival = false;
         form.assembly_info = {
             required: false,
             estimated_minutes: 0,

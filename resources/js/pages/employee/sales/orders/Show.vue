@@ -2,6 +2,7 @@
 import { Head, router } from '@inertiajs/vue3';
 import { ArrowLeft, FileText, MapPin, Package, Truck, User, X, XCircle, CheckCircle2, DollarSign, RotateCcw, Plus, Loader2, CreditCard } from '@lucide/vue';
 import { computed, ref } from 'vue';
+import { toast } from 'vue-sonner';
 import Heading from '@/components/Heading.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { createLazyComponent } from '@/composables/createLazyComponent';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { resend as resendShipment, returnItem as returnItemRoute } from '@/routes/employee/fulfillment/shipments';
+import { resend , returnItem as returnRoute } from '@/routes/employee/fulfillment/shipments';
 import { cancel, complete, index, updateStatus, markPaid, createShipments, storeShipments } from '@/routes/employee/sales/orders';
 import type { BreadcrumbItem, Order, ShipmentItem } from '@/types';
 
@@ -17,22 +18,25 @@ const VnPayPaymentDialog = createLazyComponent(
     () => import('@/components/custom/paywall/VnPayPaymentDialog.vue'),
 );
 
-interface StockOption {
-    location_id: string;
-    location_name: string;
-    location_code: string;
-    available_qty: number;
-}
-
 interface OrderItemWithStock {
-    id: string;
-    purchasable_name: string;
+    bundle_name: string | null;
+    order_item_id: string;
+    variant_id: string;
+    sku: string;
+    name: string;
     quantity: number;
-    stock_options: StockOption[];
+    is_bundle_component: boolean;
+    stock_options: Array<{
+        location_id: string;
+        location_name: string;
+        location_code: string;
+        available_qty: number;
+    }>;
 }
 
 interface ShipmentRow {
     order_item_id: string;
+    variant_id: string;
     location_id: string;
     quantity: number;
 }
@@ -84,28 +88,28 @@ const orderItemsWithStock = ref<OrderItemWithStock[]>([]);
 const loadingShipments = ref(false);
 const dialogError = ref('');
 
-function getRowsForItem(orderItemId: string) {
-    return shipmentRows.value.filter(r => r.order_item_id === orderItemId);
+function getRowsForItem(variantId: string) {
+    return shipmentRows.value.filter(r => r.variant_id === variantId);
 }
 
-function getAllocatedQuantity(orderItemId: string) {
+function getAllocatedQuantity(variantId: string) {
     return shipmentRows.value
-        .filter(r => r.quantity > 0 && r.order_item_id === orderItemId)
+        .filter(r => r.quantity > 0 && r.variant_id === variantId)
         .reduce((sum, r) => sum + r.quantity, 0);
 }
 
-function getMaxQuantityForLocation(orderItemId: string, locationId: string): number {
-    const item = orderItemsWithStock.value.find(i => i.id === orderItemId);
+function getMaxQuantityForLocation(variantId: string, locationId: string): number {
+    const item = orderItemsWithStock.value.find(i => i.variant_id === variantId);
     const stockOpt = item?.stock_options.find(s => s.location_id === locationId);
     return stockOpt?.available_qty ?? 0;
 }
 
-function getMaxQuantityForItem(orderItemId: string, locationId: string): number {
-    return getMaxQuantityForLocation(orderItemId, locationId);
+function getMaxQuantityForItem(variantId: string, locationId: string): number {
+    return getMaxQuantityForLocation(variantId, locationId);
 }
 
-function isLocationUsed(orderItemId: string, locationId: string, currentIdx: number): boolean {
-    const rows = getRowsForItem(orderItemId);
+function isLocationUsed(variantId: string, locationId: string, currentIdx: number): boolean {
+    const rows = getRowsForItem(variantId);
     return rows.some((r, idx) => idx !== currentIdx && r.location_id === locationId);
 }
 
@@ -113,37 +117,68 @@ async function openCreateShipments() {
     loadingShipments.value = true;
     dialogError.value = '';
     try {
-        const res = await fetch(createShipments({ order: props.order.id }).url);
-        if (res.ok) {
-            const data = await res.json();
-            orderItemsWithStock.value = data.items;
-            // Initialize with one row per item using first location
-            shipmentRows.value = data.items.map((item: OrderItemWithStock) => ({
-                order_item_id: item.id,
-                location_id: item.stock_options[0]?.location_id ?? '',
-                quantity: 0,
-            }));
-            showShipmentsDialog.value = true;
+        const res = await fetch(createShipments({ order: props.order.id }).url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            }
+        });
+
+        if (!res.ok) {
+            // If it's a 403, it's a Gate authorization failure
+            if (res.status === 403) {
+                toast.error('Bạn không có quyền tạo đơn vận chuyển cho đơn hàng này.');
+                return;
+            }
+            const errorData = await res.json().catch(() => ({ message: 'Lỗi không xác định' }));
+            toast.error(errorData.message || 'Có lỗi xảy ra khi tải dữ liệu vận chuyển.');
+            return;
         }
-    } catch {
-        // Silently fail
+
+        const data = await res.json();
+
+        if (data.error) {
+            toast.error(data.error);
+            return;
+        }
+
+        if (!data.items || data.items.length === 0) {
+            toast.error('Không tìm thấy sản phẩm nào có thể vận chuyển cho đơn hàng này.');
+            return;
+        }
+
+        orderItemsWithStock.value = data.items;
+
+        shipmentRows.value = data.items.map((item: OrderItemWithStock) => ({
+            order_item_id: item.order_item_id,
+            variant_id: item.variant_id,
+            location_id: item.stock_options?.[0]?.location_id ?? '',
+            quantity: 0,
+        }));
+
+        showShipmentsDialog.value = true;
+    } catch (e) {
+        console.error(e);
+        toast.error('Có lỗi kết nối xảy ra. Vui lòng thử lại.');
     } finally {
         loadingShipments.value = false;
     }
 }
 
-function getUsedLocationsForItem(orderItemId: string): Set<string> {
-    const rows = getRowsForItem(orderItemId);
+function getUsedLocationsForItem(variantId: string): Set<string> {
+    const rows = getRowsForItem(variantId);
     return new Set(rows.map(r => r.location_id).filter(Boolean));
 }
 
-function addLocationRow(orderItemId: string) {
-    const item = orderItemsWithStock.value.find(i => i.id === orderItemId);
-    const used = getUsedLocationsForItem(orderItemId);
+function addLocationRow(variantId: string) {
+    const item = orderItemsWithStock.value.find(i => i.order_item_id === variantId);
+    const used = getUsedLocationsForItem(variantId);
     const firstAvailable = item?.stock_options.find(o => !used.has(o.location_id));
     if (firstAvailable) {
         shipmentRows.value.push({
-            order_item_id: orderItemId,
+            order_item_id: item!.order_item_id,
+            variant_id: variantId,
             location_id: firstAvailable.location_id,
             quantity: 0,
         });
@@ -163,10 +198,10 @@ function confirmCreateShipments() {
     // Validate each order item total equals required quantity
     for (const item of orderItemsWithStock.value) {
         const allocated = activeRows
-            .filter(r => r.order_item_id === item.id)
+            .filter(r => r.variant_id === item.variant_id)
             .reduce((sum, r) => sum + r.quantity, 0);
         if (allocated !== item.quantity) {
-            const name = item.purchasable_name || 'Sản phẩm';
+            const name = item.name || 'Sản phẩm';
             dialogError.value = `Tổng SL "${name}" phải bằng ${item.quantity} (hiện tại: ${allocated})`;
             return;
         }
@@ -179,16 +214,15 @@ function confirmCreateShipments() {
             dialogError.value = 'Vui lòng chọn kho cho tất cả các dòng';
             return;
         }
-        const maxQty = getMaxQuantityForLocation(row.order_item_id, row.location_id);
+        const maxQty = getMaxQuantityForLocation(row.variant_id, row.location_id);
         if (row.quantity > maxQty) {
-            const item = orderItemsWithStock.value.find(item => item.id === row.order_item_id);
+            const item = orderItemsWithStock.value.find(item => item.variant_id === row.variant_id);
             const stockOpt = item?.stock_options.find(s => s.location_id === row.location_id);
-            dialogError.value = `"${item?.purchasable_name}" tại ${stockOpt?.location_name ?? '?'} chỉ còn ${maxQty} (bạn nhập ${row.quantity})`;
+            dialogError.value = `"${item?.name}" tại ${stockOpt?.location_name ?? '?'} chỉ còn ${maxQty} (bạn nhập ${row.quantity})`;
             return;
         }
     }
 
-    // Must have at least one active row
     if (activeRows.length === 0) {
         dialogError.value = 'Vui lòng chọn ít nhất một kho';
         return;
@@ -199,8 +233,15 @@ function confirmCreateShipments() {
             order_item_id: r.order_item_id,
             location_id: r.location_id,
             quantity: r.quantity,
+            variant_id: r.variant_id
         })),
-    }, { preserveScroll: true });
+    }, {
+        preserveScroll: true,
+        onSuccess: () => {
+            showShipmentsDialog.value = false;
+            toast.success('Đã tạo vận chuyển thành công.');
+        }
+    });
     showShipmentsDialog.value = false;
 }
 
@@ -243,7 +284,7 @@ function goBack() {
 }
 
 function handleResendShipment(shipmentId: string) {
-    router.post(resendShipment({ shipment: shipmentId }).url, {}, {
+    router.post(resend({ shipment: shipmentId }).url, {}, {
         preserveScroll: true,
     });
 }
@@ -257,7 +298,7 @@ function handleReturnItem(item: ShipmentItem, shipmentId: string) {
 
 function confirmReturn() {
     if (!returnItem.value || !returnShipmentId.value) return;
-    router.post(returnItemRoute({ shipment: returnShipmentId.value, shipmentItem: returnItem.value.id }).url, {
+    router.post(returnRoute({ shipment: returnShipmentId.value, shipmentItem: returnItem.value.id }).url, {
         reason: returnReason.value,
     }, { preserveScroll: true });
     showReturnDialog.value = false;
@@ -626,7 +667,7 @@ function confirmReturn() {
             </div>
         </div>
 
-        <!-- Create Shipments Dialog -->
+        <!-- TODO: Create Shipments Dialog -->
         <div
             v-if="showShipmentsDialog"
             class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
@@ -637,39 +678,39 @@ function confirmReturn() {
                 <div class="space-y-4">
                     <div
                         v-for="item in orderItemsWithStock"
-                        :key="item.id"
+                        :key="item.variant_id"
                         class="rounded-lg border p-3"
                     >
                         <div class="flex items-center justify-between mb-2">
                             <div>
-                                <span class="text-sm font-medium">{{ item.purchasable_name }}</span>
+                                <span class="text-sm font-medium">{{ item.name }}</span>
                                 <span class="ml-2 text-xs text-muted-foreground">
                                     (SL: {{ item.quantity }})
                                 </span>
                             </div>
                             <div class="text-xs">
-                                <span :class="getAllocatedQuantity(item.id) === item.quantity ? 'text-green-600' : 'text-orange-600'">
-                                    Đã chia: {{ getAllocatedQuantity(item.id) }}/{{ item.quantity }}
+                                <span :class="getAllocatedQuantity(item.variant_id) === item.quantity ? 'text-green-600' : 'text-orange-600'">
+                                    Đã chia: {{ getAllocatedQuantity(item.variant_id) }}/{{ item.quantity }}
                                 </span>
                             </div>
                         </div>
 
                         <div class="space-y-2">
                             <div
-                                v-for="(row, idx) in getRowsForItem(item.id)"
+                                v-for="(row, idx) in getRowsForItem(item.variant_id)"
                                 :key="idx"
                                 class="flex items-center gap-2"
                             >
                                 <Select
                                     :model-value="row.location_id"
-                                    @update:model-value="(val) => { row.location_id = val as string; row.quantity = Math.min(row.quantity, getMaxQuantityForItem(item.id, row.location_id)); }"
+                                    @update:model-value="(val) => { row.location_id = val as string; row.quantity = Math.min(row.quantity, getMaxQuantityForItem(item.variant_id, row.location_id)); }"
                                 >
                                     <SelectTrigger class="flex-1 text-sm">
                                         <SelectValue placeholder="Chọn kho..." />
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem
-                                            v-for="opt in item.stock_options.filter(o => !isLocationUsed(item.id, o.location_id, idx))"
+                                            v-for="opt in item.stock_options.filter(o => !isLocationUsed(item.variant_id, o.location_id, idx))"
                                             :key="opt.location_id"
                                             :value="opt.location_id"
                                         >
@@ -681,12 +722,12 @@ function confirmReturn() {
                                     :model-value="row.quantity"
                                     type="number"
                                     min="0"
-                                    :max="getMaxQuantityForItem(item.id, row.location_id)"
+                                    :max="getMaxQuantityForItem(item.variant_id, row.location_id)"
                                     class="w-20 text-sm"
-                                    @update:model-value="(val: any) => { const v = parseInt(val) || 0; row.quantity = Math.min(v, getMaxQuantityForItem(item.id, row.location_id)); }"
+                                    @update:model-value="(val: any) => { const v = parseInt(val) || 0; row.quantity = Math.min(v, getMaxQuantityForItem(item.variant_id, row.location_id)); }"
                                 />
                                 <Button
-                                    v-if="getRowsForItem(item.id).length > 1"
+                                    v-if="getRowsForItem(item.variant_id).length > 1"
                                     variant="ghost"
                                     size="icon"
                                     class="h-8 w-8 shrink-0"
@@ -698,11 +739,11 @@ function confirmReturn() {
                         </div>
 
                         <Button
-                            v-if="getRowsForItem(item.id).length < item.stock_options.length"
+                            v-if="getRowsForItem(item.variant_id).length < item.stock_options.length"
                             variant="outline"
                             size="sm"
                             class="mt-2 text-xs h-7"
-                            @click="addLocationRow(item.id)"
+                            @click="addLocationRow(item.variant_id)"
                         >
                             <Plus class="mr-1 h-3 w-3" /> Thêm kho
                         </Button>

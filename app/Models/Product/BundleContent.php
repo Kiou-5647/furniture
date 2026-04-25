@@ -2,6 +2,7 @@
 
 namespace App\Models\Product;
 
+use App\Models\Product\ProductCard;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -25,8 +26,15 @@ class BundleContent extends Model
         return $this->belongsTo(Bundle::class);
     }
 
+    public function productCard(): BelongsTo
+    {
+        return $this->belongsTo(ProductCard::class);
+    }
+
+    // Add a helper to get the underlying product if still needed
     public function product(): BelongsTo
     {
-        return $this->belongsTo(Product::class);
+        return $this->productCard()->join('products', 'product_cards.product_id', '=', 'products.id')
+            ->select('products.*');
     }
 }

@@ -2,26 +2,43 @@
 
 namespace App\Builders\Product;
 
+use App\Data\Product\BundleFilterData;
 use Illuminate\Database\Eloquent\Builder;
 
 class BundleBuilder extends Builder
 {
-    public function active(): self
+    public function filterBy(BundleFilterData $filter): self
     {
-        return $this->where('is_active', true);
+        if ($filter->search) {
+            $search = $filter->search;
+            $this->where(
+                fn($q) =>
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('slug', 'like', "%{$search}%")
+            );
+        }
+
+        if ($filter->is_active !== null) {
+            $this->where('is_active', $filter->is_active);
+        }
+
+
+        if ($filter->created_from) {
+            $this->whereDate('created_at', '>=', $filter->created_from);
+        }
+        if ($filter->created_to) {
+            $this->whereDate('created_at', '<=', $filter->created_to);
+        }
+
+        return $this;
     }
 
-    public function search(string $search): self
+    public function sortBy(string $orderBy, string $orderDir): self
     {
-        return $this->where('name', 'ilike', "%{$search}%");
-    }
+        $allowedSorts = ['created_at', 'name', 'discount_value'];
+        $column = in_array($orderBy, $allowedSorts) ? $orderBy : 'created_at';
+        $direction = in_array($orderDir, ['asc', 'desc']) ? $orderDir : 'desc';
 
-    public function withValidProducts(): self
-    {
-        return $this->whereHas('contents', function ($query) {
-            $query->whereHas('product', function ($q) {
-                $q->whereNull('deleted_at');
-            });
-        });
+        return $this->orderBy($column, $direction);
     }
 }

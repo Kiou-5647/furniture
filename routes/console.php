@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('analytics:sync-views')->everyFiveMinutes();
+Schedule::command('products:expire-new-arrivals')->daily();
