@@ -62,6 +62,5 @@ return new class extends Migration
         Schema::dropIfExists('lookups');
         Schema::dropIfExists('lookup_namespaces');
         Schema::dropIfExists('positions');
-        Schema::dropIfExists('settings');
     }
 };

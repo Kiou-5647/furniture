@@ -27,7 +27,7 @@ import type {
     LookupOptionItem,
 } from '@/composables/useProductForm';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { index } from '@/routes/employee/products/items';
+import { index } from '@/routes/employee/products';
 import type { SpecNamespace, SpecLookupOption } from '@/types';
 import type { Product } from '@/types/product';
 import StepContent from './steps/StepContent.vue';

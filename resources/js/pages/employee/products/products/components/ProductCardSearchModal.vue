@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { search as searchCards } from '@/routes/employee/products/items/product-cards';
+import { search as searchCards } from '@/routes/employee/products/product-cards';
 
 const props = defineProps<{
     open: boolean;

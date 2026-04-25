@@ -15,10 +15,9 @@ class UpsertBundleAction
         // 1. Extract and remove media files from data to prevent DB column errors
         $primaryImage = $data['primary_image_file'] ?? null;
         $hoverImage = $data['hover_image_file'] ?? null;
-        $gallery = $data['gallery_files'] ?? [];
         $contents = $data['contents'] ?? null;
 
-        unset($data['primary_image_file'], $data['hover_image_file'], $data['gallery_files'], $data['contents']);
+        unset($data['primary_image_file'], $data['hover_image_file'], $data['contents']);
 
         DB::beginTransaction();
 
@@ -48,14 +47,6 @@ class UpsertBundleAction
 
             if ($hoverImage instanceof UploadedFile) {
                 $bundle->addMedia($hoverImage)->toMediaCollection('hover_image');
-            }
-
-            if (!empty($gallery)) {
-                foreach ($gallery as $file) {
-                    if ($file instanceof UploadedFile) {
-                        $bundle->addMedia($file)->toMediaCollection('gallery');
-                    }
-                }
             }
 
             DB::commit();

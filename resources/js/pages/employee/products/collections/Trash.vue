@@ -4,7 +4,7 @@ import { ArrowLeft, Trash2 } from '@lucide/vue';
 import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { index } from '@/routes/employee/products/collections';
+import { index } from '@/routes/employee/collections';
 import type { BreadcrumbItem } from '@/types';
 import type { CollectionFilterData, CollectionPagination } from '@/types/collection';
 

@@ -76,32 +76,32 @@ class MenuService
             if ($user->can('products.view')) {
                 $productItems[] = [
                     'title' => 'Danh sách sản phẩm',
-                    'href' => route('employee.products.items.index'),
-                    'isActive' => Route::is('employee.products.items.*'),
+                    'href' => route('employee.products.index'),
+                    'isActive' => Route::is('employee.products.*'),
                 ];
             }
 
             if ($user->can('categories.view')) {
                 $productItems[] = [
                     'title' => 'Danh mục',
-                    'href' => route('employee.products.categories.index'),
-                    'isActive' => Route::is('employee.products.categories.*'),
+                    'href' => route('employee.categories.index'),
+                    'isActive' => Route::is('employee.categories.*'),
                 ];
             }
 
             if ($user->can('collections.view')) {
                 $productItems[] = [
                     'title' => 'Bộ sưu tập',
-                    'href' => route('employee.products.collections.index'),
-                    'isActive' => Route::is('employee.products.collections.*'),
+                    'href' => route('employee.collections.index'),
+                    'isActive' => Route::is('employee.collections.*'),
                 ];
             }
 
             if ($user->can('bundles.view')) {
                 $productItems[] = [
                     'title' => 'Gói sản phẩm',
-                    'href' => route('employee.products.bundles.index'),
-                    'isActive' => Route::is('employee.products.bundles.*'),
+                    'href' => route('employee.bundles.index'),
+                    'isActive' => Route::is('employee.bundles.*'),
                 ];
             }
 
@@ -264,6 +264,11 @@ class MenuService
                 'icon' => 'Settings2',
                 'isActive' => Route::is('employee.settings.*'),
                 'items' => [
+                    [
+                        'title' => 'Cấu hình chung',
+                        'href' => route('employee.settings.general.index'),
+                        'isActive' => Route::is('employee.settings.general.*'),
+                    ],
                     [
                         'title' => 'Tra cứu',
                         'href' => route('employee.settings.lookups.index'),

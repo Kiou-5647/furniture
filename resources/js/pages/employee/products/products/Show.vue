@@ -14,7 +14,7 @@ import ProductCard from '@/components/custom/product/ProductCard.vue';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { index } from '@/routes/employee/products/items';
+import { index } from '@/routes/employee/products';
 import type { BreadcrumbItem } from '@/types';
 import type { Product } from '@/types/product';
 

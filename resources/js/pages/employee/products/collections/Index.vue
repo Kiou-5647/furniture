@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import { createLazyComponent } from '@/composables/createLazyComponent';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { cleanQuery, setCookie } from '@/lib/utils';
-import { index, destroy } from '@/routes/employee/products/collections';
+import { index, destroy } from '@/routes/employee/collections';
 import type { BreadcrumbItem } from '@/types';
 import type {
     Collection,

@@ -155,5 +155,25 @@ defineProps<{
                 </TextLink>
             </div>
         </Form>
+        <div class="mt-6">
+            <div class="relative">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-300 dark:border-gray-700"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-2 bg-white dark:bg-gray-900 text-gray-500">Hoặc đăng nhập với</span>
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <a
+                    href="api/auth/google/redirect"
+                    class="flex items-center justify-center w-full px-4 py-2 space-x-2 transition-colors border border-gray-300 rounded-lg bg-white hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:hover:bg-gray-700"
+                >
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5" alt="Google">
+                    <span class="text-gray-700 dark:text-gray-200 font-medium">Sign in with Google</span>
+                </a>
+            </div>
+        </div>
     </AuthSplitLayout>
 </template>

@@ -4,12 +4,14 @@ namespace App\Http\Middleware;
 
 use App\Services\Public\ShopMenuService;
 use App\Services\Setting\MenuService;
+use App\Settings\GeneralSettings;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
 {
     public function __construct(
+        protected GeneralSettings $settings,
         protected MenuService $menuService,
         protected ShopMenuService $shopMenuService,
     ) {}
@@ -46,7 +48,7 @@ class HandleInertiaRequests extends Middleware
 
         return [
             ...parent::share($request),
-            'name' => config('app.name'),
+            'name' => $this->settings->site_name ?? config('app.name'),
             'auth' => [
                 'user' => $user ? [
                     'id' => $user->id,
@@ -54,10 +56,15 @@ class HandleInertiaRequests extends Middleware
                     'email' => $user->email,
                     'type' => $user->type->value,
                     'avatar_url' => $user->avatar_url,
+                    'email_verified_at' => $user->email_verified_at,
                     'permissions' => $user->hasRole('super_admin')
                         ? ['*']
                         : $user->getAllPermissions()->pluck('name'),
                 ] : null,
+            ],
+            'settings' => [
+                'freeship_threshold' => $this->settings->freeship_threshold,
+                'default_warranty' => $this->settings->default_warranty,
             ],
             'menu' => $this->menuService->getMenu($user),
             'shopMenu' => $this->shopMenuService->getMenu(),

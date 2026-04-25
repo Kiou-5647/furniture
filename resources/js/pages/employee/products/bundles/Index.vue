@@ -10,7 +10,7 @@ import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { cleanQuery, setCookie } from '@/lib/utils';
-import { index, create, edit, destroy } from '@/routes/employee/products/bundles';
+import { index, create, edit, destroy } from '@/routes/employee/bundles';
 import type { BreadcrumbItem } from '@/types';
 import type { Bundle, BundleFilterData, BundlePagination } from '@/types/bundle';
 import { getColumns } from './types/columns';

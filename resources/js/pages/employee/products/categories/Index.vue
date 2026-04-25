@@ -29,7 +29,7 @@ import {
 import { createLazyComponent } from '@/composables/createLazyComponent';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { cleanQuery, setCookie } from '@/lib/utils';
-import { index, destroy } from '@/routes/employee/products/categories';
+import { index, destroy } from '@/routes/employee/categories';
 import type { BreadcrumbItem } from '@/types';
 import type {
     Category,

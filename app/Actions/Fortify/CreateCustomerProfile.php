@@ -18,7 +18,6 @@ class CreateCustomerProfile
                 'full_name' => $input['name'] ?? $user->name,
                 'phone' => $input['phone'] ?? null,
                 'total_spent' => 0.00,
-                'loyalty_points' => 0,
             ]);
         });
     }

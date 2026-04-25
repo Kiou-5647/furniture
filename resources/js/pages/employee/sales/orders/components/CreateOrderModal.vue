@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useForm } from '@inertiajs/vue3';
+import { useForm, usePage } from '@inertiajs/vue3';
 import {
     Loader2,
     MapPin,
@@ -141,6 +141,8 @@ const props = defineProps<{
     }[];
 }>();
 
+const page = usePage();
+
 const emit = defineEmits(['close', 'refresh']);
 
 const showShipping = ref(false);
@@ -219,7 +221,7 @@ const showBundleDialog = ref(false);
 
 const getSelectedVariant = (content: BundleContentItem) => {
     const variantId = bundleVariantSelections.value[content.id];
-    return content.variants.find(v => v.id === variantId);
+    return content.variants.find((v) => v.id === variantId);
 };
 
 const selectedCustomerLabel = computed(() => {
@@ -268,7 +270,35 @@ const totalAmount = computed(() => {
 });
 
 const grandTotal = computed(() => {
-    return totalAmount.value + (parseFloat(form.shipping_cost!) || 0);
+    return totalAmount.value + effectiveShippingCost.value;
+});
+
+const freeshipThreshold = computed(
+    () => page.props.settings?.freeship_threshold || 0,
+);
+
+const effectiveShippingCost = computed(() => {
+    // Only apply free shipping if shipping is enabled AND threshold is met
+    if (showShipping.value && totalAmount.value >= freeshipThreshold.value) {
+        return 0;
+    }
+    return parseFloat(form.shipping_cost || '0');
+});
+
+const isFreeShippingActive = computed(() => {
+    return showShipping.value && totalAmount.value >= freeshipThreshold.value;
+});
+
+const freeshipMessage = computed(() => {
+    if (!showShipping.value) return null;
+
+    const diff = freeshipThreshold.value - totalAmount.value;
+
+    if (diff > 0) {
+        return `Mua thêm ${diff.toLocaleString('vi-VN')}đ để được miễn phí vận chuyển`;
+    }
+
+    return 'Đã đạt ngưỡng miễn phí vận chuyển!';
 });
 
 async function selectCustomer(c: {
@@ -372,18 +402,24 @@ const bundleDynamicPrice = computed(() => {
     let total = 0;
     const contents = props.bundleContents?.[selectedBundle.value.id] ?? [];
 
-    contents.forEach(content => {
+    contents.forEach((content) => {
         const variantId = bundleVariantSelections.value[content.id];
-        const variant = content.variants.find(v => v.id === variantId);
-        total += (parseFloat(variant?.sale_price || variant?.price || '0')) * content.quantity;
+        const variant = content.variants.find((v) => v.id === variantId);
+        total +=
+            parseFloat(variant?.sale_price || variant?.price || '0') *
+            content.quantity;
     });
 
     const bundle = selectedBundle.value;
     switch (bundle.discount_type) {
-        case 'percentage': return Math.max(0, total * (1 - bundle.discount_value / 100));
-        case 'fixed_amount': return Math.max(0, total - bundle.discount_value);
-        case 'fixed_price': return bundle.discount_value;
-        default: return total;
+        case 'percentage':
+            return Math.max(0, total * (1 - bundle.discount_value / 100));
+        case 'fixed_amount':
+            return Math.max(0, total - bundle.discount_value);
+        case 'fixed_price':
+            return bundle.discount_value;
+        default:
+            return total;
     }
 });
 
@@ -416,15 +452,20 @@ function confirmBundleSelection() {
         const variantId = bundleVariantSelections.value[content.id];
         if (variantId) {
             configuration[content.id] = variantId;
-            const variant = content.variants.find(v => v.id === variantId);
-            variantTotal += (parseFloat(variant?.sale_price || variant?.price || '0')) * content.quantity;
+            const variant = content.variants.find((v) => v.id === variantId);
+            variantTotal +=
+                parseFloat(variant?.sale_price || variant?.price || '0') *
+                content.quantity;
         }
     });
 
     const bundleData = selectedBundle.value;
     let finalPrice = variantTotal;
     if (bundleData.discount_type === 'percentage') {
-        finalPrice = Math.max(0, variantTotal * (1 - bundleData.discount_value / 100));
+        finalPrice = Math.max(
+            0,
+            variantTotal * (1 - bundleData.discount_value / 100),
+        );
     } else if (bundleData.discount_type === 'fixed_amount') {
         finalPrice = Math.max(0, variantTotal - bundleData.discount_value);
     } else if (bundleData.discount_type === 'fixed_price') {
@@ -1126,7 +1167,7 @@ watch(
                     <div class="flex items-center gap-4 text-sm">
                         <span class="text-muted-foreground">Tạm tính</span>
                         <span class="tabular-nums"
-                            >{{ totalAmount.toLocaleString('vi-VN') }}đ</span
+                            >{{ formatPrice(totalAmount) }}</span
                         >
                         <span
                             v-if="
@@ -1142,17 +1183,28 @@ watch(
                                 parseFloat(form.shipping_cost!) > 0
                             "
                             class="tabular-nums"
+                            :class="{ 'line-through text-muted-foreground': isFreeShippingActive }"
                             >{{
-                                Number(form.shipping_cost).toLocaleString(
-                                    'vi-VN',
-                                )
-                            }}đ</span
+                                formatPrice(form.shipping_cost!)
+                            }}</span
                         >
+                    </div>
+                    <div
+                        v-if="freeshipMessage"
+                        class="flex items-center gap-1.5 justify-self-end text-sm font-medium"
+                        :class="
+                            totalAmount >= freeshipThreshold
+                                ? 'text-green-600'
+                                : 'text-orange-500'
+                        "
+                    >
+                        <Tag class="h-3 w-3" />
+                        {{ freeshipMessage }}
                     </div>
                     <div
                         class="justify-self-end text-lg font-bold tabular-nums"
                     >
-                        Tổng: {{ grandTotal.toLocaleString('vi-VN') }}đ
+                        Tổng: {{ formatPrice(grandTotal) }}đ
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -1175,9 +1227,12 @@ watch(
         </DialogContent>
 
         <!-- Bundle Variant Selection Dialog -->
-        <Dialog :open="showBundleDialog" @update:open="(val) => !val && (showBundleDialog = false)">
-            <DialogContent class="max-w-[700px] p-0 overflow-hidden">
-                <DialogHeader class="px-6 pt-6 pb-4 bg-zinc-50 border-b">
+        <Dialog
+            :open="showBundleDialog"
+            @update:open="(val) => !val && (showBundleDialog = false)"
+        >
+            <DialogContent class="max-w-[700px] overflow-hidden p-0">
+                <DialogHeader class="border-b bg-zinc-50 px-6 pt-6 pb-4">
                     <DialogTitle class="text-xl font-bold text-zinc-900">
                         Cấu hình gói: {{ selectedBundle?.name }}
                     </DialogTitle>
@@ -1186,29 +1241,58 @@ watch(
                     </DialogDescription>
                 </DialogHeader>
 
-                <div class="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
-                    <div v-for="content in bundleContents?.[selectedBundle?.id ?? ''] ?? []"
-                         :key="content.id"
-                         class="flex items-start gap-4 p-4 rounded-2xl border transition-colors hover:bg-zinc-50"
+                <div class="max-h-[60vh] space-y-6 overflow-y-auto p-6">
+                    <div
+                        v-for="content in bundleContents?.[
+                            selectedBundle?.id ?? ''
+                        ] ?? []"
+                        :key="content.id"
+                        class="flex items-start gap-4 rounded-2xl border p-4 transition-colors hover:bg-zinc-50"
                     >
                         <!-- Selection Thumbnail -->
-                        <div class="w-16 h-16 shrink-0 overflow-hidden rounded-lg border bg-white">
+                        <div
+                            class="h-16 w-16 shrink-0 overflow-hidden rounded-lg border bg-white"
+                        >
                             <img
-                                :src="getSelectedVariant(content)?.primary_image_url || '/placeholder-product.jpg'"
+                                :src="
+                                    getSelectedVariant(content)
+                                        ?.primary_image_url ||
+                                    '/placeholder-product.jpg'
+                                "
                                 class="h-full w-full object-cover"
                             />
                         </div>
 
-                        <div class="flex-1 flex flex-col gap-3">
-                            <div class="flex justify-between items-start">
+                        <div class="flex flex-1 flex-col gap-3">
+                            <div class="flex items-start justify-between">
                                 <div>
-                                    <h3 class="font-semibold text-zinc-900 flex items-center gap-2">
-                                        {{ content.product_name + ' ' + getSelectedVariant(content)?.name}}
-                                        <Badge variant="secondary" class="text-[10px]">x{{ content.quantity }}</Badge>
+                                    <h3
+                                        class="flex items-center gap-2 font-semibold text-zinc-900"
+                                    >
+                                        {{
+                                            content.product_name +
+                                            ' ' +
+                                            getSelectedVariant(content)?.name
+                                        }}
+                                        <Badge
+                                            variant="secondary"
+                                            class="text-[10px]"
+                                            >x{{ content.quantity }}</Badge
+                                        >
                                     </h3>
                                 </div>
-                                <span class="font-medium text-zinc-900 tabular-nums">
-                                    {{ formatPrice(getSelectedVariant(content)?.sale_price || getSelectedVariant(content)?.price || 0 ) }}
+                                <span
+                                    class="font-medium text-zinc-900 tabular-nums"
+                                >
+                                    {{
+                                        formatPrice(
+                                            getSelectedVariant(content)
+                                                ?.sale_price ||
+                                                getSelectedVariant(content)
+                                                    ?.price ||
+                                                0,
+                                        )
+                                    }}
                                 </span>
                             </div>
 
@@ -1217,18 +1301,31 @@ watch(
                                 <button
                                     v-for="v in content.variants"
                                     :key="v.id"
-                                    @click="bundleVariantSelections[content.id] = v.id"
+                                    @click="
+                                        bundleVariantSelections[content.id] =
+                                            v.id
+                                    "
                                     class="group relative h-8 w-8 rounded-full border-2 transition-all"
                                     :class="[
-                                        bundleVariantSelections[content.id] === v.id
-                                            ? 'border-orange-400 ring-2 ring-orange-400/20 scale-110'
+                                        bundleVariantSelections[content.id] ===
+                                        v.id
+                                            ? 'scale-110 border-orange-400 ring-2 ring-orange-400/20'
                                             : 'border-transparent hover:scale-110',
-                                        !v.in_stock ? 'opacity-30 grayscale cursor-not-allowed' : 'cursor-pointer'
+                                        !v.in_stock
+                                            ? 'cursor-not-allowed opacity-30 grayscale'
+                                            : 'cursor-pointer',
                                     ]"
                                 >
-                                    <img :src="v.primary_image_url!" class="h-full w-full rounded-full object-cover" />
-                                    <span class="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-zinc-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                                        {{  content.product_name + ' ' + v.name }}
+                                    <img
+                                        :src="v.primary_image_url!"
+                                        class="h-full w-full rounded-full object-cover"
+                                    />
+                                    <span
+                                        class="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 rounded bg-zinc-800 px-2 py-1 text-[10px] whitespace-nowrap text-white opacity-0 transition-opacity group-hover:opacity-100"
+                                    >
+                                        {{
+                                            content.product_name + ' ' + v.name
+                                        }}
                                     </span>
                                 </button>
                             </div>
@@ -1236,19 +1333,34 @@ watch(
                     </div>
                 </div>
 
-                <DialogFooter class="p-6 bg-zinc-50 border-t flex items-center justify-between">
+                <DialogFooter
+                    class="flex items-center justify-between border-t bg-zinc-50 p-6"
+                >
                     <div class="flex flex-col">
-                        <span class="text-xs text-zinc-500 uppercase font-bold">Tổng cộng</span>
-                        <span class="text-2xl font-bold text-orange-500 tabular-nums">
+                        <span class="text-xs font-bold text-zinc-500 uppercase"
+                            >Tổng cộng</span
+                        >
+                        <span
+                            class="text-2xl font-bold text-orange-500 tabular-nums"
+                        >
                             {{ formatPrice(bundleDynamicPrice) }}
                         </span>
                     </div>
                     <div class="flex gap-2">
-                        <Button variant="outline" @click="showBundleDialog = false">Hủy</Button>
+                        <Button
+                            variant="outline"
+                            @click="showBundleDialog = false"
+                            >Hủy</Button
+                        >
                         <Button
                             @click="confirmBundleSelection"
-                            class="bg-orange-400 hover:bg-orange-500 text-white"
-                            :disabled="Object.keys(bundleVariantSelections).length < (props.bundleContents?.[selectedBundle?.id ?? '']?.length ?? 0)"
+                            class="bg-orange-400 text-white hover:bg-orange-500"
+                            :disabled="
+                                Object.keys(bundleVariantSelections).length <
+                                (props.bundleContents?.[
+                                    selectedBundle?.id ?? ''
+                                ]?.length ?? 0)
+                            "
                         >
                             Xác nhận thêm
                         </Button>

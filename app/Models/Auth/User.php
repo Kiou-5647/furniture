@@ -4,6 +4,7 @@ namespace App\Models\Auth;
 
 use App\Enums\UserType;
 use App\Models\Customer\Customer;
+use App\Models\Hr\Designer;
 use App\Models\Hr\Employee;
 use App\Models\Sales\Order;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -62,18 +63,7 @@ class User extends Authenticatable implements MustVerifyEmail
             ->logOnly(['name', 'email', 'type', 'is_active', 'is_verified', 'last_login_at'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
-            ->setDescriptionForEvent(fn (string $eventName) => "User account {$eventName}");
-    }
-
-    public function getAvatarUrlAttribute(): ?string
-    {
-        $profile = match ($this->type->value) {
-            'employee' => $this->employee,
-            'customer' => $this->customer,
-            default => null,
-        };
-
-        return $profile?->getFirstMediaUrl('avatar', 'thumb') ?: null;
+            ->setDescriptionForEvent(fn(string $eventName) => "User account {$eventName}");
     }
 
     public function isEmployee(): bool
@@ -86,6 +76,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->type === UserType::Customer;
     }
 
+    public function isDesiger(): bool
+    {
+        return $this->type === UserType::Designer;
+    }
+
     public function employee(): HasOne
     {
         return $this->hasOne(Employee::class);
@@ -94,6 +89,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function customer(): HasOne
     {
         return $this->hasOne(Customer::class);
+    }
+
+    public function designer(): HasOne
+    {
+        return $this->hasOne(Designer::class);
     }
 
     public function orders(): HasMany

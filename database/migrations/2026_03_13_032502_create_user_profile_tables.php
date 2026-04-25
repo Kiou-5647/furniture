@@ -44,7 +44,6 @@ return new class extends Migration
             $table->string('full_name')->nullable();
             $table->string('phone', 20)->nullable();
             $table->decimal('total_spent', 15, 2)->default(0);
-            $table->integer('loyalty_points')->default(0);
             $table->timestamps();
             $table->softDeletes();
         });

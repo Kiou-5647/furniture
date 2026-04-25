@@ -6,6 +6,23 @@
 
 export const DAYS_SHORT = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'] as const;
 
+function parseDate(dateStr: string): Date | null {
+    if (!dateStr) return null;
+
+    // Handle dd/mm/yyyy or dd/mm/yyyy HH:mm
+    if (dateStr.includes('/')) {
+        const [datePart, timePart] = dateStr.split(/[\s-]/);
+        const [dd, mm, yyyy] = datePart.split('/');
+        if (dd && mm && yyyy) {
+            return new Date(`${yyyy}-${mm}-${dd}${timePart ? 'T' + timePart : ''}`);
+        }
+    }
+
+    // Handle ISO or yyyy-mm-dd
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? null : d;
+}
+
 /**
  * Format a session date (YYYY-MM-DD + hour integers) into "T4 15/04 · 14:00–16:00".
  */
@@ -14,7 +31,9 @@ export function formatSessionDate(
     startHour: number,
     endHour: number,
 ): string {
-    const d = new Date(dateStr);
+    const d = parseDate(dateStr);
+    if (!d) return '—';
+
     const dayName = DAYS_SHORT[d.getDay()] ?? '';
     const dd = d.getDate().toString().padStart(2, '0');
     const mm = (d.getMonth() + 1).toString().padStart(2, '0');
@@ -24,39 +43,33 @@ export function formatSessionDate(
 }
 
 /**
- * Format a datetime string from the API ("dd/mm/yyyy HH:MM" or "dd/mm/yyyy-HH:mm:ss")
- * into "T4 15/04/2026 · 14:00". Returns the original string if it can't be parsed.
+ * Format a datetime string into "T4 15/04/2026 · 14:00".
  */
 export function formatDateTime(datetimeStr: string): string {
-    if (!datetimeStr) return '';
-    const [datePart, timePart] = datetimeStr.split(/[\s-]/);
-    if (!datePart || !timePart) return datetimeStr;
-    const [dd, mm, yyyy] = datePart.split('/');
-    if (!dd || !mm || !yyyy) return datetimeStr;
-    const d = new Date(`${yyyy}-${mm}-${dd}T${timePart}`);
+    const d = parseDate(datetimeStr);
+    if (!d) return datetimeStr || '—';
+
     const dayName = DAYS_SHORT[d.getDay()] ?? '';
-    return `${dayName} ${datePart} · ${timePart}`;
+    const dd = d.getDate().toString().padStart(2, '0');
+    const mm = (d.getMonth() + 1).toString().padStart(2, '0');
+    const yyyy = d.getFullYear();
+    const hh = d.getHours().toString().padStart(2, '0');
+    const min = d.getMinutes().toString().padStart(2, '0');
+
+    return `${dayName} ${dd}/${mm}/${yyyy} · ${hh}:${min}`;
 }
 
 /**
- * Format a date string ("dd/mm/yyyy" or "yyyy-mm-dd") into "T4 15/04/2026".
+ * Format a date string into "T4 15/04/2026".
  */
 export function formatDateOnly(dateStr: string): string {
-    if (!dateStr) return '—';
-    const parts = dateStr.split(/[\/\-]/);
-    if (parts.length !== 3) return dateStr;
+    const d = parseDate(dateStr);
+    if (!d) return '—';
 
-    // Determine order: if first part is 4 digits it's yyyy-mm-dd
-    if (parts[0]!.length === 4) {
-        const [yyyy, mm, dd] = parts;
-        const d = new Date(`${yyyy}-${mm}-${dd}`);
-        const dayName = DAYS_SHORT[d.getDay()] ?? '';
-        return `${dayName} ${dd}/${mm}/${yyyy}`;
-    }
-
-    // Otherwise assume dd/mm/yyyy
-    const [dd, mm, yyyy] = parts;
-    const d = new Date(`${yyyy}-${mm}-${dd}`);
     const dayName = DAYS_SHORT[d.getDay()] ?? '';
+    const dd = d.getDate().toString().padStart(2, '0');
+    const mm = (d.getMonth() + 1).toString().padStart(2, '0');
+    const yyyy = d.getFullYear();
+
     return `${dayName} ${dd}/${mm}/${yyyy}`;
 }

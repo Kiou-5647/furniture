@@ -23,7 +23,6 @@ class Customer extends Model implements HasMedia
 
     protected $casts = [
         'total_spent' => 'decimal:2',
-        'loyalty_points' => 'integer',
     ];
 
     public function user(): BelongsTo
@@ -44,9 +43,9 @@ class Customer extends Model implements HasMedia
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['full_name', 'email', 'phone', 'total_spent', 'loyalty_points'])
+            ->logOnly(['full_name', 'email', 'phone', 'total_spent'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
-            ->setDescriptionForEvent(fn (string $eventName) => "Customer {$eventName}");
+            ->setDescriptionForEvent(fn(string $eventName) => "Customer {$eventName}");
     }
 }

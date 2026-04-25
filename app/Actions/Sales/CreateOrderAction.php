@@ -11,11 +11,13 @@ use App\Models\Product\ProductVariant;
 use App\Models\Sales\Invoice;
 use App\Models\Sales\Order;
 use App\Services\Location\StockLocatorService;
+use App\Settings\GeneralSettings;
 use Illuminate\Support\Facades\DB;
 
 class CreateOrderAction
 {
     public function __construct(
+        protected GeneralSettings $settings,
         protected StockLocatorService $stockLocator,
     ) {}
 
@@ -24,11 +26,16 @@ class CreateOrderAction
         DB::beginTransaction();
 
         try {
-            // Validate items and resolve source locations
             $validatedItems = $this->validateAndResolveItems($data);
             $totalAmount = collect($validatedItems)->sum(fn($item) => $item['unit_price'] * $item['quantity']);
             $totalItems = collect($validatedItems)->sum('quantity');
+
             $shippingCost = (float) ($data->shipping_cost ?? 0);
+
+            if (! empty($data->shipping_method_id) && $totalAmount >= $this->settings->freeship_threshold) {
+                $shippingCost = 0;
+            }
+
             $grandTotal = $totalAmount + $shippingCost;
 
             // Build address data

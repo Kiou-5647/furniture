@@ -1,6 +1,6 @@
 import { router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
-import { index, store, update } from '@/routes/employee/products/bundles';
+import { index, store, update } from '@/routes/employee/bundles';
 import type { Bundle } from '@/types/bundle';
 
 export function useBundleForm(initialBundle: Bundle | null) {
@@ -17,9 +17,6 @@ export function useBundleForm(initialBundle: Bundle | null) {
         primary_image_url: initialBundle?.images?.primary ?? null,
         hover_image_file: null as File | null,
         hover_image_url: initialBundle?.images?.hover ?? null,
-        gallery_files: [] as File[],
-        gallery_urls: initialBundle?.images?.gallery ?? [],
-        removed_gallery_ids: [] as string[],
 
         contents: initialBundle?.contents ?? [],
     });
@@ -92,23 +89,6 @@ export function useBundleForm(initialBundle: Bundle | null) {
         if (file) form.value.hover_image_url = null;
     }
 
-    function addGalleryImages(files: File[]) {
-        const remaining = 10 - (form.value.gallery_urls.length + form.value.gallery_files.length);
-        form.value.gallery_files.push(...files.slice(0, Math.max(0, remaining)));
-    }
-
-    function removeGalleryImage(index: number, isExisting: boolean) {
-        if (isExisting) {
-            const mediaId = form.value.gallery_urls[index];
-            if (mediaId) {
-                form.value.removed_gallery_ids.push(mediaId);
-                form.value.gallery_urls.splice(index, 1);
-            }
-        } else {
-            form.value.gallery_files.splice(index, 1);
-        }
-    }
-
     function submit() {
         const payload = {
             ...form.value,
@@ -137,6 +117,6 @@ export function useBundleForm(initialBundle: Bundle | null) {
 
     return {
         form, isValid, bundlePricing, addCard, removeCard, submit,
-        setPrimaryImage, setHoverImage, addGalleryImages, removeGalleryImage
+        setPrimaryImage, setHoverImage
     };
 }

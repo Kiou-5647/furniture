@@ -23,7 +23,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { slugify } from '@/lib/utils';
-import { store, update } from '@/routes/employee/products/collections';
+import { store, update } from '@/routes/employee/collections';
 import type { Collection } from '@/types/collection';
 
 const props = defineProps<{
@@ -144,7 +144,7 @@ function closeModal() {
                                 >Ảnh đại diện</FieldLabel
                             >
                             <ImageUploader
-                            :model-value="form.image"
+                                v-model="form.image"
                                 :preview-url="imagePreviewUrl"
                                 aspect-ratio="square"
                             />
@@ -155,7 +155,7 @@ function closeModal() {
                                 >Banner</FieldLabel
                             >
                             <ImageUploader
-                            :model-value="form.banner"
+                                v-model="form.banner"
                                 :preview-url="bannerPreviewUrl"
                                 aspect-ratio="wide"
                             />
@@ -242,7 +242,7 @@ function closeModal() {
                                     >Ảnh đại diện</FieldLabel
                                 >
                                 <ImageUploader
-                                :model-value="form.image"
+                                    v-model="form.image"
                                     :preview-url="imagePreviewUrl"
                                     aspect-ratio="square"
                                     class="w-60 justify-self-center"
@@ -253,7 +253,7 @@ function closeModal() {
                                     >Banner</FieldLabel
                                 >
                                 <ImageUploader
-                                :model-value="form.banner"
+                                    v-model="form.banner"
                                     :preview-url="bannerPreviewUrl"
                                     aspect-ratio="wide"
                                 />

@@ -2,10 +2,11 @@
 import { Head, router } from '@inertiajs/vue3';
 import { ArrowLeft, User, FileText, CreditCard, ClipboardList } from '@lucide/vue';
 import { ref } from 'vue';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { index } from '@/routes/employee/sales/refunds';
+import { approve, reject } from '@/routes/employee/sales/refunds';
 import type { BreadcrumbItem } from '@/types';
 import type { Refund } from '@/types/refund';
 
@@ -30,7 +31,7 @@ const statusColors: Record<string, string> = {
 function handleApprove() {
     if (!confirm('Duyệt yêu cầu hoàn tiền này?')) return;
     isProcessing.value = true;
-    router.post(`/nhan-vien/hoan-tien/${props.refund.id}/approve`, {}, {
+    router.post(approve(props.refund.id), {}, {
         onFinish: () => (isProcessing.value = false),
     });
 }
@@ -38,7 +39,7 @@ function handleApprove() {
 function handleReject() {
     if (!confirm('Từ chối yêu cầu hoàn tiền này?')) return;
     isProcessing.value = true;
-    router.post(`/nhan-vien/hoan-tien/${props.refund.id}/reject`, {}, {
+    router.post(reject(props.refund.id), {}, {
         onFinish: () => (isProcessing.value = false),
     });
 }

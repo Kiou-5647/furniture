@@ -19,7 +19,7 @@ import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { cleanQuery, setCookie } from '@/lib/utils';
-import { index, destroy, show, create, edit } from '@/routes/employee/products/items';
+import { index, destroy, show, create, edit } from '@/routes/employee/products';
 import type {
     BreadcrumbItem,
     ProductStatus,

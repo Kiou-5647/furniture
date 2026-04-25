@@ -47,4 +47,10 @@ return [
         'order_type' => env('VNPAY_ORDER_TYPE', 'furniture'),
     ],
 
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI'),
+    ],
+
 ];

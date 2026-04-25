@@ -1,8 +1,8 @@
-import { useForm } from '@inertiajs/vue3';
+import { useForm, usePage } from '@inertiajs/vue3';
 import { Package, Settings, Layers, Warehouse } from '@lucide/vue';
 import { computed, reactive, ref, watch } from 'vue';
 import type { Ref } from 'vue';
-import { store, update } from '@/routes/employee/products/items';
+import { store, update } from '@/routes/employee/products';
 import type { ProductStatus, SpecLookupOption, SpecItem } from '@/types';
 import type { ProductSpecifications } from '@/types/lookup';
 import type { Product, ProductVariant, OptionGroup } from '@/types/product';
@@ -51,6 +51,12 @@ const difficultyOptions: { label: string; value: string }[] = [
     { label: 'Trung bình', value: 'medium' },
     { label: 'Khó', value: 'hard' },
 ];
+
+const page = usePage();
+
+const defaultWarrantyMonths = computed(() =>
+    Number(page.props.settings?.default_warranty) || 0
+) ;
 
 export interface ProductFormContext {
     form: ReturnType<typeof useForm>;
@@ -156,7 +162,7 @@ export function useProductForm(
             manual_url: '',
             manual_file: null,
         },
-        warranty_months: 12 as number | null,
+        warranty_months: defaultWarrantyMonths.value as number | null,
         is_featured: false,
         is_new_arrival: false,
         published_date: '',
@@ -890,7 +896,7 @@ export function useProductForm(
         form.reset();
         form.clearErrors();
         form.status = 'draft';
-        form.warranty_months = 12;
+        form.warranty_months = defaultWarrantyMonths.value;
         form.is_new_arrival = false;
         form.assembly_info = {
             required: false,

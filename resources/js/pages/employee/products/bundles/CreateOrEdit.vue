@@ -24,7 +24,7 @@ import { createLazyComponent } from '@/composables/createLazyComponent';
 import { useBundleForm } from '@/composables/useBundleForm';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { slugify } from '@/lib/utils';
-import { index } from '@/routes/employee/products/bundles';
+import { index } from '@/routes/employee/bundles';
 import type { Bundle } from '@/types/bundle';
 
 const ProductCardSearchModal = createLazyComponent(
@@ -46,8 +46,6 @@ const {
     submit,
     setPrimaryImage,
     setHoverImage,
-    addGalleryImages,
-    removeGalleryImage,
 } = useBundleForm(props.bundle);
 
 const showSearchModal = ref(false);
@@ -429,80 +427,6 @@ watch(
                                     setHoverImage(
                                         ($event.target as HTMLInputElement)
                                             .files?.[0] || null,
-                                    )
-                                "
-                            />
-                        </div>
-
-                        <!-- Gallery -->
-                        <div class="space-y-2">
-                            <Label>Thư viện (Tối đa 10)</Label>
-                            <div class="grid grid-cols-5 gap-2">
-                                <!-- Existing and New Images -->
-                                <div
-                                    v-for="(url, idx) in form.gallery_urls"
-                                    :key="'url-' + idx"
-                                    class="group relative aspect-square overflow-hidden rounded border bg-muted/30"
-                                >
-                                    <img
-                                        :src="url"
-                                        class="h-full w-full object-cover"
-                                    />
-                                    <button
-                                        @click.stop="
-                                            removeGalleryImage(idx, true)
-                                        "
-                                        class="absolute inset-0 flex items-center justify-center bg-destructive/60 opacity-0 transition-opacity group-hover:opacity-100"
-                                    >
-                                        <Trash2 class="h-3 w-3 text-white" />
-                                    </button>
-                                </div>
-                                <div
-                                    v-for="(file, idx) in form.gallery_files"
-                                    :key="'file-' + idx"
-                                    class="group relative aspect-square overflow-hidden rounded border bg-muted/30"
-                                >
-                                    <img
-                                        :src="createObjectURL(file)"
-                                        class="h-full w-full object-cover"
-                                    />
-                                    <button
-                                        @click.stop="
-                                            removeGalleryImage(idx, false)
-                                        "
-                                        class="absolute inset-0 flex items-center justify-center bg-destructive/60 opacity-0 transition-opacity group-hover:opacity-100"
-                                    >
-                                        <Trash2 class="h-3 w-3 text-white" />
-                                    </button>
-                                </div>
-
-                                <!-- Add Button -->
-                                <div
-                                    v-if="
-                                        form.gallery_urls.length +
-                                            form.gallery_files.length <
-                                        10
-                                    "
-                                    @click="triggerUpload('gallery-upload')"
-                                    class="flex aspect-square cursor-pointer items-center justify-center rounded border-2 border-dashed bg-muted/30 transition-colors hover:bg-muted"
-                                >
-                                    <Plus
-                                        class="h-4 w-4 text-muted-foreground"
-                                    />
-                                </div>
-                            </div>
-                            <input
-                                id="gallery-upload"
-                                type="file"
-                                class="hidden"
-                                multiple
-                                accept="image/*"
-                                @change="
-                                    addGalleryImages(
-                                        Array.from(
-                                            ($event.target as HTMLInputElement)
-                                                .files || [],
-                                        ),
                                     )
                                 "
                             />

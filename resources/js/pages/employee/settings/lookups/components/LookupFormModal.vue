@@ -168,7 +168,7 @@ const isColorNamespace = computed(() => currentNamespace.value === 'mau-sac');
                             >Hình ảnh</FieldLabel
                         >
                         <ImageUploader
-                            :model-value="form.image"
+                            v-model="form.image"
                             :preview-url="previewUrl"
                             aspect-ratio="square"
                         />
@@ -362,7 +362,7 @@ const isColorNamespace = computed(() => currentNamespace.value === 'mau-sac');
                                 >Hình ảnh</FieldLabel
                             >
                             <ImageUploader
-                                :model-value="form.image"
+                                v-model="form.image"
                                 :preview-url="previewUrl"
                                 aspect-ratio="square"
                                 class="mt-2 w-60 justify-self-center"

@@ -1,8 +1,9 @@
 <?php
 
-use App\Http\Controllers\Public\CartController;
+use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Customer\ReviewController;
 use App\Http\Controllers\Payment\VnPayReturnController;
+use App\Http\Controllers\Public\CartController;
 use App\Http\Controllers\Public\ProductController;
 use App\Http\Controllers\Public\WelcomeController;
 use Illuminate\Support\Facades\Route;
@@ -38,6 +39,12 @@ Route::middleware(['auth', 'verified', 'user_type:customer'])->name('customer.')
  */
 Route::get('/payment/vnpay/return', VnPayReturnController::class)->name('payment.vnpay.return');
 Route::inertia('/payment/vnpay/status', 'payment/vnpay-status')->name('payment.vnpay.status');
+
+/**
+ * Google Auth
+ */
+Route::get('api/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
+Route::get('api/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
 
 require __DIR__ . '/employee.php';
 require __DIR__ . '/settings.php';

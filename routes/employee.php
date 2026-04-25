@@ -3,6 +3,7 @@
 use App\Http\Controllers\Employee\Booking\BookingController;
 use App\Http\Controllers\Employee\Booking\DesignServiceController;
 use App\Http\Controllers\Employee\EmployeeDashboardController;
+use App\Http\Controllers\Setting\EmployeeProfileController;
 use App\Http\Controllers\Employee\Fulfillment\ShipmentController;
 use App\Http\Controllers\Employee\Fulfillment\ShippingMethodController;
 use App\Http\Controllers\Employee\Hr\DepartmentController;
@@ -20,11 +21,18 @@ use App\Http\Controllers\Employee\Sales\OrderController;
 use App\Http\Controllers\Employee\Sales\PaymentController;
 use App\Http\Controllers\Employee\Sales\RefundController;
 use App\Http\Controllers\Employee\Setting\ActivityLogController;
+use App\Http\Controllers\Employee\Setting\GeneralSettingsController;
 use App\Http\Controllers\Employee\Setting\LookupController;
 use App\Http\Controllers\Employee\Setting\LookupNamespaceController;
 use App\Http\Controllers\Employee\Vendor\VendorController;
 use App\Http\Controllers\Payment\VnPayPaymentController;
 use Illuminate\Support\Facades\Route;
+
+
+Route::middleware(['auth', 'user_type:employee'])->prefix('nhan-vien')->name('employee.')->group(function () {
+    Route::get('/ho-so', [EmployeeProfileController::class, 'edit'])->name('profile.edit');
+    Route::post('/ho-so', [EmployeeProfileController::class, 'update'])->name('profile.update');
+});
 
 Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien')->name('employee.')->group(function () {
     /**
@@ -162,13 +170,14 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
         Route::prefix('hoan-tien')->name('refunds.')->group(function () {
             Route::middleware(['can:payments.view'])->group(function () {
                 Route::get('/', [RefundController::class, 'index'])->name('index');
-                Route::get('/{refund}', [RefundController::class, 'show'])->name('show');
             });
-
             Route::middleware(['can:payments.manage'])->group(function () {
                 Route::post('/{refund}/mark-processing', [RefundController::class, 'markProcessing'])->name('mark-processing');
                 Route::post('/{refund}/approve', [RefundController::class, 'approve'])->name('approve');
                 Route::post('/{refund}/reject', [RefundController::class, 'reject'])->name('reject');
+            });
+            Route::middleware(['can:payments.view'])->group(function () {
+                Route::get('/{refund}', [RefundController::class, 'show'])->name('show');
             });
         });
 
@@ -255,6 +264,14 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
 
     Route::prefix('cau-hinh')->name('settings.')->group(function () {
         /**
+         * General Settings routes
+         */
+        Route::prefix('chung')->name('general.')->group(function () {
+            Route::get('/', [GeneralSettingsController::class, 'index'])->name('index');
+            Route::post('/', [GeneralSettingsController::class, 'update'])->name('update');
+        });
+
+        /**
          * Lookup Namespaces routes
          */
         Route::prefix('danh-muc-tra-cuu')->name('lookupNamespaces.')->group(function () {
@@ -299,93 +316,90 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
      * Products routes
      */
     Route::prefix('san-pham')->name('products.')->group(function () {
-        Route::prefix('')->name('items.')->group(function () {
-            Route::middleware(['can:products.view'])->group(function () {
-                Route::get('/', [ProductController::class, 'index'])->name('index');
-                Route::get('cards/search', [ProductController::class, 'searchCards'])->name('product-cards.search');
-            });
-
-            Route::middleware(['can:products.manage'])->group(function () {
-                Route::get('/chinh-sua/{product}', [ProductController::class, 'edit'])->name('edit');
-                Route::get('/tao-san-pham', [ProductController::class, 'create'])->name('create');
-                Route::post('/', [ProductController::class, 'store'])->name('store');
-                Route::put('/{product}', [ProductController::class, 'update'])->name('update');
-                Route::delete('/{product}', [ProductController::class, 'destroy'])->name('destroy');
-
-                // Soft Delete / Trash Sub-group
-                Route::prefix('thung-rac')->name('trash.')->group(function () {
-                    Route::get('/', [ProductController::class, 'trash'])->name('index');
-                    Route::post('/{product}/restore', [ProductController::class, 'restore'])->name('restore')->withTrashed();
-                    Route::delete('/{product}/force', [ProductController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
-                });
-            });
-            Route::middleware(['can:products.view'])->group(function () {
-                Route::get('/{product}', [ProductController::class, 'show'])->name('show');
-            });
+        Route::middleware(['can:products.view'])->group(function () {
+            Route::get('/', [ProductController::class, 'index'])->name('index');
+            Route::get('cards/search', [ProductController::class, 'searchCards'])->name('product-cards.search');
         });
 
-        // Categories routes
-        Route::prefix('danh-muc')->name('categories.')->group(function () {
-            // View Group
-            Route::middleware(['can:categories.view'])->group(function () {
-                Route::get('/{groupSlug?}', [CategoryController::class, 'index'])->name('index');
-            });
+        Route::middleware(['can:products.manage'])->group(function () {
+            Route::get('/chinh-sua/{product}', [ProductController::class, 'edit'])->name('edit');
+            Route::get('/tao-san-pham', [ProductController::class, 'create'])->name('create');
+            Route::post('/', [ProductController::class, 'store'])->name('store');
+            Route::put('/{product}', [ProductController::class, 'update'])->name('update');
+            Route::delete('/{product}', [ProductController::class, 'destroy'])->name('destroy');
 
-            // Manage Group
-            Route::middleware(['can:categories.manage'])->group(function () {
-                Route::post('/', [CategoryController::class, 'store'])->name('store');
-                Route::put('/{category}', [CategoryController::class, 'update'])->name('update');
-                Route::delete('/{category}', [CategoryController::class, 'destroy'])->name('destroy');
-
-                // Soft Delete / Trash Sub-group
-                Route::prefix('thung-rac')->name('trash.')->group(function () {
-                    Route::get('/', [CategoryController::class, 'trash'])->name('index');
-                    Route::post('/{category}/restore', [CategoryController::class, 'restore'])->name('restore')->withTrashed();
-                    Route::delete('/{category}/force', [CategoryController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
-                });
+            // Soft Delete / Trash Sub-group
+            Route::prefix('thung-rac')->name('trash.')->group(function () {
+                Route::get('/', [ProductController::class, 'trash'])->name('index');
+                Route::post('/{product}/restore', [ProductController::class, 'restore'])->name('restore')->withTrashed();
+                Route::delete('/{product}/force', [ProductController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
             });
         });
+        Route::middleware(['can:products.view'])->group(function () {
+            Route::get('/{product}', [ProductController::class, 'show'])->name('show');
+        });
+    });
 
-        Route::prefix('bo-suu-tap')->name('collections.')->group(function () {
-            // View Group
-            Route::middleware(['can:collections.view'])->group(function () {
-                Route::get('/', [CollectionController::class, 'index'])->name('index');
-            });
-
-            // Manage Group
-            Route::middleware(['can:collections.manage'])->group(function () {
-                Route::post('/', [CollectionController::class, 'store'])->name('store');
-                Route::put('/{collection}', [CollectionController::class, 'update'])->name('update');
-                Route::delete('/{collection}', [CollectionController::class, 'destroy'])->name('destroy');
-
-                // Soft Delete / Trash Sub-group
-                Route::prefix('thung-rac')->name('trash.')->group(function () {
-                    Route::get('/', [CollectionController::class, 'trash'])->name('index');
-                    Route::post('/{collection}/restore', [CollectionController::class, 'restore'])->name('restore')->withTrashed();
-                    Route::delete('/{collection}/force', [CollectionController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
-                });
-            });
+    Route::prefix('danh-muc')->name('categories.')->group(function () {
+        // View Group
+        Route::middleware(['can:categories.view'])->group(function () {
+            Route::get('/{groupSlug?}', [CategoryController::class, 'index'])->name('index');
         });
 
-        Route::prefix('goi-san-pham')->name('bundles.')->group(function () {
-            Route::middleware(['can:bundles.view'])->group(function () {
-                Route::get('/', [BundleController::class, 'index'])->name('index');
+        // Manage Group
+        Route::middleware(['can:categories.manage'])->group(function () {
+            Route::post('/', [CategoryController::class, 'store'])->name('store');
+            Route::put('/{category}', [CategoryController::class, 'update'])->name('update');
+            Route::delete('/{category}', [CategoryController::class, 'destroy'])->name('destroy');
+
+            // Soft Delete / Trash Sub-group
+            Route::prefix('thung-rac')->name('trash.')->group(function () {
+                Route::get('/', [CategoryController::class, 'trash'])->name('index');
+                Route::post('/{category}/restore', [CategoryController::class, 'restore'])->name('restore')->withTrashed();
+                Route::delete('/{category}/force', [CategoryController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
             });
+        });
+    });
 
-            // Manage Group
-            Route::middleware(['can:bundles.manage'])->group(function () {
-                Route::get('/tao-goi-san-pham', [BundleController::class, 'create'])->name('create');
-                Route::get('/chinh-sua/{bundle}', [BundleController::class, 'edit'])->name('edit');
-                Route::post('/', [BundleController::class, 'store'])->name('store');
-                Route::put('/{bundle}', [BundleController::class, 'update'])->name('update');
-                Route::delete('/{bundle}', [BundleController::class, 'destroy'])->name('destroy');
+    Route::prefix('bo-suu-tap')->name('collections.')->group(function () {
+        // View Group
+        Route::middleware(['can:collections.view'])->group(function () {
+            Route::get('/', [CollectionController::class, 'index'])->name('index');
+        });
 
-                // Soft Delete / Trash Sub-group
-                Route::prefix('thung-rac')->name('trash.')->group(function () {
-                    Route::get('/', [BundleController::class, 'trash'])->name('index');
-                    Route::post('/{bundle}/restore', [BundleController::class, 'restore'])->name('restore')->withTrashed();
-                    Route::delete('/{bundle}/force', [BundleController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
-                });
+        // Manage Group
+        Route::middleware(['can:collections.manage'])->group(function () {
+            Route::post('/', [CollectionController::class, 'store'])->name('store');
+            Route::put('/{collection}', [CollectionController::class, 'update'])->name('update');
+            Route::delete('/{collection}', [CollectionController::class, 'destroy'])->name('destroy');
+
+            // Soft Delete / Trash Sub-group
+            Route::prefix('thung-rac')->name('trash.')->group(function () {
+                Route::get('/', [CollectionController::class, 'trash'])->name('index');
+                Route::post('/{collection}/restore', [CollectionController::class, 'restore'])->name('restore')->withTrashed();
+                Route::delete('/{collection}/force', [CollectionController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
+            });
+        });
+    });
+
+    Route::prefix('goi-san-pham')->name('bundles.')->group(function () {
+        Route::middleware(['can:bundles.view'])->group(function () {
+            Route::get('/', [BundleController::class, 'index'])->name('index');
+        });
+
+        // Manage Group
+        Route::middleware(['can:bundles.manage'])->group(function () {
+            Route::get('/tao-goi-san-pham', [BundleController::class, 'create'])->name('create');
+            Route::get('/chinh-sua/{bundle}', [BundleController::class, 'edit'])->name('edit');
+            Route::post('/', [BundleController::class, 'store'])->name('store');
+            Route::put('/{bundle}', [BundleController::class, 'update'])->name('update');
+            Route::delete('/{bundle}', [BundleController::class, 'destroy'])->name('destroy');
+
+            // Soft Delete / Trash Sub-group
+            Route::prefix('thung-rac')->name('trash.')->group(function () {
+                Route::get('/', [BundleController::class, 'trash'])->name('index');
+                Route::post('/{bundle}/restore', [BundleController::class, 'restore'])->name('restore')->withTrashed();
+                Route::delete('/{bundle}/force', [BundleController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
             });
         });
     });

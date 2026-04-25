@@ -230,7 +230,7 @@ function clearAll() {
                     <!-- Left: Avatar -->
                     <div class="hidden sm:block">
                         <ImageUploader
-                            :model-value="form.avatar"
+                            v-model="form.avatar"
                             :preview-url="avatarPreview"
                             aspect-ratio="square"
                             label="Chọn ảnh"
@@ -243,7 +243,7 @@ function clearAll() {
                         <!-- Mobile Avatar -->
                         <div class="sm:hidden">
                             <ImageUploader
-                                :model-value="form.avatar"
+                                v-model="form.avatar"
                                 :preview-url="avatarPreview"
                                 aspect-ratio="square"
                                 label="Chọn ảnh"

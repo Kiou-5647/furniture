@@ -42,7 +42,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { slugify } from '@/lib/utils';
-import { store, update } from '@/routes/employee/products/categories';
+import { store, update } from '@/routes/employee/categories';
 import type { ProductType } from '@/types';
 import type { Category } from '@/types/category';
 
@@ -78,7 +78,7 @@ watch(
     (newCategory) => {
         if (newCategory && props.open) {
             form.group_id = newCategory.group_id;
-            form.room_ids = newCategory.rooms?.map(r => r.id) ?? [];
+            form.room_ids = newCategory.rooms?.map((r) => r.id) ?? [];
             form.product_type = newCategory.product_type;
             form.slug = newCategory.slug;
             form.display_name = newCategory.display_name;
@@ -148,7 +148,6 @@ const selectedGroupLabel = computed(() => {
     const g = props.categoryGroups.find((g) => g.id === form.group_id);
     return g?.label;
 });
-
 </script>
 
 <template>
@@ -195,7 +194,7 @@ const selectedGroupLabel = computed(() => {
                             >Hình ảnh</FieldLabel
                         >
                         <ImageUploader
-                            :model-value="form.image"
+                            v-model="form.image"
                             :preview-url="previewUrl"
                             aspect-ratio="square"
                         />
@@ -376,7 +375,7 @@ const selectedGroupLabel = computed(() => {
                                 >Hình ảnh</FieldLabel
                             >
                             <ImageUploader
-                                :model-value="form.image"
+                                v-model="form.image"
                                 :preview-url="previewUrl"
                                 aspect-ratio="square"
                                 hint="4:3 hoặc 1:1 · Max 2MB"

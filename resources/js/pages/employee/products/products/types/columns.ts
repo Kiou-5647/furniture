@@ -20,7 +20,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { show } from '@/routes/employee/products/items';
+import { show } from '@/routes/employee/products';
 import type { Product } from '@/types/product';
 
 function formatPrice(value: string | number): string {
