@@ -15,7 +15,7 @@ class OrderResource extends JsonResource
         return [
             'id' => $this->id,
             'order_number' => $this->order_number,
-            'customer' => $this->whenLoaded('customer', fn () => [
+            'customer' => $this->whenLoaded('customer', fn() => [
                 'id' => $this->customer->id,
                 'name' => $this->customer->customer?->full_name ?? $this->customer->name,
                 'email' => $this->customer->email,
@@ -31,7 +31,7 @@ class OrderResource extends JsonResource
             'source' => $this->source,
             'payment_method' => $this->payment_method?->value,
             'payment_method_label' => $this->payment_method?->label(),
-            'store_location' => $this->whenLoaded('storeLocation', fn () => [
+            'store_location' => $this->whenLoaded('storeLocation', fn() => [
                 'id' => $this->storeLocation->id,
                 'name' => $this->storeLocation->name,
                 'code' => $this->storeLocation->code,
@@ -39,7 +39,7 @@ class OrderResource extends JsonResource
             'paid_at' => $this->paid_at?->format('d/m/Y H:i'),
             'shipping_cost' => $this->shipping_cost,
             'shipping_method_id' => $this->shipping_method_id,
-            'shipping_method' => $this->whenLoaded('shippingMethod', fn () => [
+            'shipping_method' => $this->whenLoaded('shippingMethod', fn() => [
                 'id' => $this->shippingMethod->id,
                 'name' => $this->shippingMethod->name,
                 'estimated_delivery_days' => $this->shippingMethod->estimated_delivery_days,
@@ -55,7 +55,7 @@ class OrderResource extends JsonResource
             'invoices' => InvoiceResource::collection($this->whenLoaded('invoices')),
             'shipments' => ShipmentResource::collection($this->whenLoaded('shipments')),
             'refunds' => RefundResource::collection($this->whenLoaded('refunds')),
-            'accepted_by' => $this->whenLoaded('acceptedBy', fn () => $this->acceptedBy->full_name),
+            'accepted_by' => $this->whenLoaded('acceptedBy', fn() => $this->acceptedBy->full_name),
             'created_at' => $this->created_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
             'updated_at' => $this->updated_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
             'deleted_at' => $this->deleted_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),

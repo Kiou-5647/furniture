@@ -40,16 +40,9 @@ class CreateOrderAction
 
             // Build address data
             $addressData = [];
-            if (! empty($data->building)) {
-                $addressData['building'] = $data->building;
-            }
-            if (! empty($data->address_number)) {
-                $addressData['address_number'] = $data->address_number;
-            }
+            $addressData['street'] = $data->street;
+            $addressData['full_address'] = $data->street . ', ' . $data->ward_name . ', ' . $data->province_name;
 
-            // Determine initial status based on order source
-            // Employee-created orders skip Pending → go straight to Processing
-            // Online orders (customer self-service) start at Pending waiting for payment
             $initialStatus = $data->source === 'in_store'
                 ? OrderStatus::Processing
                 : OrderStatus::Pending;

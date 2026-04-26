@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Sales;
 
-use App\Models\Customer\CustomerAddress;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -40,8 +39,7 @@ class CreateOrderRequest extends FormRequest
             'ward_code' => ['nullable', 'string', 'max:10'],
             'province_name' => ['nullable', 'string', 'max:255'],
             'ward_name' => ['nullable', 'string', 'max:255'],
-            'building' => ['nullable', 'string', 'max:255'],
-            'address_number' => ['nullable', 'string', 'max:255'],
+            'street' => ['nullable', 'string', 'max:255'],
         ];
 
         return $rules;
@@ -60,26 +58,5 @@ class CreateOrderRequest extends FormRequest
             'items.*.unit_price.required' => 'Vui lòng nhập đơn giá.',
             'items.*.unit_price.min' => 'Đơn giá phải lớn hơn hoặc bằng 0.',
         ];
-    }
-
-    public function withValidator($validator): void
-    {
-        $validator->after(function ($validator) {
-            $customerId = $this->input('customer_id');
-            $addressId = $this->input('shipping_address_id');
-
-            if ($customerId && $addressId) {
-                $exists = CustomerAddress::where('customer_id', $customerId)
-                    ->where('id', $addressId)
-                    ->exists();
-
-                if (! $exists) {
-                    $validator->errors()->add(
-                        'shipping_address_id',
-                        'Địa chỉ không thuộc khách hàng này.'
-                    );
-                }
-            }
-        });
     }
 }

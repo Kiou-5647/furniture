@@ -2,6 +2,7 @@ import type { ColumnDef } from '@tanstack/vue-table';
 import { h } from 'vue';
 import { formatDateTime, formatSessionDate } from '@/lib/date-utils';
 import type { Booking } from '@/types/booking';
+import { formatPrice } from '@/lib/utils';
 
 export function getColumns(
     onConfirm: (booking: Booking) => void,
@@ -30,27 +31,6 @@ export function getColumns(
                 ]),
         },
         {
-            accessorKey: 'service',
-            header: 'Dịch vụ',
-            size: 180,
-            enableSorting: false,
-            enableHiding: false,
-            meta: { align: 'left' },
-            cell: ({ row }) =>
-                h('div', {}, [
-                    h(
-                        'div',
-                        { class: 'font-medium text-sm' },
-                        row.original.service.name,
-                    ),
-                    h(
-                        'div',
-                        { class: 'text-xs text-muted-foreground' },
-                        `${Number(row.original.service.base_price).toLocaleString('vi-VN')}đ`,
-                    ),
-                ]),
-        },
-        {
             accessorKey: 'designer',
             header: 'Nhà thiết kế',
             size: 160,
@@ -65,30 +45,27 @@ export function getColumns(
                 ),
         },
         {
-            accessorKey: 'sessions',
+            accessorKey: 'total_price', // Replaced 'service'
+            header: 'Tổng tiền',
+            size: 120,
+            enableSorting: false,
+            enableHiding: false,
+            meta: { align: 'left' },
+            cell: ({ row }) =>
+                h(
+                    'span',
+                    { class: 'text-sm font-medium' },
+                    formatPrice(row.original.total_price),
+                ),
+        },
+        {
+            accessorKey: 'start_at',
             header: 'Ngày/Giờ',
             size: 200,
             enableSorting: false,
             enableHiding: false,
             meta: { align: 'left' },
             cell: ({ row }) => {
-                const sessions = row.original.sessions;
-                if (sessions && sessions.length > 0) {
-                    const first = sessions[0];
-                    const formatted = formatSessionDate(
-                        first.date,
-                        first.start_hour,
-                        first.end_hour,
-                    );
-                    const extra = sessions.length > 1
-                        ? ` +${sessions.length - 1}`
-                        : '';
-                    return h(
-                        'span',
-                        { class: 'text-sm' },
-                        `${formatted}${extra}`,
-                    );
-                }
                 if (row.original.start_at) {
                     const formatted = formatDateTime(row.original.start_at);
                     return h(

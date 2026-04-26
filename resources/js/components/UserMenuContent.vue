@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
 import { LogOut, Settings } from '@lucide/vue';
+import { computed } from 'vue';
 import {
     DropdownMenuGroup,
     DropdownMenuItem,
@@ -9,6 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import UserInfo from '@/components/UserInfo.vue';
 import { logout } from '@/routes';
+import { edit as editEmployeeProfile } from '@/routes/employee/profile';
 import { edit } from '@/routes/profile';
 import type { User } from '@/types';
 
@@ -16,11 +18,22 @@ type Props = {
     user: User;
 };
 
+const profileRoute = computed(() => {
+    switch (props.user.type) {
+        case 'employee':
+            return editEmployeeProfile().url;
+        case 'customer':
+            return edit();
+        default:
+            return edit();
+    }
+});
+
 const handleLogout = () => {
     router.flushAll();
 };
 
-defineProps<Props>();
+const props = defineProps<Props>();
 </script>
 
 <template>
@@ -32,7 +45,7 @@ defineProps<Props>();
     <DropdownMenuSeparator />
     <DropdownMenuGroup>
         <DropdownMenuItem :as-child="true">
-            <Link class="block w-full cursor-pointer" :href="edit()" prefetch>
+            <Link class="block w-full cursor-pointer" :href="profileRoute" prefetch>
                 <Settings class="mr-2 h-4 w-4" />
                 Cài đặt
             </Link>

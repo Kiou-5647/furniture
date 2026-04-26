@@ -20,7 +20,6 @@ class CancelBookingAction
 
         $booking->update([
             'status' => BookingStatus::Cancelled,
-            'accepted_by' => $performedBy?->id,
         ]);
 
         // Create refund if deposit was paid and employee is cancelling

@@ -9,7 +9,6 @@ readonly class BookingFilterData
 {
     public function __construct(
         public ?string $designer_id = null,
-        public ?string $service_id = null,
         public ?BookingStatus $status = null,
         public ?string $customer_id = null,
         public ?string $search = null,
@@ -22,7 +21,6 @@ readonly class BookingFilterData
     {
         return new self(
             designer_id: $request->query('designer_id'),
-            service_id: $request->query('service_id'),
             status: $request->query('status') ? BookingStatus::tryFrom($request->query('status')) : null,
             customer_id: $request->query('customer_id'),
             search: $request->query('search'),

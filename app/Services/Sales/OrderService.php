@@ -24,7 +24,7 @@ class OrderService
         $orderDirection = $filter->order_direction === 'asc' ? 'asc' : 'desc';
 
         return Order::query()
-            ->with(['customer.customer', 'acceptedBy', 'items.sourceLocation', 'storeLocation'])
+            ->with(['customer', 'acceptedBy', 'items.sourceLocation', 'storeLocation'])
             ->when($filter->customer_id, fn($q) => $q->byCustomerId($filter->customer_id))
             ->when($filter->status, fn($q) => $q->byStatus($filter->status))
             ->when($filter->source, fn($q) => $q->bySource($filter->source))
@@ -37,7 +37,7 @@ class OrderService
     public function getTrashedFiltered(OrderFilterData $filter): LengthAwarePaginator
     {
         return Order::onlyTrashed()
-            ->with(['customer.customer', 'acceptedBy'])
+            ->with(['customer', 'acceptedBy'])
             ->when($filter->customer_id, fn($q) => $q->byCustomerId($filter->customer_id))
             ->when($filter->search, fn($q) => $q->search($filter->search))
             ->orderBy($filter->order_by ?? 'deleted_at', $filter->order_direction ?? 'desc')
@@ -47,7 +47,7 @@ class OrderService
     public function getById(string $id): Order
     {
         return Order::with([
-            'customer.customer',
+            'customer',
             'items.sourceLocation',
             'items.purchasable',
             'acceptedBy',
@@ -87,28 +87,23 @@ class OrderService
         return User::query()
             ->where('type', 'customer')
             ->where('is_active', true)
-            ->with(['customer' => function ($q) {
-                $q->with(['addresses' => function ($q) {
-                    $q->orderBy('is_default', 'desc');
-                }]);
-            }])
+            ->with(['customer'])
             ->orderBy('name')
             ->get(['id', 'name', 'email'])
             ->map(function ($user) {
                 $customerProfile = $user->customer;
-                $defaultAddress = $customerProfile?->addresses->first();
 
                 return [
                     'id' => $user->id,
                     'name' => $customerProfile->full_name ?? $user->name,
                     'email' => $user->email,
                     'phone' => $customerProfile->phone ?? null,
-                    'default_address' => $defaultAddress ? [
-                        'province_code' => $defaultAddress->province_code,
-                        'province_name' => $defaultAddress->province_name,
-                        'ward_code' => $defaultAddress->ward_code,
-                        'ward_name' => $defaultAddress->ward_name,
-                        'address_data' => $defaultAddress->address_data,
+                    'default_address' => $customerProfile ? [
+                        'province_code' => $customerProfile->province_code,
+                        'province_name' => $customerProfile->province_name,
+                        'ward_code' => $customerProfile->ward_code,
+                        'ward_name' => $customerProfile->ward_name,
+                        'address_data' => $customerProfile->address_data,
                     ] : null,
                 ];
             });

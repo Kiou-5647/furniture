@@ -25,6 +25,7 @@ const DesignerFormModal = createLazyComponent(
 );
 
 const props = defineProps<{
+    workHours: any[],
     employeeOptions: { id: string; full_name: string; phone: string | null; email: string | null }[];
     designers?: DesignerPagination;
     filters: DesignerFilterData;
@@ -187,6 +188,7 @@ function performDelete() {
         <DesignerFormModal
             v-if="showFormModal"
             :open="showFormModal"
+            :workHours="workHours"
             :designer="selectedDesigner"
             :employee-options="employeeOptions"
             @close="showFormModal = false"

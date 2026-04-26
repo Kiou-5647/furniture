@@ -4,12 +4,10 @@ namespace Database\Seeders;
 
 use App\Models\Auth\User;
 use App\Models\Customer\Customer;
-use App\Models\Customer\CustomerAddress;
 use App\Models\Setting\Province;
 use App\Models\Setting\Ward;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class CustomerSeeder extends Seeder
 {
@@ -47,22 +45,16 @@ class CustomerSeeder extends Seeder
                 ]
             );
 
-            $customer = Customer::firstOrCreate(
+            Customer::firstOrCreate(
                 ['user_id' => $user->id],
-                ['full_name' => $d['full_name'], 'phone' => $d['phone']]
-            );
-
-            CustomerAddress::firstOrCreate(
-                ['customer_id' => $customer->id, 'type' => 'shipping'],
                 [
-                    'customer_id' => $customer->id,
-                    'type' => 'shipping',
+                    'full_name' => $d['full_name'],
+                    'phone' => $d['phone'],
                     'province_code' => $hn?->province_code,
                     'province_name' => $hn?->name,
                     'ward_code' => $hnWard?->ward_code,
                     'ward_name' => $hnWard?->name,
-                    'address_data' => ['street' => $d['address']],
-                    'is_default' => true,
+                    'address_data' => ['street' => $d['address'], 'full_address' => $d['address'] . ', ' . $hnWard?->name . ', ' . $hn?->name]
                 ]
             );
         }

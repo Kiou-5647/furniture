@@ -33,7 +33,7 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
         });
-        DB::statement("ALTER TABLE users ADD CONSTRAINT chk_users_type CHECK (type IN ('employee', 'vendor', 'customer'))");
+        DB::statement("ALTER TABLE users ADD CONSTRAINT chk_users_type CHECK (type IN ('employee', 'designer', 'customer'))");
         DB::statement('CREATE INDEX idx_users_type ON users(type)');
         DB::statement('CREATE INDEX idx_users_active ON users(is_active) WHERE is_active = true AND deleted_at IS NULL');
         DB::statement('CREATE INDEX idx_users_deleted ON users(deleted_at) WHERE deleted_at IS NOT NULL');

@@ -34,17 +34,12 @@ class BookingBuilder extends Builder
 
     public function byStatus(BookingStatus $status): self
     {
-        return $this->where('status', $status);
+        return $this->where('status', $status->value);
     }
 
     public function byDesigner(string $designerId): self
     {
         return $this->where('designer_id', $designerId);
-    }
-
-    public function byService(string $serviceId): self
-    {
-        return $this->where('service_id', $serviceId);
     }
 
     public function byCustomer(string $customerId): self
@@ -55,10 +50,11 @@ class BookingBuilder extends Builder
     public function search(string $search): self
     {
         return $this->where(function ($query) use ($search) {
-            $query->whereHas('customer', fn ($q) => $q->where('name', 'ilike', "%{$search}%"))
-                ->orWhereHas('customer', fn ($q) => $q->where('email', 'ilike', "%{$search}%"))
-                ->orWhereHas('designer', fn ($q) => $q->where('full_name', 'ilike', "%{$search}%"))
-                ->orWhereHas('service', fn ($q) => $q->where('name', 'ilike', "%{$search}%"));
+            return $this->where(function ($query) use ($search) {
+                $query->whereHas('customer', fn($q) => $q->where('name', 'ilike', "%{$search}%"))
+                    ->orWhereHas('customer', fn($q) => $q->where('email', 'ilike', "%{$search}%"))
+                    ->orWhereHas('designer', fn($q) => $q->where('full_name', 'ilike', "%{$search}%"));
+            });
         });
     }
 }

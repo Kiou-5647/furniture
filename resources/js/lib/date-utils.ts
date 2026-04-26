@@ -39,7 +39,7 @@ export function formatSessionDate(
     const mm = (d.getMonth() + 1).toString().padStart(2, '0');
     const start = `${startHour.toString().padStart(2, '0')}:00`;
     const end = `${endHour.toString().padStart(2, '0')}:00`;
-    return `${dayName} ${dd}/${mm} · ${start}–${end}`;
+    return `${dayName} · ${dd}/${mm} · ${start}–${end}`;
 }
 
 /**
@@ -56,7 +56,7 @@ export function formatDateTime(datetimeStr: string): string {
     const hh = d.getHours().toString().padStart(2, '0');
     const min = d.getMinutes().toString().padStart(2, '0');
 
-    return `${dayName} ${dd}/${mm}/${yyyy} · ${hh}:${min}`;
+    return `${dayName} · ${dd}/${mm}/${yyyy} · ${hh}:${min}`;
 }
 
 /**
@@ -71,5 +71,5 @@ export function formatDateOnly(dateStr: string): string {
     const mm = (d.getMonth() + 1).toString().padStart(2, '0');
     const yyyy = d.getFullYear();
 
-    return `${dayName} ${dd}/${mm}/${yyyy}`;
+    return `${dayName} · ${dd}/${mm}/${yyyy}`;
 }

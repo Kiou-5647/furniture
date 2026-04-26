@@ -11,6 +11,9 @@ use App\Models\Fulfillment\Shipment;
 use App\Models\Fulfillment\ShippingMethod;
 use App\Models\Hr\Employee;
 use App\Models\Inventory\Location;
+use App\Models\Sales\Invoice;
+use App\Models\Sales\OrderItem;
+use App\Models\Sales\Refund;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -53,7 +56,7 @@ class Order extends Model
             ->logOnly(['order_number', 'status', 'total_amount', 'customer_id', 'accepted_by'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
-            ->setDescriptionForEvent(fn (string $eventName) => "Order {$eventName}");
+            ->setDescriptionForEvent(fn(string $eventName) => "Order {$eventName}");
     }
 
     public function customer(): BelongsTo
@@ -98,12 +101,15 @@ class Order extends Model
 
     public function getShippingAddressText(): string
     {
-        $parts = array_filter([
-            $this->address_data['address_number'] ?? null,
-            $this->address_data['building'] ?? null,
+        if (!empty($this->address_data['full_address'])) {
+            return $this->address_data['full_address'];
+        }
+
+        $parts = [
+            $this->address_data['street'] ?? null,
             $this->ward_name,
             $this->province_name,
-        ]);
+        ];
 
         return implode(', ', $parts) ?: '—';
     }
@@ -113,7 +119,7 @@ class Order extends Model
         $date = now()->format('dmy');
 
         do {
-            $number = 'ORD-'.$date.'-'.self::randomToken();
+            $number = 'ORD-' . $date . '-' . self::randomToken();
         } while (self::where('order_number', $number)->exists());
 
         return $number;
@@ -176,7 +182,7 @@ class Order extends Model
                 return false;
             }
             $allResolved = $this->shipments()
-                ->whereHas('items', fn ($q) => $q->whereNotIn('status', [ShipmentStatus::Delivered, ShipmentStatus::Returned]))
+                ->whereHas('items', fn($q) => $q->whereNotIn('status', [ShipmentStatus::Delivered, ShipmentStatus::Returned]))
                 ->doesntExist();
 
             return $allResolved;

@@ -74,37 +74,42 @@ class InvoiceObserver
      */
     protected function handleBookingLifecycle(Invoice $invoice): void
     {
-        $invoiceable = $invoice->invoiceable;
-        if (! $invoiceable instanceof Booking) {
+        if ($invoice->invoiceable_type !== 'App\Models\Booking\Booking') {
             return;
         }
 
-        if (! $invoice->isDirty('status')) {
+        if ($invoice->status !== InvoiceStatus::Paid) {
             return;
         }
+
+        $booking = $invoice->invoiceable;
 
         // Deposit invoice just paid → transition booking status
-        if ($invoice->type === InvoiceType::Deposit
+        if (
+            $invoice->type === InvoiceType::Deposit
             && $invoice->status === InvoiceStatus::Paid
-            && $invoiceable->status === BookingStatus::PendingDeposit) {
+            && $booking->status === BookingStatus::PendingDeposit
+        ) {
 
-            $designer = $invoiceable->designer;
+            $designer = $booking->designer;
 
             if ($designer?->auto_confirm_bookings) {
-                $invoiceable->update(['status' => BookingStatus::Confirmed]);
+                $booking->updateQuietly(['status' => BookingStatus::Confirmed]);
             } else {
-                $invoiceable->update(['status' => BookingStatus::PendingConfirmation]);
+                $booking->updateQuietly(['status' => BookingStatus::PendingConfirmation]);
             }
 
             return;
         }
 
         // Final invoice just paid → complete booking
-        if ($invoice->type === InvoiceType::FinalBalance
+        if (
+            $invoice->type === InvoiceType::FinalBalance
             && $invoice->status === InvoiceStatus::Paid
-            && $invoiceable->status === BookingStatus::Confirmed) {
+            && $booking->status === BookingStatus::Confirmed
+        ) {
 
-            $invoiceable->update(['status' => BookingStatus::Completed]);
+            $booking->updateQuietly(['status' => BookingStatus::Completed]);
         }
     }
 }

@@ -9,7 +9,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('orders', function (Blueprint $table) {
-            $table->dropForeign(['shipping_address_id']);
             $table->dropColumn('shipping_address_id');
         });
     }
@@ -17,11 +16,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('orders', function (Blueprint $table) {
-            $table->foreignUuid('shipping_address_id')
-                ->nullable()
-                ->after('customer_id')
-                ->constrained('customer_addresses')
-                ->nullOnDelete();
+            $table->uuid('shipping_address_id')->nullable();
         });
     }
 };

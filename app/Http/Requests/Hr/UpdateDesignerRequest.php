@@ -25,9 +25,9 @@ class UpdateDesignerRequest extends FormRequest
             'is_active' => ['boolean'],
             'avatar' => ['nullable', 'image', 'max:2048'],
             'availabilities' => ['nullable', 'array'],
-            'availabilities.*.day_of_week' => ['integer', 'between:0,6'],
-            'availabilities.*.start_time' => ['date_format:H:i'],
-            'availabilities.*.end_time' => ['date_format:H:i'],
+            'availabilities.*.day_of_week' => ['required', 'integer', 'between:0,6'],
+            'availabilities.*.hour' => ['required', 'integer', 'between:0,23'],
+            'availabilities.*.is_available' => ['required', 'boolean'],
         ];
     }
 

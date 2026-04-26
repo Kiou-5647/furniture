@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { router, useForm } from '@inertiajs/vue3';
+import { useForm } from '@inertiajs/vue3';
 import {
     ChevronDown,
     ChevronRight,
@@ -38,15 +38,19 @@ import {
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
-import {
-    store,
-    update,
-    updateAvailabilitySlots,
-} from '@/routes/employee/hr/designers';
+import { availabilities, store, update } from '@/routes/employee/hr/designers';
 import type { WeeklySlots } from '@/types/designer';
+
+interface WorkHours {
+    morning_start: number;
+    morning_end: number;
+    afternoon_start: number;
+    afternoon_end: number;
+}
 
 const props = defineProps<{
     open: boolean;
+    workHours: WorkHours;
     designer: any | null;
     employeeOptions: {
         id: string;
@@ -73,7 +77,7 @@ const DAYS = [
     { key: 0, label: 'CN' },
 ];
 
-const HOURS = Array.from({ length: 24 }, (_, i) => i);
+const HOURS = Array.from({ length: 19 }, (_, i) => i + 5);
 
 const form = useForm({
     full_name: '',
@@ -86,6 +90,7 @@ const form = useForm({
     auto_confirm_bookings: false,
     is_active: true,
     avatar: null as File | null,
+    availabilities: [] as any[],
 });
 
 const showEmployeeInfo = ref(false);
@@ -104,22 +109,23 @@ function formatHour(hour: number): string {
     return `${hour.toString().padStart(2, '0')}:00`;
 }
 
-function getFirstHour(day: number): number | null {
-    const slots = weeklySlots.value[day];
-    if (!slots) return null;
-    for (let h = 0; h < 24; h++) {
-        if (slots[h]) return h;
-    }
-    return null;
-}
+function flattenSlots() {
+    const slotsFlat: Array<{
+        day_of_week: number;
+        hour: number;
+        is_available: boolean;
+    }> = [];
 
-function getLastHour(day: number): number | null {
-    const slots = weeklySlots.value[day];
-    if (!slots) return null;
-    for (let h = 23; h >= 0; h--) {
-        if (slots[h]) return h + 1;
+    for (const day of DAYS) {
+        for (const hour of HOURS) {
+            slotsFlat.push({
+                day_of_week: day.key,
+                hour,
+                is_available: weeklySlots.value[day.key]?.[hour] ?? false,
+            });
+        }
     }
-    return null;
+    return slotsFlat;
 }
 
 watch(
@@ -149,7 +155,7 @@ watch(
             if (newDes.id) {
                 try {
                     const response = await fetch(
-                        `/nhan-vien/quan-ly-nhan-su/nha-thiet-ke/${newDes.id}/availabilities`,
+                        availabilities(newDes.id).url,
                         {
                             headers: {
                                 'X-CSRF-TOKEN':
@@ -163,7 +169,7 @@ watch(
                     );
                     const data = await response.json();
                     weeklySlots.value = data.weekly || {};
-                } catch (e) {
+                } catch {
                     weeklySlots.value = {};
                 }
             }
@@ -209,17 +215,49 @@ function selectAllDay(day: number, available: boolean) {
     }
 }
 
+function selectWorkHours(day: number) {
+    // Typical working hours: 8am-12pm and 1pm-8pm
+    if (!weeklySlots.value[day]) {
+        weeklySlots.value[day] = Array(24).fill(false);
+    }
+    for (
+        let h = props.workHours.morning_start;
+        h < props.workHours.morning_end;
+        h++
+    ) {
+        weeklySlots.value[day][h] = true;
+    }
+    for (
+        let h = props.workHours.afternoon_start;
+        h < props.workHours.afternoon_end;
+        h++
+    ) {
+        weeklySlots.value[day][h] = true;
+    }
+}
+
+function clearDay(day: number) {
+    if (!weeklySlots.value[day]) {
+        weeklySlots.value[day] = Array(24).fill(false);
+    } else {
+        weeklySlots.value[day] = weeklySlots.value[day].map(() => false);
+    }
+}
+
 function submit() {
     form.employee_id =
         designerType.value === 'employee'
             ? selectedEmployeeId.value
             : undefined;
 
+    form.availabilities = flattenSlots();
+
     if (props.designer) {
         form.put(update({ designer: props.designer.id }).url, {
             preserveScroll: true,
             onSuccess: () => {
-                saveAvailability();
+                emit('refresh');
+                closeModal();
             },
         });
     } else {
@@ -230,39 +268,6 @@ function submit() {
                 closeModal();
             },
         });
-    }
-}
-
-async function saveAvailability() {
-    if (!props.designer?.id) return;
-
-    const slotsFlat: Array<{
-        day_of_week: number;
-        hour: number;
-        is_available: boolean;
-    }> = [];
-
-    for (const day of DAYS) {
-        for (const hour of HOURS) {
-            slotsFlat.push({
-                day_of_week: day.key,
-                hour,
-                is_available: weeklySlots.value[day.key]?.[hour] ?? false,
-            });
-        }
-    }
-
-    try {
-        await router.put(
-            updateAvailabilitySlots({ designer: props.designer.id }).url,
-            { slots: slotsFlat },
-            { preserveScroll: true },
-        );
-        emit('refresh');
-        closeModal();
-    } catch (e) {
-        console.error('Save error:', e);
-        alert('Lỗi khi lưu availability');
     }
 }
 
@@ -281,7 +286,7 @@ function closeModal() {
 <template>
     <Dialog :open="open" @update:open="(val) => !val && closeModal()">
         <DialogContent
-            class="flex h-[90vh] max-h-[90vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-[1000px]"
+            class="flex h-[90vh] max-h-[90vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-[75vw]"
         >
             <DialogHeader class="shrink-0 border-b px-4 py-3 sm:px-6 sm:py-3.5">
                 <div class="flex items-center justify-between">
@@ -590,7 +595,7 @@ function closeModal() {
                 </div>
 
                 <div
-                    class="w-full border-t px-4 py-4 sm:w-[45%] sm:flex-shrink-0 sm:border-t-0 sm:px-5 sm:py-5"
+                    class="w-full border-t px-4 py-4 sm:w-[60%] sm:flex-shrink-0 sm:border-t-0 sm:px-5 sm:py-5"
                 >
                     <div class="mb-2 flex items-center justify-between">
                         <div class="flex items-center gap-2">
@@ -608,7 +613,7 @@ function closeModal() {
                     </div>
 
                     <div class="overflow-x-auto">
-                        <div class="min-w-[400px]">
+                        <div class="min-w-[600px]">
                             <div
                                 class="grid grid-cols-[40px_repeat(7,minmax(35px,1fr))] gap-px bg-border"
                             >
@@ -620,9 +625,40 @@ function closeModal() {
                                 <div
                                     v-for="day in DAYS"
                                     :key="day.key"
-                                    class="bg-muted p-1 text-center text-[10px] font-medium"
+                                    class="flex flex-col items-center gap-1 bg-muted p-1 text-center"
                                 >
-                                    {{ day.label }}
+                                    <span class="text-[10px] font-medium">{{
+                                        day.label
+                                    }}</span>
+                                    <div class="flex justify-center gap-1">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            class="h-4 px-1 text-[8px] leading-none"
+                                            @click="selectAllDay(day.key, true)"
+                                        >
+                                            All
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            class="h-4 px-1 text-[8px] leading-none"
+                                            @click="selectWorkHours(day.key)"
+                                        >
+                                            Job
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            class="h-4 px-1 text-[8px] leading-none"
+                                            @click="clearDay(day.key)"
+                                        >
+                                            X
+                                        </Button>
+                                    </div>
                                 </div>
 
                                 <template v-for="hour in HOURS" :key="hour">

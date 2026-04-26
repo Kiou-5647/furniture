@@ -13,7 +13,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->string('order_number')->unique();
             $table->foreignUuid('customer_id')->constrained('users')->onDelete('restrict');
-            $table->foreignUuid('shipping_address_id')->nullable()->constrained('customer_addresses')->onDelete('restrict');
+            $table->uuid('shipping_address_id')->nullable();
             $table->decimal('total_amount', 15, 2)->default(0);
             $table->string('status', 50)->default('pending');
             $table->foreignUuid('accepted_by')->nullable()->constrained('employees')->onDelete('set null');

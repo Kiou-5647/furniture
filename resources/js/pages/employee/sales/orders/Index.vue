@@ -37,6 +37,8 @@ const props = defineProps<{
     filters: OrderFilterData;
 }>();
 
+console.info(JSON.stringify(props.orders!))
+
 const catalogItems = ref<any[]>([]);
 const bundleContents = ref<Record<string, any[]>>({});
 const catalogLoaded = ref(false);

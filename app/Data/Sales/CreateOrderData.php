@@ -22,8 +22,7 @@ readonly class CreateOrderData
         public ?string $ward_code = null,
         public ?string $province_name = null,
         public ?string $ward_name = null,
-        public ?string $building = null,
-        public ?string $address_number = null,
+        public ?string $street = null,
     ) {}
 
     public static function fromRequest(Request $request): self
@@ -44,8 +43,7 @@ readonly class CreateOrderData
             ward_code: $request->string('ward_code')->toString() ?: null,
             province_name: $request->string('province_name')->toString() ?: null,
             ward_name: $request->string('ward_name')->toString() ?: null,
-            building: $request->string('building')->toString() ?: null,
-            address_number: $request->string('address_number')->toString() ?: null,
+            street: $request->string('street')->toString() ?: null,
         );
     }
 }

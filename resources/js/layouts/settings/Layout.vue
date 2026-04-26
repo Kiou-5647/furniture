@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -7,13 +7,29 @@ import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { toUrl } from '@/lib/utils';
 import { edit as editAppearance } from '@/routes/appearance';
 import { edit as editEmployeeProfile } from '@/routes/employee/profile';
+import { edit } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
 import type { NavItem } from '@/types';
+import { computed } from 'vue';
+
+
+const page = usePage();
+const user = page.props.auth.user;
+const profileRoute = computed(() => {
+    switch (user.type) {
+        case 'employee':
+            return editEmployeeProfile().url;
+        case 'customer':
+            return edit();
+        default:
+            return edit();
+    }
+});
 
 const sidebarNavItems: NavItem[] = [
     {
         title: 'Hồ sơ',
-        href: editEmployeeProfile(),
+        href: profileRoute.value,
     },
     {
         title: 'Bảo mật',

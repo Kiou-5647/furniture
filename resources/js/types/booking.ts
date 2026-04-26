@@ -1,4 +1,9 @@
 export interface Booking {
+    address_line: any;
+    ward_name: any;
+    province_name: any;
+    service: any;
+    deadline_at: any;
     id: string;
     customer: {
         id: string;
@@ -12,28 +17,21 @@ export interface Booking {
         hourly_rate?: string;
         auto_confirm_bookings?: boolean;
     };
-    service: {
-        id: string;
-        name: string;
-        type: string;
-        base_price: string;
-        deposit_percentage: number;
-        estimated_hours?: number;
-        is_schedule_blocking: boolean;
-    };
-    sessions?: Array<{
-        id: string;
-        date: string;
-        start_hour: number;
-        end_hour: number;
-    }>;
     start_at?: string;
     end_at?: string;
-    deadline_at?: string;
+    total_price: number;
     status: string;
     status_label: string;
     status_color: string;
     accepted_by?: string;
+    address: {
+        province_code: string;
+        province_name: string;
+        ward_code: string;
+        ward_name: string;
+        street: string;
+        full_address: string;
+    };
     deposit_invoice?: {
         id: string;
         invoice_number: string;
@@ -74,7 +72,6 @@ export interface BookingPagination {
 
 export interface BookingFilterData {
     designer_id?: string;
-    service_id?: string;
     status?: string;
     customer_id?: string;
     search?: string;

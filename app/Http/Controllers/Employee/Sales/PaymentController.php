@@ -26,7 +26,7 @@ class PaymentController
         return Inertia::render('employee/sales/payments/Index', [
             'gatewayOptions' => $this->service->getGatewayOptions(),
             'customerOptions' => $this->service->getCustomerOptions(),
-            'payments' => Inertia::defer(fn () => PaymentResource::collection(
+            'payments' => Inertia::defer(fn() => PaymentResource::collection(
                 $this->service->getFiltered($filter)
             )),
             'filters' => $filter,

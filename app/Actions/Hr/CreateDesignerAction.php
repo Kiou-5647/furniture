@@ -5,8 +5,9 @@ namespace App\Actions\Hr;
 use App\Enums\UserType;
 use App\Models\Auth\User;
 use App\Models\Hr\Designer;
-use App\Models\Hr\DesignerAvailability;
 use App\Models\Hr\Employee;
+use App\Services\Hr\DesignerService;
+use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -16,7 +17,9 @@ class CreateDesignerAction
 {
     public function execute(array $data, ?UploadedFile $avatarFile = null): Designer
     {
-        return DB::transaction(function () use ($data, $avatarFile) {
+        $designerService = new DesignerService();
+
+        return DB::transaction(function () use ($data, $avatarFile, $designerService) {
             $availabilities = $data['availabilities'] ?? [];
             unset($data['availabilities']);
 
@@ -50,17 +53,9 @@ class CreateDesignerAction
                 $designer->addMedia($avatarFile)->toMediaCollection('avatar');
             }
 
-            // Save availabilities
-            foreach ($availabilities as $slot) {
-                DesignerAvailability::create([
-                    'designer_id' => $designer->id,
-                    'day_of_week' => $slot['day_of_week'],
-                    'start_time' => $slot['start_time'],
-                    'end_time' => $slot['end_time'],
-                ]);
-            }
+            $designerService->setWeeklySlots($designer, $availabilities);
 
-            return $designer->load(['user', 'employee', 'availabilities']);
+            return $designer->load(['user', 'employee', 'availabilitySlots']);
         });
     }
 }

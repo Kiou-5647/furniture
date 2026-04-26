@@ -5,80 +5,67 @@ namespace App\Actions\Booking;
 use App\Data\Booking\CreateBookingData;
 use App\Enums\BookingStatus;
 use App\Models\Booking\Booking;
-use App\Models\Booking\BookingSession;
-use App\Models\Booking\DesignService;
 use App\Models\Hr\Designer;
-use App\Services\Booking\BookingAvailabilityChecker;
+use App\Services\Booking\BookingAvailabilityService;
 use App\Services\Booking\BookingInvoiceService;
-use App\Services\Booking\DesignerAvailabilityService;
+use App\Settings\BookingSettings;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CreateBookingAction
 {
     public function __construct(
-        private DesignerAvailabilityService $availabilityService,
-        private BookingAvailabilityChecker $availabilityChecker,
-        private BookingInvoiceService $invoiceService
+        private BookingAvailabilityService $availabilityChecker,
+        private BookingInvoiceService $invoiceService,
+        private BookingSettings $settings,
     ) {}
 
     public function execute(CreateBookingData $data): Booking
     {
-        return DB::transaction(function () use ($data) {
-            $designer = Designer::with('employee')->findOrFail($data->designer_id);
-            $service = DesignService::findOrFail($data->service_id);
+        Log::info('Start create booking!');
+        $designer = Designer::with('employee')->findOrFail($data->designer_id);
 
-            if ($service->is_schedule_blocking) {
-                $errors = $this->availabilityChecker->validateBookingSlots(
-                    $designer,
-                    $data->date,
-                    $data->start_hour,
-                    $data->end_hour
-                );
+        $startAt = Carbon::parse($data->date . ' ' . $data->start_time);
+        $endAt = (clone $startAt)->addHours($data->duration);
 
-                if (! empty($errors)) {
-                    throw new \InvalidArgumentException(implode('. ', $errors));
-                }
-            }
+        if (!$this->availabilityChecker->isAvailable($designer, $startAt, $endAt)) {
+            throw new \InvalidArgumentException('Nhà thiết kế không sẵn sàng vào khung giờ này.');
+        }
 
-            $startAt = Carbon::parse($data->date)->setHour($data->start_hour)->startOfHour();
-            $endAt = Carbon::parse($data->date)->setHour($data->end_hour)->startOfHour();
+        Log::info('Before DB transaction!');
 
-            if (! $service->is_schedule_blocking && $data->deadline_at) {
-                $deadlineAt = Carbon::parse($data->deadline_at);
-            } else {
-                $deadlineAt = $service->deadline_days
-                    ? now()->addDays($service->deadline_days)
-                    : null;
-            }
+        return DB::transaction(function () use ($designer, $data, $startAt, $endAt) {
+            Log::info('Start DB transaction!');
 
-            $status = BookingStatus::PendingDeposit;
+            $totalPrice = $designer->hourly_rate * $data->duration;
+
+            $addressData = [];
+            $addressData['street'] = $data->street;
+            $addressData['full_address'] = $data->street . ', ' . $data->ward_name . ', ' . $data->province_name;
 
             $booking = Booking::create([
-                'customer_id' => $data->customer_id,
-                'customer_name' => $data->customer_name,
+                'customer_id'    => $data->customer_id,
+                'customer_name'  => $data->customer_name,
                 'customer_email' => $data->customer_email,
                 'customer_phone' => $data->customer_phone,
-                'designer_id' => $designer->id,
-                'service_id' => $service->id,
-                'start_at' => $startAt,
-                'end_at' => $endAt,
-                'deadline_at' => $deadlineAt,
-                'status' => $status,
+                'province_code'  => $data->province_code,
+                'ward_code'      => $data->ward_code,
+                'province_name'  => $data->province_name,
+                'ward_name'      => $data->ward_name,
+                'address_data'   => $addressData,
+                'designer_id'    => $designer->id,
+                'start_at'       => $startAt,
+                'end_at'         => $endAt,
+                'total_price'    => $totalPrice,
+                'notes'          => $data->notes,
+                'status'         => BookingStatus::PendingDeposit,
             ]);
 
-            if ($service->is_schedule_blocking) {
-                BookingSession::create([
-                    'booking_id' => $booking->id,
-                    'date' => $data->date,
-                    'start_hour' => $data->start_hour,
-                    'end_hour' => $data->end_hour,
-                ]);
-            }
+            $this->invoiceService->createDepositInvoice($booking, $this->settings->deposit_percentage);
 
-            $depositInvoice = $this->invoiceService->createDepositInvoice($booking);
-
-            return $booking->load(['designer', 'service', 'sessions', 'depositInvoice']);
+            Log::info('End DB transaction!');
+            return $booking->load(['designer', 'depositInvoice']);
         });
     }
 }

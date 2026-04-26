@@ -9,10 +9,9 @@ use App\Models\Sales\Invoice;
 
 class BookingInvoiceService
 {
-    public function createDepositInvoice(Booking $booking): Invoice
+    public function createDepositInvoice(Booking $booking, float $percentage): Invoice
     {
-        $service = $booking->service;
-        $depositAmount = (float) $service->base_price * ($service->deposit_percentage / 100);
+        $depositAmount = $booking->total_price * ($percentage / 100);
 
         $invoice = Invoice::create([
             'invoice_number' => Invoice::generateInvoiceNumber(),
@@ -31,11 +30,11 @@ class BookingInvoiceService
 
     public function createFinalInvoice(Booking $booking): Invoice
     {
-        $service = $booking->service;
+        $totalPrice = (float) $booking->total_price;
         $depositAmount = $booking->depositInvoice
             ? (float) $booking->depositInvoice->amount_due
             : 0;
-        $finalAmount = (float) $service->base_price - $depositAmount;
+        $finalAmount = $totalPrice - $depositAmount;
 
         $invoice = Invoice::create([
             'invoice_number' => Invoice::generateInvoiceNumber(),
@@ -47,7 +46,7 @@ class BookingInvoiceService
             'amount_paid' => 0,
         ]);
 
-        $booking->update(['final_invoice_id' => $invoice->id]);
+        $booking->updateQuietly(['final_invoice_id' => $invoice->id]);
 
         return $invoice;
     }
@@ -74,16 +73,12 @@ class BookingInvoiceService
 
     public function getDepositAmount(Booking $booking): float
     {
-        $service = $booking->service;
-
-        return (float) $service->base_price * ($service->deposit_percentage / 100);
+        $settings = app(\App\Settings\BookingSettings::class);
+        return (float) $booking->total_price * ($settings->deposit_percentage / 100);
     }
 
     public function getFinalAmount(Booking $booking): float
     {
-        $service = $booking->service;
-        $depositAmount = $this->getDepositAmount($booking);
-
-        return max(0, (float) $service->base_price - $depositAmount);
+        return max(0, (float) $booking->total_price - $this->getDepositAmount($booking));
     }
 }

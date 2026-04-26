@@ -114,8 +114,7 @@ export interface OrderForm {
     ward_code: string | undefined;
     province_name: string | undefined;
     ward_name: string | undefined;
-    building: string;
-    address_number: string;
+    street: string;
     items: OrderItem[];
 }
 
@@ -209,8 +208,7 @@ const form = useForm<OrderForm>({
     ward_code: undefined,
     province_name: undefined,
     ward_name: undefined,
-    building: '',
-    address_number: '',
+    street: '',
     items: [],
 });
 
@@ -324,11 +322,7 @@ async function selectCustomer(c: {
         skipProvinceWatch.value = true;
         form.province_code = addr.province_code || '';
         form.province_name = addr.province_name || '';
-        form.building = addr.address_data?.building || '';
-        form.address_number =
-            addr.address_data?.address_number ||
-            addr.address_data?.street ||
-            '';
+        form.street = addr.address_data?.street || '';
 
         // Load wards for this province, then set ward code
         if (form.province_code) {
@@ -793,13 +787,8 @@ watch(
                                         </Field>
                                     </div>
                                     <Input
-                                        v-model="form.building"
-                                        placeholder="Tòa nhà / Chung cư"
-                                        class="text-sm"
-                                    />
-                                    <Input
-                                        v-model="form.address_number"
-                                        placeholder="Số nhà / Đường"
+                                        v-model="form.street"
+                                        placeholder="Địa chỉ"
                                         class="text-sm"
                                     />
                                     <div class="grid grid-cols-2 gap-2">

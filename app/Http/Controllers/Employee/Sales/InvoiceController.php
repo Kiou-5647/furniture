@@ -10,6 +10,7 @@ use App\Http\Resources\Employee\Sales\InvoiceResource;
 use App\Models\Sales\Invoice;
 use App\Services\Sales\InvoiceService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -27,10 +28,10 @@ class InvoiceController
         return Inertia::render('employee/sales/invoices/Index', [
             'statusOptions' => $this->service->getStatusOptions(),
             'typeOptions' => $this->service->getTypeOptions(),
-            'currentEmployeeId' => auth()->user()?->employee?->id,
+            'currentEmployeeId' => Auth::user()?->employee?->id,
             'orderOptions' => $this->service->getOrderOptions()->values(),
             // 'bookingOptions' => $this->service->getBookingOptions()->values(),
-            'invoices' => Inertia::defer(fn () => InvoiceResource::collection(
+            'invoices' => Inertia::defer(fn() => InvoiceResource::collection(
                 $this->service->getFiltered($filter)
             )),
             'filters' => $filter,
@@ -42,7 +43,7 @@ class InvoiceController
         $filter = InvoiceFilterData::fromRequest($request);
 
         return Inertia::render('employee/sales/invoices/Trash', [
-            'invoices' => Inertia::defer(fn () => InvoiceResource::collection(
+            'invoices' => Inertia::defer(fn() => InvoiceResource::collection(
                 $this->service->getTrashedFiltered($filter)
             )),
             'filters' => $filter,

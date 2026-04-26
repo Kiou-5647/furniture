@@ -15,6 +15,9 @@ return new class extends Migration
             $table->string('province_name')->nullable()->after('ward_code');
             $table->string('ward_name')->nullable()->after('province_name');
             $table->jsonb('address_data')->nullable()->after('ward_name');
+
+            $table->foreign('province_code')->references('province_code')->on('provinces')->onDelete('set null');
+            $table->foreign('ward_code')->references('ward_code')->on('wards')->onDelete('set null');
         });
     }
 

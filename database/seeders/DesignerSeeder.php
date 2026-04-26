@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\Booking\DesignService;
 use App\Models\Hr\Designer;
 use App\Models\Hr\Employee;
 use Illuminate\Database\Seeder;
@@ -35,18 +34,6 @@ class DesignerSeeder extends Seeder
             );
         }
 
-        DesignService::firstOrCreate(
-            ['name' => 'Tư vấn thiết kế nội thất'],
-            [
-                'name' => 'Tư vấn thiết kế nội thất',
-                'type' => 'consultation',
-                'is_schedule_blocking' => true,
-                'base_price' => 1000000,
-                'deposit_percentage' => 30,
-                'estimated_hours' => 1,
-            ]
-        );
-
-        $this->command->info('Created 1 designer + 1 design service.');
+        $this->command->info('Created 1 designer');
     }
 }

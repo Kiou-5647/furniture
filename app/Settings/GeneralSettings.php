@@ -15,9 +15,6 @@ class GeneralSettings extends Settings
         return 'general';
     }
 
-    /**
-     * Return human-readable labels for the settings in Vietnamese
-     */
     public static function labels(): array
     {
         return [

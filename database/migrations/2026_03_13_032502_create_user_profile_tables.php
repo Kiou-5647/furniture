@@ -41,34 +41,19 @@ return new class extends Migration
         Schema::create('customers', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignIdFor(User::class, 'user_id')->unique()->constrained()->onDelete('cascade');
-            $table->string('full_name')->nullable();
-            $table->string('phone', 20)->nullable();
-            $table->decimal('total_spent', 15, 2)->default(0);
-            $table->timestamps();
-            $table->softDeletes();
-        });
-
-        Schema::create('customer_addresses', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->uuid('customer_id');
-            $table->foreign('customer_id')->references('id')->on('customers')->onDelete('cascade');
             $table->foreign('province_code')->references('province_code')->on('provinces')->onDelete('set null');
             $table->foreign('ward_code')->references('ward_code')->on('wards')->onDelete('set null');
-            $table->string('type', 20)->default('shipping');
-            $table->text('delivery_instructions')->nullable();
+            $table->string('full_name')->nullable();
+            $table->string('phone', 20)->nullable();
             $table->string('province_code', 2)->nullable();
             $table->string('ward_code', 5)->nullable();
             $table->string('province_name')->nullable();
             $table->string('ward_name')->nullable();
             $table->jsonb('address_data')->default('{}');
-            $table->boolean('is_default')->default(false);
+            $table->decimal('total_spent', 15, 2)->default(0);
             $table->timestamps();
             $table->softDeletes();
         });
-        DB::statement("ALTER TABLE customer_addresses ADD CONSTRAINT chk_address_type CHECK (type IN ('shipping', 'billing', 'both'))");
-        DB::statement('CREATE INDEX idx_addresses_customer_id ON customer_addresses(customer_id)');
-        DB::statement('CREATE INDEX idx_customer_addresses_default ON customer_addresses(is_default) WHERE is_default = true');
-        DB::statement('CREATE UNIQUE INDEX uq_customer_default_address ON customer_addresses(customer_id) WHERE is_default = true AND deleted_at IS NULL');
 
         Schema::create('vendors', function (Blueprint $table) {
             $table->uuid('id')->primary();
@@ -101,7 +86,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('vendors');
-        Schema::dropIfExists('customer_addresses');
         Schema::dropIfExists('customers');
         Schema::dropIfExists('employees');
         Schema::dropIfExists('departments');

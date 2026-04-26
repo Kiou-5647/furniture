@@ -200,14 +200,6 @@ class MenuService
                 ];
             }
 
-            if ($user->can('design_services.view')) {
-                $bookingItems[] = [
-                    'title' => 'Dịch vụ thiết kế',
-                    'href' => route('employee.services.index'),
-                    'isActive' => Route::is('booking.services.*'),
-                ];
-            }
-
             $menu[] = [
                 'title' => 'Đặt lịch thiết kế',
                 'href' => '#',

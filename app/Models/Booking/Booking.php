@@ -4,16 +4,13 @@ namespace App\Models\Booking;
 
 use App\Builders\Booking\BookingBuilder;
 use App\Enums\BookingStatus;
-use App\Enums\DesignServiceType;
 use App\Enums\InvoiceStatus;
 use App\Models\Auth\User;
 use App\Models\Hr\Designer;
-use App\Models\Hr\Employee;
 use App\Models\Sales\Invoice;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
@@ -33,20 +30,23 @@ class Booking extends Model
     protected function casts(): array
     {
         return [
+            'status' => BookingStatus::class,
             'start_at' => 'datetime',
             'end_at' => 'datetime',
-            'deadline_at' => 'datetime',
-            'status' => BookingStatus::class,
+            'total_price' => 'decimal:2',
+            'address_data' => 'array',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
         ];
     }
 
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['status', 'designer_id', 'service_id', 'start_at', 'deadline_at'])
+            ->logOnly(['status', 'designer_id', 'total_price', 'start_at', 'end_at'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
-            ->setDescriptionForEvent(fn (string $eventName) => "Booking {$eventName}");
+            ->setDescriptionForEvent(fn(string $eventName) => "Booking {$eventName}");
     }
 
     public function customer(): BelongsTo
@@ -59,19 +59,24 @@ class Booking extends Model
         return $this->belongsTo(Designer::class);
     }
 
-    public function service(): BelongsTo
-    {
-        return $this->belongsTo(DesignService::class, 'service_id');
-    }
-
-    public function acceptedBy(): BelongsTo
-    {
-        return $this->belongsTo(Employee::class, 'accepted_by');
-    }
-
     public function invoice(): MorphOne
     {
         return $this->morphOne(Invoice::class, 'invoiceable');
+    }
+
+    public function getFullAddress(): string
+    {
+        if (!empty($this->address_data['full_address'])) {
+            return $this->address_data['full_address'];
+        }
+
+        $parts = [
+            $this->address_data['street'] ?? null,
+            $this->ward_name,
+            $this->province_name,
+        ];
+
+        return implode(', ', $parts) ?: '—';
     }
 
     public function depositInvoice(): BelongsTo
@@ -84,32 +89,9 @@ class Booking extends Model
         return $this->belongsTo(Invoice::class, 'final_invoice_id');
     }
 
-    public function sessions(): HasMany
-    {
-        return $this->hasMany(BookingSession::class);
-    }
-
-    /**
-     * Check if the deposit invoice has been fully paid.
-     */
     public function hasDepositPaid(): bool
     {
         return $this->depositInvoice?->status === InvoiceStatus::Paid;
-    }
-
-    public function isConsultation(): bool
-    {
-        return $this->service?->type === DesignServiceType::Consultation;
-    }
-
-    public function isCustomBuild(): bool
-    {
-        return $this->service?->type === DesignServiceType::CustomBuild;
-    }
-
-    public function requiresSchedule(): bool
-    {
-        return $this->service?->is_schedule_blocking ?? false;
     }
 
     public function canBeConfirmed(): bool

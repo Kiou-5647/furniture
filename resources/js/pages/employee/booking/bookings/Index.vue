@@ -24,10 +24,29 @@ const CreateBookingDialog = createLazyComponent(
 );
 
 const props = defineProps<{
+    deposit_percentage: number;
     statusOptions: { value: string; label: string; color: string }[];
-    customerOptions: { value: string; label: string }[];
-    designerOptions: { value: string; label: string }[];
-    serviceOptions: { value: string; label: string }[];
+    customerOptions: {
+        id: string;
+        name: string;
+        email: string;
+        phone?: string;
+        address?: {
+            province_code: string;
+            province_name: string;
+            ward_code: string;
+            ward_name: string;
+            address_data: {
+                street: string;
+                full_address: string;
+            };
+        };
+    }[];
+    designerOptions: {
+        value: string;
+        label: string;
+        hourly_rate: number;
+    }[];
     bookings?: BookingPagination;
     filters: BookingFilterData;
 }>();
@@ -59,7 +78,7 @@ watch(search, (val) => {
 const showCreateDialog = ref(false);
 
 watch(
-    () => props.bookings,
+    () => props.bookings?.data,
     (newData) => {
         if (newData) {
             setTimeout(() => (isActuallyLoading.value = false), 200);
@@ -191,9 +210,9 @@ async function handleCancel(booking: Booking) {
 
             <CreateBookingDialog
                 :open="showCreateDialog"
+                :deposit_percentage="deposit_percentage"
                 :customer-options="customerOptions"
                 :designer-options="designerOptions"
-                :service-options="serviceOptions"
                 @close="showCreateDialog = false"
                 @created="handleCreated"
             />
