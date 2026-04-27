@@ -2,12 +2,13 @@
 
 namespace App\Models\Product;
 
-use App\Models\Public\CartItem;
 use App\Models\Customer\Review;
 use App\Models\Inventory\Inventory;
 use App\Models\Inventory\StockMovement;
 use App\Models\Product\Product;
 use App\Models\Product\ProductCard;
+use App\Models\Public\CartItem;
+use App\Services\Sales\PriceCalculationService;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -32,7 +33,6 @@ class ProductVariant extends Model implements HasMedia
     {
         return [
             'price' => 'decimal:2',
-            'sale_price' => 'decimal:2',
             'profit_margin_value' => 'decimal:2',
             'profit_margin_unit' => 'string',
             'weight' => 'array',
@@ -124,6 +124,11 @@ class ProductVariant extends Model implements HasMedia
     public function isInStock(): bool
     {
         return $this->getAvailableStock() > 0;
+    }
+
+    public function getEffectivePrice(): float
+    {
+        return app(PriceCalculationService::class)->calculateEffectivePrice($this);
     }
 
     public function getTotalValue(): string

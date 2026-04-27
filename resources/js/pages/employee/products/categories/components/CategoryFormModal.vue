@@ -50,6 +50,7 @@ const props = defineProps<{
     open: boolean;
     categoryGroups: any[];
     roomOptions: any[];
+    specOptions: any[];
     category: Category | null;
 }>();
 
@@ -58,6 +59,7 @@ const emit = defineEmits(['close', 'delete']);
 const form = useForm({
     group_id: null as string | null,
     room_ids: null as string[] | null,
+    filterable_specs: null as string[] | null,
     product_type: 'noi-that' as ProductType,
     slug: '',
     display_name: '',
@@ -79,6 +81,8 @@ watch(
         if (newCategory && props.open) {
             form.group_id = newCategory.group_id;
             form.room_ids = newCategory.rooms?.map((r) => r.id) ?? [];
+            form.filterable_specs =
+                newCategory.filterable_specs?.map((s) => s.id) ?? [];
             form.product_type = newCategory.product_type;
             form.slug = newCategory.slug;
             form.display_name = newCategory.display_name;
@@ -344,11 +348,30 @@ const selectedGroupLabel = computed(() => {
                                     <MultiSelect
                                         title="Phòng"
                                         :options="roomOptions"
-                                        :model-value="form.room_ids ?? []"
+                                        v-model="form.room_ids!"
                                         placeholder="Thêm phòng..."
                                     />
                                     <FieldError
                                         :errors="[form.errors.room_ids]"
+                                    />
+                                </FieldContent>
+                            </Field>
+                            <Field>
+                                <FieldLabel>
+                                    <Tag
+                                        class="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                                    />
+                                    Thông số lọc
+                                </FieldLabel>
+                                <FieldContent>
+                                    <MultiSelect
+                                        title="Thông số lọc"
+                                        :options="specOptions"
+                                        v-model="form.filterable_specs!"
+                                        placeholder="Thêm thông số..."
+                                    />
+                                    <FieldError
+                                        :errors="[form.errors.filterable_specs]"
                                     />
                                 </FieldContent>
                             </Field>

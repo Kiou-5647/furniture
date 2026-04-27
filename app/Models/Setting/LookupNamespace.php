@@ -18,7 +18,6 @@ class LookupNamespace extends Model
     {
         return [
             'for_variants' => 'boolean',
-            'is_filterable' => 'boolean',
             'is_active' => 'boolean',
             'is_system' => 'boolean',
         ];

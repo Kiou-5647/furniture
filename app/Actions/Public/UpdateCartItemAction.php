@@ -15,7 +15,6 @@ class UpdateCartItemAction
         }
 
         $item->updateQuietly(['quantity' => $quantity]);
-        $item->syncPriceFromPurchasable();
 
         return $item->fresh();
     }

@@ -242,7 +242,6 @@ function handleReturn() {
                     </div>
                 </div>
 
-                <!-- RIGHT SIDE: DETAILS & SELECTION (Matches the image style) -->
                 <div class="flex flex-col gap-8">
                     <section>
                         <h1
@@ -310,7 +309,7 @@ function handleReturn() {
                                                 }
                                             "
                                         >
-                                            View Product
+                                            Xem sản phẩm
                                             <ExternalLink class="h-3 w-3" />
                                         </a>
                                     </div>
@@ -365,7 +364,7 @@ function handleReturn() {
                         <div
                             class="flex items-center justify-between text-zinc-500"
                         >
-                            <span class="text-sm">Bundle Discount</span>
+                            <span class="text-sm">Giảm</span>
                             <!-- Changed text-red-500 to text-orange-400 -->
                             <span class="text-sm font-medium text-orange-400">
                                 -{{ formatPrice(savings) }}
@@ -375,7 +374,7 @@ function handleReturn() {
                             class="flex items-center justify-between border-t border-zinc-200 pt-4"
                         >
                             <span class="text-lg font-semibold text-zinc-900"
-                                >Subtotal</span
+                                >Tổng cộng</span
                             >
                             <div class="text-right">
                                 <span

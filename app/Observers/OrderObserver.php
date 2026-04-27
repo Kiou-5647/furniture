@@ -21,6 +21,8 @@ class OrderObserver
     public function updated(Order $order): void
     {
         if ($order->isDirty('status') && $order->status === OrderStatus::Completed) {
+            app(\App\Actions\Customer\UpdateCustomerTotalSpentAction::class)->execute($order);
+
             $this->createRefundForOverpaidInvoice($order);
         }
     }
@@ -57,7 +59,7 @@ class OrderObserver
 
         // Get the employee who accepted the order (or first available employee)
         $employee = $order->acceptedBy
-            ?? Employee::whereHas('user', fn ($q) => $q->where('type', 'employee'))->first();
+            ?? Employee::whereHas('user', fn($q) => $q->where('type', 'employee'))->first();
 
         if ($employee) {
             app(CreateRefundRequestAction::class)->execute(

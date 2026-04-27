@@ -23,7 +23,7 @@ class StoreVendorRequest extends FormRequest
             'ward_code' => ['nullable', 'string', 'size:5'],
             'address_data' => ['required', 'array'],
             'address_data.street' => ['required', 'string'],
-            'address_data.full_text' => ['required', 'string'],
+            'address_data.full_address' => ['required', 'string'],
             'bank_name' => ['nullable', 'string', 'max:255'],
             'bank_account_number' => ['nullable', 'string', 'max:100'],
             'bank_account_holder' => ['nullable', 'string', 'max:255'],

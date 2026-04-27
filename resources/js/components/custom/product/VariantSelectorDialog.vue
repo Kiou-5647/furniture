@@ -13,6 +13,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { useCartStore } from '@/stores/cart';
 import type { ProductCard, ProductCardVariant } from '@/types/public/product';
+import { formatPrice } from '@/lib/utils';
 
 const props = defineProps<{
     open: boolean;
@@ -26,23 +27,43 @@ const { addToCart, state } = useCartStore();
 const selectedVariantId = ref<string | null>(null);
 const quantity = ref(1);
 
-// Match the logic from ProductCard for initial selection
 const initializeSelection = () => {
-    if (!props.productCard.swatches || props.productCard.swatches.length === 0) {
+    if (
+        !props.productCard.swatches ||
+        props.productCard.swatches.length === 0
+    ) {
         selectedVariantId.value = null;
         return;
     }
-    selectedVariantId.value = props.productCard.swatches[0].id;
+    selectedVariantId.value =
+        props.productCard.default_variant_id ??
+        props.productCard.swatches[0].id;
 };
 
 onMounted(initializeSelection);
 
 const currentVariant = computed<ProductCardVariant | null>(() => {
-    return props.productCard.swatches.find(s => s.id === selectedVariantId.value)
-           || props.productCard.swatches[0] || null;
+    return (
+        props.productCard.swatches.find(
+            (s) => s.id === selectedVariantId.value,
+        ) ||
+        props.productCard.swatches[0] ||
+        null
+    );
 });
 
-const price = computed(() => currentVariant.value?.sale_price ?? currentVariant.value?.price ?? 0);
+const currentPrice = computed(() => {
+    const variant = currentVariant.value;
+    if (!variant) return 0;
+    return Number(variant.sale_price) < Number(variant.price)
+        ? Number(variant.sale_price)
+        : Number(variant.price);
+});
+
+const isOnSale = computed(() => {
+    const variant = currentVariant.value;
+    return variant && Number(variant.sale_price) < Number(variant.price);
+});
 
 function updateQuantity(delta: number) {
     quantity.value = Math.max(1, quantity.value + delta);
@@ -70,7 +91,7 @@ async function handleConfirmAdd() {
 </script>
 
 <template>
-    <Dialog :open="open" @update:open="val => emit('update:open', val)">
+    <Dialog :open="open" @update:open="(val) => emit('update:open', val)">
         <DialogContent class="sm:max-w-md">
             <DialogHeader>
                 <DialogTitle class="text-xl">
@@ -81,26 +102,41 @@ async function handleConfirmAdd() {
             <div class="grid gap-6 py-4">
                 <!-- Image Preview -->
                 <div class="flex items-center gap-4">
-                    <div class="relative h-24 w-24 overflow-hidden rounded-lg border bg-muted">
+                    <div
+                        class="relative h-24 w-24 overflow-hidden rounded-lg border bg-muted"
+                    >
                         <img
                             v-if="currentVariant?.primary_image_url"
                             :src="currentVariant.primary_image_url"
                             class="h-full w-full object-cover"
                         />
-                        <div v-else class="flex h-full w-full items-center justify-center text-muted-foreground">
+                        <div
+                            v-else
+                            class="flex h-full w-full items-center justify-center text-muted-foreground"
+                        >
                             No Image
                         </div>
                     </div>
                     <div class="flex flex-col gap-1">
-                        <span class="text-lg font-bold text-orange-500">
-                            {{ price.toLocaleString('vi-VN') }}đ
+                        <span class="text-sm">
+                            {{
+                                productCard.product.name +
+                                ' ' +
+                                (currentVariant?.name || 'Phiên bản mặc định')
+                            }}
                         </span>
-                        <span v-if="currentVariant?.sale_price" class="text-sm line-through text-muted-foreground">
-                            {{ (currentVariant.price).toLocaleString('vi-VN') }}đ
-                        </span>
-                        <span class="text-xs text-muted-foreground">
-                            {{ productCard.product.name + ' ' + currentVariant?.name || 'Phiên bản mặc định' }}
-                        </span>
+                        <div class="flex items-center">
+                            <span class="text-lg font-bold text-orange-500">
+                                {{ formatPrice(currentPrice) }}
+                            </span>
+                            &nbsp;
+                            <span
+                                v-if="isOnSale"
+                                class="text-sm text-muted-foreground line-through"
+                            >
+                                {{ formatPrice(Number(currentVariant!.price)) }}
+                            </span>
+                        </div>
                     </div>
                 </div>
 
@@ -112,13 +148,29 @@ async function handleConfirmAdd() {
                             v-for="swatch in productCard.swatches"
                             :key="swatch.id"
                             @click="selectedVariantId = swatch.id"
-                            class="group relative h-10 w-10  rounded-md border-2 transition-all"
-                            :class="selectedVariantId === swatch.id ? 'border-primary ring-2 ring-primary/20' : 'border-transparent hover:border-zinc-300'"
+                            class="group relative h-10 w-10 rounded-md border-2 transition-all"
+                            :class="
+                                selectedVariantId === swatch.id
+                                    ? 'border-primary ring-2 ring-primary/20'
+                                    : 'border-transparent hover:border-zinc-300'
+                            "
                         >
-                            <img v-if="swatch.swatch_image_url" :src="swatch.swatch_image_url" class="h-full w-full overflow-hidden object-cover" />
-                            <div v-else class="h-full w-full bg-zinc-200" />
-                            <span class="absolute w-25 top-12 left-1/2 -translate-x-1/2 scale-0 rounded bg-zinc-800 px-2 py-1 text-sm text-white transition-all group-hover:scale-100">
-                                {{ swatch.label || swatch.name}}
+                            <div
+                                class="h-full w-full overflow-hidden rounded-[4px]"
+                            >
+                                <img
+                                    v-if="swatch.swatch_image_url"
+                                    :src="swatch.swatch_image_url"
+                                    class="h-full w-full object-cover"
+                                />
+                                <div v-else class="h-full w-full bg-zinc-200" />
+                            </div>
+
+                            <!-- Label: Now outside the overflow-hidden div, so it can overflow the button -->
+                            <span
+                                class="absolute top-full left-1/2 z-10 mt-2 w-max -translate-x-1/2 scale-0 rounded bg-zinc-800 px-2 py-1 text-xs text-white transition-all group-hover:scale-100"
+                            >
+                                {{ swatch.label || swatch.name }}
                             </span>
                         </button>
                     </div>
@@ -128,11 +180,23 @@ async function handleConfirmAdd() {
                 <div class="space-y-3">
                     <Label class="text-sm font-medium">Số lượng</Label>
                     <div class="flex items-center gap-3">
-                        <Button variant="outline" size="icon" class="h-8 w-8" @click="updateQuantity(-1)">
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            class="h-8 w-8"
+                            @click="updateQuantity(-1)"
+                        >
                             <Minus class="h-4 w-4" />
                         </Button>
-                        <span class="w-8 text-center font-medium">{{ quantity }}</span>
-                        <Button variant="outline" size="icon" class="h-8 w-8" @click="updateQuantity(1)">
+                        <span class="w-8 text-center font-medium">{{
+                            quantity
+                        }}</span>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            class="h-8 w-8"
+                            @click="updateQuantity(1)"
+                        >
                             <Plus class="h-4 w-4" />
                         </Button>
                     </div>

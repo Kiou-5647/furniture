@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
+import { Link, router } from '@inertiajs/vue3';
 import { ImageOff, Minus, Plus } from '@lucide/vue';
 import { Trash2, Loader2 } from 'lucide-vue-next';
 import { VisuallyHidden } from 'reka-ui';
@@ -16,20 +16,33 @@ import {
 import { formatPrice } from '@/lib/utils';
 import { index } from '@/routes/cart';
 import { useCartStore } from '@/stores/cart';
+import { Separator } from '@/components/ui/separator';
+import { show } from '@/routes/products';
 
-const { state, fetchCart, updateItemQuantity, removeItem, closeDrawer } =
-    useCartStore();
+const {
+    state,
+    fetchCart,
+    visitItemPage,
+    updateItemQuantity,
+    removeItem,
+    closeDrawer,
+} = useCartStore();
 
 onMounted(() => {
     fetchCart();
 });
+
+function goToCart() {
+    closeDrawer();
+    router.visit(index());
+}
 </script>
 
 <template>
     <Sheet :open="state.isOpen" @update:open="closeDrawer">
         <SheetContent side="right" class="flex w-full flex-col sm:max-w-md">
             <SheetHeader>
-                <SheetTitle>Shopping Cart</SheetTitle>
+                <SheetTitle>Giỏ hàng</SheetTitle>
                 <VisuallyHidden><SheetDescription /></VisuallyHidden>
             </SheetHeader>
 
@@ -50,7 +63,7 @@ onMounted(() => {
                     </Button>
                 </div>
 
-                <div class="flex h-full flex-col gap-6 overflow-y-auto p-4">
+                <div class="flex h-full flex-col gap-3 overflow-y-auto p-4">
                     <div
                         v-for="item in state.items"
                         :key="item.id"
@@ -59,8 +72,15 @@ onMounted(() => {
                         <!-- ITEM HEADER: Used for both Product and Bundle -->
                         <div class="flex items-center gap-3">
                             <!-- Image -->
-                            <div
-                                class="h-16 w-16 shrink-0 overflow-hidden rounded-lg border bg-muted"
+                            <Link
+                                class="h-16 w-16 shrink-0 cursor-pointer overflow-hidden rounded-lg border bg-muted"
+                                @click="
+                                    visitItemPage(
+                                        item.purchasable_type,
+                                        item.sku,
+                                        item.slug,
+                                    )
+                                "
                             >
                                 <img
                                     v-if="item.image_url"
@@ -73,15 +93,23 @@ onMounted(() => {
                                 >
                                     <ImageOff class="h-6 w-6" />
                                 </div>
-                            </div>
+                            </Link>
 
                             <!-- Primary Info -->
                             <div class="flex flex-1 flex-col justify-center">
                                 <div class="flex items-start justify-between">
-                                    <span
-                                        class="text-sm leading-tight font-bold"
-                                        >{{ item.name }}</span
+                                    <Link
+                                        class="cursor-pointer text-left text-sm leading-tight font-bold"
+                                        @click="
+                                            visitItemPage(
+                                                item.purchasable_type,
+                                                item.sku,
+                                                item.slug,
+                                            )
+                                        "
                                     >
+                                        {{ item.name }}
+                                    </Link>
                                     <Button
                                         variant="ghost"
                                         size="icon"
@@ -147,7 +175,7 @@ onMounted(() => {
                                     'App\\Models\\Product\\Bundle' &&
                                 item.selected_variants
                             "
-                            class="ml-3 space-y-2 border-l-2 border-zinc-200 py-2 pl-4"
+                            class="space-y-2 border-l-2 border-zinc-200 py-2 pl-4"
                         >
                             <p
                                 class="mb-2 text-[10px] font-bold tracking-wider text-muted-foreground uppercase"
@@ -161,15 +189,37 @@ onMounted(() => {
                                 class="flex items-center justify-between py-1"
                             >
                                 <div class="flex items-center gap-2">
-                                    <img
-                                        v-if="variant.image_url"
-                                        :src="variant.image_url"
-                                        class="h-16 w-16 rounded-full border object-cover"
-                                    />
+                                    <a
+                                        :href="
+                                            show({
+                                                sku: variant.sku,
+                                                variant_slug: variant.slug,
+                                            }).url
+                                        "
+                                        class="h-16 w-16 shrink-0 cursor-pointer overflow-hidden rounded-lg border bg-muted"
+                                    >
+                                        <img
+                                            v-if="variant.image_url"
+                                            :src="variant.image_url"
+                                            class="h-full w-full rounded-md border object-cover"
+                                        />
+                                        <div
+                                            v-else
+                                            class="h-full w-full rounded-md border object-cover"
+                                        >
+                                            <ImageOff class="h-6 w-6" />
+                                        </div>
+                                    </a>
                                     <div class="flex flex-col">
-                                        <span
+                                        <a
+                                            :href="
+                                                show({
+                                                    sku: variant.sku,
+                                                    variant_slug: variant.slug,
+                                                }).url
+                                            "
                                             class="mr-3 text-xs leading-none font-medium"
-                                            >{{ variant.name }}</span
+                                            >{{ variant.name }}</a
                                         >
                                         <span
                                             class="text-sm font-bold text-primary"
@@ -183,32 +233,26 @@ onMounted(() => {
                                     </div>
                                 </div>
                                 <span class="text-xs font-medium">
-                                    {{
-                                        formatPrice(
-                                            variant.sale_price ?? variant.price,
-                                        )
-                                    }}
+                                    {{ formatPrice(variant.sale_price!) }}
                                 </span>
                             </div>
                         </div>
 
-                        <div class="border-b border-zinc-100 pb-4" />
+                        <Separator />
                     </div>
                 </div>
             </div>
 
             <SheetFooter class="space-y-4 border-t pt-6">
                 <div class="flex justify-between text-lg font-bold">
-                    <span>Total</span>
-                    <span>{{ formatPrice(state.totals.total) }} VND</span>
+                    <span>Tổng cộng</span>
+                    <span>{{ formatPrice(state.totals.total) }}</span>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
-                    <Button variant="outline" @click="closeDrawer"
-                        >Continue</Button
+                    <Button variant="outline" @click="closeDrawer">Đóng</Button>
+                    <Button class="w-full" @click="goToCart()"
+                        >Xem chi tiết</Button
                     >
-                    <Link :href="index()">
-                        <Button class="w-full">Review Cart</Button>
-                    </Link>
                 </div>
             </SheetFooter>
         </SheetContent>

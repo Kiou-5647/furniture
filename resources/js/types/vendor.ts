@@ -9,7 +9,7 @@ export interface Vendor {
     ward_code: string | null;
     address_data: {
         street: string;
-        full_text: string;
+        full_address: string;
     };
     bank_name: string | null;
     bank_account_number: string | null;

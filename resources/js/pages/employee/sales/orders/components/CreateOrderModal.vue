@@ -83,7 +83,6 @@ export interface BundleContentItem {
         slug: string;
         name: string;
         price: string;
-        sale_price: string;
         in_stock: boolean;
         primary_image_url?: string | null;
         swatch_image_url?: string | null;
@@ -143,6 +142,8 @@ const props = defineProps<{
 const page = usePage();
 
 const emit = defineEmits(['close', 'refresh']);
+
+console.info(JSON.stringify(props.catalogItems!));
 
 const showShipping = ref(false);
 const customerSearch = ref('');
@@ -399,9 +400,7 @@ const bundleDynamicPrice = computed(() => {
     contents.forEach((content) => {
         const variantId = bundleVariantSelections.value[content.id];
         const variant = content.variants.find((v) => v.id === variantId);
-        total +=
-            parseFloat(variant?.sale_price || variant?.price || '0') *
-            content.quantity;
+        total += parseFloat(variant?.price || '0') * content.quantity;
     });
 
     const bundle = selectedBundle.value;
@@ -448,8 +447,7 @@ function confirmBundleSelection() {
             configuration[content.id] = variantId;
             const variant = content.variants.find((v) => v.id === variantId);
             variantTotal +=
-                parseFloat(variant?.sale_price || variant?.price || '0') *
-                content.quantity;
+                parseFloat(variant?.price || '0') * content.quantity;
         }
     });
 
@@ -1155,9 +1153,9 @@ watch(
                 <div v-if="form.items.length > 0" class="space-y-0.5">
                     <div class="flex items-center gap-4 text-sm">
                         <span class="text-muted-foreground">Tạm tính</span>
-                        <span class="tabular-nums"
-                            >{{ formatPrice(totalAmount) }}</span
-                        >
+                        <span class="tabular-nums">{{
+                            formatPrice(totalAmount)
+                        }}</span>
                         <span
                             v-if="
                                 showShipping &&
@@ -1172,10 +1170,11 @@ watch(
                                 parseFloat(form.shipping_cost!) > 0
                             "
                             class="tabular-nums"
-                            :class="{ 'line-through text-muted-foreground': isFreeShippingActive }"
-                            >{{
-                                formatPrice(form.shipping_cost!)
-                            }}</span
+                            :class="{
+                                'text-muted-foreground line-through':
+                                    isFreeShippingActive,
+                            }"
+                            >{{ formatPrice(form.shipping_cost!) }}</span
                         >
                     </div>
                     <div
@@ -1276,10 +1275,7 @@ watch(
                                     {{
                                         formatPrice(
                                             getSelectedVariant(content)
-                                                ?.sale_price ||
-                                                getSelectedVariant(content)
-                                                    ?.price ||
-                                                0,
+                                                ?.price || 0,
                                         )
                                     }}
                                 </span>

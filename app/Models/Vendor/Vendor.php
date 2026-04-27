@@ -27,6 +27,17 @@ class Vendor extends Model
             ->logAll()
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
-            ->setDescriptionForEvent(fn (string $eventName) => "Vendor {$eventName}");
+            ->setDescriptionForEvent(fn(string $eventName) => "Vendor {$eventName}");
+    }
+
+    public function discounts()
+    {
+        return $this->morphMany(\App\Models\Sales\Discount::class, 'discountable');
+    }
+
+    // Relationship to Products (Inverse)
+    public function products()
+    {
+        return $this->hasMany(\App\Models\Product\Product::class);
     }
 }

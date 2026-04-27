@@ -18,7 +18,6 @@ class CartItem extends Model
     protected function casts(): array
     {
         return [
-            'unit_price' => 'decimal:2',
             'configuration' => 'array',
             'quantity' => 'integer',
         ];
@@ -36,20 +35,22 @@ class CartItem extends Model
 
     public function getSubtotal(): float
     {
-        return (float) $this->unit_price * $this->quantity;
+        return (float) $this->getEffectivePrice() * $this->quantity;
     }
 
-    public function syncPriceFromPurchasable(): void
+    public function getEffectivePrice(): float
     {
-        $price = match (true) {
-            $this->purchasable instanceof ProductVariant => (float) $this->purchasable->price,
-            $this->purchasable instanceof Bundle => (float) $this->purchasable->calculateBundlePrice(),
-            default => $this->unit_price,
-        };
-
-        if ((float) $this->unit_price !== (float) $price) {
-            $this->updateQuietly(['unit_price' => $price]);
+        if ($this->purchasable instanceof ProductVariant) {
+            // Use the Discount Service logic we built into the variant model
+            return $this->purchasable->getEffectivePrice();
         }
+
+        if ($this->purchasable instanceof Bundle) {
+            // Use the Bundle's own internal pricing logic
+            return (float) $this->purchasable->calculateBundlePrice();
+        }
+
+        return 0.0;
     }
 
     public function validateAvailability(): bool

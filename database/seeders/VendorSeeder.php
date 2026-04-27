@@ -20,7 +20,7 @@ class VendorSeeder extends Seeder
                 'ward_code' => '00070',
                 'address_data' => [
                     'street' => '123 Đường Láng',
-                    'full_text' => '123 Đường Láng, Phường Hoàn Kiếm, Hà Nội',
+                    'full_address' => '123 Đường Láng, Phường Hoàn Kiếm, Hà Nội',
                 ],
                 'bank_name' => 'Vietcombank',
                 'bank_account_number' => '0123456789',
@@ -37,7 +37,7 @@ class VendorSeeder extends Seeder
                 'ward_code' => '25747',
                 'address_data' => [
                     'street' => '456 Nguyễn Văn Linh',
-                    'full_text' => '456 Nguyễn Văn Linh, Phường Thủ Dầu Một, TP. Hồ Chí Minh',
+                    'full_address' => '456 Nguyễn Văn Linh, Phường Thủ Dầu Một, TP. Hồ Chí Minh',
                 ],
                 'bank_name' => 'Techcombank',
                 'bank_account_number' => '19028765432',
@@ -54,7 +54,7 @@ class VendorSeeder extends Seeder
                 'ward_code' => '00004',
                 'address_data' => [
                     'street' => 'Làng Nghề Đồng Kỵ',
-                    'full_text' => 'Làng Nghề Đồng Kỵ, Phường Ba Đình, Hà Nội',
+                    'full_address' => 'Làng Nghề Đồng Kỵ, Phường Ba Đình, Hà Nội',
                 ],
                 'bank_name' => 'Agribank',
                 'bank_account_number' => '2601205678901',
@@ -71,7 +71,7 @@ class VendorSeeder extends Seeder
                 'ward_code' => '25750',
                 'address_data' => [
                     'street' => 'Tầng 5, Tòa nhà Bitexco, 2 Hải Triều',
-                    'full_text' => 'Tầng 5, Tòa nhà Bitexco, 2 Hải Triều, Phường Phú Lợi, TP. Hồ Chí Minh',
+                    'full_address' => 'Tầng 5, Tòa nhà Bitexco, 2 Hải Triều, Phường Phú Lợi, TP. Hồ Chí Minh',
                 ],
                 'bank_name' => 'MB Bank',
                 'bank_account_number' => '0912345678',
@@ -88,7 +88,7 @@ class VendorSeeder extends Seeder
                 'ward_code' => '00025',
                 'address_data' => [
                     'street' => '392 Nguyễn Trãi',
-                    'full_text' => '392 Nguyễn Trãi, Phường Giảng Võ, Hà Nội',
+                    'full_address' => '392 Nguyễn Trãi, Phường Giảng Võ, Hà Nội',
                 ],
                 'bank_name' => 'BIDV',
                 'bank_account_number' => '8888999900',

@@ -35,7 +35,7 @@ class BundleResource extends JsonResource
                     'name' => $v->name,
                     'swatch_label' => $v->swatch_label,
                     'price' => $v->price,
-                    'sale_price' => $v->sale_price,
+                    'sale_price' => $v->getEffectivePrice(),
                     'in_stock' => $v->getAvailableStock() > 0,
                     'images' => [
                         'swatch' => $v->getFirstMediaUrl('swatch_image', 'swatch'),

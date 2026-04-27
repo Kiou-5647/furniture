@@ -5,6 +5,7 @@ namespace App\Models\Product;
 use App\Builders\Product\CategoryBuilder;
 use App\Enums\ProductType;
 use App\Models\Setting\Lookup;
+use App\Models\Setting\LookupNamespace;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -31,7 +32,6 @@ class Category extends Model implements HasMedia
     {
         return [
             'product_type' => ProductType::class,
-            'filterable_specs' => 'array',
             'is_active' => 'boolean',
         ];
     }
@@ -44,6 +44,27 @@ class Category extends Model implements HasMedia
     public function rooms()
     {
         return $this->belongsToMany(Lookup::class, 'category_room_placement', 'category_id', 'room_id');
+    }
+
+    public function discounts()
+    {
+        return $this->morphMany(\App\Models\Sales\Discount::class, 'discountable');
+    }
+
+    // Relationship to Products (Inverse)
+    public function products()
+    {
+        return $this->hasMany(\App\Models\Product\Product::class);
+    }
+
+    public function filterableSpecs()
+    {
+        return $this->belongsToMany(
+            LookupNamespace::class,
+            'category_filterable_specs',
+            'category_id',
+            'namespace_id'
+        );
     }
 
     public function newEloquentBuilder($query): CategoryBuilder

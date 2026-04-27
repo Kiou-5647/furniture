@@ -88,7 +88,7 @@ it('triggers cache invalidation when vendor is created', function () {
 
     Vendor::create([
         'name' => 'Test Vendor',
-        'address_data' => ['street' => '123 Test St', 'full_text' => '123 Test St, Test Ward'],
+        'address_data' => ['street' => '123 Test St', 'full_address' => '123 Test St, Test Ward'],
     ]);
 
     // After model creation, observer should have flushed both tags
@@ -99,7 +99,7 @@ it('triggers cache invalidation when vendor is created', function () {
 it('triggers cache invalidation when vendor is updated', function () {
     $vendor = Vendor::create([
         'name' => 'Original Name',
-        'address_data' => ['street' => '123 Test St', 'full_text' => '123 Test St, Test Ward'],
+        'address_data' => ['street' => '123 Test St', 'full_address' => '123 Test St, Test Ward'],
     ]);
 
     // Re-seed cache after creation (since create triggers invalidation)

@@ -63,4 +63,15 @@ class Collection extends Model implements HasMedia
             ->logOnlyDirty()
             ->dontLogEmptyChanges();
     }
+
+    public function discounts()
+    {
+        return $this->morphMany(\App\Models\Sales\Discount::class, 'discountable');
+    }
+
+    // Relationship to Products (Inverse)
+    public function products()
+    {
+        return $this->hasMany(\App\Models\Product\Product::class);
+    }
 }

@@ -9,6 +9,7 @@ use App\Http\Requests\Product\Category\UpdateCategoryRequest;
 use App\Http\Resources\Employee\Product\CategoryResource;
 use App\Models\Product\Category;
 use App\Models\Setting\Lookup;
+use App\Models\Setting\LookupNamespace;
 use App\Services\Product\CategoryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -27,7 +28,8 @@ class CategoryController
         return Inertia::render('employee/products/categories/Index', [
             'categoryGroups' => $this->service->getCategoryGroups(),
             'roomOptions' => $this->service->getRoomOptions(),
-            'categories' => Inertia::defer(fn () => CategoryResource::collection(
+            'specOptions' => $this->service->getFilterableSpecOptions(),
+            'categories' => Inertia::defer(fn() => CategoryResource::collection(
                 $this->service->getFiltered($filter)
             )),
             'filters' => $filter,
@@ -43,7 +45,7 @@ class CategoryController
         return Inertia::render('employee/products/categories/Trash', [
             'categoryGroups' => $this->service->getCategoryGroups(),
             'roomOptions' => $this->service->getRoomOptions(),
-            'categories' => Inertia::defer(fn () => CategoryResource::collection(
+            'categories' => Inertia::defer(fn() => CategoryResource::collection(
                 $this->service->getTrashedFiltered($filter)
             )),
             'filters' => $filter,

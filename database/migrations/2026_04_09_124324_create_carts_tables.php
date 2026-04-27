@@ -27,7 +27,6 @@ return new class extends Migration
             $table->string('purchasable_type', 100);
             $table->uuid('purchasable_id');
             $table->integer('quantity')->default(1);
-            $table->decimal('unit_price', 15, 2)->default(0);
             $table->jsonb('configuration')->default('{}');
             $table->timestamps();
 

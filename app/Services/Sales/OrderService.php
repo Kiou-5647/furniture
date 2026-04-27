@@ -123,7 +123,7 @@ class OrderService
                     'id' => $v->id,
                     'name' => $v->name,
                     'sku' => $v->sku,
-                    'price' => $v->price,
+                    'price' => $v->getEffectivePrice(),
                     'purchasable_type' => 'App\\Models\\Product\\ProductVariant',
                 ])->toArray(),
             ]);
@@ -186,7 +186,7 @@ class OrderService
         $variants = ProductVariant::query()
             ->where('status', 'active')
             ->whereHas('product', fn($q) => $q->where('status', 'published'))
-            ->with(['product:id,name'])
+            ->with(['product.category', 'product.collection', 'product.vendor'])
             ->get();
 
         foreach ($variants as $variant) {
@@ -204,7 +204,7 @@ class OrderService
                 'id' => $variant->id,
                 'name' => $variant->product?->name . ' — ' . $variant->name,
                 'sku' => $variant->sku,
-                'price' => $variant->price,
+                'price' => $variant->getEffectivePrice(),
                 'stock_at_store' => $stockAtStore,
                 'stock_total' => $stockTotal,
                 'image_url' => $variant->getFirstMediaUrl('primary_image') ?: null,
@@ -285,8 +285,7 @@ class OrderService
                     'slug' => $v->slug,
                     'name' => $v->name,
                     'swatch_label' => $v->swatch_label,
-                    'price' => $v->price,
-                    'sale_price' => $v->sale_price,
+                    'price' => $v->getEffectivePrice(),
                     'in_stock' => $v->getAvailableStock() > 0,
                     'primary_image_url' => $v->getFirstMediaUrl('primary_image'),
                     'swatch_image_url' => $v->getFirstMediaUrl('swatch_image', 'swatch')

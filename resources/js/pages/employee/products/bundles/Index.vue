@@ -8,14 +8,14 @@ import DataTableSingleFilter from '@/components/custom/data-table/DataTableSingl
 import DeleteConfirmation from '@/components/custom/DeleteConfirmation.vue';
 import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { cleanQuery, setCookie } from '@/lib/utils';
 import { index, create, edit, destroy } from '@/routes/employee/bundles';
 import type { BreadcrumbItem } from '@/types';
 import type { Bundle, BundleFilterData, BundlePagination } from '@/types/bundle';
 import { getColumns } from './types/columns';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 
 const props = defineProps<{
     bundles?: BundlePagination;

@@ -70,7 +70,7 @@ class Cart extends Model
     public function calculateTotal(): float
     {
         return $this->items->sum(function (CartItem $item) {
-            return (float) $item->unit_price * $item->quantity;
+            return $item->getEffectivePrice() * $item->quantity;
         });
     }
 

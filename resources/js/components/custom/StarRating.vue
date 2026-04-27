@@ -55,7 +55,7 @@ const stars = computed(() => {
             />
         </div>
         <span v-if="showRating" class="ml-1 text-zinc-500 font-medium">
-            {{ rating }}
+            {{ numericRating.toFixed(1) }}
         </span>
         <span v-if="showCount" class="ml-1 text-zinc-500 font-medium">
             ({{ count }})

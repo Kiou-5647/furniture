@@ -13,11 +13,13 @@ class CartItemResource extends JsonResource
     public function toArray(Request $request): array
     {
         $name = 'Unknown Item';
+        $sku = '';
         $image = null;
         $selectedVariants = null;
 
         if ($this->purchasable instanceof ProductVariant) {
             $name = "{$this->purchasable->product->name} - {$this->purchasable->name}";
+            $sku = $this->purchasable->sku;
             $image = $this->purchasable->getFirstMediaUrl('primary_image', 'thumb');
         } elseif ($this->purchasable instanceof Bundle) {
             $name = $this->purchasable->name;
@@ -36,8 +38,9 @@ class CartItemResource extends JsonResource
                                 'name' => $variant->product->name . ' ' . $variant->name,
                                 'label' => $variant->swatch_label,
                                 'sku' => $variant->sku,
+                                'slug' => $variant->slug,
                                 'price' => $variant->price,
-                                'sale_price' => $variant->sale_price,
+                                'sale_price' => $variant->getEffectivePrice(),
                                 'quantity' => $content->quantity,
                                 'image_url' => $variant->getFirstMediaUrl('primary_image', 'thumb'),
                             ];
@@ -50,8 +53,10 @@ class CartItemResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $name,
+            'sku' => $sku,
+            'slug' => $this->purchasable->slug,
             'quantity' => $this->quantity,
-            'unit_price' => (float) $this->unit_price,
+            'unit_price' => $this->getEffectivePrice(),
             'subtotal' => (float) $this->getSubtotal(),
             'configuration' => $this->configuration,
             'image_url' => $image,

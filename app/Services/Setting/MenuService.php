@@ -115,8 +115,16 @@ class MenuService
         }
 
         // Sales Group
-        if ($user->canAny(['orders.view', 'invoices.view', 'payments.view', 'payments.manage'])) {
+        if ($user->canAny(['discounts.view', 'orders.view', 'invoices.view', 'payments.view', 'payments.manage'])) {
             $salesItems = [];
+
+            if ($user->can('discounts.view')) {
+                $salesItems[] = [
+                    'title' => 'Giảm giá',
+                    'href' => route('employee.sales.discounts.index'),
+                    'isActive' => Route::is('sales.discounts.*'),
+                ];
+            }
 
             if ($user->can('orders.view')) {
                 $salesItems[] = [
@@ -189,20 +197,12 @@ class MenuService
         }
 
         // Booking Group
-        if ($user->canAny(['bookings.view', 'design_services.view'])) {
+        if ($user->canAny(['bookings.view'])) {
             $bookingItems = [];
-
-            if ($user->can('bookings.view')) {
-                $bookingItems[] = [
-                    'title' => 'Đặt lịch',
-                    'href' => route('employee.booking.index'),
-                    'isActive' => Route::is('booking.*') && ! Route::is('booking.services.*'),
-                ];
-            }
 
             $menu[] = [
                 'title' => 'Đặt lịch thiết kế',
-                'href' => '#',
+                'href' => route('employee.booking.index'),
                 'icon' => 'CalendarDays',
                 'isActive' => Route::is('booking.*'),
                 'items' => $bookingItems,

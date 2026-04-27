@@ -53,14 +53,25 @@ class CategoryService
             );
     }
 
+    public function getFilterableSpecOptions(): Collection
+    {
+        return Cache::tags([CacheTag::LookupNamespaces->value])
+            ->remember(
+                CacheTag::LookupNamespaces->key('data'),
+                CacheKeys::TTL,
+                fn() => LookupNamespace::whereNot('slug', 'nhom-danh-muc')->select(['id', 'display_name'])->get() ?? collect()
+            );
+    }
+
     public function getFiltered(CategoryFilterData $filter): LengthAwarePaginator
     {
         return Category::query()
-            ->with(['group', 'rooms'])
+            ->with(['group', 'rooms', 'filterableSpecs'])
             ->when($filter->group_id, fn($q) => $q->where('group_id', $filter->group_id))
             ->when($filter->product_type, fn($q) => $q->byProductType($filter->product_type))
             ->when($filter->search, fn($q) => $q->search($filter->search))
-            ->when($filter->room_ids, fn($q) => $q->inRooms($filter->room_ids)) // ADD THIS
+            ->when($filter->room_ids, fn($q) => $q->inRooms($filter->room_ids))
+            ->when($filter->namespace_ids, fn($q) => $q->inNamespaces($filter->namespace_ids))
             ->when(! is_null($filter->is_active), fn($q) => $q->where('is_active', $filter->is_active))
             ->orderBy($filter->order_by ?? 'display_name', $filter->order_direction ?? 'asc')
             ->paginate($filter->per_page ?? 15);
@@ -69,45 +80,13 @@ class CategoryService
     public function getTrashedFiltered(CategoryFilterData $filter): LengthAwarePaginator
     {
         return Category::onlyTrashed()
-            ->with(['group', 'rooms']) // Change 'room' to 'rooms'
+            ->with(['group', 'rooms', 'filterableSpecs'])
             ->when($filter->group_id, fn($q) => $q->where('group_id', $filter->group_id))
             ->when($filter->product_type, fn($q) => $q->byProductType($filter->product_type))
             ->when($filter->search, fn($q) => $q->search($filter->search))
+            ->when($filter->room_ids, fn($q) => $q->inRooms($filter->room_ids))
+            ->when($filter->namespace_ids, fn($q) => $q->inNamespaces($filter->namespace_ids))
             ->orderBy($filter->order_by ?? 'deleted_at', $filter->order_direction ?? 'desc')
             ->paginate($filter->per_page ?? 15);
-    }
-
-    public function getAvailableFilters(string $categorySlug): Collection
-    {
-        return Cache::tags([CacheTag::CategoryFilters->value])
-            ->remember("{$categorySlug}", CacheKeys::TTL, fn() => $this->buildAvailableFilters($categorySlug));
-    }
-
-    protected function buildAvailableFilters(string $categorySlug): Collection
-    {
-        $category = Category::where('slug', $categorySlug)->first();
-        if (! $category || empty($category->filterable_specs)) {
-            return collect();
-        }
-
-        $filterableSlugs = $category->filterable_specs ?? [];
-
-        $namespaces = LookupNamespace::query()
-            ->whereIn('slug', $filterableSlugs)
-            ->where('is_filterable', true)
-            ->where('is_active', true)
-            ->with(['activeLookups' => fn($q) => $q->orderBy('display_name')])
-            ->get();
-
-        return $namespaces->map(fn($ns) => [
-            'namespace' => $ns->slug,
-            'label' => $ns->display_name,
-            'options' => $ns->activeLookups->map(fn($lookup) => [
-                'slug' => $lookup->slug,
-                'label' => $lookup->display_name,
-                'metadata' => $lookup->metadata ?? [],
-                'image_url' => $lookup->getFirstMediaUrl('image', 'webp') ?: null,
-            ])->values(),
-        ])->values();
     }
 }

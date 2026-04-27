@@ -67,7 +67,7 @@ class ProductPageResource extends JsonResource
                 'description' => $activeVariant->description ?? null,
                 'swatch_label' => $activeVariant->swatch_label ?? null,
                 'price' => $activeVariant->price,
-                'sale_price' => $activeVariant->sale_price,
+                'sale_price' => $activeVariant->getEffectivePrice(),
                 'in_stock' => $activeVariant->getAvailableStock() > 0,
                 'option_values' => $activeVariant->option_values,
                 'sales_count' => $activeVariant->sales_count,

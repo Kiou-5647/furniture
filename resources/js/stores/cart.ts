@@ -1,12 +1,16 @@
+import { router } from '@inertiajs/vue3';
 import axios from 'axios'
 import { reactive, computed } from 'vue'
+import { show as showBundle } from '@/routes/bundles';
 import { data as cartData, destroy, update, store } from '@/routes/cart'
+import { show as showProduct } from '@/routes/products';
 
 export interface CartVariant {
     id: string;
     name: string;
     label: string | null;
     sku: string;
+    slug: string;
     price: number;
     sale_price: number | null;
     quantity: number;
@@ -16,6 +20,8 @@ export interface CartVariant {
 export interface CartItem {
     id: string;
     name: string;
+    sku: string;
+    slug: string;
     quantity: number;
     unit_price: number;
     subtotal: number;
@@ -51,6 +57,16 @@ export const useCartStore = () => {
             console.error("Failed to fetch cart", e)
         } finally {
             state.isLoading = false
+        }
+    }
+
+    const visitItemPage = (purchasable_type: string, sku: string | null, slug: string | null) => {
+        state.isOpen = false;
+        if (purchasable_type == 'App\\Models\\Product\\Bundle')
+        {
+            router.visit(showBundle(slug!).url)
+        } else if (purchasable_type == 'App\\Models\\Product\\ProductVariant') {
+            router.visit(showProduct({sku: sku!, variant_slug: slug!}).url)
         }
     }
 
@@ -97,6 +113,7 @@ export const useCartStore = () => {
         openDrawer,
         closeDrawer,
         fetchCart,
+        visitItemPage,
         addToCart,
         updateItemQuantity,
         removeItem,

@@ -42,4 +42,15 @@ class CategoryBuilder extends Builder
             $query->whereIn('lookups.id', $roomIds);
         });
     }
+
+    public function inNamespaces(array $namespaceIds): self
+    {
+        if (empty($namespaceIds)) {
+            return $this;
+        }
+
+        return $this->whereHas('filterableSpecs', function ($query) use ($namespaceIds) {
+            $query->whereIn('namespace_id', $namespaceIds);
+        });
+    }
 }

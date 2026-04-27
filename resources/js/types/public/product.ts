@@ -97,6 +97,8 @@ export interface ProductSpecification {
 
 export interface ProductCard {
     id: string;
+    matching_variants_count: number;
+    default_variant_id: string;
     metrics: {
         views_count: number;
         sales_count: number;

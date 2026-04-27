@@ -3,7 +3,6 @@
 use App\Http\Controllers\Employee\Booking\BookingController;
 use App\Http\Controllers\Employee\Booking\DesignServiceController;
 use App\Http\Controllers\Employee\EmployeeDashboardController;
-use App\Http\Controllers\Setting\EmployeeProfileController;
 use App\Http\Controllers\Employee\Fulfillment\ShipmentController;
 use App\Http\Controllers\Employee\Fulfillment\ShippingMethodController;
 use App\Http\Controllers\Employee\Hr\DepartmentController;
@@ -16,6 +15,7 @@ use App\Http\Controllers\Employee\Product\BundleController;
 use App\Http\Controllers\Employee\Product\CategoryController;
 use App\Http\Controllers\Employee\Product\CollectionController;
 use App\Http\Controllers\Employee\Product\ProductController;
+use App\Http\Controllers\Employee\Sales\DiscountController;
 use App\Http\Controllers\Employee\Sales\InvoiceController;
 use App\Http\Controllers\Employee\Sales\OrderController;
 use App\Http\Controllers\Employee\Sales\PaymentController;
@@ -26,6 +26,7 @@ use App\Http\Controllers\Employee\Setting\LookupController;
 use App\Http\Controllers\Employee\Setting\LookupNamespaceController;
 use App\Http\Controllers\Employee\Vendor\VendorController;
 use App\Http\Controllers\Payment\VnPayPaymentController;
+use App\Http\Controllers\Setting\EmployeeProfileController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -123,6 +124,23 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
      * Sales routes
      */
     Route::prefix('ban-hang')->name('sales.')->group(function () {
+        Route::prefix('giam-gia')->name('discounts.')->group(function () {
+            Route::get('targets/categories', [DiscountController::class, 'getCategories'])->name('targets.categories');
+            Route::get('targets/collections', [DiscountController::class, 'getCollections'])->name('targets.collections');
+            Route::get('targets/vendors', [DiscountController::class, 'getVendors'])->name('targets.vendors');
+            // View Group
+            Route::middleware(['can:discounts.view'])->group(function () {
+                Route::get('/', [DiscountController::class, 'index'])->name('index');
+            });
+
+            // Manage Group
+            Route::middleware(['can:discounts.manage'])->group(function () {
+                Route::post('/', [DiscountController::class, 'store'])->name('store');
+                Route::put('/{discount}', [DiscountController::class, 'update'])->name('update');
+                Route::delete('/{discount}', [DiscountController::class, 'destroy'])->name('destroy');
+            });
+        });
+
         // Orders
         Route::prefix('don-hang')->name('orders.')->group(function () {
             Route::middleware(['can:orders.view'])->group(function () {

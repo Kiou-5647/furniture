@@ -23,7 +23,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { createLazyComponent } from '@/composables/createLazyComponent';
 import { useBundleForm } from '@/composables/useBundleForm';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { slugify } from '@/lib/utils';
+import { formatPrice, slugify } from '@/lib/utils';
 import { index } from '@/routes/employee/bundles';
 import type { Bundle } from '@/types/bundle';
 
@@ -268,11 +268,8 @@ watch(
                                                 class="font-medium text-foreground"
                                             >
                                                 {{
-                                                    getActiveVariant(item)
-                                                        ?.sale_price ??
-                                                    getActiveVariant(item)
-                                                        ?.price
-                                                }}đ
+                                                    formatPrice(Number(getActiveVariant(item)?.sale_price || getActiveVariant(item)?.price || 0))
+                                                }}
                                             </span>
                                         </p>
                                     </div>

@@ -146,7 +146,6 @@ class UpdateProductRequest extends FormRequest
             ],
             'variants.*.swatch_label' => 'nullable|string|max:255',
             'variants.*.price' => ['required_with:variants', 'numeric', 'min:0'],
-            'variants.*.sale_price' => 'nullable|numeric|min:0',
             'variants.*.profit_margin_value' => ['nullable', 'numeric', 'min:0'],
             'variants.*.profit_margin_unit' => ['nullable', Rule::in(['fixed', 'percentage'])],
             'variants.*.weight' => ['nullable', 'array'],

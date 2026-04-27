@@ -18,7 +18,6 @@ return new class extends Migration
             $table->string('display_name', 255);
             $table->text('description')->nullable();
             $table->boolean('for_variants')->default(false);
-            $table->boolean('is_filterable')->default(false);
             $table->boolean('is_active')->default(true);
             $table->boolean('is_system')->default(false);
             $table->timestamps();

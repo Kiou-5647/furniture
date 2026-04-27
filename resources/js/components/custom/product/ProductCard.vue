@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import { ImageOff, ShoppingCart } from '@lucide/vue';
-import { Heart } from 'lucide-vue-next';
 import { computed, ref, onMounted } from 'vue';
 import StarRating from '@/components/custom/StarRating.vue';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { formatPrice } from '@/lib/utils';
 import type { ProductCard, ProductCardVariant } from '@/types/public/product';
 import VariantSelectorDialog from './VariantSelectorDialog.vue';
-
 
 const props = defineProps<{
     productCard: ProductCard;
@@ -26,19 +26,10 @@ function previewSwatch(swatch: ProductCardVariant) {
 const initializeSelection = () => {
     if (!activeCard.value) return;
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const colorFilter = urlParams.get('mau-sac');
-
-    if (colorFilter) {
-        const matchingSwatch = activeCard.value.swatches.find(
-            (s) => s.option_values?.['mau-sac'] === colorFilter,
-        );
-        if (matchingSwatch) {
-            selectedVariantId.value = matchingSwatch.id;
-        }
-    } else {
-        selectedVariantId.value = activeCard.value.swatches[0]?.id ?? null;
-    }
+    selectedVariantId.value =
+        activeCard.value.default_variant_id ??
+        activeCard.value.swatches[0]?.id ??
+        null;
 };
 
 onMounted(() => {
@@ -75,10 +66,6 @@ const displayImage = computed(() => {
 
     return swatch.primary_image_url;
 });
-
-function formatPrice(value: number): string {
-    return value?.toLocaleString('vi-VN') ?? '0';
-}
 
 function productUrl(): string {
     if (!currentSwatch.value) return '#';
@@ -124,57 +111,70 @@ function openSelector() {
         <!-- Product Details -->
         <div class="space-y-2 p-3">
             <!-- Product Name -->
-            <Link :href="productUrl()" class="block">
-                <h3 class="transition-color line-clamp-2 text-sm font-medium">
-                    {{ displayName }}
-                </h3>
-            </Link>
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger as-child>
+                        <Link :href="productUrl()" class="block">
+                            <h3 class="transition-color truncate text-sm font-medium">
+                                {{ displayName }}
+                            </h3>
+                        </Link>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p class="text-xs">{{ displayName }}</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
 
             <!-- Price -->
             <div class="flex items-baseline gap-2">
                 <span
-                    v-if="currentSwatch?.sale_price"
+                    v-if="
+                        currentSwatch &&
+                        Number(currentSwatch.sale_price) <
+                            Number(currentSwatch.price)
+                    "
                     class="text-base font-bold text-orange-500"
                 >
-                    {{ formatPrice(Number(currentSwatch.sale_price)) }}đ
+                    {{ formatPrice(Number(currentSwatch.sale_price)) }}
                 </span>
 
                 <span
                     :class="
-                        currentSwatch?.sale_price
+                        currentSwatch &&
+                        Number(currentSwatch.sale_price) <
+                            Number(currentSwatch.price)
                             ? 'text-sm line-through'
                             : 'text-base font-bold'
                     "
                 >
-                    {{ formatPrice(Number(currentSwatch?.price)) }}đ
-                </span>
-            </div>
-
-            <!-- Sell Count -->
-            <div
-                v-if="productCard.metrics.sales_count > 0"
-                class="flex items-center gap-1 text-xs text-zinc-500"
-            >
-                <span>
-                    Đã bán
-                    {{
-                        productCard.metrics.sales_count.toLocaleString('vi-VN')
-                    }}
+                    {{ formatPrice(Number(currentSwatch?.price)) }}
                 </span>
             </div>
 
             <!-- Rating -->
-            <div v-if="productCard.metrics.average_rating" class="py-1">
-                <StarRating
-                    :rating="productCard.metrics.average_rating"
-                    :count="productCard.metrics.reviews_count ?? 0"
-                    show-count
-                    size="h-5 w-5"
-                />
+            <div v-if="productCard.metrics.average_rating || productCard.metrics.sales_count > 0" class="flex items-center justify-between py-1">
+                <!-- Left Side: Rating -->
+                <div v-if="productCard.metrics.average_rating">
+                    <StarRating
+                        :rating="productCard.metrics.average_rating"
+                        :count="productCard.metrics.reviews_count ?? 0"
+                        show-count
+                        show-rating
+                        size="h-5 w-5 text-xs"
+                    />
+                </div>
+                <div v-else class="w-0"></div> <!-- Spacer to keep sales count on the right if no rating exists -->
+
+                <!-- Right Side: Sell Count -->
+                <div
+                    v-if="productCard.metrics.sales_count > 0"
+                    class="text-xs text-zinc-500"
+                >
+                    Đã bán {{ productCard.metrics.sales_count.toLocaleString('vi-VN') }}
+                </div>
             </div>
 
-            <!-- Color Swatches -->
-            <!-- FIX 3: Use .swatches instead of .swatch_options -->
             <div
                 v-if="
                     hasCards &&

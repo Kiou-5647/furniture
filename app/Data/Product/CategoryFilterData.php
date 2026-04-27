@@ -15,7 +15,8 @@ class CategoryFilterData
         public readonly ?string $order_by,
         public readonly ?string $order_direction,
         public readonly ?int $per_page,
-        public readonly ?array $room_ids, // ADD THIS
+        public readonly ?array $room_ids,
+        public readonly ?array $namespace_ids
     ) {}
 
     public static function fromRequest(Request $request, ?string $groupId): self
@@ -25,6 +26,7 @@ class CategoryFilterData
         return new self(
             group_id: $groupId ?? ($request->has('group_id') ? $request->query('group_id') : null),
             room_ids: $request->has('room_ids') ? explode(',', $request->query('room_ids')) : null,
+            namespace_ids: $request->has('namespace_ids') ? explode(',', $request->query('namespace_ids')) : null,
             product_type: ProductType::tryFrom($request->query('product_type')),
             search: $request->query('search'),
             is_active: $request->has('is_active') ? $request->boolean('is_active') : null,

@@ -117,6 +117,9 @@ const duration = computed(() => {
 
     const start = new Date(props.booking.start_at);
     const end = new Date(props.booking.end_at);
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) return '—';
+
     const diffInMs = end.getTime() - start.getTime();
     const diffInHours = Math.round(diffInMs / (1000 * 60 * 60));
 

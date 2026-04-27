@@ -142,6 +142,34 @@ export function getColumns(
             },
         },
         {
+            id: 'filterable_specs',
+            header: 'Thông số lọc',
+            size: 180,
+            enableSorting: false,
+            enableHiding: true,
+            meta: { align: 'center' },
+            cell: ({ row }) => {
+                const filterable_specs = row.original.filterable_specs ?? [];
+                const visibleSpecs = filterable_specs.slice(0, 2);
+                const remainingCount = filterable_specs.length - visibleSpecs.length;
+
+                return h('div', { class: 'flex items-center justify-center gap-1 flex-wrap' }, [
+                    ...visibleSpecs.map(spec =>
+                        h(Badge, {
+                            variant: 'secondary',
+                            class: 'text-[10px] px-1 py-0'
+                        }, () => spec.display_name)
+                    ),
+                    remainingCount > 0
+                        ? h(Badge, {
+                            variant: 'outline',
+                            class: 'text-[10px] px-1 py-0 bg-muted'
+                        }, () => `+${remainingCount}`)
+                        : null,
+                ]);
+            },
+        },
+        {
             accessorKey: 'is_active',
             header: 'Trạng thái',
             size: 100,

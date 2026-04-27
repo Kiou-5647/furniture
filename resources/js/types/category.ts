@@ -7,6 +7,10 @@ export interface Category {
     group?: Lookup;
 
     rooms: Lookup[];
+    filterable_specs: {
+        id: string;
+        display_name: string;
+    }[];
 
     product_type: ProductType;
     product_type_label: string;
@@ -62,6 +66,7 @@ export interface CategoryPagination {
 export interface CategoryFilterData {
     group_id?: string | null;
     room_ids?: string[] | null;
+    namespace_ids?: string[] | null;
     product_type?: ProductType | null;
     search?: string;
     is_active?: boolean | null;

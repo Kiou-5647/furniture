@@ -5,6 +5,7 @@ export * from './lookup';
 export * from './department';
 export * from './employee';
 export * from './order';
+export * from './discount';
 
 export type AttributeType =
     | 'text'

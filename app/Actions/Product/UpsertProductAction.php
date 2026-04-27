@@ -76,11 +76,6 @@ class UpsertProductAction
             $swatchImageFile = Arr::pull($variantData, 'swatch_image_file', null);
             $removedGalleryIds = Arr::pull($variantData, 'removed_gallery_ids', []);
             $price = $variantData['price'] ?? null;
-            $salePrice = $variantData['sale_price'] ?? null;
-
-            if ($salePrice !== null && $price !== null && $salePrice > $price) {
-                throw new \Exception("Sale price cannot be higher than the base price for variant {$variantData['sku']}.");
-            }
 
             $duplicate = ProductVariant::where('product_id', $product->id)
                 ->where('option_values', json_encode($variantData['option_values']))
@@ -98,13 +93,11 @@ class UpsertProductAction
                 $variant = $product->variants()->find($variantId);
                 $updateData = $variantData;
                 $updateData['swatch_label'] = $swatchLabel;
-                $updateData['sale_price'] = $salePrice;
 
                 $variant->update($updateData);
             } else {
                 $createData = $variantData;
                 $createData['swatch_label'] = $swatchLabel;
-                $createData['sale_price'] = $salePrice;
 
                 $variant = $product->variants()->create($createData);
             }

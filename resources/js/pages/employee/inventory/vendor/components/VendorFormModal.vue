@@ -60,7 +60,7 @@ const form = useForm({
     ward_code: undefined as string | undefined,
     address_data: {
         street: '',
-        full_text: '',
+        full_address: '',
     },
     bank_name: undefined as string | undefined,
     bank_account_number: undefined as string | undefined,
@@ -81,7 +81,7 @@ function regenerateFullText() {
     if (form.address_data.street) parts.push(form.address_data.street);
     if (selectedWard.value) parts.push(selectedWard.value);
     if (selectedProvince.value) parts.push(selectedProvince.value);
-    form.address_data.full_text = parts.join(', ');
+    form.address_data.full_address = parts.join(', ');
 }
 
 async function loadProvinces() {
@@ -123,7 +123,7 @@ watch(
             form.ward_code = newVendor.ward_code;
             form.address_data = {
                 street: newVendor.address_data?.street ?? '',
-                full_text: newVendor.address_data?.full_text ?? '',
+                full_address: newVendor.address_data?.full_address ?? '',
             };
             form.bank_name = newVendor.bank_name;
             form.bank_account_number = newVendor.bank_account_number;
@@ -140,7 +140,7 @@ watch(
         } else if (!newVendor && props.open) {
             form.reset();
             form.is_active = true;
-            form.address_data = { street: '', full_text: '' };
+            form.address_data = { street: '', full_address: '' };
         }
     },
     { immediate: true },
@@ -391,7 +391,7 @@ function closeModal() {
                         <FieldLabel>Địa chỉ đầy đủ (Tự động sinh)</FieldLabel>
                         <FieldContent>
                             <Textarea
-                                v-model="form.address_data.full_text"
+                                v-model="form.address_data.full_address"
                                 placeholder="Số nhà, tên đường, Phường/Xã, Tỉnh/Thành"
                                 class="w-full"
                                 readonly

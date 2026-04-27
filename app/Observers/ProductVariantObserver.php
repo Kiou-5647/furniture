@@ -2,10 +2,8 @@
 
 namespace App\Observers;
 
-use App\Enums\CartStatus;
 use App\Models\Product\ProductCard;
 use App\Models\Product\ProductVariant;
-use App\Models\Public\CartItem;
 use App\Models\Setting\Lookup;
 use Illuminate\Support\Str;
 
@@ -14,24 +12,25 @@ class ProductVariantObserver
     public function saving(ProductVariant $variant): void
     {
         $product = $variant->product;
-        $productName = $product ? $product->name : '';
         $productSlug = $product ? Str::slug($product->name) : '';
 
         if (filled($variant->name)) {
             $variant->name = trim($variant->name);
         } else {
-            $productTitle = $product ? Str::title($product->name) : '';
+            $optionValues = $variant->option_values ?? [];
             $displayLabel = $variant->swatch_label
-                ?? collect($variant->option_values ?? [])
-                ->map(fn($v) => Str::title($v))
+                ?? collect($optionValues)
+                ->map(function ($valSlug, $nsSlug) {
+                    return Lookup::whereHas('namespace', fn($q) => $q->where('slug', $nsSlug))
+                        ->where('slug', $valSlug)
+                        ->value('display_name') ?? Str::title($valSlug);
+                })
+                ->filter()
                 ->implode(' ');
 
-            if ($displayLabel) {
-                $variant->name = $productTitle . ' ' . $displayLabel;
-            } elseif ($productTitle) {
-                $variant->name = $productTitle;
-            }
+            $variant->name = $displayLabel ?: ($product ? $product->name : '');
         }
+
         $variantPart = $variant->name ? Str::slug($variant->name) : '';
         $variant->slug = ($productSlug && $variantPart && $productSlug !== $variantPart)
             ? $productSlug . '-' . $variantPart
@@ -55,10 +54,6 @@ class ProductVariantObserver
                 $variant->product->syncMetricsFromVariants();
             }
         }
-
-        if ($variant->wasChanged(['price', 'sale_price'])) {
-            $this->syncCartPrices($variant);
-        }
     }
 
     public function deleted(ProductVariant $variant): void
@@ -67,21 +62,6 @@ class ProductVariantObserver
         if ($variant->productCard && $variant->productCard->variants()->count() === 0) {
             $variant->productCard->delete();
         }
-    }
-
-    protected function syncCartPrices(ProductVariant $variant): void
-    {
-        $currentPrice = (float) ($variant->sale_price ?? $variant->price);
-
-        // Update all CartItems that:
-        // - Reference this variant
-        // - Belong to a cart that is still 'Open' (not checked out or abandoned)
-        CartItem::where('purchasable_id', $variant->id)
-            ->where('purchasable_type', ProductVariant::class)
-            ->whereHas('cart', fn($q) => $q->where('status', CartStatus::Open))
-            ->update([
-                'unit_price' => $currentPrice,
-            ]);
     }
 
     protected function assignProductCard(ProductVariant $variant, $product): void

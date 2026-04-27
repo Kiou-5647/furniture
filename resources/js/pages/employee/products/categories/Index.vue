@@ -45,6 +45,7 @@ const CategoryFormModal = createLazyComponent(
 const props = defineProps<{
     categoryGroups: any[];
     roomOptions: any[];
+    specOptions: any[];
     categories?: CategoryPagination;
     filters: CategoryFilterData;
     currentGroup?: any;
@@ -65,9 +66,16 @@ const activeColumns = computed(() =>
 );
 
 const mappedRoomOptions = computed(() => {
-    return props.roomOptions.map(room => ({
+    return props.roomOptions.map((room) => ({
         label: room.display_name,
         value: room.id,
+    }));
+});
+
+const mappedSpecOptions = computed(() => {
+    return props.specOptions.map((spec) => ({
+        label: spec.display_name,
+        value: spec.id,
     }));
 });
 
@@ -93,6 +101,7 @@ const selectedGroup = ref(
 );
 
 const selectedRooms = ref(props.filters.room_ids ?? []);
+const selectedSpecs = ref(props.filters.namespace_ids ?? []);
 
 // Faceted Filter: Product Types
 const selectedType = ref(props.filters.product_type ?? null);
@@ -120,7 +129,8 @@ const updateSearch = debounce(() => {
         search: search.value,
         product_type: selectedType.value ?? undefined,
         is_active: selectedStatus.value ?? undefined,
-        room_ids: selectedRooms.value.join(','), // Ensure it's a comma-separated string for the backend
+        room_ids: selectedRooms.value.join(','),
+        namespace_ids: selectedSpecs.value.join(','),
         page: 1,
     };
 
@@ -135,6 +145,7 @@ const updateSearch = debounce(() => {
 watch(search, (val) => val !== (props.filters.search ?? '') && updateSearch());
 watch(selectedType, () => updateSearch());
 watch(selectedRooms, () => updateSearch());
+watch(selectedSpecs, () => updateSearch());
 
 watch(
     () => props.categories,
@@ -372,6 +383,12 @@ function handlePreviewImage(url: string) {
                                     :options="mappedRoomOptions"
                                     icon_location="end"
                                 />
+                                <DataTableFacetedFilter
+                                    title="Thông số lọc"
+                                    v-model="selectedSpecs"
+                                    :options="mappedSpecOptions"
+                                    icon_location="end"
+                                />
                             </template>
                         </DataTableGroup>
                     </div>
@@ -385,6 +402,7 @@ function handlePreviewImage(url: string) {
             :open="showFormModal"
             :category-groups="categoryGroups"
             :room-options="mappedRoomOptions"
+            :specOptions="mappedSpecOptions"
             :category="selectedCategory"
             @close="showFormModal = false"
             @delete="confirmDelete"

@@ -28,7 +28,7 @@ export function useBundleForm(initialBundle: Bundle | null) {
         form.value.contents.forEach(item => {
             const variants = item.product_card?.variants || [];
             if (variants.length > 0) {
-                const minPrice = Math.min(...variants.map(v => v.sale_price ?? v.price));
+                const minPrice = Math.min(...variants.map(v => Number(v.sale_price ?? v.price)));
                 individualTotal += minPrice * item.quantity;
             }
         });

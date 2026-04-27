@@ -13,6 +13,8 @@ class ProductCardResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'matching_variants_count' => $this->matching_variants_count ?? 0,
+            'default_variant_id' => $this->default_variant_id ?? null,
             'metrics' => [
                 'views_count' => $this->views_count,
                 'sales_count' => $this->sales_count,
@@ -31,7 +33,7 @@ class ProductCardResource extends JsonResource
                 'name' => $v->name,
                 'label' => $v->swatch_label,
                 'price' => $v->price,
-                'sale_price' => $v->sale_price,
+                'sale_price' => $v->getEffectivePrice(),
                 'in_stock' => $v->getAvailableStock() > 0,
                 'primary_image_url' => $v->getFirstMediaUrl('primary_image', 'webp') ?? $v->getFirstMediaUrl('primary_image') ?? null,
                 'hover_image_url' => $v->getFirstMediaUrl('hover_image', 'webp') ?? $v->getFirstMediaUrl('hover_image') ?? null,

@@ -50,7 +50,6 @@ class CategorySeeder extends Seeder
                     'group_id' => $groupSeatings?->id,
                     'product_type' => 'noi-that',
                     'is_active' => true,
-                    'filterable_specs' => [],
                 ]
             );
 
@@ -80,7 +79,6 @@ class CategorySeeder extends Seeder
                     'product_type' => 'noi-that',
 
                     'is_active' => true,
-                    'filterable_specs' => [],
                 ]
             );
 
@@ -108,7 +106,6 @@ class CategorySeeder extends Seeder
                     'group_id' => $groupStorage?->id,
                     'product_type' => 'noi-that',
                     'is_active' => true,
-                    'filterable_specs' => [],
                 ]
             );
 

@@ -29,7 +29,9 @@ class CartService
         $itemCount = 0;
 
         foreach ($cart->items as $item) {
-            $lineSubtotal = (float) $item->unit_price * $item->quantity;
+            $price = $item->getEffectivePrice();
+            $lineSubtotal = $price * $item->quantity;
+
             $subtotal += $lineSubtotal;
             $itemCount += $item->quantity;
 
@@ -37,7 +39,7 @@ class CartService
                 'id' => $item->id,
                 'name' => $item->purchasable?->name ?? 'Unknown',
                 'quantity' => $item->quantity,
-                'unit_price' => (float) $item->unit_price,
+                'unit_price' => $price,
                 'subtotal' => $lineSubtotal,
             ];
         }

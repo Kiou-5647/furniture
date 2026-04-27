@@ -53,7 +53,6 @@ class Bundle extends Model implements HasMedia
     {
         $this->addMediaCollection('primary_image')->singleFile();
         $this->addMediaCollection('hover_image')->singleFile();
-        $this->addMediaCollection('gallery')->onlyKeepLatest(10);
     }
 
     public function registerMediaConversions(?Media $media = null): void
@@ -98,19 +97,13 @@ class Bundle extends Model implements HasMedia
             if (!$card) continue;
 
             if ($configuration && isset($configuration[$content->id])) {
-                // TRANSACTIONAL: User has picked a specific variant
                 $variantId = $configuration[$content->id];
                 $variant = $card->variants()->find($variantId);
 
-                // Use sale_price if available, otherwise base price
-                $price = $variant ? ($variant->sale_price ?? $variant->price) : 0;
+                $price = $variant ? $variant->getEffectivePrice() : 0;
                 $individualTotal += (float) $price * $content->quantity;
             } else {
-                // MARKETING: No selection yet, use the cheapest option for "Starting from" price
-                $minEffectivePrice = $card->variants()
-                    ->selectRaw('MIN(COALESCE(sale_price, price)) as min_price')
-                    ->value('min_price') ?? 0;
-
+                $minEffectivePrice = $card->variants->min(fn($v) => $v->getEffectivePrice()) ?? 0;
                 $individualTotal += (float) $minEffectivePrice * $content->quantity;
             }
         }

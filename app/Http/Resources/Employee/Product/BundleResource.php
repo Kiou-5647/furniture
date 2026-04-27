@@ -42,7 +42,7 @@ class BundleResource extends JsonResource
                         'sku' => $v->sku,
                         'name' => $v->name,
                         'price' => $v->price,
-                        'sale_price' => $v->sale_price,
+                        'sale_price' => $v->getEffectivePrice(),
                         'primary_image' => $v->getFirstMediaUrl('primary_image'),
                         'hover_image' => $v->getFirstMediaUrl('hover_image'),
                         'swatch_image' => $v->getFirstMediaUrl('swatch_image'),
