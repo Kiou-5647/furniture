@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\CaptureGuestSession;
 use App\Http\Middleware\EnsureUserType;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -21,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state', 'per_page', 'user_timezone']);
 
         $middleware->web(append: [
+            CaptureGuestSession::class,
             SetUserTimezone::class,
             HandleAppearance::class,
             HandleInertiaRequests::class,

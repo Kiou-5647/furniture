@@ -5,6 +5,8 @@ namespace App\Observers;
 use App\Enums\InvoiceStatus;
 use App\Enums\ShipmentStatus;
 use App\Models\Fulfillment\ShipmentItem;
+use App\Models\Product\Bundle;
+use App\Models\Sales\OrderItem;
 
 class ShipmentItemObserver
 {
@@ -23,30 +25,6 @@ class ShipmentItemObserver
         }
     }
 
-    protected function reduceInvoiceAmount(ShipmentItem $shipmentItem): void
-    {
-        $orderItem = $shipmentItem->orderItem;
-        if (! $orderItem) {
-            return;
-        }
-
-        $invoice = $orderItem->order->invoices()->first();
-        if (! $invoice || $invoice->amount_due <= 0) {
-            return;
-        }
-
-        $itemValue = (float) $orderItem->unit_price * $shipmentItem->quantity_shipped;
-        $invoice->decrement('amount_due', $itemValue);
-
-        // Refresh to get updated values
-        $invoice->refresh();
-
-        // If amount_paid > amount_due after reduction, mark as overpaid
-        if ($invoice->amount_paid > $invoice->amount_due && $invoice->status !== InvoiceStatus::Overpaid) {
-            $invoice->update(['status' => InvoiceStatus::Overpaid]);
-        }
-    }
-
     protected function updateShipmentStatus(ShipmentItem $shipmentItem): void
     {
         $shipment = $shipmentItem->shipment;
@@ -59,5 +37,47 @@ class ShipmentItemObserver
         } elseif ($allDelivered) {
             $shipment->update(['status' => ShipmentStatus::Delivered]);
         }
+    }
+
+    protected function reduceInvoiceAmount(ShipmentItem $shipmentItem): void
+    {
+        $orderItem = $shipmentItem->orderItem;
+        if (! $orderItem) {
+            return;
+        }
+
+        $invoice = $orderItem->order->invoices()->first();
+        if (! $invoice || $invoice->amount_due <= 0) {
+            return;
+        }
+
+        $itemValue = $this->calculateItemValue($orderItem, $shipmentItem);
+        $invoice->decrement('amount_due', $itemValue);
+
+        // Refresh to get updated values
+        $invoice->refresh();
+
+        // If amount_paid > amount_due after reduction, mark as overpaid
+        if ($invoice->amount_paid > $invoice->amount_due && $invoice->status !== InvoiceStatus::Overpaid) {
+            $invoice->update(['status' => InvoiceStatus::Overpaid]);
+        }
+    }
+
+    protected function calculateItemValue(OrderItem $orderItem, ShipmentItem $shipmentItem): float
+    {
+        // Simple variant: use unit_price
+        if ($orderItem->purchasable_type !== \App\Models\Product\Bundle::class) {
+            return (float) $orderItem->unit_price * $shipmentItem->quantity_shipped;
+        }
+
+        $configuration = $orderItem->configuration ?? [];
+
+        foreach ($configuration as $configValue) {
+            if (is_array($configValue) && ($configValue['variant_id'] ?? null) === $shipmentItem->variant_id) {
+                return (float) ($configValue['price'] ?? 0) * $shipmentItem->quantity_shipped;
+            }
+        }
+
+        return 0.0;
     }
 }

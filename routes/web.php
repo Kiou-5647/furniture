@@ -2,8 +2,11 @@
 
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Customer\ReviewController;
+use App\Http\Controllers\Payment\VnPayPaymentController;
 use App\Http\Controllers\Payment\VnPayReturnController;
+use App\Http\Controllers\Public\BundleController;
 use App\Http\Controllers\Public\CartController;
+use App\Http\Controllers\Public\CheckoutController;
 use App\Http\Controllers\Public\ProductController;
 use App\Http\Controllers\Public\WelcomeController;
 use Illuminate\Support\Facades\Route;
@@ -24,12 +27,18 @@ Route::get('/san-pham/{sku}/{variant_slug}', [ProductController::class, 'show'])
     ->middleware('track.product.view')
     ->name('products.show');
 
-Route::get('/goi-san-pham/{bundle:slug}', [App\Http\Controllers\Public\BundleController::class, 'show'])
+Route::get('/goi-san-pham/{bundle:slug}', [BundleController::class, 'show'])
     ->name('bundles.show');
 
 Route::middleware(['auth', 'verified', 'user_type:customer'])->name('customer.')->group(function () {
     Route::inertia('dashboard', 'Dashboard')->name('dashboard');
     Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+
+    Route::prefix('checkout')->group(function () {
+        Route::get('/', [CheckoutController::class, 'index'])->name('checkout.index');
+        Route::post('/', [CheckoutController::class, 'store'])->name('checkout.store');
+        Route::get('/success', [CheckoutController::class, 'success'])->name('checkout.success');
+    });
 });
 
 
@@ -37,6 +46,7 @@ Route::middleware(['auth', 'verified', 'user_type:customer'])->name('customer.')
 /**
  * VNPay payment routes (public - called by VNPay gateway)
  */
+Route::get('/vnpay/{invoice}', [VnPayPaymentController::class, 'initiate'])->name('payment.vnpay.initiate');
 Route::get('/payment/vnpay/return', VnPayReturnController::class)->name('payment.vnpay.return');
 Route::inertia('/payment/vnpay/status', 'payment/vnpay-status')->name('payment.vnpay.status');
 

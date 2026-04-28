@@ -3,7 +3,10 @@
 namespace App\Models\Product;
 
 use App\Builders\Product\BundleBuilder;
+use App\Enums\ProductStatus;
 use App\Models\Product\BundleContent;
+use App\Models\Product\ProductCard;
+use App\Models\Product\ProductVariant;
 use App\Models\Public\CartItem;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -116,12 +119,33 @@ class Bundle extends Model implements HasMedia
         };
     }
 
-    public function isValid(): bool
+    public function isValid(?array $configuration = null): bool
     {
-        if ($this->contents->isEmpty()) {
+        // 1. Basic structural check: Bundle must be active and have contents
+        if (!$this->is_active || $this->contents->isEmpty()) {
             return false;
         }
 
-        return $this->contents->every(fn(BundleContent $content) => $content->productCard !== null);
+        // 2. Structure check: All contents must link to a valid ProductCard
+        if (!$this->contents->every(fn($content) => $content->productCard !== null)) {
+            return false;
+        }
+
+        // 3. Real-time check: If a specific cart configuration is provided,
+        // verify that every selected variant is actually in stock and published.
+        if ($configuration !== null) {
+            foreach ($this->contents as $content) {
+                $variantId = $configuration[$content->id] ?? null;
+                if (!$variantId) return false;
+
+                /** @var \App\Models\Product\ProductVariant */
+                $variant = ProductVariant::find($variantId);
+                if (!$variant->isValid()) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 }

@@ -21,7 +21,7 @@ class CustomerSeeder extends Seeder
 
     protected function seedCustomers(): void
     {
-        Customer::factory()->count(1000)->create();
+        Customer::factory()->count(10)->create();
 
         $hn = Province::firstWhere('province_code', '01');
         $hnWard = Ward::firstWhere('province_code', '01');

@@ -74,6 +74,7 @@ class OrderController
     {
         $order = $this->service->getById($order->id);
         $variantStockOptions = $this->service->getOrderVariantStockOptions($order);
+        $order->load(['shipments.items.variant']);
 
         return Inertia::render('employee/sales/orders/Show', [
             'order' => new OrderResource($order),

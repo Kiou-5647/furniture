@@ -9,10 +9,6 @@ use Illuminate\Support\Collection;
 
 class StockLocatorService
 {
-    public function __construct(
-        protected LocationDistanceService $distanceService,
-    ) {}
-
     /**
      * Check if a shipping order has a clear "nearest" location.
      * Returns null if employee should choose manually.
@@ -104,11 +100,6 @@ class StockLocatorService
 
         $inventories = $query->get();
 
-        // Get all locations sorted by distance
-        $closestLocations = $this->distanceService
-            ->getClosestLocationsToAddress($customerProvinceCode)
-            ->keyBy('id');
-
         $results = $inventories->map(function (Inventory $inv) use ($customerProvinceCode) {
             $location = $inv->location;
             if (! $location) {
@@ -171,7 +162,7 @@ class StockLocatorService
             }
 
             // Only keep locations that have at least the required quantity for this component
-            $eligibleLocations = array_filter($variantStocks, fn ($qty) => $qty >= $content->quantity);
+            $eligibleLocations = array_filter($variantStocks, fn($qty) => $qty >= $content->quantity);
 
             if (empty($eligibleLocations)) {
                 return collect(); // Bundle cannot be fulfilled anywhere

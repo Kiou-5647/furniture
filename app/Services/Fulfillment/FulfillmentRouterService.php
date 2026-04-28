@@ -68,7 +68,8 @@ class FulfillmentRouterService
         }
 
         foreach ($bundle->contents as $content) {
-            $variantId = $config[$content->id] ?? null;
+            $configValue = $config[$content->id];
+            $variantId = $configValue['variant_id'] ?? null;
 
             if ($variantId) {
                 // Resolve the best location for this specific variant in the bundle

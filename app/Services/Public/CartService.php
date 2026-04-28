@@ -2,11 +2,12 @@
 
 namespace App\Services\Public;
 
-use App\Data\Public\CartTotalsData;
 use App\Data\Product\BundleFilterData;
+use App\Data\Public\CartTotalsData;
 use App\Models\Auth\User;
 use App\Models\Public\Cart;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Log;
 
 class CartService
 {
@@ -22,36 +23,61 @@ class CartService
 
     public function calculateTotals(Cart $cart): CartTotalsData
     {
-        $cart->load('items');
+        $cart->load('items.purchasable');
 
         $lineItems = [];
-        $subtotal = 0;
+        $actualTotal = 0;       // The final amount the user actually pays
+        $originalSum = 0;       // The absolute base price of every single item/variant
         $itemCount = 0;
 
         foreach ($cart->items as $item) {
-            $price = $item->getEffectivePrice();
-            $lineSubtotal = $price * $item->quantity;
+            $quantity = $item->quantity;
+            $effectivePrice = $item->getEffectivePrice();
+            $itemActualTotal = $effectivePrice * $quantity;
 
-            $subtotal += $lineSubtotal;
-            $itemCount += $item->quantity;
+            $actualTotal += $itemActualTotal;
+            $itemCount += $quantity;
+
+            // Calculate the "Original Price" for this line item
+            $itemOriginalPrice = 0.0;
+
+            if ($item->purchasable instanceof \App\Models\Product\ProductVariant) {
+                // For simple items: base price * qty
+                $itemOriginalPrice = (float) $item->purchasable->price * $quantity;
+            } elseif ($item->purchasable instanceof \App\Models\Product\Bundle) {
+                // For bundles: SUM of (base price of each component * component qty) * bundle qty
+                $bundleBaseSum = 0.0;
+                foreach ($item->purchasable->contents as $content) {
+                    $variantId = $item->configuration[$content->id] ?? null;
+                    $variant = $variantId ? \App\Models\Product\ProductVariant::find($variantId) : null;
+
+                    // Use base price, NOT effective price, to find the absolute original value
+                    $componentBasePrice = $variant ? (float) $variant->price : 0;
+                    $bundleBaseSum += $componentBasePrice * $content->quantity;
+                }
+                $itemOriginalPrice = $bundleBaseSum * $quantity;
+            }
+
+            $originalSum += $itemOriginalPrice;
 
             $lineItems[] = [
                 'id' => $item->id,
                 'name' => $item->purchasable?->name ?? 'Unknown',
-                'quantity' => $item->quantity,
-                'unit_price' => $price,
-                'subtotal' => $lineSubtotal,
+                'quantity' => $quantity,
+                'unit_price' => $effectivePrice,
+                'subtotal' => $itemActualTotal,
             ];
         }
 
-        // Bundles already calculate their discounted price, so subtotal = total
-        $discount = 0;
+        // Discount = (Sum of all base prices) - (Sum of all actual prices)
+        // This automatically captures both Variant sales AND Bundle discounts
+        $totalDiscount = max(0, $originalSum - $actualTotal);
 
         return new CartTotalsData(
             item_count: $itemCount,
-            subtotal: $subtotal,
-            discount: $discount,
-            total: $subtotal,
+            subtotal: $originalSum,     // Tạm tính = Absolute original value
+            discount: $totalDiscount,   // Tiết kiệm = Total savings
+            total: $actualTotal,        // Tổng cộng = Final price to pay
             line_items: $lineItems,
         );
     }
@@ -74,21 +100,36 @@ class CartService
         ];
     }
 
-    public function getOpenCarts(BundleFilterData $filter): LengthAwarePaginator
+    public function merge(string $sessionId, User $user): void
     {
-        return Cart::query()
-            ->open()
-            ->with(['user', 'items'])
-            ->orderBy($filter->order_by, $filter->order_direction)
-            ->paginate($filter->per_page);
-    }
+        $guestCart = Cart::query()
+            ->where('user_id', null)
+            ->where('session_id', $sessionId)
+            ->first();
 
-    public function getAbandonedCarts(BundleFilterData $filter): LengthAwarePaginator
-    {
-        return Cart::query()
-            ->abandoned()
-            ->with(['user', 'items'])
-            ->orderBy($filter->order_by, $filter->order_direction)
-            ->paginate($filter->per_page);
+        if (!$guestCart) return;
+
+        $userCart = $this->getOrCreateForUser($user);
+
+        // Load all user cart items into a collection once to avoid N+1 queries
+        $userItems = $userCart->items;
+
+        foreach ($guestCart->items as $guestItem) {
+            // Find matching item using PHP comparison (handles JSON order perfectly)
+            $existingItem = $userItems->first(function ($item) use ($guestItem) {
+                return $item->purchasable_id === $guestItem->purchasable_id &&
+                    $item->purchasable_type === $guestItem->purchasable_type &&
+                    $item->configuration === $guestItem->configuration;
+            });
+
+            if ($existingItem) {
+                $existingItem->increment('quantity', $guestItem->quantity);
+                $guestItem->delete();
+            } else {
+                $guestItem->update([
+                    'cart_id' => $userCart->id,
+                ]);
+            }
+        }
     }
 }

@@ -15,6 +15,7 @@ export interface CartVariant {
     sale_price: number | null;
     quantity: number;
     image_url: string | null;
+    available_stock: number;
 }
 
 export interface CartItem {
@@ -24,11 +25,15 @@ export interface CartItem {
     slug: string;
     quantity: number;
     unit_price: number;
+    original_unit_price: number;
+    is_available: boolean;
+    available_stock: number;
     subtotal: number;
     image_url: string | null;
     purchasable_type: string;
+    purchasable_id: string;
     configuration: Record<string, string> | null;
-    selected_variants?: CartVariant[]; // Added for Bundle breakdowns
+    selected_variants?: CartVariant[];
 }
 
 const state = reactive({

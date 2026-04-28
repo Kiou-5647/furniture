@@ -6,6 +6,7 @@ import { store, update } from '@/routes/employee/products';
 import type { ProductStatus, SpecLookupOption, SpecItem } from '@/types';
 import type { ProductSpecifications } from '@/types/lookup';
 import type { Product, ProductVariant, OptionGroup } from '@/types/product';
+import { toISODate } from '@/lib/date-utils';
 
 export interface VariantStock {
     location_id: string;
@@ -40,9 +41,7 @@ const steps = [
 
 const statusOptions: { label: string; value: ProductStatus }[] = [
     { label: 'Bản nháp', value: 'draft' },
-    { label: 'Chờ duyệt', value: 'pending_review' },
     { label: 'Đã xuất bản', value: 'published' },
-    { label: 'Đang ẩn', value: 'hidden' },
     { label: 'Lưu trữ', value: 'archived' },
 ];
 
@@ -237,8 +236,8 @@ export function useProductForm(
                 form.warranty_months = newProduct.warranty_months;
                 form.is_featured = newProduct.is_featured;
                 form.is_new_arrival = newProduct.is_new_arrival;
-                form.published_date = newProduct.published_date ?? '';
-                form.new_arrival_until = newProduct.new_arrival_until ?? '';
+                form.published_date = toISODate(newProduct.published_date ?? '');
+                form.new_arrival_until = toISODate(newProduct.new_arrival_until ?? '');
                 const optionGroups = newProduct.option_groups ?? [];
                 form.variants = (newProduct.variants ?? []).map((v: any) => {
                     const normalizedOptionValues: Record<string, string> = {};
@@ -874,8 +873,6 @@ export function useProductForm(
 
     function submit() {
         if (!isValid.value) return;
-
-        console.info(product?.assembly_info)
 
         const url = product ? update(product).url : store().url;
         const method = product ? 'put' : 'post';

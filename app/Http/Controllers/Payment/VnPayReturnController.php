@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Payment;
 
 use App\Actions\Payment\ProcessVnPayReturnAction;
+use App\Enums\UserType;
 use App\Models\Booking\Booking;
 use App\Models\Sales\Invoice;
 use App\Models\Sales\Order;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 class VnPayReturnController
@@ -22,7 +24,16 @@ class VnPayReturnController
 
         if ($result['success']) {
             $invoice = $result['invoice'] ?? null;
-            $redirectUrl = $this->buildRedirectUrl($invoice);
+            $redirectUrl = '';
+            $user = Auth::user();
+            if ($user->type === UserType::Customer) {
+                $redirectUrl = $this->buildCustomerRedirectUrl($invoice);
+            } else if ($user->type === UserType::Employee) {
+                $redirectUrl = $this->buildEmployeeRedirectUrl($invoice);
+            } else {
+                $redirectUrl = route('home');
+            }
+
 
             return redirect($redirectUrl)->with('success', $result['message']);
         }
@@ -33,7 +44,16 @@ class VnPayReturnController
             ->with('vnp_response', $returnData);
     }
 
-    protected function buildRedirectUrl(?Invoice $invoice): string
+    protected function buildCustomerRedirectUrl(?Invoice $invoice): string
+    {
+        if (! $invoice) {
+            return route('home');
+        }
+
+        return route('home');
+    }
+
+    protected function buildEmployeeRedirectUrl(?Invoice $invoice): string
     {
         if (! $invoice) {
             return route('employee.dashboard');

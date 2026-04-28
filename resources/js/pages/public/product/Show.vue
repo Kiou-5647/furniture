@@ -163,9 +163,6 @@ const breadcrumbs = computed((): BreadcrumbItem[] => {
     }
     return items;
 });
-
-console.info(props.product_page.featured_highlights);
-console.info(props.product_page.plain_features);
 </script>
 
 <template>

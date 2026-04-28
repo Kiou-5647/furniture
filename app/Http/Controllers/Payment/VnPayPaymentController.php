@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Payment;
 
 use App\Actions\Payment\InitiateVnPayPaymentAction;
+use App\Enums\UserType;
 use App\Models\Booking\Booking;
 use App\Models\Sales\Invoice;
 use App\Models\Sales\Order;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class VnPayPaymentController
 {
@@ -26,25 +28,25 @@ class VnPayPaymentController
 
     protected function authorizeInvoice(Request $request, Invoice $invoice): void
     {
-        $user = $request->user();
+        $user = Auth::user();
 
         if (! $user) {
-            abort(403, 'Unauthorized');
+            abort(403, 'Không đủ quyền hạn!');
         }
 
         $invoiceable = $invoice->invoiceable;
 
         // For orders: check orders.manage permission
         if ($invoiceable instanceof Order) {
-            if (! $user->can('orders.manage')) {
-                abort(403, 'Không đủ quyền hạn!');
+            if ($user->type !== UserType::Customer && ! $user->can('orders.manage')) {
+                abort(403, 'Không đủ quyền hạn tạo đơn hàng!');
             }
         }
 
         // For bookings: check bookings.manage permission
         if ($invoiceable instanceof Booking) {
-            if (! $user->can('bookings.manage')) {
-                abort(403, 'Không đủ quyền hạn!');
+            if ($user->type !== UserType::Customer && ! $user->can('bookings.manage')) {
+                abort(403, 'Không đủ quyền hạn tạo lịch thiết kế!');
             }
         }
     }

@@ -13,6 +13,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { resend , returnItem as returnRoute } from '@/routes/employee/fulfillment/shipments';
 import { cancel, complete, index, updateStatus, markPaid, createShipments, storeShipments } from '@/routes/employee/sales/orders';
 import type { BreadcrumbItem, Order, ShipmentItem } from '@/types';
+import { initiate } from '@/actions/App/Http/Controllers/Payment/VnPayPaymentController';
 
 const VnPayPaymentDialog = createLazyComponent(
     () => import('@/components/custom/paywall/VnPayPaymentDialog.vue'),
@@ -77,7 +78,7 @@ function handleVnPayPayment() {
     if (!props.order?.invoices?.length) return;
     const openInvoice = props.order.invoices.find(i => i.status !== 'paid' && i.status !== 'cancelled');
     if (!openInvoice?.id) return;
-    vnPayUrl.value = `/nhan-vien/ban-hang/thanh-toan/vnpay/${openInvoice.id}`;
+    vnPayUrl.value = initiate(openInvoice.id).url;
     showVnPayDialog.value = true;
 }
 
@@ -305,7 +306,6 @@ function confirmReturn() {
     returnItem.value = null;
     returnShipmentId.value = '';
 }
-
 </script>
 
 <template>
@@ -574,7 +574,6 @@ function confirmReturn() {
                             <tr class="border-b bg-muted/50 text-xs text-muted-foreground">
                                 <th class="w-[25%] px-4 py-2 text-left">Sản phẩm</th>
                                 <th class="w-[7%] px-4 py-2 text-center">SL</th>
-                                <th class="w-[15%] px-4 py-2 text-center">Nguồn</th>
                                 <th class="w-[15%] px-4 py-2 text-center">Trạng thái</th>
                                 <th class="w-[15%] px-4 py-2 text-center">Thao tác</th>
                                 <th class="w-[23%] px-4 py-2 text-center">Người gửi</th>
@@ -582,11 +581,8 @@ function confirmReturn() {
                         </thead>
                         <tbody>
                             <tr v-for="item in shipment.items" :key="item.id" class="border-b text-sm">
-                                <td class="w-[25%] truncate px-4 py-3">{{ item.order_item?.purchasable_name ?? '—' }}</td>
+                                <td class="w-[25%] truncate px-4 py-3">{{ item.variant?.name ? item.variant?.name : item.order_item?.purchasable_name }}</td>
                                 <td class="w-[7%] px-4 py-3 text-center tabular-nums">{{ item.quantity_shipped }}</td>
-                                <td class="w-[20%] truncate px-4 py-3 text-center text-xs text-muted-foreground">
-                                    {{ item.source_location?.name ?? '—' }}
-                                </td>
                                 <td class="w-[15%] px-4 py-3 text-center">
                                     <Badge
                                         :class="['text-xs', item.status_color ? `text-${item.status_color}-600` : '']"

@@ -13,13 +13,11 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->foreignUuid('user_id')->nullable()->constrained('users')->onDelete('set null');
             $table->string('session_id')->nullable();
-            $table->string('status', 50)->default('open');
             $table->timestamps();
         });
 
         DB::statement('CREATE INDEX idx_carts_user_id ON carts (user_id) WHERE user_id IS NOT NULL');
         DB::statement('CREATE INDEX idx_carts_session_id ON carts (session_id) WHERE session_id IS NOT NULL');
-        DB::statement('CREATE INDEX idx_carts_status ON carts (status)');
 
         Schema::create('cart_items', function (Blueprint $table) {
             $table->uuid('id')->primary();

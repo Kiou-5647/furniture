@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RolesAndPermissionsSeeder::class,
             GeodataSeeder::class,
+            ProvinceRegionSeeder::class,
             LocationSeeder::class,
             DepartmentSeeder::class,
             EmployeeSeeder::class,
@@ -24,7 +25,6 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             CollectionSeeder::class,
             TimberProductSeeder::class,
-            VendorSeeder::class,
             InventorySeeder::class,
             ShippingMethodSeeder::class,
         ]);

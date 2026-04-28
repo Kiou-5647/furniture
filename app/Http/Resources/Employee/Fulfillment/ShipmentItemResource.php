@@ -13,16 +13,16 @@ class ShipmentItemResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'order_item' => $this->whenLoaded('orderItem', fn () => [
+            'order_item' => $this->whenLoaded('orderItem', fn() => [
                 'id' => $this->orderItem->id,
                 'purchasable_name' => $this->orderItem->purchasable?->name ?? '—',
                 'purchasable_id' => $this->orderItem->purchasable_id,
             ]),
-            'source_location' => $this->whenLoaded('sourceLocation', fn () => [
-                'id' => $this->sourceLocation->id,
-                'name' => $this->sourceLocation->name,
-                'code' => $this->sourceLocation->code,
-            ]),
+            'variant' => [
+                'id' => $this->variant->id,
+                'name' => $this->variant->product->name . ' ' . $this->variant->name,
+                'sku' => $this->variant->sku,
+            ],
             'quantity_shipped' => $this->quantity_shipped,
             'status' => $this->status->value,
             'status_label' => $this->status->label(),

@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Listeners\Auth\MergeCartListener;
 use App\Models\Booking\Booking;
 use App\Models\Customer\Review;
 use App\Models\Fulfillment\Shipment;
@@ -32,11 +33,13 @@ use App\Observers\ReviewObserver;
 use App\Observers\ShipmentItemObserver;
 use App\Observers\ShipmentObserver;
 use Carbon\CarbonImmutable;
+use Illuminate\Auth\Events\Login;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -68,6 +71,11 @@ class AppServiceProvider extends ServiceProvider
 
             return resolve($type)->where('id', $value)->exists();
         });
+
+        Event::listen(
+            Login::class,
+            MergeCartListener::class
+        );
     }
 
     protected function configureDefaults(): void

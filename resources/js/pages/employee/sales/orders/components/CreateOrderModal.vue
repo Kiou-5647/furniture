@@ -143,8 +143,6 @@ const page = usePage();
 
 const emit = defineEmits(['close', 'refresh']);
 
-console.info(JSON.stringify(props.catalogItems!));
-
 const showShipping = ref(false);
 const customerSearch = ref('');
 const catalogSearch = ref('');

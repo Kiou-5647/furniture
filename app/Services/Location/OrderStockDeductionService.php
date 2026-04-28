@@ -141,17 +141,17 @@ class OrderStockDeductionService
         string $notes,
         ?Employee $performedBy
     ): void {
-        $sourceLocation = $shipmentItem->sourceLocation
+        $sourceLocation = $shipment->originLocation
             ?? $shipmentItem->orderItem?->sourceLocation;
         if (! $sourceLocation) {
             return;
         }
 
-        $findId = $shipmentItem->variant_id ?? $shipmentItem->orderItem?->purchasable_id;
+        $variantId = $shipmentItem->variant_id;
 
 
         /** @var ProductVariant $variant */
-        $variant = ProductVariant::find($findId);
+        $variant = ProductVariant::find($variantId);
         if (! $variant) {
             return;
         }

@@ -3,7 +3,6 @@
 namespace App\Models\Public;
 
 use App\Builders\Customer\CartBuilder;
-use App\Enums\CartStatus;
 use App\Models\Auth\User;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
@@ -18,13 +17,6 @@ class Cart extends Model
     use HasUuids;
 
     protected $table = 'carts';
-
-    protected function casts(): array
-    {
-        return [
-            'status' => CartStatus::class,
-        ];
-    }
 
     public function newEloquentBuilder($query): CartBuilder
     {
@@ -48,22 +40,19 @@ class Cart extends Model
 
     public static function getOrCreate(?User $user = null, ?string $sessionId = null): Cart
     {
-        $query = Cart::query()->open();
+        $query = Cart::query();
 
         if ($user) {
             $query->where('user_id', $user->id);
         } elseif ($sessionId) {
             $query->where('session_id', $sessionId);
         } else {
-            return Cart::create([
-                'status' => CartStatus::Open,
-            ]);
+            return Cart::create();
         }
 
         return $query->first() ?? Cart::create([
             'user_id' => $user?->id,
             'session_id' => $sessionId,
-            'status' => CartStatus::Open,
         ]);
     }
 
@@ -77,15 +66,5 @@ class Cart extends Model
     public function clear(): void
     {
         $this->items()->delete();
-    }
-
-    public function markAsCheckedOut(): void
-    {
-        $this->updateQuietly(['status' => CartStatus::CheckedOut]);
-    }
-
-    public function markAsAbandoned(): void
-    {
-        $this->updateQuietly(['status' => CartStatus::Abandoned]);
     }
 }

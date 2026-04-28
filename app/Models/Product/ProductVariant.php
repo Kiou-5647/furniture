@@ -2,6 +2,7 @@
 
 namespace App\Models\Product;
 
+use App\Enums\ProductStatus;
 use App\Models\Customer\Review;
 use App\Models\Inventory\Inventory;
 use App\Models\Inventory\StockMovement;
@@ -123,7 +124,12 @@ class ProductVariant extends Model implements HasMedia
 
     public function isInStock(): bool
     {
-        return $this->getAvailableStock() > 0;
+        return $this->getTotalStock() > 0;
+    }
+
+    public function isValid(): bool
+    {
+        return $this->isInStock() && $this->product->status === ProductStatus::Published;
     }
 
     public function getEffectivePrice(): float

@@ -49,6 +49,7 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import type { ProductFormContext } from '@/composables/useProductForm';
 import type { LookupOptionItem } from '@/composables/useProductForm';
+import { formatDateOnly } from '@/lib/date-utils';
 import { cn } from '@/lib/utils';
 import type { SpecItem } from '@/types';
 import type { SpecNamespace } from '@/types';
@@ -271,8 +272,6 @@ function setSpecGroupWithLabel(ns: string) {
     const nsObj = props.specNamespaces.find((n) => n.namespace === ns);
     ctx.setSpecGroupNamespace!(ns, nsObj!.label);
 }
-
-console.info(ctx.form.assembly_info)
 </script>
 
 <template>
@@ -431,7 +430,6 @@ console.info(ctx.form.assembly_info)
                                         ? Number($event)
                                         : null
                                 "
-                                placeholder="12"
                             />
                             <FieldError
                                 :errors="[ctx.form.errors.warranty_months]"
@@ -458,8 +456,11 @@ console.info(ctx.form.assembly_info)
                                     >
                                         <CalendarIcon />
                                         {{
-                                            ctx.form.published_date ??
-                                            'Chọn ngày'
+                                            ctx.form.published_date
+                                                ? formatDateOnly(
+                                                      ctx.form.published_date,
+                                                  )
+                                                : 'Chọn ngày'
                                         }}
                                     </Button>
                                 </PopoverTrigger>
@@ -568,8 +569,9 @@ console.info(ctx.form.assembly_info)
                                         >
                                             <CalendarIcon />
                                             {{
-                                                ctx.form.new_arrival_until ??
-                                                'Chọn ngày kết thúc'
+                                                ctx.form.new_arrival_until
+                                                    ? formatDateOnly(ctx.form.new_arrival_until)
+                                                    : 'Chọn ngày kết thúc'
                                             }}
                                         </Button>
                                     </PopoverTrigger>
@@ -611,7 +613,7 @@ console.info(ctx.form.assembly_info)
                 v-if="ctx.form.new_arrival_until"
                 class="text-sm text-muted-foreground"
             >
-                Hàng mới đến: {{ ctx.form.new_arrival_until }}
+                Hàng mới đến: {{ formatDateOnly(ctx.form.new_arrival_until) }}
             </div>
         </div>
 
@@ -1211,11 +1213,9 @@ console.info(ctx.form.assembly_info)
                     </Field>
 
                     <template v-if="ctx.form.assembly_info.required">
-                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
                             <Field class="flex flex-col">
-                                <FieldLabel
-                                    >Thời gian (phút)</FieldLabel
-                                >
+                                <FieldLabel>Thời gian (phút)</FieldLabel>
                                 <Input
                                     :model-value="
                                         ctx.form.assembly_info
@@ -1251,34 +1251,65 @@ console.info(ctx.form.assembly_info)
                                     </SelectContent>
                                 </Select>
                             </Field>
-                            <Field class="flex col-span-2">
-                                <FieldLabel>Tài liệu hướng dẫn (PDF)</FieldLabel>
+                            <Field class="col-span-2 flex">
+                                <FieldLabel
+                                    >Tài liệu hướng dẫn (PDF)</FieldLabel
+                                >
                                 <FieldContent class="space-y-2">
                                     <div class="flex items-center gap-3">
                                         <Input
                                             type="file"
                                             accept="application/pdf"
-                                            @change="ctx.form.assembly_info.manual_file = $event.target.files[0]"
+                                            @change="
+                                                ctx.form.assembly_info.manual_file =
+                                                    $event.target.files[0]
+                                            "
                                             class="text-sm"
                                         />
                                         <!-- Show the existing URL if we are in Edit mode -->
-                                        <div v-if="ctx.form.assembly_info?.manual_url" class="flex items-center gap-2">
+                                        <div
+                                            v-if="
+                                                ctx.form.assembly_info
+                                                    ?.manual_url
+                                            "
+                                            class="flex items-center gap-2"
+                                        >
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
                                                 class="h-6 w-6 p-0 text-destructive"
-                                                @click="ctx.form.assembly_info.manual_url = null"
+                                                @click="
+                                                    ctx.form.assembly_info.manual_url =
+                                                        null
+                                                "
                                             >
                                                 <X class="h-3 w-3" />
                                             </Button>
                                         </div>
                                     </div>
-                                    <p v-if="!ctx.form.assembly_info.manual_url" class="text-[10px] text-muted-foreground mt-1">
-                                        Vui lòng tải lên tệp PDF hướng dẫn lắp đặt.
+                                    <p
+                                        v-if="
+                                            !ctx.form.assembly_info.manual_url
+                                        "
+                                        class="mt-1 text-[10px] text-muted-foreground"
+                                    >
+                                        Vui lòng tải lên tệp PDF hướng dẫn lắp
+                                        đặt.
                                     </p>
-                                    <a :href="ctx.form.assembly_info.manual_url" target="_blank" rel="noopener noreferrer">
-                                        <span class="text-xs text-muted-foreground truncate max-w-full">
-                                            {{ ctx.form.assembly_info.manual_url }}
+                                    <a
+                                        :href="
+                                            ctx.form.assembly_info.manual_url
+                                        "
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        <span
+                                            class="max-w-full truncate text-xs text-muted-foreground"
+                                        >
+                                            {{
+                                                ctx.form.assembly_info
+                                                    .manual_url
+                                            }}
                                         </span>
                                     </a>
                                 </FieldContent>

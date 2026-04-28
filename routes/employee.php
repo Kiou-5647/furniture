@@ -209,11 +209,6 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
             Route::middleware(['can:payments.view'])->group(function () {
                 Route::get('/', [PaymentController::class, 'index'])->name('index');
             });
-
-            Route::middleware(['can:payments.manage'])->group(function () {
-                Route::post('/', [PaymentController::class, 'store'])->name('store');
-                Route::get('/vnpay/{invoice}', [VnPayPaymentController::class, 'initiate'])->name('vnpay.initiate');
-            });
         });
     });
 

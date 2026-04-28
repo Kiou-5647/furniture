@@ -8,6 +8,7 @@ use App\Enums\InvoiceType;
 use App\Enums\OrderStatus;
 use App\Models\Product\Bundle;
 use App\Models\Product\ProductVariant;
+use App\Models\Public\CartItem;
 use App\Models\Sales\Invoice;
 use App\Models\Sales\Order;
 use App\Services\Location\StockLocatorService;
@@ -28,11 +29,12 @@ class CreateOrderAction
         try {
             $validatedItems = $this->validateAndResolveItems($data);
             $totalAmount = collect($validatedItems)->sum(fn($item) => $item['unit_price'] * $item['quantity']);
+            $originalTotal = collect($validatedItems)->sum(fn($item) => $item['original_unit_price'] * $item['quantity']);
             $totalItems = collect($validatedItems)->sum('quantity');
 
             $shippingCost = (float) ($data->shipping_cost ?? 0);
 
-            if (! empty($data->shipping_method_id) && $totalAmount >= $this->settings->freeship_threshold) {
+            if (! empty($data->shipping_method_id) && $originalTotal >= $this->settings->freeship_threshold) {
                 $shippingCost = 0;
             }
 
@@ -46,6 +48,7 @@ class CreateOrderAction
             $initialStatus = $data->source === 'in_store'
                 ? OrderStatus::Processing
                 : OrderStatus::Pending;
+
 
             // Create order
             $order = Order::create([
@@ -82,13 +85,24 @@ class CreateOrderAction
             ]);
 
             foreach ($validatedItems as $itemData) {
+                if ($itemData['original_unit_price']) {
+                    unset($itemData['original_unit_price']);
+                }
                 $order->items()->create($itemData);
+            }
+
+            if ($data->customer_id && $data->source === 'online') {
+                CartItem::query()
+                    ->whereHas('cart', function ($q) use ($data) {
+                        $q->where('user_id', $data->customer_id);
+                    })
+                    ->delete();
             }
 
             DB::commit();
 
             return $order->load(['items', 'customer']);
-        } catch (\Throwable $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
             throw $e;
         }
@@ -115,6 +129,20 @@ class CreateOrderAction
                 throw new \RuntimeException('Sản phẩm không khả dụng.');
             }
 
+            $originalUnitPrice = 0;
+            if ($purchasable instanceof ProductVariant) {
+                $originalUnitPrice = (float) $purchasable->price;
+            } elseif ($purchasable instanceof Bundle) {
+                $config = $item['configuration'] ?? [];
+                foreach ($purchasable->contents as $content) {
+                    $variantId = $config[$content->id] ?? null;
+                    if ($variantId) {
+                        $variant = \App\Models\Product\ProductVariant::find($variantId);
+                        $originalUnitPrice += (float) ($variant->price ?? 0) * $content->quantity;
+                    }
+                }
+            }
+
             // For bundles: validate all bundle content variants have stock somewhere
             if ($purchasable instanceof Bundle) {
                 $this->validateBundleAvailability($purchasable, $item, $isShipping, $data->store_location_id, $customerProvinceCode);
@@ -139,7 +167,6 @@ class CreateOrderAction
                         }
                     }
                 } elseif ($data->store_location_id) {
-                    // In-store: must have stock at store location
                     $stockOptions = $this->stockLocator->findStockForItem(
                         $item['purchasable_type'],
                         $item['purchasable_id'],
@@ -160,12 +187,46 @@ class CreateOrderAction
                 }
             }
 
+            $finalConfiguration = $item['configuration'] ?? [];
+            if ($purchasable instanceof Bundle) {
+                $enrichedConfig = [];
+                $bundleUnitPrice = (float) $item['unit_price'];
+
+                $totalIndividualValue = 0.0;
+                foreach ($purchasable->contents as $content) {
+                    $variantId = $finalConfiguration[$content->id] ?? null;
+                    if ($variantId) {
+                        $variant = \App\Models\Product\ProductVariant::find($variantId);
+                        $totalIndividualValue += ($variant ? (float) $variant->getEffectivePrice() : 0) * $content->quantity;
+                    }
+                }
+
+                foreach ($purchasable->contents as $content) {
+                    $variantId = $finalConfiguration[$content->id] ?? null;
+                    if ($variantId) {
+                        $variant = \App\Models\Product\ProductVariant::find($variantId);
+                        $originalPrice = $variant ? (float) $variant->getEffectivePrice() : 0;
+
+                        $discountedUnitPrice = $totalIndividualValue > 0
+                            ? ($originalPrice / $totalIndividualValue) * $bundleUnitPrice
+                            : 0;
+
+                        $enrichedConfig[$content->id] = [
+                            'variant_id' => $variantId,
+                            'price' => round($discountedUnitPrice, -3),
+                        ];
+                    }
+                }
+                $finalConfiguration = $enrichedConfig;
+            }
+
             $validated[] = [
                 'purchasable_type' => $item['purchasable_type'],
                 'purchasable_id' => $item['purchasable_id'],
                 'quantity' => $item['quantity'],
                 'unit_price' => $item['unit_price'],
-                'configuration' => $item['configuration'] ?? [],
+                'original_unit_price' => $originalUnitPrice,
+                'configuration' => $finalConfiguration,
                 'source_location_id' => $sourceLocationId ?? null,
             ];
         }

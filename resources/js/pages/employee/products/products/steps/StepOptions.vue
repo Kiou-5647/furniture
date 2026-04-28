@@ -25,7 +25,7 @@ import { Switch } from '@/components/ui/switch';
 import type {
     LookupOptionGroup,
     ProductFormContext,
-} from '../../../../../composables/useProductForm';
+} from '@/composables/useProductForm';
 
 const ctx = inject<ProductFormContext>('productForm')!;
 const page = usePage();

@@ -81,7 +81,7 @@ export function useBundleForm(initialBundle: Bundle | null) {
 
     function setPrimaryImage(file: File | null) {
         form.value.primary_image_file = file;
-        if (file) form.value.primary_image_url = null; // Clear URL if new file selected
+        if (file) form.value.primary_image_url = null;
     }
 
     function setHoverImage(file: File | null) {
@@ -90,6 +90,7 @@ export function useBundleForm(initialBundle: Bundle | null) {
     }
 
     function submit() {
+        console.info(form.value)
         const payload = {
             ...form.value,
             contents: form.value.contents.map(c => ({
@@ -99,7 +100,6 @@ export function useBundleForm(initialBundle: Bundle | null) {
         };
 
         if (initialBundle) {
-            console.info(initialBundle)
             router.put(update({ bundle: initialBundle }).url, payload, {
                 onSuccess: () => router.visit(index()),
                 onError: (errors) => console.error(errors),

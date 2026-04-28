@@ -65,8 +65,6 @@ const removeAvatar = (event: Event) => {
         fileInput.value.value = ''; // Clear the actual file input
     }
 };
-
-console.info(props.mustVerifyEmail)
 </script>
 
 <template>

@@ -142,11 +142,11 @@ export interface ShipmentItem {
         purchasable_name: string;
         purchasable_id: string | null;
     } | null;
-    source_location: {
+    variant: {
         id: string;
         name: string;
-        code: string;
-    } | null;
+        sku: string;
+    }
     quantity_shipped: number;
     status: string;
     status_label: string;

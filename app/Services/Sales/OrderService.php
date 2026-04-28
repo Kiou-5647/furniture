@@ -314,7 +314,8 @@ class OrderService
                 }
 
                 foreach ($bundle->contents as $content) {
-                    $variantId = $config[$content->id] ?? null;
+                    $configValue = $config[$content->id];
+                    $variantId = $configValue['variant_id'] ?? null;
 
                     if ($variantId) {
                         $variant = \App\Models\Product\ProductVariant::find($variantId);

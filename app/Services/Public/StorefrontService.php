@@ -12,6 +12,7 @@ class StorefrontService
     public function getProductCards(ProductCardFilterData $filter): Collection
     {
         $query = ProductCard::query()
+            ->whereHas('product', fn($q) => $q->active())
             ->with(['product', 'variants', 'options']);
 
         if ($filter->category) {
@@ -70,6 +71,7 @@ class StorefrontService
                 'swatch_image_url' => $v->getFirstMediaUrl('swatch_image', 'swatch') ?? $v->getFirstMediaUrl('swatch_image') ?? null,
                 'name' => $v->name,
                 'label' => $v->swatch_label,
+                'is_available' => $v->isInStock(),
             ]),
         ];
     }

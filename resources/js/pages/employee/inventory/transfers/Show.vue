@@ -93,8 +93,6 @@ const receiveTable = useVueTable({
     getCoreRowModel: getCoreRowModel(),
 });
 
-console.info(JSON.stringify(props.transfer.items))
-
 const viewTableColumns = computed(() =>
     getItemColumns(props.transfer.status, openImagePreview, false),
 );

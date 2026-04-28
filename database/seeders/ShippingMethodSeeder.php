@@ -22,8 +22,8 @@ class ShippingMethodSeeder extends Seeder
             [
                 'name' => 'Tiêu chuẩn',
                 'code' => 'standard',
-                'price' => 30000,
-                'estimated_delivery_days' => 3,
+                'price' => 50000,
+                'estimated_delivery_days' => 7,
                 'is_active' => true,
             ]
         );
@@ -33,8 +33,8 @@ class ShippingMethodSeeder extends Seeder
             [
                 'name' => 'Nhanh',
                 'code' => 'express',
-                'price' => 60000,
-                'estimated_delivery_days' => 1,
+                'price' => 100000,
+                'estimated_delivery_days' => 3,
                 'is_active' => true,
             ]
         );

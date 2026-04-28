@@ -80,7 +80,6 @@ function handleSelect(card: any) {
     };
 
     emit('selected', normalizedCard);
-    console.info(JSON.stringify(card));
 }
 </script>
 

@@ -814,9 +814,6 @@ class TimberProductSeeder extends Seeder
             'is_new_arrival' => false,
             'published_date' => null,
             'new_arrival_until' => null,
-            'views_count' => 0,
-            'reviews_count' => 0,
-            'average_rating' => 0,
             'created_at' => now(),
             'updated_at' => now(),
         ]);

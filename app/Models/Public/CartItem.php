@@ -2,6 +2,7 @@
 
 namespace App\Models\Public;
 
+use App\Enums\ProductStatus;
 use App\Models\Product\Bundle;
 use App\Models\Product\ProductVariant;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -58,11 +59,11 @@ class CartItem extends Model
         if (! $this->purchasable) return false;
 
         if ($this->purchasable instanceof ProductVariant) {
-            return $this->purchasable->isInStock() && $this->purchasable->status === 'published';
+            return $this->purchasable->isInStock() && $this->purchasable->product->status === ProductStatus::Published;
         }
 
         if ($this->purchasable instanceof Bundle) {
-            return $this->purchasable->is_active && $this->purchasable->isValid();
+            return $this->purchasable->isValid($this->configuration ?? []);
         }
 
         return false;

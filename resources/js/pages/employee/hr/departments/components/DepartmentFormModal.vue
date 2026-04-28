@@ -20,8 +20,6 @@ const props = defineProps<{
 
 const emit = defineEmits(['close']);
 
-console.info(props.managerOptions);
-
 const form = useForm({
     name: '',
     code: '',
@@ -177,7 +175,6 @@ function closeModal() {
                                         v-for="m in managerOptions"
                                         :key="m.id"
                                         :value="m.id"
-                                        @click.stop="console.info(m, form.manager_id)"
                                     >
                                         {{ m.label }}
                                     </SelectItem>

@@ -219,7 +219,6 @@ const getLayoutPropsForKey = (key: string) => {
                 :more-url="section.moreUrl"
                 :layout="getLayoutForKey(key)"
                 :layout-props="getLayoutPropsForKey(key)"
-                @vue:before-mount="console.info(section.cards)"
             />
         </div>
 

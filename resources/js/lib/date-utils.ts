@@ -6,7 +6,7 @@
 
 export const DAYS_SHORT = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'] as const;
 
-function parseDate(dateStr: string): Date | null {
+export function parseDate(dateStr: string): Date | null {
     if (!dateStr) return null;
 
     // Handle dd/mm/yyyy or dd/mm/yyyy HH:mm
@@ -24,8 +24,14 @@ function parseDate(dateStr: string): Date | null {
 }
 
 /**
- * Format a session date (YYYY-MM-DD + hour integers) into "T4 15/04 · 14:00–16:00".
+ * Normalize any date string to YYYY-MM-DD.
  */
+export function toISODate(dateStr: string): string {
+    const d = parseDate(dateStr);
+    if (!d) return '';
+    return d.toISOString().split('T')[0];
+}
+
 export function formatSessionDate(
     dateStr: string,
     startHour: number,

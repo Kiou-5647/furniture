@@ -25,8 +25,8 @@ class StoreBundleRequest extends FormRequest
             'contents.*.product_card_id' => ['required', 'exists:product_cards,id'],
             'contents.*.quantity' => ['required', 'integer', 'min:1'],
 
-            'primary_image' => ['nullable', 'image', 'max:5120'],
-            'hover_image' => ['nullable', 'image', 'max:5120'],
+            'primary_image_file' => ['nullable', 'image', 'max:5120'],
+            'hover_image_file' => ['nullable', 'image', 'max:5120'],
             'gallery' => ['nullable', 'array', 'max:10'],
             'gallery.*' => ['image', 'max:5120'],
         ];
@@ -49,8 +49,8 @@ class StoreBundleRequest extends FormRequest
             'contents.*.product_card_id.exists' => 'Sản phẩm được chọn không tồn tại.',
             'contents.*.quantity.required' => 'Vui lòng nhập số lượng.',
             'contents.*.quantity.min' => 'Số lượng phải lớn hơn hoặc bằng 1.',
-            'primary_image.image' => 'Ảnh chính phải là hình ảnh.',
-            'primary_image.max' => 'Dung lượng ảnh chính không được vượt quá 5MB.',
+            'primary_image_file.image' => 'Ảnh chính phải là hình ảnh.',
+            'primary_image_file.max' => 'Dung lượng ảnh chính không được vượt quá 5MB.',
             'hover_image.image' => 'Ảnh hover phải là hình ảnh.',
             'hover_image.max' => 'Dung lượng ảnh hover không được vượt quá 5MB.',
             'gallery.*.image' => 'Tệp tải lên trong thư viện phải là hình ảnh.',

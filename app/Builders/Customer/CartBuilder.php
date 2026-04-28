@@ -8,24 +8,14 @@ use Illuminate\Database\Eloquent\Builder;
 
 class CartBuilder extends Builder
 {
-    public function open(): self
-    {
-        return $this->where('status', 'open');
-    }
-
-    public function abandoned(): self
-    {
-        return $this->where('status', 'abandoned');
-    }
-
-    public function checkedOut(): self
-    {
-        return $this->where('status', 'checked_out');
-    }
-
     public function forUser(User $user): self
     {
         return $this->where('user_id', $user->id);
+    }
+
+    public function forSession(string $sessionId): self
+    {
+        return $this->where('session_id', $sessionId);
     }
 
     public function olderThan(Carbon $date): self

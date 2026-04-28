@@ -20,9 +20,7 @@ export type ProductType = 'noi-that' | 'phu-kien' | 'trang-tri' | 'thap-sang';
 
 export type ProductStatus =
     | 'draft'
-    | 'pending_review'
     | 'published'
-    | 'hidden'
     | 'archived';
 export type VariantStatus = 'active' | 'inactive';
 export type AssemblyDifficulty = 'easy' | 'medium' | 'hard';

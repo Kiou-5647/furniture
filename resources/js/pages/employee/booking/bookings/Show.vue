@@ -18,6 +18,7 @@ import {
 } from '@/routes/employee/booking';
 import type { BreadcrumbItem } from '@/types';
 import type { Booking } from '@/types/booking';
+import { initiate } from '@/actions/App/Http/Controllers/Payment/VnPayPaymentController';
 
 const VnPayPaymentDialog = createLazyComponent(
     () => import('@/components/custom/paywall/VnPayPaymentDialog.vue'),
@@ -62,7 +63,7 @@ async function handleCancel() {
 
 function handleVnPayPayment() {
     if (!props.booking.deposit_invoice?.id) return;
-    vnPayUrl.value = `/nhan-vien/ban-hang/thanh-toan/vnpay/${props.booking.deposit_invoice.id}`;
+    vnPayUrl.value = initiate(props.booking.deposit_invoice.id).url;
     showVnPayDialog.value = true;
 }
 
@@ -93,7 +94,7 @@ function handleMarkDepositPaid() {
 
 function handleVnPayFinalPayment() {
     if (!props.booking.final_invoice?.id) return;
-    vnPayUrl.value = `/nhan-vien/ban-hang/thanh-toan/vnpay/${props.booking.final_invoice.id}`;
+    vnPayUrl.value = initiate(props.booking.final_invoice.id).url;
     showVnPayDialog.value = true;
 }
 

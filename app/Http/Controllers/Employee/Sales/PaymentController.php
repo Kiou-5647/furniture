@@ -37,7 +37,7 @@ class PaymentController
     {
         Gate::authorize('create', Payment::class);
 
-        $payment = $action->execute($request->validated());
+        $action->execute($request->validated());
 
         return back()->with('success', 'Đã ghi nhận thanh toán.');
     }
