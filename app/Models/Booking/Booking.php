@@ -34,7 +34,6 @@ class Booking extends Model
             'start_at' => 'datetime',
             'end_at' => 'datetime',
             'total_price' => 'decimal:2',
-            'address_data' => 'array',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
@@ -66,12 +65,8 @@ class Booking extends Model
 
     public function getFullAddress(): string
     {
-        if (!empty($this->address_data['full_address'])) {
-            return $this->address_data['full_address'];
-        }
-
         $parts = [
-            $this->address_data['street'] ?? null,
+            $this->street ?? null,
             $this->ward_name,
             $this->province_name,
         ];

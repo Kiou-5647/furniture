@@ -312,7 +312,7 @@ async function selectCustomer(c: {
 
     // Auto-fill address from customer's default address
     const addr = c.default_address;
-    if (addr?.address_data) {
+    if (addr) {
         // Ensure provinces are loaded first
         if (provinces.value.length === 0) {
             await loadProvinces();
@@ -321,7 +321,7 @@ async function selectCustomer(c: {
         skipProvinceWatch.value = true;
         form.province_code = addr.province_code || '';
         form.province_name = addr.province_name || '';
-        form.street = addr.address_data?.street || '';
+        form.street = addr.street || '';
 
         // Load wards for this province, then set ward code
         if (form.province_code) {

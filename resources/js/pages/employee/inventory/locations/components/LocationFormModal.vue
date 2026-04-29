@@ -55,12 +55,11 @@ const loadingWards = ref(false);
 const form = useForm({
     name: '',
     type: 'warehouse' as 'warehouse' | 'retail' | 'vendor',
-    building: undefined as string | undefined,
-    address_number: undefined as string | undefined,
     province_code: undefined as string | undefined,
     province_name: undefined as string | undefined,
     ward_code: undefined as string | undefined,
     ward_name: undefined as string | undefined,
+    street: undefined as string | undefined,
     phone: undefined as string | undefined,
     manager_id: undefined as string | undefined,
     is_active: true,
@@ -98,8 +97,7 @@ watch(
         if (newLocation && props.open) {
             form.name = newLocation.name;
             form.type = newLocation.type;
-            form.building = newLocation.building;
-            form.address_number = newLocation.address_number;
+            form.street = newLocation.street;
             form.ward_code = newLocation.ward_code;
             form.ward_name = newLocation.ward_name;
             form.province_code = newLocation.province_code;
@@ -167,15 +165,6 @@ const wardDisplayLabel = computed(() => {
 });
 
 function submit() {
-    const addressData: Record<string, string> = {};
-    if (form.building) addressData.building = form.building;
-    if (form.address_number) addressData.address_number = form.address_number;
-
-    form.transform((data) => ({
-        ...data,
-        address_data: addressData,
-    }));
-
     if (props.location) {
         form.put(update(props.location).url, {
             onSuccess: () => closeModal(),
@@ -414,29 +403,14 @@ function closeModal() {
 
                     <!-- Building -->
                     <Field>
-                        <FieldLabel>Tòa nhà / Khu</FieldLabel>
+                        <FieldLabel>Địa chỉ</FieldLabel>
                         <FieldContent>
                             <Input
-                                v-model="form.building"
+                                v-model="form.street"
                                 placeholder="Ví dụ: Tòa nhà A, Khu phức hợp B"
                                 class="w-full"
                             />
-                            <FieldError :errors="[form.errors.building]" />
-                        </FieldContent>
-                    </Field>
-
-                    <!-- Address Number -->
-                    <Field>
-                        <FieldLabel>Số nhà / Đường</FieldLabel>
-                        <FieldContent>
-                            <Input
-                                v-model="form.address_number"
-                                placeholder="Ví dụ: 123 Nguyễn Trãi"
-                                class="w-full"
-                            />
-                            <FieldError
-                                :errors="[form.errors.address_number]"
-                            />
+                            <FieldError :errors="[form.errors.street]" />
                         </FieldContent>
                     </Field>
                 </div>

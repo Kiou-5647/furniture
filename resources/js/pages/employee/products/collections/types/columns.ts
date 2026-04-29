@@ -36,40 +36,35 @@ export function getColumns(
                 return h('div', { class: 'flex items-center gap-3' }, [
                     item.image_thumb_url
                         ? h('img', {
-                              src: item.image_thumb_url,
-                              class: 'w-12 h-8 rounded-md object-cover border shadow-sm cursor-zoom-in hover:scale-105 transition-all shrink-0',
-                              onClick: (event: MouseEvent) => {
-                                  event.stopPropagation();
-                                  onPreviewImage(item.image_url!);
-                              },
-                          })
+                            src: item.image_thumb_url,
+                            class: 'w-12 h-8 rounded-md object-cover border shadow-sm cursor-zoom-in hover:scale-105 transition-all shrink-0',
+                            onClick: (event: MouseEvent) => {
+                                event.stopPropagation();
+                                onPreviewImage(item.image_url!);
+                            },
+                        })
                         : h(
-                              'div',
-                              {
-                                  class: 'w-12 h-8 rounded-md border border-dashed flex items-center justify-center bg-muted/50 shrink-0',
-                              },
-                              [
-                                  h(
-                                      'span',
-                                      {
-                                          class: 'text-[8px] text-muted-foreground',
-                                      },
-                                      'N/A',
-                                  ),
-                              ],
-                          ),
+                            'div',
+                            {
+                                class: 'w-12 h-8 rounded-md border border-dashed flex items-center justify-center bg-muted/50 shrink-0',
+                            },
+                            [
+                                h(
+                                    'span',
+                                    {
+                                        class: 'text-[8px] text-muted-foreground',
+                                    },
+                                    'N/A',
+                                ),
+                            ],
+                        ),
                     h('div', { class: 'min-w-0 flex-1' }, [
                         h('div', { class: 'flex items-center gap-1.5' }, [
                             h(
                                 'span',
                                 { class: 'font-medium truncate' },
                                 item.display_name,
-                            ),
-                            item.is_featured
-                                ? h(Star, {
-                                      class: 'h-3 w-3 fill-yellow-400 text-yellow-400 shrink-0',
-                                  })
-                                : null,
+                            )
                         ]),
                         h(
                             'span',
@@ -81,6 +76,14 @@ export function getColumns(
                     ]),
                 ]);
             },
+        },
+        {
+            accessorKey: 'description',
+            header: 'Mô tả',
+            size: 200,
+            enableSorting: false,
+            enableHiding: true,
+            cell: ({ row }) => h('span', { class: 'text-xs truncate tabular-nums' }, row.getValue('description')),
         },
         {
             accessorKey: 'is_active',

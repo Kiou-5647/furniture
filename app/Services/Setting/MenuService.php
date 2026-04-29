@@ -16,7 +16,6 @@ class MenuService
 
         return match ($user->type) {
             UserType::Employee => $this->getEmployeeMenu($user),
-            UserType::Customer => $this->getCustomerMenu($user),
             default => [],
         };
     }
@@ -114,23 +113,36 @@ class MenuService
             ];
         }
 
+        // Booking Group
+        if ($user->canAny(['bookings.view'])) {
+            $bookingItems = [];
+
+            $menu[] = [
+                'title' => 'Đặt lịch thiết kế',
+                'href' => route('employee.booking.index'),
+                'icon' => 'CalendarDays',
+                'isActive' => Route::is('booking.*'),
+                'items' => $bookingItems,
+            ];
+        }
+
         // Sales Group
         if ($user->canAny(['discounts.view', 'orders.view', 'invoices.view', 'payments.view', 'payments.manage'])) {
             $salesItems = [];
-
-            if ($user->can('discounts.view')) {
-                $salesItems[] = [
-                    'title' => 'Giảm giá',
-                    'href' => route('employee.sales.discounts.index'),
-                    'isActive' => Route::is('sales.discounts.*'),
-                ];
-            }
 
             if ($user->can('orders.view')) {
                 $salesItems[] = [
                     'title' => 'Đơn hàng',
                     'href' => route('employee.sales.orders.index'),
                     'isActive' => Route::is('sales.orders.*'),
+                ];
+            }
+
+            if ($user->can('discounts.view')) {
+                $salesItems[] = [
+                    'title' => 'Giảm giá',
+                    'href' => route('employee.sales.discounts.index'),
+                    'isActive' => Route::is('sales.discounts.*'),
                 ];
             }
 
@@ -196,19 +208,6 @@ class MenuService
             ];
         }
 
-        // Booking Group
-        if ($user->canAny(['bookings.view'])) {
-            $bookingItems = [];
-
-            $menu[] = [
-                'title' => 'Đặt lịch thiết kế',
-                'href' => route('employee.booking.index'),
-                'icon' => 'CalendarDays',
-                'isActive' => Route::is('booking.*'),
-                'items' => $bookingItems,
-            ];
-        }
-
         // Inventory Management Group
         if ($user->can('inventory.view')) {
             $inventoryItems = [];
@@ -271,17 +270,5 @@ class MenuService
         }
 
         return $menu;
-    }
-
-    private function getCustomerMenu(User $user): array
-    {
-        return [
-            [
-                'title' => 'Bảng điều khiển',
-                'url' => route('customer.dashboard'),
-                'icon' => 'LayoutGrid',
-                'isActive' => Route::is('customer.dashboard'),
-            ],
-        ];
     }
 }

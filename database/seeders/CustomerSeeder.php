@@ -27,11 +27,11 @@ class CustomerSeeder extends Seeder
         $hnWard = Ward::firstWhere('province_code', '01');
 
         $data = [
-            ['full_name' => 'Nguyễn Văn A', 'email' => 'nguyenvana@gmail.com', 'phone' => '0911111111', 'address' => '123 Nguyễn Trãi'],
-            ['full_name' => 'Trần Thị B', 'email' => 'tranthib@gmail.com', 'phone' => '0922222222', 'address' => '456 Lê Lợi'],
-            ['full_name' => 'Lê Văn C', 'email' => 'levanc@gmail.com', 'phone' => '0933333333', 'address' => '789 Trần Hưng Đạo'],
-            ['full_name' => 'Phạm Thị D', 'email' => 'phamthid@gmail.com', 'phone' => '0944444444', 'address' => '321 Hai Bà Trưng'],
-            ['full_name' => 'Hoàng Văn E', 'email' => 'hoangvane@gmail.com', 'phone' => '0955555555', 'address' => '654 Nguyễn Huệ'],
+            ['full_name' => 'Nguyễn Văn A', 'email' => 'nguyenvana@gmail.com', 'phone' => '0911111111', 'street' => '123 Nguyễn Trãi'],
+            ['full_name' => 'Trần Thị B', 'email' => 'tranthib@gmail.com', 'phone' => '0922222222', 'street' => '456 Lê Lợi'],
+            ['full_name' => 'Lê Văn C', 'email' => 'levanc@gmail.com', 'phone' => '0933333333', 'street' => '789 Trần Hưng Đạo'],
+            ['full_name' => 'Phạm Thị D', 'email' => 'phamthid@gmail.com', 'phone' => '0944444444', 'street' => '321 Hai Bà Trưng'],
+            ['full_name' => 'Hoàng Văn E', 'email' => 'hoangvane@gmail.com', 'phone' => '0955555555', 'street' => '654 Nguyễn Huệ'],
         ];
 
         foreach ($data as $i => $d) {
@@ -56,7 +56,7 @@ class CustomerSeeder extends Seeder
                     'province_name' => $hn?->name,
                     'ward_code' => $hnWard?->ward_code,
                     'ward_name' => $hnWard?->name,
-                    'address_data' => ['street' => $d['address'], 'full_address' => $d['address'] . ', ' . $hnWard?->name . ', ' . $hn?->name]
+                    'street' => $d['street'],
                 ]
             );
         }

@@ -14,4 +14,14 @@ class LookupNamespaceBuilder extends Builder
                 ->orWhere('description', 'ilike', "%{$search}%");
         });
     }
+
+    public function forVariants(): self
+    {
+        return $this->where('for_variants', true);
+    }
+
+    public function active(): self
+    {
+        return $this->where('is_active', true);
+    }
 }

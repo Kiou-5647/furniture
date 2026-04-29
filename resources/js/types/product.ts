@@ -37,8 +37,8 @@ export interface Product {
         manual_file: File | null;
     };
     warranty_months: number | null;
-    view_count: number;
-    review_count: number;
+    views_count: number;
+    reviews_count: number;
     average_rating: string | null;
     min_price: string;
     max_price: string;

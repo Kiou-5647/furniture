@@ -116,7 +116,7 @@ class ProductService
                 ->where('is_active', true)
                 ->orderBy('type')
                 ->orderBy('name')
-                ->get(['id', 'code', 'name', 'type', 'address_data', 'province_name', 'ward_name'])
+                ->get(['id', 'code', 'name', 'type', 'street', 'province_name', 'ward_name'])
                 ->map(fn(Location $location) => [
                     'id' => $location->id,
                     'code' => $location->code,

@@ -19,11 +19,6 @@ class RolesAndPermissionsSeeder extends Seeder
     protected function seedRolesAndPermissions(): void
     {
         $permissions = [
-            'users.view',
-            'users.create',
-            'users.update',
-            'users.delete',
-            'users.manage',
             'roles.view',
             'roles.manage',
             'permissions.view',
@@ -82,7 +77,6 @@ class RolesAndPermissionsSeeder extends Seeder
         $rolePermissions = [
             'super_admin' => null,
             'admin' => [
-                'users.manage',
                 'roles.manage',
                 'permissions.assign',
                 'products.manage',

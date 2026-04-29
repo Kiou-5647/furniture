@@ -26,7 +26,7 @@ class VendorController
         $filter = VendorFilterData::fromRequest($request);
 
         return Inertia::render('employee/inventory/vendor/Index', [
-            'vendors' => Inertia::defer(fn () => VendorResource::collection(
+            'vendors' => Inertia::defer(fn() => VendorResource::collection(
                 $this->service->getFiltered($filter)
             )),
             'filters' => $filter,

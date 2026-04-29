@@ -13,6 +13,13 @@ class CacheInvalidator
     {
         CacheTag::Lookups->flush();
         CacheTag::LookupNamespaces->flush();
+        CacheTag::CategoryRooms->flush();
+        CacheTag::CategoryGroups->flush();
+        CacheTag::VariantOptions->flush();
+        CacheTag::FeatureOptions->flush();
+        CacheTag::SpecNamespaces->flush();
+        CacheTag::AllSpecLookups->flush();
+        CacheTag::ShopMenu->flush();
     }
 
     public function onLookupNamespaceChanged(?LookupNamespace $namespace = null): void
@@ -23,11 +30,11 @@ class CacheInvalidator
             CacheTag::Vendors->flush();
             CacheTag::Categories->flush();
             CacheTag::CategoryGroups->flush();
-            CacheTag::CategoryRooms->flush();
             CacheTag::VariantOptions->flush();
             CacheTag::FeatureOptions->flush();
             CacheTag::SpecNamespaces->flush();
             CacheTag::AllSpecLookups->flush();
+            CacheTag::CategoryRooms->flush();
             CacheTag::ShopMenu->flush();
 
             return;

@@ -23,19 +23,13 @@ import {
 } from '@/components/ui/navigation-menu';
 import { getInitials } from '@/composables/useInitials';
 import { home, login, logout } from '@/routes';
-import { dashboard as customerDashboard } from '@/routes/customer';
-import { dashboard as employeeDashboard } from '@/routes/employee';
+import { dashboard } from '@/routes/employee';
 import { useCartStore } from '@/stores/cart';
+import { edit } from '@/routes/customer/profile';
 
 const page = usePage();
 const auth = computed(() => page.props.auth);
 const shopMenu = computed(() => (page.props.shopMenu ?? []) as ShopMenuRoom[]);
-const dashboard = computed(() => {
-    if (auth.value?.user.type == 'employee') {
-        return employeeDashboard().url;
-    }
-    return customerDashboard().url;
-})
 const showMobileMenu = ref(false);
 const { openDrawer, itemCount } = useCartStore()
 
@@ -115,13 +109,20 @@ interface ShopMenuRoom {
                                 <p class="text-xs text-zinc-500 truncate">{{ auth.user.email }}</p>
                             </div>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem as-child>
-                                <Link :href="dashboard" class="cursor-pointer flex items-center gap-2">
+                            <DropdownMenuItem v-if="auth.user.type == 'employee'" as-child>
+                                <Link :href="dashboard()" class="cursor-pointer flex items-center gap-2">
                                     <LayoutGrid class="h-4 w-4" />
                                     Bảng điều khiển
                                 </Link>
                             </DropdownMenuItem>
-                            <DropdownMenuSeparator />
+                            <DropdownMenuSeparator v-if="auth.user.type == 'employee'" />
+                            <DropdownMenuItem v-if="auth.user.type == 'customer'" as-child>
+                                <Link :href="edit()" class="cursor-pointer flex items-center gap-2">
+                                    <LayoutGrid class="h-4 w-4" />
+                                    Hồ sơ cá nhân
+                                </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator v-if="auth.user.type == 'customer'" />
                             <DropdownMenuItem as-child>
                                 <Link :href="logout().url" method="post" as="button"
                                     class="cursor-pointer flex items-center gap-2 text-red-600">
@@ -213,10 +214,15 @@ interface ShopMenuRoom {
                     </div>
                 </div>
                 <div class="pt-4 border-t">
-                    <Link v-if="auth?.user" :href="dashboard"
+                    <Link v-if="auth?.user.type == 'employee'" :href="dashboard()"
                         class="block px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 rounded-lg"
                         @click="showMobileMenu = false">
                         Bảng điều khiển
+                    </Link>
+                    <Link v-if="auth?.user.type == 'customer'" :href="edit()"
+                        class="block px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 rounded-lg"
+                        @click="showMobileMenu = false">
+                        Hồ sơ cá nhân
                     </Link>
                     <Link v-if="auth?.user" :href="logout().url" method="post"
                         class="block px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg"

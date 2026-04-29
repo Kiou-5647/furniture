@@ -7,10 +7,7 @@ export interface Vendor {
     website: string | null;
     province_code: string | null;
     ward_code: string | null;
-    address_data: {
-        street: string;
-        full_address: string;
-    };
+    street: string | null;
     bank_name: string | null;
     bank_account_number: string | null;
     bank_account_holder: string | null;

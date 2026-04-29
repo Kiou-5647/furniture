@@ -17,7 +17,6 @@ return new class extends Migration
             $table->string('display_name', 255);
             $table->string('slug', 64);
             $table->boolean('is_active')->default(true);
-            $table->boolean('is_featured')->default(false);
             $table->text('description')->nullable();
             $table->timestamps();
             $table->softDeletes();
@@ -26,7 +25,6 @@ return new class extends Migration
         DB::statement('CREATE UNIQUE INDEX unq_collections_slug_active ON collections (slug) WHERE deleted_at IS NULL');
         DB::statement('CREATE INDEX idx_collections_display_name_trgm ON collections USING GIN (display_name gin_trgm_ops)');
         DB::statement('CREATE INDEX idx_collections_active ON collections (is_active) WHERE is_active = true AND deleted_at IS NOT NULL');
-        DB::statement('CREATE INDEX idx_collections_featured ON collections (is_featured) WHERE is_featured = true');
         DB::statement('CREATE INDEX idx_collections_deleted ON collections (deleted_at) WHERE deleted_at IS NOT NULL');
     }
 

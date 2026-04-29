@@ -29,7 +29,6 @@ class Collection extends Model implements HasMedia
     {
         return [
             'is_active' => 'boolean',
-            'is_featured' => 'boolean',
         ];
     }
 
@@ -41,7 +40,6 @@ class Collection extends Model implements HasMedia
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('image')->singleFile();
-        $this->addMediaCollection('banner')->singleFile();
     }
 
     public function registerMediaConversions(?Media $media = null): void

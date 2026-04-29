@@ -16,16 +16,15 @@ class LocationResource extends JsonResource
             'type' => $this->type->value,
             'type_label' => $this->type->label(),
             'type_color' => $this->type->color(),
-            'building' => $this->address_data['building'] ?? null,
-            'address_number' => $this->address_data['address_number'] ?? null,
             'province_code' => $this->province_code,
             'province_name' => $this->province_name,
             'ward_code' => $this->ward_code,
             'ward_name' => $this->ward_name,
+            'street' => $this->street,
             'full_address' => $this->getFullAddress(),
             'phone' => $this->phone,
             'manager_id' => $this->manager_id,
-            'manager' => $this->whenLoaded('manager', fn () => [
+            'manager' => $this->whenLoaded('manager', fn() => [
                 'id' => $this->manager?->id,
                 'full_name' => $this->manager?->full_name,
             ]),

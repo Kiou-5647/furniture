@@ -24,7 +24,8 @@ class LookupController
 
         return Inertia::render('employee/settings/lookups/Index', [
             'namespaces' => $this->service->getNamespaces(),
-            'lookups' => Inertia::defer(fn () => LookupResource::collection(
+            'categories' => $this->service->getCategories(),
+            'lookups' => Inertia::defer(fn() => LookupResource::collection(
                 $this->service->getFiltered($filter)
             )),
             'filters' => $filter,
@@ -37,7 +38,7 @@ class LookupController
 
         return Inertia::render('employee/settings/lookups/Trash', [
             'namespaces' => $this->service->getNamespaces(),
-            'lookups' => Inertia::defer(fn () => LookupResource::collection(
+            'lookups' => Inertia::defer(fn() => LookupResource::collection(
                 $this->service->getTrashedFiltered($filter)
             )),
             'filters' => $filter,

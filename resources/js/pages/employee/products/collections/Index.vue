@@ -65,11 +65,6 @@ const hasActiveFilters = computed(() => {
     );
 });
 
-const featuredOptions = [
-    { label: 'Nổi bật', value: 'true', icon: Star },
-    { label: 'Thường', value: 'false', icon: StarOff },
-];
-
 const statusOptions = [
     { label: 'Đang hiện', value: 'true', icon: CheckCircle2 },
     { label: 'Đang ẩn', value: 'false', icon: CircleDashed },
@@ -225,13 +220,6 @@ function handlePreviewImage(url: string) {
                                 title="Trạng thái"
                                 v-model="selectedStatus"
                                 :options="statusOptions"
-                                :searchable="false"
-                                icon_location="end"
-                            />
-                            <DataTableSingleFilter
-                                title="Nổi bật"
-                                v-model="selectedFeatured"
-                                :options="featuredOptions"
                                 :searchable="false"
                                 icon_location="end"
                             />

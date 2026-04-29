@@ -7,25 +7,33 @@ use Illuminate\Support\Facades\Storage;
 
 trait MediaSeederTrait
 {
-    /**
-     * Attach a file from local storage to a model's media collection.
-     *
-     * @param  Model  $model  The model instance to attach media to.
-     * @param  string  $path  The path relative to the specified disk (e.g., 'images/products/folder/image.jpg').
-     * @param  string  $collection  The Spatie MediaLibrary collection name (e.g., 'primary_image').
-     * @param  string  $disk  The storage disk to use (default: 'local').
-     */
+    protected array $commonImageExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'];
+
     protected function attachMedia(Model $model, string $path, string $collection = 'image', string $disk = 'local'): void
     {
         $storage = Storage::disk($disk);
+        $finalPath = $path;
 
-        if (! $storage->exists($path)) {
-            $this->command->warn("Media file not found at: {$path}");
+        $extension = pathinfo($path, PATHINFO_EXTENSION);
+
+        if (empty($extension) || !in_array(strtolower($extension), $this->commonImageExtensions)) {
+            foreach ($this->commonImageExtensions as $ext) {
+                $attemptPath = $path . '.' . $ext;
+                if ($storage->exists($attemptPath)) {
+                    $finalPath = $attemptPath;
+                    break;
+                }
+            }
+        }
+
+        if (! $storage->exists($finalPath)) {
+            $this->command->warn("Media file not found at: {$finalPath}");
 
             return;
         }
+        $this->command->info("Found: {$finalPath}");
 
-        $model->addMedia($storage->path($path))
+        $model->addMedia($storage->path($finalPath))
             ->preservingOriginal()
             ->toMediaCollection($collection, 'public');
     }

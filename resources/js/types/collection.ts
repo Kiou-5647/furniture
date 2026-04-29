@@ -5,10 +5,7 @@ export interface Collection {
     description: string | null;
     image_url?: string;
     image_thumb_url?: string;
-    banner_url?: string;
-    banner_thumb_url?: string;
     is_active: boolean;
-    is_featured: boolean;
     created_at: string;
     updated_at: string;
 }

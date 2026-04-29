@@ -20,7 +20,7 @@ class VendorResource extends JsonResource
             'website' => $this->website,
             'province_code' => $this->province_code,
             'ward_code' => $this->ward_code,
-            'address_data' => (array) $this->address_data,
+            'street' => $this->street,
             'bank_name' => $this->bank_name,
             'bank_account_number' => $this->bank_account_number,
             'bank_account_holder' => $this->bank_account_holder,

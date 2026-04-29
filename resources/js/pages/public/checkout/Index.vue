@@ -53,7 +53,7 @@ const form = useForm({
     province_name: props.customer?.province_name || '',
     ward_code: props.customer?.ward_code || '',
     ward_name: props.customer?.ward_name || '',
-    street: props.customer?.address_data?.street || '',
+    street: props.customer?.street || '',
     shipping_method_id: '',
     payment_method: 'cod',
     notes: '',

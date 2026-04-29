@@ -29,7 +29,7 @@ class BookingService
                     'province_name' => $user->customer?->province_name,
                     'ward_code' => $user->customer?->ward_code,
                     'ward_name' => $user->customer?->ward_name,
-                    'address_data' => $user->customer?->address_data,
+                    'street' => $user->customer?->street,
                 ],
             ]);
     }

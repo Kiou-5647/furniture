@@ -9,7 +9,8 @@ import {
     CreditCard,
     User,
 } from '@lucide/vue';
-import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import { nextTick, onMounted, ref, watch } from 'vue';
+import { toast } from 'vue-sonner';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -35,7 +36,6 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
 import { store, update } from '@/routes/employee/inventory/vendor';
 
 const props = defineProps<{
@@ -58,31 +58,12 @@ const form = useForm({
     website: undefined as string | undefined,
     province_code: undefined as string | undefined,
     ward_code: undefined as string | undefined,
-    address_data: {
-        street: '',
-        full_address: '',
-    },
+    street: undefined as string | undefined,
     bank_name: undefined as string | undefined,
     bank_account_number: undefined as string | undefined,
     bank_account_holder: undefined as string | undefined,
-    is_active: true,
+    is_active: true as boolean,
 });
-
-const selectedProvince = computed(() =>
-    provinces.value.find((p) => p.value === form.province_code)?.label ?? '',
-);
-
-const selectedWard = computed(() =>
-    wards.value.find((w) => w.value === form.ward_code)?.label ?? '',
-);
-
-function regenerateFullText() {
-    const parts: string[] = [];
-    if (form.address_data.street) parts.push(form.address_data.street);
-    if (selectedWard.value) parts.push(selectedWard.value);
-    if (selectedProvince.value) parts.push(selectedProvince.value);
-    form.address_data.full_address = parts.join(', ');
-}
 
 async function loadProvinces() {
     loadingProvinces.value = true;
@@ -121,10 +102,7 @@ watch(
             form.website = newVendor.website;
             form.province_code = newVendor.province_code;
             form.ward_code = newVendor.ward_code;
-            form.address_data = {
-                street: newVendor.address_data?.street ?? '',
-                full_address: newVendor.address_data?.full_address ?? '',
-            };
+            form.street = newVendor.street;
             form.bank_name = newVendor.bank_name;
             form.bank_account_number = newVendor.bank_account_number;
             form.bank_account_holder = newVendor.bank_account_holder;
@@ -140,7 +118,6 @@ watch(
         } else if (!newVendor && props.open) {
             form.reset();
             form.is_active = true;
-            form.address_data = { street: '', full_address: '' };
         }
     },
     { immediate: true },
@@ -154,21 +131,6 @@ watch(
         if (newProvinceCode) {
             loadWards(newProvinceCode);
         }
-        regenerateFullText();
-    },
-);
-
-watch(
-    () => form.ward_code,
-    () => {
-        regenerateFullText();
-    },
-);
-
-watch(
-    () => form.address_data.street,
-    () => {
-        regenerateFullText();
     },
 );
 
@@ -176,6 +138,7 @@ function submit() {
     if (props.vendor) {
         form.put(update(props.vendor).url, {
             onSuccess: () => closeModal(),
+            onError: (errors) => toast.error(errors.error || 'Có lỗi xảy ra!'),
         });
     } else {
         form.post(store().url, {
@@ -243,7 +206,9 @@ function closeModal() {
                                     placeholder="Nguyễn Văn A"
                                     class="w-full"
                                 />
-                                <FieldError :errors="[form.errors.contact_name]" />
+                                <FieldError
+                                    :errors="[form.errors.contact_name]"
+                                />
                             </FieldContent>
                         </Field>
                     </div>
@@ -367,38 +332,19 @@ function closeModal() {
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>
-                                <FieldError
-                                    :errors="[form.errors.ward_code]"
-                                />
+                                <FieldError :errors="[form.errors.ward_code]" />
                             </FieldContent>
                         </Field>
                     </div>
 
                     <Field>
-                        <FieldLabel>
-                            Số nhà, tên đường
-                        </FieldLabel>
+                        <FieldLabel> Địa chỉ</FieldLabel>
                         <FieldContent>
                             <Input
-                                v-model="form.address_data.street"
+                                v-model="form.street"
                                 placeholder="123 Đường ABC"
                                 class="w-full"
                             />
-                        </FieldContent>
-                    </Field>
-
-                    <Field>
-                        <FieldLabel>Địa chỉ đầy đủ (Tự động sinh)</FieldLabel>
-                        <FieldContent>
-                            <Textarea
-                                v-model="form.address_data.full_address"
-                                placeholder="Số nhà, tên đường, Phường/Xã, Tỉnh/Thành"
-                                class="w-full"
-                                readonly
-                            />
-                            <p class="text-xs text-muted-foreground mt-1">
-                                Được tự động tạo từ địa chỉ chi tiết + phường/xã + tỉnh/thành
-                            </p>
                         </FieldContent>
                     </Field>
 
@@ -429,7 +375,9 @@ function closeModal() {
                                     placeholder="1010..."
                                     class="w-full"
                                 />
-                                <FieldError :errors="[form.errors.bank_account_number]" />
+                                <FieldError
+                                    :errors="[form.errors.bank_account_number]"
+                                />
                             </FieldContent>
                         </Field>
 
@@ -441,7 +389,9 @@ function closeModal() {
                                     placeholder="Tên chủ tài khoản"
                                     class="w-full"
                                 />
-                                <FieldError :errors="[form.errors.bank_account_holder]" />
+                                <FieldError
+                                    :errors="[form.errors.bank_account_holder]"
+                                />
                             </FieldContent>
                         </Field>
                     </div>
@@ -456,7 +406,7 @@ function closeModal() {
                                 Hiển thị và cho phép sử dụng
                             </p>
                         </div>
-                        <Switch v-model="form.is_active" />
+                        <Switch v-model="form.is_active"/>
                     </div>
                 </div>
 

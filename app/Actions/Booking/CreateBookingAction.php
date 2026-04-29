@@ -40,9 +40,6 @@ class CreateBookingAction
 
             $totalPrice = $designer->hourly_rate * $data->duration;
 
-            $addressData = [];
-            $addressData['street'] = $data->street;
-            $addressData['full_address'] = $data->street . ', ' . $data->ward_name . ', ' . $data->province_name;
 
             $booking = Booking::create([
                 'customer_id'    => $data->customer_id,
@@ -53,7 +50,7 @@ class CreateBookingAction
                 'ward_code'      => $data->ward_code,
                 'province_name'  => $data->province_name,
                 'ward_name'      => $data->ward_name,
-                'address_data'   => $addressData,
+                'street'         => $data->street,
                 'designer_id'    => $designer->id,
                 'start_at'       => $startAt,
                 'end_at'         => $endAt,

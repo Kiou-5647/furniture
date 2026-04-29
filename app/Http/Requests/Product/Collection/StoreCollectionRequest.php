@@ -40,9 +40,8 @@ class StoreCollectionRequest extends FormRequest
             ],
             'description' => ['nullable', 'string'],
             'is_active' => ['boolean'],
-            'is_featured' => ['boolean'],
-            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
-            'banner' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
+            'image_url' => ['nullable', 'string'],
         ];
     }
 
@@ -59,10 +58,6 @@ class StoreCollectionRequest extends FormRequest
             'image.image' => 'Tệp tải lên phải là hình ảnh.',
             'image.mimes' => 'Hình ảnh phải có định dạng: jpg, jpeg, png, hoặc webp.',
             'image.max' => 'Dung lượng hình ảnh không được vượt quá 2MB.',
-
-            'banner.image' => 'Tệp tải lên phải là hình ảnh.',
-            'banner.mimes' => 'Hình ảnh phải có định dạng: jpg, jpeg, png, hoặc webp.',
-            'banner.max' => 'Dung lượng hình ảnh không được vượt quá 2MB.',
         ];
     }
 }

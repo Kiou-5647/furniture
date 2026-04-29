@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3';
 import { Loader2, Type, Hash, Tag, Palette } from '@lucide/vue';
-import { computed, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
+import { toast } from 'vue-sonner';
 import ImageUploader from '@/components/custom/ImageUploader.vue';
 import StatusToggle from '@/components/custom/StatusToggle.vue';
 import { Badge } from '@/components/ui/badge';
@@ -39,6 +40,7 @@ const props = defineProps<{
     display_namespace: string;
     lookup: Lookup | null;
     namespaces: { id: string | null; slug: string; label: string }[];
+    categories: { id: string; display_name: string }[];
 }>();
 
 const emit = defineEmits(['close', 'delete']);
@@ -50,10 +52,14 @@ const form = useForm({
     description: '',
     is_active: true,
     image: null as File | null,
+    image_url: '',
     metadata: {
         hex_code: '',
+        category_id: '',
     },
 });
+
+const skipImageUrl = ref(false);
 
 watch(
     () => form.display_name,
@@ -74,8 +80,13 @@ watch(
             form.description = newLookup.description ?? '';
             form.is_active = newLookup.is_active;
             form.image = null;
+            if (skipImageUrl.value) {
+                form.image_url = newLookup.image_url ?? '';
+                skipImageUrl.value = true;
+            }
             form.metadata = {
                 hex_code: newLookup.metadata?.hex_code ?? '',
+                category_id: newLookup.metadata?.category_id ?? '',
             };
         } else if (!newLookup && props.open) {
             form.reset();
@@ -95,6 +106,8 @@ function submit() {
     if (props.lookup) {
         form.put(update(props.lookup).url, {
             onSuccess: () => closeModal(),
+            onError: (errors) => () =>
+                toast.error('Có lỗi xảy ra trong quá trình cập nhật!'),
         });
     } else {
         form.post(store().url, {
@@ -107,6 +120,10 @@ function closeModal() {
     form.reset();
     form.clearErrors();
     emit('close');
+}
+
+function handleEmitError(message: string) {
+    toast.error(message);
 }
 
 const currentNamespace = computed(() => {
@@ -127,7 +144,10 @@ const selectedNsLabel = computed(() => {
     return ns?.label;
 });
 
-const isColorNamespace = computed(() => currentNamespace.value === 'mau-sac');
+const isColor = computed(() => currentNamespace.value === 'mau-sac');
+const isSubCategories = computed(
+    () => currentNamespace.value === 'danh-muc-phu',
+);
 </script>
 
 <template>
@@ -171,20 +191,23 @@ const isColorNamespace = computed(() => currentNamespace.value === 'mau-sac');
                             v-model="form.image"
                             :preview-url="previewUrl"
                             aspect-ratio="square"
+                            @error="handleEmitError"
+                            @remove-image="form.image_url = ''"
                         />
+                        <FieldError :errors="[form.errors.image]" />
                     </div>
 
                     <div class="space-y-4">
                         <div
                             class="grid grid-cols-1 gap-3 sm:grid-cols-2"
-                            v-if="isColorNamespace"
+                            v-if="isColor"
                         >
                             <Field>
                                 <FieldLabel>
                                     <Tag
                                         class="h-3.5 w-3.5 shrink-0 text-muted-foreground"
                                     />
-                                    Danh mục
+                                    Nhóm
                                 </FieldLabel>
                                 <FieldContent>
                                     <Select v-model="form.namespace_id">
@@ -247,13 +270,92 @@ const isColorNamespace = computed(() => currentNamespace.value === 'mau-sac');
                             </Field>
                         </div>
 
+                        <div
+                            class="grid grid-cols-1 gap-3 sm:grid-cols-2"
+                            v-else-if="isSubCategories"
+                        >
+                            <Field>
+                                <FieldLabel>
+                                    <Tag
+                                        class="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                                    />
+                                    Nhóm
+                                </FieldLabel>
+                                <FieldContent>
+                                    <Select v-model="form.namespace_id">
+                                        <SelectTrigger class="w-full">
+                                            <SelectValue
+                                                :placeholder="
+                                                    selectedNsLabel ||
+                                                    'Chọn danh mục...'
+                                                "
+                                            />
+                                        </SelectTrigger>
+                                        <SelectContent
+                                            position="popper"
+                                            :side-offset="4"
+                                        >
+                                            <SelectItem
+                                                v-for="ns in namespaces"
+                                                :key="ns.id ?? '_null'"
+                                                :value="ns.id ?? '_null'"
+                                            >
+                                                {{ ns.label }}
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <FieldError
+                                        :errors="[form.errors.namespace_id]"
+                                    />
+                                </FieldContent>
+                            </Field>
+
+                            <Field>
+                                <FieldLabel>
+                                    <Palette
+                                        class="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                                    />
+                                    Danh mục
+                                </FieldLabel>
+                                <FieldContent>
+                                    <Select v-model="form.metadata.category_id">
+                                        <SelectTrigger class="w-full">
+                                            <SelectValue
+                                                :placeholder="
+                                                    selectedNsLabel ||
+                                                    'Chọn danh mục...'
+                                                "
+                                            />
+                                        </SelectTrigger>
+                                        <SelectContent
+                                            position="popper"
+                                            :side-offset="4"
+                                        >
+                                            <SelectItem
+                                                v-for="c in categories"
+                                                :key="c.id ?? '_null'"
+                                                :value="c.id ?? '_null'"
+                                            >
+                                                {{ c.display_name }}
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <FieldError
+                                        :errors="[
+                                            form.errors['metadata.category_id'],
+                                        ]"
+                                    />
+                                </FieldContent>
+                            </Field>
+                        </div>
+
                         <div v-else class="grid grid-cols-2 gap-2">
                             <Field>
                                 <FieldLabel>
                                     <Tag
                                         class="h-3.5 w-3.5 shrink-0 text-muted-foreground"
                                     />
-                                    Danh mục
+                                    Nhóm
                                 </FieldLabel>
                                 <FieldContent>
                                     <Select v-model="form.namespace_id">
@@ -366,14 +468,14 @@ const isColorNamespace = computed(() => currentNamespace.value === 'mau-sac');
                                 :preview-url="previewUrl"
                                 aspect-ratio="square"
                                 class="mt-2 w-60 justify-self-center"
+                                @error="handleEmitError"
+                                @remove-image="form.image_url = ''"
                             />
+                            <FieldError :errors="[form.errors.image]" />
                         </div>
 
                         <div
-                            :class="[
-                                'flex gap-3',
-                                isColorNamespace! ? '' : 'sm:hidden',
-                            ]"
+                            :class="['flex gap-3', isColor! ? '' : 'sm:hidden']"
                         >
                             <StatusToggle
                                 v-model="form.is_active"

@@ -3,7 +3,6 @@ import { Head, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import PlaceholderPattern from '@/components/PlaceholderPattern.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { dashboard as customerDashboard } from '@/routes/customer';
 import { dashboard as employeeDashboard } from '@/routes/employee';
 import type { BreadcrumbItem } from '@/types';
 
@@ -12,7 +11,7 @@ const dashboard = computed(() => {
     if (page.props.auth?.user.type == 'employee') {
         return employeeDashboard().url;
     }
-    return customerDashboard().url;
+    return 'home';
 })
 
 const breadcrumbs: BreadcrumbItem[] = [

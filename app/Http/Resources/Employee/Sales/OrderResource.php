@@ -24,7 +24,7 @@ class OrderResource extends JsonResource
             'shipping_ward_code' => $this->ward_code,
             'shipping_province_name' => $this->province_name,
             'shipping_ward_name' => $this->ward_name,
-            'shipping_address_data' => $this->address_data,
+            'shipping_street' => $this->street,
             'shipping_address_text' => $this->getShippingAddressText(),
             'total_amount' => $this->total_amount,
             'total_items' => $this->total_items,

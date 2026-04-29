@@ -3,16 +3,15 @@ import { useForm } from '@inertiajs/vue3';
 import {
     Loader2,
     LayoutGrid,
-    Package,
     Sparkles,
-    Lamp,
     Tag,
     Hash,
     Type,
     Sofa,
     Home,
 } from '@lucide/vue';
-import { computed, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
+import { toast } from 'vue-sonner';
 import ImageUploader from '@/components/custom/ImageUploader.vue';
 import MultiSelect from '@/components/custom/MultiSelect.vue';
 import StatusToggle from '@/components/custom/StatusToggle.vue';
@@ -58,22 +57,23 @@ const emit = defineEmits(['close', 'delete']);
 
 const form = useForm({
     group_id: null as string | null,
-    room_ids: null as string[] | null,
-    filterable_specs: null as string[] | null,
+    room_ids: [] as string[],
+    filterable_specs: [] as string[],
     product_type: 'noi-that' as ProductType,
     slug: '',
     display_name: '',
     description: '',
     is_active: true,
     image: null as File | null,
+    image_url: '',
 });
 
 const typeOptions = [
     { label: 'Nội thất', value: 'noi-that', icon: Sofa },
-    { label: 'Phụ kiện', value: 'phu-kien', icon: Package },
     { label: 'Trang trí', value: 'trang-tri', icon: Sparkles },
-    { label: 'Thắp sáng', value: 'thap-sang', icon: Lamp },
 ];
+
+const skipImageUrl = ref(false);
 
 watch(
     () => props.category,
@@ -89,6 +89,10 @@ watch(
             form.description = newCategory.description ?? '';
             form.is_active = newCategory.is_active;
             form.image = null;
+            if(skipImageUrl.value){
+                form.image_url = newCategory.image_url ?? '';
+                skipImageUrl.value = true;
+            }
         } else if (!newCategory && props.open) {
             form.reset();
             form.is_active = true;
@@ -107,6 +111,7 @@ watch(
 );
 
 const previewUrl = computed(() => {
+    console.info(form.image)
     if (form.image) return URL.createObjectURL(form.image);
     return props.category?.image_url ?? null;
 });
@@ -152,6 +157,10 @@ const selectedGroupLabel = computed(() => {
     const g = props.categoryGroups.find((g) => g.id === form.group_id);
     return g?.label;
 });
+
+function handleEmitError(message: string) {
+    toast.error(message);
+}
 </script>
 
 <template>
@@ -201,7 +210,10 @@ const selectedGroupLabel = computed(() => {
                             v-model="form.image"
                             :preview-url="previewUrl"
                             aspect-ratio="square"
+                            @error="handleEmitError"
+                            @remove-image="form.image_url = ''"
                         />
+                        <FieldError :errors="[form.errors.image]" />
                     </div>
 
                     <!-- Right: Fields -->
@@ -401,9 +413,11 @@ const selectedGroupLabel = computed(() => {
                                 v-model="form.image"
                                 :preview-url="previewUrl"
                                 aspect-ratio="square"
-                                hint="4:3 hoặc 1:1 · Max 2MB"
                                 class="mt-2 w-60 justify-self-center"
+                                @error="handleEmitError"
+                                @remove-image="form.image_url = ''"
                             />
+                            <FieldError :errors="[form.errors.image]" />
                         </div>
 
                         <!-- Status -->

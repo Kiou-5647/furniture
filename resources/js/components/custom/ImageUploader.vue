@@ -17,13 +17,14 @@ const props = withDefaults(
         label: 'Chọn ảnh',
         hint: '',
         removable: true,
-        maxSizeMb: 2,
+        maxSizeMb: 10,
     },
 );
 
 const emit = defineEmits<{
-    'update:modelValue': [file: File | null];
-    error: [message: string];
+    (e: 'update:modelValue', value: File | null): void,
+    (e: 'removeImage'): void,
+    (e: 'error', value: string): void,
 }>();
 
 const fileInput = useTemplateRef<HTMLInputElement>('fileInput');
@@ -109,6 +110,7 @@ function removeImage() {
     if (fileInput.value) {
         fileInput.value.value = '';
     }
+    emit('removeImage');
     emit('update:modelValue', null);
 }
 </script>

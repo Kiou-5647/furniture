@@ -11,7 +11,8 @@ class UpsertLookupAction
     public function execute(array $data, ?Lookup $lookup = null): Lookup
     {
         $imageFile = $data['image'] ?? null;
-        unset($data['image'], $data['image_path']);
+        $imageUrl = $data['image_url'] ?? null;
+        unset($data['image'], $data['image_url']);
 
         DB::beginTransaction();
 
@@ -24,6 +25,10 @@ class UpsertLookupAction
 
             if ($imageFile instanceof UploadedFile) {
                 $lookup->addMedia($imageFile)->toMediaCollection('image');
+            }
+
+            if (!$imageUrl && !$imageFile) {
+                $lookup->clearMediaCollection('image');
             }
 
             DB::commit();

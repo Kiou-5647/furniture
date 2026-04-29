@@ -108,9 +108,7 @@ const selectedType = ref(props.filters.product_type ?? null);
 
 const typeOptions = [
     { label: 'Nội thất', value: 'noi-that', icon: LayoutGrid },
-    { label: 'Phụ kiện', value: 'phu-kien', icon: Package },
     { label: 'Trang trí', value: 'trang-tri', icon: Sparkles },
-    { label: 'Thắp sáng', value: 'thap-sang', icon: Lamp },
 ];
 
 const statusOptions = [

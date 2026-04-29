@@ -4,7 +4,10 @@ namespace Database\Seeders;
 
 use App\Models\Product\Category;
 use App\Models\Setting\Lookup;
+use App\Models\Setting\LookupNamespace;
+use Database\Seeders\MediaSeederTrait;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\File;
 
 class CategorySeeder extends Seeder
 {
@@ -18,104 +21,92 @@ class CategorySeeder extends Seeder
     public function run(): void
     {
         $this->seedCategories();
+        $this->seedRoomPlacements();
+        $this->seedFilterableSpecs();
     }
 
     protected function seedCategories(): void
     {
-        // 1. Seatings
-        $groupSeatings = Lookup::firstWhere('slug', 'ghe-ngoi');
-        foreach (
-            [
-                ['display_name' => 'Ghế sofa & ghế đôi', 'slug' => 'ghe-sofa-va-ghe-doi', 'rooms' => ['phong-khach', 'van-phong']],
-                ['display_name' => 'Ghế sofa góc', 'slug' => 'ghe-sofa-goc', 'rooms' => ['phong-khach', 'van-phong']],
-                ['display_name' => 'Ghế đôi', 'slug' => 'ghe-doi', 'rooms' => ['phong-khach', 'phong-ngu']],
-                ['display_name' => 'Ghế ăn', 'slug' => 'ghe-an', 'rooms' => ['phong-an']],
-                ['display_name' => 'Ghế đẩu', 'slug' => 'ghe-dau', 'rooms' => ['phong-an']],
-                ['display_name' => 'Ghế dài', 'slug' => 'ghe-dai', 'rooms' => ['phong-khach', 'phong-an']],
-                ['display_name' => 'Ghế quầy bar', 'slug' => 'ghe-quay-bar', 'rooms' => ['phong-an']],
-                ['display_name' => 'Băng ghế ăn', 'slug' => 'bang-ghe-an', 'rooms' => ['phong-an']],
-                ['display_name' => 'Ghế mô đun', 'slug' => 'ghe-mo-dun', 'rooms' => ['phong-khach']],
-                ['display_name' => 'Ghế ottoman', 'slug' => 'ghe-ottoman', 'rooms' => ['phong-khach']],
-                ['display_name' => 'Ghế đệm', 'slug' => 'ghe-dem', 'rooms' => ['phong-khach']],
-                ['display_name' => 'Ghế thư giãn', 'slug' => 'ghe-thu-gian', 'rooms' => ['phong-khach', 'phong-ngu']],
-                ['display_name' => 'Ghế xoay', 'slug' => 'ghe-xoay', 'rooms' => ['phong-khach', 'van-phong']],
-                ['display_name' => 'Ghế văn phòng', 'slug' => 'ghe-van-phong', 'rooms' => ['van-phong']],
-                ['display_name' => 'Băng ghế', 'slug' => 'bang-ghe', 'rooms' => ['phong-khach']],
-            ] as $d
-        ) {
-            $category = Category::updateOrCreate(
-                ['slug' => $d['slug']],
+        $path = base_path('docs/database/categories.php');
+        if (!File::exists($path)) {
+            $this->command->warn("Categories file not found at: {$path}");
+            return;
+        }
+
+        require $path;
+
+        foreach ($categories as $category) {
+            // Use slug as the unique identifier to avoid duplicate key errors
+            $cat = Category::updateOrCreate(
+                ['slug' => $category['slug']],
                 [
-                    'display_name' => $d['display_name'],
-                    'group_id' => $groupSeatings?->id,
-                    'product_type' => 'noi-that',
-                    'is_active' => true,
+                    'id' => $category['id'],
+                    'group_id' => $category['group_id'],
+                    'product_type' => $category['product_type'],
+                    'display_name' => $category['display_name'],
+                    'description' => $category['description'],
+                    'is_active' => $category['is_active'],
+                    'created_at' => fake()->dateTimeBetween('-1 months', '-2 weeks'),
+                    'updated_at' => fake()->dateTimeBetween('-2 weeks', 'now'),
                 ]
             );
-
-            if (isset($d['rooms'])) {
-                $roomIds = Lookup::whereIn('slug', $d['rooms'])->pluck('id')->toArray();
-                $category->rooms()->sync($roomIds);
-            }
-
-            $this->attachMedia($category, "{$this->imageBase}/ghe-ngoi/{$d['slug']}.jpg");
-        }
-        $this->command->info('Seeded seating categories.');
-
-        // 2. Tables
-        $groupTables = Lookup::firstWhere('slug', 'ban');
-        foreach (
-            [
-                ['display_name' => 'Bàn cà phê', 'slug' => 'ban-ca-phe', 'rooms' => ['phong-khach']],
-                ['display_name' => 'Bàn phụ', 'slug' => 'ban-phu', 'rooms' => ['phong-khach', 'phong-ngu']],
-                ['display_name' => 'Bàn điều khiển', 'slug' => 'ban-dieu-khien', 'rooms' => ['phong-khach']],
-            ] as $d
-        ) {
-            $category = Category::updateOrCreate(
-                ['slug' => $d['slug']],
-                [
-                    'display_name' => $d['display_name'],
-                    'group_id' => $groupTables?->id,
-                    'product_type' => 'noi-that',
-
-                    'is_active' => true,
-                ]
+            $this->attachMedia(
+                $cat,
+                "{$this->imageBase}/{$cat['slug']}",
+                'image'
             );
-
-            if (isset($d['rooms'])) {
-                $roomIds = Lookup::whereIn('slug', $d['rooms'])->pluck('id')->toArray();
-                $category->rooms()->sync($roomIds);
-            }
-
-            $this->attachMedia($category, "{$this->imageBase}/ban/{$d['slug']}.jpg");
         }
-        $this->command->info('Seeded table categories.');
+        $this->command->info('Seeded categories');
+    }
 
-        // 3. Storages
-        $groupStorage = Lookup::firstWhere('slug', 'luu-tru');
-        foreach (
-            [
-                ['display_name' => 'Kệ TV', 'slug' => 'ke-tv', 'rooms' => ['phong-khach']],
-                ['display_name' => 'Kệ sách', 'slug' => 'ke-sach', 'rooms' => ['phong-khach', 'phong-lam-viec']],
-            ] as $d
-        ) {
-            $category = Category::updateOrCreate(
-                ['slug' => $d['slug']],
-                [
-                    'display_name' => $d['display_name'],
-                    'group_id' => $groupStorage?->id,
-                    'product_type' => 'noi-that',
-                    'is_active' => true,
-                ]
-            );
-
-            if (isset($d['rooms'])) {
-                $roomIds = Lookup::whereIn('slug', $d['rooms'])->pluck('id')->toArray();
-                $category->rooms()->sync($roomIds);
-            }
-
-            $this->attachMedia($category, "{$this->imageBase}/luu-tru/{$d['slug']}.jpg");
+    protected function seedRoomPlacements(): void
+    {
+        $path = base_path('docs/database/category_room_placement.php');
+        if (!File::exists($path)) {
+            $this->command->warn("Room placement file not found at: {$path}");
+            return;
         }
-        $this->command->info('Seeded storage categories.');
+
+        require $path;
+
+        foreach ($placements as $placement) {
+            // Since doc IDs might be integers/wrong, we rely on relational data
+            // We find the category and lookup by the IDs provided in the doc
+            $category = Category::find($placement['category_id']);
+            $lookup = Lookup::find($placement['room_id']);
+
+            if ($category && $lookup) {
+                // Use a pivot table logic or a specific model if exists
+                // Assuming a many-to-many relationship: category_room_placements
+                $category->rooms()->syncWithoutDetaching([$lookup->id]);
+            } else {
+                $this->command->warn("Could not find Category or Lookup for placement: " . json_encode($placement));
+            }
+        }
+        $this->command->info('Seeded category room placements');
+    }
+
+    protected function seedFilterableSpecs(): void
+    {
+        $path = base_path('docs/database/category_filterable_specs.php');
+        if (!File::exists($path)) {
+            $this->command->warn("Filterable specs file not found at: {$path}");
+            return;
+        }
+
+        require $path;
+
+        foreach ($specs as $spec) {
+            $category = Category::find($spec['category_id']);
+            $lookup = LookupNamespace::find($spec['namespace_id']);
+
+            if ($category && $lookup) {
+                // Assuming a many-to-many relationship: category_filterable_specs
+                $category->filterableSpecs()->syncWithoutDetaching([$lookup->id]);
+            } else {
+                $this->command->warn("Could not find Category or Lookup for spec: " . json_encode($spec));
+            }
+        }
+        $this->command->info('Seeded category filterable specs');
     }
 }

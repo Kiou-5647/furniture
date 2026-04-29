@@ -2,11 +2,11 @@ import { useForm, usePage } from '@inertiajs/vue3';
 import { Package, Settings, Layers, Warehouse } from '@lucide/vue';
 import { computed, reactive, ref, watch } from 'vue';
 import type { Ref } from 'vue';
+import { toISODate } from '@/lib/date-utils';
 import { store, update } from '@/routes/employee/products';
 import type { ProductStatus, SpecLookupOption, SpecItem } from '@/types';
 import type { ProductSpecifications } from '@/types/lookup';
 import type { Product, ProductVariant, OptionGroup } from '@/types/product';
-import { toISODate } from '@/lib/date-utils';
 
 export interface VariantStock {
     location_id: string;
@@ -395,13 +395,12 @@ export function useProductForm(
     const stepStates = computed<StepState[]>(() => {
         const hasName = !!form.name.trim();
         const hasCategory = !!form.category_id;
-        const hasCollection = !!form.collection_id;
         const hasStatus = !!form.status;
 
         const step1Complete =
-            hasName && hasCategory && hasCollection && hasStatus;
+            hasName && hasCategory  && hasStatus;
         const step1Touched =
-            hasName || hasCategory || hasCollection || hasStatus;
+            hasName || hasCategory || hasStatus;
         const hasOptionGroups = form.option_groups.length > 0;
         const hasVariants =
             form.variants.length > 0 &&

@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3';
-import { Loader2, Star, Type, Hash } from '@lucide/vue';
+import { Loader2, Type, Hash } from '@lucide/vue';
 import { computed, watch } from 'vue';
 import ImageUploader from '@/components/custom/ImageUploader.vue';
 import StatusToggle from '@/components/custom/StatusToggle.vue';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -25,6 +24,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { slugify } from '@/lib/utils';
 import { store, update } from '@/routes/employee/collections';
 import type { Collection } from '@/types/collection';
+import { toast } from 'vue-sonner';
 
 const props = defineProps<{
     open: boolean;
@@ -38,9 +38,8 @@ const form = useForm({
     display_name: '',
     description: '',
     is_active: true,
-    is_featured: false,
     image: null as File | null,
-    banner: null as File | null,
+    image_url: '',
 });
 
 watch(
@@ -51,13 +50,10 @@ watch(
             form.display_name = newCollection.display_name;
             form.description = newCollection.description ?? '';
             form.is_active = newCollection.is_active;
-            form.is_featured = newCollection.is_featured;
             form.image = null;
-            form.banner = null;
         } else if (!newCollection && props.open) {
             form.reset();
             form.is_active = true;
-            form.is_featured = false;
         }
     },
     { immediate: true },
@@ -75,11 +71,6 @@ watch(
 const imagePreviewUrl = computed(() => {
     if (form.image) return URL.createObjectURL(form.image);
     return props.collection?.image_url ?? null;
-});
-
-const bannerPreviewUrl = computed(() => {
-    if (form.banner) return URL.createObjectURL(form.banner);
-    return props.collection?.banner_url ?? null;
 });
 
 function submit() {
@@ -101,6 +92,10 @@ function closeModal() {
     form.reset();
     form.clearErrors();
     emit('close');
+}
+
+function handleEmitError(message: string) {
+    toast.error(message);
 }
 </script>
 
@@ -124,14 +119,6 @@ function closeModal() {
                             }}
                         </DialogDescription>
                     </div>
-                    <Badge
-                        v-if="form.is_featured"
-                        variant="default"
-                        class="shrink-0 gap-1.5 bg-yellow-500 dark:bg-yellow-600"
-                    >
-                        <Star class="h-3.5 w-3.5 fill-current" />
-                        <span class="hidden sm:inline">Nổi bật</span>
-                    </Badge>
                 </div>
             </DialogHeader>
 
@@ -147,18 +134,10 @@ function closeModal() {
                                 v-model="form.image"
                                 :preview-url="imagePreviewUrl"
                                 aspect-ratio="square"
+                                @error="handleEmitError"
+                                @remove-image="form.image_url = ''"
                             />
-                        </div>
-
-                        <div class="space-y-2">
-                            <FieldLabel class="text-sm font-medium"
-                                >Banner</FieldLabel
-                            >
-                            <ImageUploader
-                                v-model="form.banner"
-                                :preview-url="bannerPreviewUrl"
-                                aspect-ratio="wide"
-                            />
+                            <FieldError :errors="[form.errors.image]" />
                         </div>
                     </div>
 
@@ -223,12 +202,6 @@ function closeModal() {
                         <!-- Toggles: 2 items = even grid -->
                         <div class="grid grid-cols-2 gap-3">
                             <StatusToggle
-                                v-model="form.is_featured"
-                                label="Nổi bật"
-                                description="Ưu tiên trang chủ"
-                                id="is_featured"
-                            />
-                            <StatusToggle
                                 v-model="form.is_active"
                                 label="Kích hoạt"
                                 description="Ẩn bộ sưu tập khỏi website khi tắt"
@@ -246,17 +219,10 @@ function closeModal() {
                                     :preview-url="imagePreviewUrl"
                                     aspect-ratio="square"
                                     class="w-60 justify-self-center"
+                                    @error="handleEmitError"
+                                    @remove-image="form.image_url = ''"
                                 />
-                            </div>
-                            <div class="space-y-1.5">
-                                <FieldLabel class="text-sm font-medium"
-                                    >Banner</FieldLabel
-                                >
-                                <ImageUploader
-                                    v-model="form.banner"
-                                    :preview-url="bannerPreviewUrl"
-                                    aspect-ratio="wide"
-                                />
+                                <FieldError :errors="[form.errors.image]" />
                             </div>
                         </div>
                     </div>

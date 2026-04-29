@@ -41,7 +41,6 @@ class Order extends Model
             'status' => OrderStatus::class,
             'payment_method' => PaymentMethod::class,
             'paid_at' => 'datetime',
-            'address_data' => 'array',
         ];
     }
 
@@ -101,12 +100,8 @@ class Order extends Model
 
     public function getShippingAddressText(): string
     {
-        if (!empty($this->address_data['full_address'])) {
-            return $this->address_data['full_address'];
-        }
-
         $parts = [
-            $this->address_data['street'] ?? null,
+            $this->street ?? null,
             $this->ward_name,
             $this->province_name,
         ];

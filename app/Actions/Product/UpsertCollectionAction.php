@@ -11,8 +11,8 @@ class UpsertCollectionAction
     public function execute(array $data, ?Collection $collection = null): Collection
     {
         $imageFile = $data['image'] ?? null;
-        $bannerFile = $data['banner'] ?? null;
-        unset($data['image'], $data['banner'], $data['image_path']);
+        $imageUrl = $data['image_url'] ?? null;
+        unset($data['image'], $data['image_url']);
 
         DB::beginTransaction();
 
@@ -27,8 +27,8 @@ class UpsertCollectionAction
                 $collection->addMedia($imageFile)->toMediaCollection('image');
             }
 
-            if ($bannerFile instanceof UploadedFile) {
-                $collection->addMedia($bannerFile)->toMediaCollection('banner');
+            if (!$imageUrl && !$imageFile) {
+                $collection->clearMediaCollection('image');
             }
 
             DB::commit();

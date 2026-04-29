@@ -16,7 +16,7 @@ export type AttributeType =
     | 'weight';
 export type DimensionUnit = 'mm' | 'cm' | 'm' | 'inch' | 'ft';
 export type WeightUnit = 'kg' | 'lb';
-export type ProductType = 'noi-that' | 'phu-kien' | 'trang-tri' | 'thap-sang';
+export type ProductType = 'noi-that' | 'trang-tri';
 
 export type ProductStatus =
     | 'draft'

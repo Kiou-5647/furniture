@@ -2,6 +2,7 @@
 import { Form, Head, Link, usePage } from '@inertiajs/vue3';
 import { X, ImageIcon } from '@lucide/vue';
 import { computed, ref } from 'vue';
+import EmployeeProfileController from '@/actions/App/Http/Controllers/Setting/EmployeeProfileController';
 import DeleteUser from '@/components/DeleteUser.vue';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
@@ -11,10 +12,9 @@ import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { formatDateOnly } from '@/lib/date-utils';
-import { edit } from '@/routes/profile';
+import { edit } from '@/routes/employee/profile';
 import { send } from '@/routes/verification';
 import type { BreadcrumbItem } from '@/types';
-import EmployeeProfileController from '@/actions/App/Http/Controllers/Setting/EmployeeProfileController';
 
 type Props = {
     mustVerifyEmail: boolean;
@@ -94,8 +94,6 @@ const removeAvatar = (event: Event) => {
                 >
                 <div class="grid gap-2 col-span-1 md:col-span-2">
                     <div class="flex flex-col items-center justify-center gap-4">
-
-                        <!-- CUSTOM UPLOADER UI (The "Lookalike") -->
                         <div
                             @click="triggerUpload"
                             class="group relative w-40 h-40 cursor-pointer overflow-hidden rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 transition-colors hover:border-primary/50"
@@ -119,7 +117,7 @@ const removeAvatar = (event: Event) => {
                                 v-if="avatarPreview || avatar"
                                 @click="removeAvatar"
                                 type="button"
-                                class="absolute top-1 right-1 rounded-full bg-black/60 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-black/80"
+                                class="absolute top-6 right-6 rounded-full bg-black/60 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-black/80"
                             >
                                 <X class="h-3 w-3" />
                             </button>

@@ -64,6 +64,13 @@ class ProductVariantObserver
         }
     }
 
+    public function saved(ProductVariant $variant): void
+    {
+        if ($variant->product) {
+            $variant->product->syncPrices();
+        }
+    }
+
     protected function assignProductCard(ProductVariant $variant, $product): void
     {
         $product->refresh();

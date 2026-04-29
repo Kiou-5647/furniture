@@ -24,7 +24,6 @@ class Location extends Model
     {
         return [
             'type' => LocationType::class,
-            'address_data' => 'array',
             'is_active' => 'boolean',
         ];
     }
@@ -35,7 +34,7 @@ class Location extends Model
             ->logOnly(['code', 'name', 'type', 'province_name', 'ward_name', 'phone', 'is_active', 'manager_id'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
-            ->setDescriptionForEvent(fn (string $eventName) => "Location {$eventName}");
+            ->setDescriptionForEvent(fn(string $eventName) => "Location {$eventName}");
     }
 
     public function manager(): BelongsTo
@@ -55,13 +54,13 @@ class Location extends Model
 
     public function getFullAddress(): string
     {
-        $parts = array_filter([
-            $this->address_data['street'] ?? '',
+        $parts = [
+            $this->street ?? null,
             $this->ward_name,
             $this->province_name,
-        ]);
+        ];
 
-        return implode(', ', $parts);
+        return implode(', ', $parts) ?: '—';
     }
 
     public static function generateCode(string $type): string

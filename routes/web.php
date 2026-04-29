@@ -31,8 +31,13 @@ Route::get('/goi-san-pham/{bundle:slug}', [BundleController::class, 'show'])
     ->name('bundles.show');
 
 Route::middleware(['auth', 'verified', 'user_type:customer'])->name('customer.')->group(function () {
-    Route::inertia('dashboard', 'Dashboard')->name('dashboard');
-    Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+    Route::prefix('ho-so')->group(function () {
+        Route::get('thong-tin', [\App\Http\Controllers\Setting\CustomerProfileController::class, 'edit'])->name('profile.edit');
+        Route::patch('thong-tin', [\App\Http\Controllers\Setting\CustomerProfileController::class, 'update'])->name('profile.update');
+        Route::get('don-hang', [\App\Http\Controllers\Customer\OrderController::class, 'index'])->name('profile.orders');
+        Route::get('dat-lich', [\App\Http\Controllers\Customer\BookingController::class, 'index'])->name('profile.bookings');
+        Route::get('danh-gia', [\App\Http\Controllers\Customer\ReviewController::class, 'index'])->name('profile.reviews');
+    });
 
     Route::prefix('checkout')->group(function () {
         Route::get('/', [CheckoutController::class, 'index'])->name('checkout.index');

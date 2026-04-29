@@ -18,9 +18,4 @@ class CollectionBuilder extends Builder
     {
         return $this->where('is_active', true);
     }
-
-    public function featured(): self
-    {
-        return $this->where('is_featured', true);
-    }
 }

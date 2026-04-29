@@ -11,9 +11,10 @@ class UpsertCategoryAction
     public function execute(array $data, ?Category $category = null): Category
     {
         $imageFile = $data['image'] ?? null;
+        $imageUrl = $data['image_url'] ?? null;
         $roomIds = $data['room_ids'] ?? [];
         $specsIds = $data['filterable_specs'] ?? [];
-        unset($data['image'], $data['room_ids'], $data['filterable_specs']);
+        unset($data['image'], $data['image_url'], $data['room_ids'], $data['filterable_specs']);
 
         DB::beginTransaction();
 
@@ -29,6 +30,10 @@ class UpsertCategoryAction
 
             if ($imageFile instanceof UploadedFile) {
                 $category->addMedia($imageFile)->toMediaCollection('image');
+            }
+
+            if (!$imageUrl && !$imageFile) {
+                $category->clearMediaCollection('image');
             }
 
             DB::commit();

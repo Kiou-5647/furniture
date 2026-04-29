@@ -62,13 +62,13 @@ const allImages = computed(() => {
     const images = activeVariant.value.images;
     const list: { full: string; thumb: string; label: string }[] = [];
 
-    if (images.primary)
+    if (images.primary?.full)
         list.push({
             full: images.primary.full,
             thumb: images.primary.thumb || images.primary.full,
             label: 'Ảnh chính',
         });
-    if (images.hover)
+    if (images.hover?.full)
         list.push({
             full: images.hover.full,
             thumb: images.hover.thumb || images.hover.full,
@@ -76,20 +76,21 @@ const allImages = computed(() => {
         });
     if (images.gallery) {
         images.gallery.forEach((img, idx) => {
-            list.push({
-                full: img.full,
-                thumb: img.thumb || img.full,
-                label: `Chi tiết ${idx + 1}`,
-            });
+            if (img.full)
+                list.push({
+                    full: img.full,
+                    thumb: img.thumb || img.full,
+                    label: `Chi tiết ${idx + 1}`,
+                });
         });
     }
-    if (images.dimension)
+    if (images.dimension?.full)
         list.push({
             full: images.dimension.full,
             thumb: images.dimension.thumb || images.dimension.full,
             label: 'Kích thước',
         });
-    if (images.swatch)
+    if (images.swatch?.full)
         list.push({
             full: images.swatch.full,
             thumb: images.swatch.thumb || images.swatch.full,
@@ -163,6 +164,37 @@ const breadcrumbs = computed((): BreadcrumbItem[] => {
     }
     return items;
 });
+
+function getSwatchVisual(swatch: any) {
+    // 1. Try the Variant's specific swatch image
+    if (swatch.images?.swatch?.full) {
+        return { type: 'image', value: swatch.images.swatch.full };
+    }
+
+    // Find the option group marked as a swatch
+    const swatchGroup = props.product_page.option_groups.find(
+        (g) => g.is_swatches,
+    );
+    if (swatchGroup) {
+        const option = swatchGroup.options.find(
+            (o) => o.value === swatch.option_values[swatchGroup.namespace],
+        );
+
+        // 2. Try the Option Group's image (The one we just added in the Resource)
+        if (option?.image_url) {
+            return { type: 'image', value: option.image_url };
+        }
+
+        // 3. Fallback to Hex Color from metadata
+        const hex = option?.metadata?.hex_code || undefined;
+        if (hex) {
+            return { type: 'color', value: hex };
+        }
+    }
+
+    // Final fallback if everything is missing
+    return { type: 'color', value: '#E5E5E5' };
+}
 </script>
 
 <template>
@@ -323,16 +355,66 @@ const breadcrumbs = computed((): BreadcrumbItem[] => {
                         <!-- Non-Swatch Options (Pills) -->
                         <div
                             v-for="group in product_page.option_groups.filter(
-                                (g) => !g.is_swatches,
+                                (g) => !g.is_swatches && g.options.length >= 2,
                             )"
                             :key="group.namespace"
                             class="space-y-3"
                         >
                             <Label
                                 class="@lg:text-md text-sm font-bold text-zinc-700"
-                                >{{ group.name }}</Label
                             >
-                            <div class="flex flex-wrap gap-2">
+                                {{ group.name }}:
+                                <span class="font-normal">
+                                    {{
+                                        group.options.find(
+                                            (opt) =>
+                                                opt.value ===
+                                                activeVariant.option_values[
+                                                    group.namespace
+                                                ],
+                                        )?.label
+                                    }}
+                                </span>
+                            </Label>
+                            <div
+                                v-if="
+                                    group.options.every((opt) => opt.image_url)
+                                "
+                                class="flex flex-wrap gap-3"
+                            >
+                                <button
+                                    v-for="opt in group.options"
+                                    :key="opt.value"
+                                    @click="
+                                        navigateViaMap(
+                                            group.namespace,
+                                            opt.value,
+                                        )
+                                    "
+                                    class="group relative h-24 w-24 rounded-xl border-2 p-0.5 transition-all"
+                                    :class="
+                                        activeVariant.option_values[
+                                            group.namespace
+                                        ] === opt.value
+                                            ? 'border-3 border-orange-400'
+                                            : 'border-transparent hover:border-orange-400'
+                                    "
+                                >
+                                    <img
+                                        :src="opt.image_url!"
+                                        loading="lazy"
+                                        class="h-full w-full rounded-lg object-cover"
+                                    />
+                                    <span
+                                        class="absolute -bottom-8 left-1/2 z-50 -translate-x-1/2 scale-0 rounded bg-zinc-800 px-2 py-1 text-sm whitespace-nowrap text-white transition-transform group-hover:scale-100"
+                                    >
+                                        {{ opt.label }}
+                                    </span>
+                                </button>
+                            </div>
+
+                            <!-- Case 2: Any option lacks image -> Show as Text Pills -->
+                            <div v-else class="flex flex-wrap gap-2">
                                 <button
                                     v-for="opt in group.options"
                                     :key="opt.value"
@@ -388,10 +470,23 @@ const breadcrumbs = computed((): BreadcrumbItem[] => {
                                     "
                                 >
                                     <img
-                                        :src="swatch.images.swatch.full"
+                                        v-if="
+                                            getSwatchVisual(swatch).type ===
+                                            'image'
+                                        "
+                                        :src="getSwatchVisual(swatch).value"
                                         loading="lazy"
                                         class="h-full w-full rounded-full object-center"
                                     />
+                                    <!-- Render Solid Color if fallback to hex code -->
+                                    <div
+                                        v-else
+                                        :style="{
+                                            backgroundColor:
+                                                getSwatchVisual(swatch).value,
+                                        }"
+                                        class="h-full w-full rounded-full border border-zinc-200"
+                                    ></div>
                                     <span
                                         class="absolute -bottom-8 left-1/2 z-50 -translate-x-1/2 scale-0 rounded bg-zinc-800 px-2 py-1 text-sm whitespace-nowrap text-white transition-transform group-hover:scale-100"
                                     >

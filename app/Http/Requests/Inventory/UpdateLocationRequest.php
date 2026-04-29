@@ -17,8 +17,7 @@ class UpdateLocationRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', Rule::in(['warehouse', 'retail', 'vendor'])],
-            'building' => ['nullable', 'string', 'max:255'],
-            'address_number' => ['nullable', 'string', 'max:255'],
+            'street' => ['nullable', 'string', 'max:255'],
             'province_code' => ['nullable', 'string', 'max:20'],
             'province_name' => ['nullable', 'string', 'max:100'],
             'ward_code' => ['nullable', 'string', 'max:20'],

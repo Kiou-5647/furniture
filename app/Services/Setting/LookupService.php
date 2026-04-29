@@ -4,6 +4,7 @@ namespace App\Services\Setting;
 
 use App\Builders\Setting\LookupBuilder;
 use App\Data\Setting\LookupFilterData;
+use App\Models\Product\Category;
 use App\Models\Setting\Lookup;
 use App\Models\Setting\LookupNamespace;
 use App\Support\CacheKeys;
@@ -14,13 +15,40 @@ use Illuminate\Support\Facades\Cache;
 
 class LookupService
 {
+    public function getFiltered(LookupFilterData $filter): LengthAwarePaginator
+    {
+        return Lookup::query()
+            ->with('namespace')
+            ->when($filter->namespace, fn(LookupBuilder $q) => $q->byNamespace($filter->namespace))
+            ->when($filter->search, fn(LookupBuilder $q) => $q->search($filter->search))
+            ->when(! is_null($filter->is_active), fn($q) => $q->where('is_active', $filter->is_active))
+            ->orderBy($filter->order_by ?? 'slug', $filter->order_direction ?? 'asc')
+            ->paginate($filter->per_page ?? 15);
+    }
+
+    public function getTrashedFiltered(LookupFilterData $filter): LengthAwarePaginator
+    {
+        return Lookup::onlyTrashed()
+            ->with('namespace')
+            ->when($filter->namespace, fn($q) => $q->byNamespace($filter->namespace))
+            ->when($filter->search, fn($q) => $q->search($filter->search))
+            ->orderBy($filter->order_by ?? 'deleted_at', $filter->order_direction ?? 'desc')
+            ->paginate($filter->per_page ?? 15);
+    }
+
     public function getNamespaces(): Collection
     {
         return Cache::tags([CacheTag::LookupNamespaces->value])
-            ->remember(CacheTag::LookupNamespaces->key('data'), CacheKeys::TTL, fn () => $this->buildNamespaces());
+            ->remember(CacheTag::LookupNamespaces->key('all'), CacheKeys::TTL, fn() => $this->buildNamespaces());
     }
 
-    protected function buildNamespaces(): Collection
+    public function getCategories(): Collection
+    {
+        return Cache::tags([CacheTag::Categories->value])
+            ->remember(CacheTag::Categories->key('sub'), CacheKeys::TTL, fn() => Category::select(['id', 'display_name'])->get() ?? collect());
+    }
+
+    private function buildNamespaces(): Collection
     {
         $counts = Lookup::query()
             ->select('namespace_id')
@@ -37,7 +65,7 @@ class LookupService
             ->orderBy('is_system', 'desc')
             ->orderBy('created_at', 'asc')
             ->get()
-            ->map(fn ($ns) => [
+            ->map(fn($ns) => [
                 'id' => $ns->id,
                 'slug' => $ns->slug,
                 'label' => $ns->display_name,
@@ -66,41 +94,5 @@ class LookupService
         }
 
         return $namespaces;
-    }
-
-    public function getFiltered(LookupFilterData $filter): LengthAwarePaginator
-    {
-        return Lookup::query()
-            ->with('namespace')
-            ->when($filter->namespace, fn (LookupBuilder $q) => $q->byNamespace($filter->namespace))
-            ->when($filter->search, fn (LookupBuilder $q) => $q->search($filter->search))
-            ->when(! is_null($filter->is_active), fn ($q) => $q->where('is_active', $filter->is_active))
-            ->orderBy($filter->order_by ?? 'slug', $filter->order_direction ?? 'asc')
-            ->paginate($filter->per_page ?? 15);
-    }
-
-    public function getTrashedFiltered(LookupFilterData $filter): LengthAwarePaginator
-    {
-        return Lookup::onlyTrashed()
-            ->with('namespace')
-            ->when($filter->namespace, fn ($q) => $q->byNamespace($filter->namespace))
-            ->when($filter->search, fn ($q) => $q->search($filter->search))
-            ->orderBy($filter->order_by ?? 'deleted_at', $filter->order_direction ?? 'desc')
-            ->paginate($filter->per_page ?? 15);
-    }
-
-    public function getFilterableNamespaces(): Collection
-    {
-        return Cache::tags([CacheTag::FilterableNamespaces->value])
-            ->remember(CacheTag::FilterableNamespaces->key('data'), CacheKeys::TTL, fn () => LookupNamespace::query()
-                ->where('is_filterable', true)
-                ->where('is_active', true)
-                ->orderBy('display_name')
-                ->get(['id', 'slug', 'display_name'])
-                ->map(fn ($ns) => [
-                    'id' => $ns->id,
-                    'slug' => $ns->slug,
-                    'label' => $ns->display_name,
-                ])->values());
     }
 }

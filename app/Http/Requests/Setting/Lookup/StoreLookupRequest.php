@@ -30,6 +30,12 @@ class StoreLookupRequest extends FormRequest
             unset($metadata['hex_code']);
             $this->merge(['metadata' => $metadata]);
         }
+
+        if (! $namespace || $namespace->slug !== 'danh-muc-phu') {
+            $metadata = $this->input('metadata', []);
+            unset($metadata['category_id']);
+            $this->merge(['metadata' => $metadata]);
+        }
     }
 
     public function rules(): array
@@ -45,18 +51,20 @@ class StoreLookupRequest extends FormRequest
                 'max:64',
                 Rule::unique('lookups')
                     ->whereNull('deleted_at')
-                    ->where(fn ($q) => $q->where('namespace_id', $finalNamespaceId)),
+                    ->where(fn($q) => $q->where('namespace_id', $finalNamespaceId)),
             ],
             'display_name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'is_active' => ['boolean'],
-            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'image' => ['nullable', 'mimes:jpeg,png,gif,webp,application/svg+xml', 'max:10240'],
+            'image_url' => ['nullable', 'string'],
             'metadata' => ['nullable', 'array'],
             'metadata.hex_code' => [
                 'nullable',
                 'string',
                 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/',
             ],
+            'metadata.category_id' => ['nullable', 'uuid', 'exists:categories,id'],
         ];
     }
 
@@ -68,7 +76,6 @@ class StoreLookupRequest extends FormRequest
             'namespace_id.exists' => 'Danh mục đã chọn không tồn tại.',
             'slug.unique' => 'Khóa đã tồn tại trong danh mục được chọn.',
             'image.image' => 'Hình ảnh không hợp lệ.',
-            'image.mimes' => 'Hình ảnh phải có định dạng: jpg, jpeg, png, hoặc webp.',
             'image.max' => 'Dung lượng hình ảnh không được vượt quá 2MB.',
         ];
     }

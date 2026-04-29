@@ -20,7 +20,19 @@ class ProductPageResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'slug' => $this->slug,
-            'option_groups' => $this->option_groups ?? [],
+            'option_groups' => collect($this->option_groups ?? [])->map(function ($group) {
+                $options = collect($group['options'])->map(function ($option) {
+                    // Fetch the lookup record using the slug (the 'value' of the option)
+                    $lookup = \App\Models\Setting\Lookup::where('slug', $option['value'])->first();
+
+                    return array_merge($option, [
+                        'image_url' => $lookup ? $lookup->getFirstMediaUrl('image', 'webp') ?? $lookup->getFirstMediaUrl('image') : null,
+                        'image_thumb_url' => $lookup ? $lookup->getFirstMediaUrl('image', 'thumb') : null,
+                    ]);
+                })->toArray();
+
+                return array_merge($group, ['options' => $options]);
+            })->toArray(),
             'category' => [
                 'name' => $this->category?->display_name,
                 'slug' => $this->category?->slug,

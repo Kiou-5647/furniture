@@ -23,7 +23,7 @@ class UpdateEmployeeRequest extends FormRequest
             'location_id' => ['nullable', 'uuid', 'exists:locations,id'],
             'hire_date' => ['nullable', 'date'],
             'is_active' => ['boolean'],
-            'avatar' => ['nullable', 'image', 'max:2048'],
+            'avatar' => ['nullable', 'image', 'max:10240'],
             'roles' => ['nullable', 'array'],
             'roles.*' => ['string'],
             'permissions' => ['nullable', 'array'],

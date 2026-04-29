@@ -36,10 +36,7 @@ class CustomerFactory extends Factory
             'province_name' => $province?->name,
             'ward_code' => $ward?->ward_code,
             'ward_name' => $ward?->name,
-            'address_data' => [
-                'street' => fake()->streetAddress(),
-                'full_address' => fake()->streetAddress() . ', ' . ($ward?->name ?? 'Unknown Ward') . ', ' . ($province?->name ?? 'Unknown Province'),
-            ],
+            'street' => fake()->streetAddress(),
             'total_spent' => 0,
         ];
     }

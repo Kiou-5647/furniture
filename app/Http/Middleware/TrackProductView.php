@@ -8,6 +8,7 @@ use App\Models\Product\ProductVariant;
 use App\Services\Analytics\ViewTrackingService;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -22,10 +23,10 @@ class TrackProductView
         $response = $next($request);
 
         if ($response->getStatusCode() === 200) {
-            $user = $request->user();
+            $user = Auth::user();
 
             // GUARD: Only allow Guests (no user) or Customers.
-            if ($user && $user->user_type !== UserType::Customer) {
+            if ($user && $user->type !== UserType::Customer) {
                 return $response;
             }
 
@@ -36,12 +37,6 @@ class TrackProductView
             if ($sku) {
                 $targetId = ProductVariant::where('sku', $sku)->value('id');
                 $targetClass = ProductVariant::class;
-            } else {
-                $bundleSlug = $request->route('bundle_slug');
-                if ($bundleSlug) {
-                    $targetId = Bundle::where('slug', $bundleSlug)->value('id');
-                    $targetClass = Bundle::class;
-                }
             }
 
             if ($targetId && $this->shouldTrackView($request, $user, $targetId)) {

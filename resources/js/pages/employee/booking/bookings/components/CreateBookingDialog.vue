@@ -39,10 +39,7 @@ interface CustomerOption {
         province_name: string;
         ward_code: string;
         ward_name: string;
-        address_data: {
-            street: string;
-            full_address: string;
-        };
+        street: string;
     };
 }
 
@@ -183,7 +180,7 @@ async function selectCustomer(c: CustomerOption) {
 
         form.province_code = c.address.province_code || '';
         form.province_name = c.address.province_name || '';
-        form.street = c.address.address_data?.street || '';
+        form.street = c.address.street || '';
 
         if (form.province_code) {
             await loadWards(form.province_code);

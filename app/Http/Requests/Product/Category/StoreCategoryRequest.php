@@ -47,7 +47,8 @@ class StoreCategoryRequest extends FormRequest
             ],
             'description' => ['nullable', 'string'],
             'is_active' => ['boolean'],
-            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
+            'image_url' => ['nullable', 'string'],
         ];
     }
 

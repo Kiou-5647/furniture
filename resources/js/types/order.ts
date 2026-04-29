@@ -57,7 +57,7 @@ export interface Order {
     shipping_ward_code: string | null;
     shipping_province_name: string | null;
     shipping_ward_name: string | null;
-    shipping_address_data: Record<string, unknown> | null;
+    shipping_street: Record<string, unknown> | null;
     shipping_address_text: string;
     total_amount: string;
     status: string;

@@ -362,11 +362,7 @@ function setSpecGroupWithLabel(ns: string) {
 
                 <div class="flex flex-col gap-2">
                     <Field>
-                        <FieldLabel
-                            >Bộ sưu tập<span class="text-destructive"
-                                >*</span
-                            ></FieldLabel
-                        >
+                        <FieldLabel>Bộ sưu tập </FieldLabel>
                         <FieldContent>
                             <Select v-model="ctx.form.collection_id">
                                 <SelectTrigger class="w-full text-sm">
@@ -570,7 +566,10 @@ function setSpecGroupWithLabel(ns: string) {
                                             <CalendarIcon />
                                             {{
                                                 ctx.form.new_arrival_until
-                                                    ? formatDateOnly(ctx.form.new_arrival_until)
+                                                    ? formatDateOnly(
+                                                          ctx.form
+                                                              .new_arrival_until,
+                                                      )
                                                     : 'Chọn ngày kết thúc'
                                             }}
                                         </Button>

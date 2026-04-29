@@ -14,55 +14,6 @@ use Illuminate\Support\Facades\Cache;
 
 class CategoryService
 {
-    public function getCategoryGroups(): Collection
-    {
-        return Cache::tags([CacheTag::CategoryGroups->value])
-            ->remember(CacheTag::CategoryGroups->key('data'), CacheKeys::TTL, fn() => $this->buildCategoryGroups());
-    }
-
-    protected function buildCategoryGroups(): Collection
-    {
-        $counts = Category::query()
-            ->select('group_id')
-            ->selectRaw('COUNT(*) AS count')
-            ->groupBy('group_id')
-            ->pluck('count', 'group_id');
-
-        $ns = LookupNamespace::where('slug', 'nhom-danh-muc')->first();
-        if (! $ns) {
-            return collect();
-        }
-
-        return $ns->activeLookups()
-            ->get()
-            ->map(fn(Lookup $group) => [
-                'id' => $group->id,
-                'slug' => $group->slug,
-                'label' => $group->display_name,
-                'count' => $counts[$group->id] ?? 0,
-            ]);
-    }
-
-    public function getRoomOptions(): Collection
-    {
-        return Cache::tags([CacheTag::CategoryRooms->value])
-            ->remember(
-                CacheTag::CategoryRooms->key('data'),
-                CacheKeys::TTL,
-                fn() => LookupNamespace::where('slug', 'phong')->first()?->activeLookups()->get() ?? collect()
-            );
-    }
-
-    public function getFilterableSpecOptions(): Collection
-    {
-        return Cache::tags([CacheTag::LookupNamespaces->value])
-            ->remember(
-                CacheTag::LookupNamespaces->key('data'),
-                CacheKeys::TTL,
-                fn() => LookupNamespace::whereNot('slug', 'nhom-danh-muc')->select(['id', 'display_name'])->get() ?? collect()
-            );
-    }
-
     public function getFiltered(CategoryFilterData $filter): LengthAwarePaginator
     {
         return Category::query()
@@ -88,5 +39,54 @@ class CategoryService
             ->when($filter->namespace_ids, fn($q) => $q->inNamespaces($filter->namespace_ids))
             ->orderBy($filter->order_by ?? 'deleted_at', $filter->order_direction ?? 'desc')
             ->paginate($filter->per_page ?? 15);
+    }
+
+    public function getCategoryGroups(): Collection
+    {
+        return Cache::tags([CacheTag::CategoryGroups->value])
+            ->remember(CacheTag::CategoryGroups->key('data'), CacheKeys::TTL, fn() => $this->buildCategoryGroups());
+    }
+
+    public function getRoomOptions(): Collection
+    {
+        return Cache::tags([CacheTag::CategoryRooms->value])
+            ->remember(
+                CacheTag::CategoryRooms->key('data'),
+                CacheKeys::TTL,
+                fn() => LookupNamespace::where('slug', 'phong')->first()?->activeLookups()->get() ?? collect()
+            );
+    }
+
+    public function getFilterableSpecOptions(): Collection
+    {
+        return Cache::tags([CacheTag::LookupNamespaces->value])
+            ->remember(
+                CacheTag::LookupNamespaces->key('data'),
+                CacheKeys::TTL,
+                fn() => LookupNamespace::select(['id', 'display_name'])->whereNot('slug', 'nhom-danh-muc')->active()->get() ?? collect()
+            );
+    }
+
+    private function buildCategoryGroups(): Collection
+    {
+        $counts = Category::query()
+            ->select('group_id')
+            ->selectRaw('COUNT(*) AS count')
+            ->groupBy('group_id')
+            ->pluck('count', 'group_id');
+
+        $ns = LookupNamespace::where('slug', 'nhom-danh-muc')->first();
+        if (! $ns) {
+            return collect();
+        }
+
+        return $ns->activeLookups()
+            ->get()
+            ->map(fn(Lookup $group) => [
+                'id' => $group->id,
+                'slug' => $group->slug,
+                'label' => $group->display_name,
+                'count' => $counts[$group->id] ?? 0,
+            ]);
     }
 }

@@ -36,10 +36,7 @@ const props = defineProps<{
             province_name: string;
             ward_code: string;
             ward_name: string;
-            address_data: {
-                street: string;
-                full_address: string;
-            };
+            street: string;
         };
     }[];
     designerOptions: {

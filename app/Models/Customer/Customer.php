@@ -23,7 +23,6 @@ class Customer extends Model implements HasMedia
 
     protected $casts = [
         'total_spent' => 'decimal:2',
-        'address_data' => 'array',
     ];
 
     public function user(): BelongsTo
@@ -33,17 +32,13 @@ class Customer extends Model implements HasMedia
 
     public function getFullAddress(): string
     {
-        if (!empty($this->address_data['full_address'])) {
-            return $this->address_data['full_address'];
-        }
-
         $parts = [
-            $this->address_data['street'] ?? null,
+            $this->street ?? null,
             $this->ward_name,
             $this->province_name,
         ];
 
-        return implode(', ', array_filter($parts));
+        return implode(', ', $parts) ?: '—';
     }
 
     public function registerMediaCollections(): void
@@ -61,7 +56,6 @@ class Customer extends Model implements HasMedia
                 'ward_code',
                 'province_name',
                 'ward_name',
-                'address_data',
                 'total_spent'
             ])
             ->logOnlyDirty()

@@ -125,7 +125,7 @@ function formatPrice(value: string | number): string {
                                 />
                                 {{
                                     product.average_rating
-                                        ? `${product.average_rating} (${product.review_count})`
+                                        ? `${product.average_rating} (${product.reviews_count ?? 0})`
                                         : 'Chưa có'
                                 }}
                             </dd>
@@ -134,7 +134,7 @@ function formatPrice(value: string | number): string {
                         <div class="flex justify-between">
                             <dt class="text-muted-foreground">Lượt xem</dt>
                             <dd class="font-medium">
-                                {{ product.view_count }}
+                                {{ product.views_count }}
                             </dd>
                         </div>
                         <Separator />

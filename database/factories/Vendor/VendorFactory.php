@@ -15,11 +15,7 @@ class VendorFactory extends Factory
             'name' => $this->faker->company(),
             'email' => $this->faker->companyEmail(),
             'phone' => $this->faker->phoneNumber(),
-            'address_data' => [
-                'street' => $this->faker->streetAddress(),
-                'city' => $this->faker->city(),
-                'province' => $this->faker->state(),
-            ],
+            'street' => $this->faker->streetAddress(),
             'is_active' => true,
         ];
     }

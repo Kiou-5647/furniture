@@ -40,11 +40,6 @@ class CreateOrderAction
 
             $grandTotal = $totalAmount + $shippingCost;
 
-            // Build address data
-            $addressData = [];
-            $addressData['street'] = $data->street;
-            $addressData['full_address'] = $data->street . ', ' . $data->ward_name . ', ' . $data->province_name;
-
             $initialStatus = $data->source === 'in_store'
                 ? OrderStatus::Processing
                 : OrderStatus::Pending;
@@ -52,36 +47,35 @@ class CreateOrderAction
 
             // Create order
             $order = Order::create([
-                'order_number' => Order::generateOrderNumber(),
-                'customer_id' => $data->customer_id,
-                'guest_name' => $data->guest_name,
-                'guest_phone' => $data->guest_phone,
-                'guest_email' => $data->guest_email,
-                'notes' => $data->notes,
-                'source' => $data->source,
-                'store_location_id' => $data->store_location_id,
-                'shipping_method_id' => $data->shipping_method_id,
-                'shipping_cost' => $shippingCost,
-                'payment_method' => $data->payment_method ?? 'cash',
-                'province_code' => $data->province_code,
-                'ward_code' => $data->ward_code,
-                'province_name' => $data->province_name,
-                'ward_name' => $data->ward_name,
-                'address_data' => ! empty($addressData) ? $addressData : null,
-                'total_amount' => $grandTotal,
-                'total_items' => $totalItems,
-                'status' => $initialStatus,
+                'order_number'          => Order::generateOrderNumber(),
+                'customer_id'           => $data->customer_id,
+                'guest_name'            => $data->guest_name,
+                'guest_phone'           => $data->guest_phone,
+                'guest_email'           => $data->guest_email,
+                'notes'                 => $data->notes,
+                'source'                => $data->source,
+                'store_location_id'     => $data->store_location_id,
+                'shipping_method_id'    => $data->shipping_method_id,
+                'shipping_cost'         => $shippingCost,
+                'payment_method'        => $data->payment_method ?? 'cash',
+                'province_code'         => $data->province_code,
+                'ward_code'             => $data->ward_code,
+                'province_name'         => $data->province_name,
+                'ward_name'             => $data->ward_name,
+                'street'          => $data->street ?? null,
+                'total_amount'          => $grandTotal,
+                'total_items'           => $totalItems,
+                'status'                => $initialStatus,
             ]);
 
-            // Create invoice for all orders
             Invoice::create([
-                'invoice_number' => Invoice::generateInvoiceNumber(),
-                'invoiceable_type' => Order::class,
-                'invoiceable_id' => $order->id,
-                'type' => InvoiceType::Full,
-                'amount_due' => $grandTotal,
-                'amount_paid' => 0,
-                'status' => InvoiceStatus::Open,
+                'invoice_number'        => Invoice::generateInvoiceNumber(),
+                'invoiceable_type'      => Order::class,
+                'invoiceable_id'        => $order->id,
+                'type'                  => InvoiceType::Full,
+                'amount_due'            => $grandTotal,
+                'amount_paid'           => 0,
+                'status'                => InvoiceStatus::Open,
             ]);
 
             foreach ($validatedItems as $itemData) {
@@ -196,6 +190,7 @@ class CreateOrderAction
                 foreach ($purchasable->contents as $content) {
                     $variantId = $finalConfiguration[$content->id] ?? null;
                     if ($variantId) {
+                        /** @var \App\Models\Product\ProductVariant */
                         $variant = \App\Models\Product\ProductVariant::find($variantId);
                         $totalIndividualValue += ($variant ? (float) $variant->getEffectivePrice() : 0) * $content->quantity;
                     }
@@ -204,6 +199,7 @@ class CreateOrderAction
                 foreach ($purchasable->contents as $content) {
                     $variantId = $finalConfiguration[$content->id] ?? null;
                     if ($variantId) {
+                        /** @var \App\Models\Product\ProductVariant */
                         $variant = \App\Models\Product\ProductVariant::find($variantId);
                         $originalPrice = $variant ? (float) $variant->getEffectivePrice() : 0;
 

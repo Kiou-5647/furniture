@@ -163,4 +163,18 @@ class Product extends Model implements HasMedia
             'average_rating' => $metrics->avg_rating ?? 0,
         ]);
     }
+
+    public function syncPrices(): void
+    {
+        $prices = $this->variants()->pluck('price');
+        if ($prices->isEmpty()) {
+            $this->update(['min_price' => 0, 'max_price' => 0]);
+            return;
+        }
+
+        $this->update([
+            'min_price' => $prices->min(),
+            'max_price' => $prices->max(),
+        ]);
+    }
 }

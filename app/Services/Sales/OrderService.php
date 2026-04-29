@@ -103,7 +103,7 @@ class OrderService
                         'province_name' => $customerProfile->province_name,
                         'ward_code' => $customerProfile->ward_code,
                         'ward_name' => $customerProfile->ward_name,
-                        'address_data' => $customerProfile->address_data,
+                        'street' => $customerProfile->street,
                     ] : null,
                 ];
             });

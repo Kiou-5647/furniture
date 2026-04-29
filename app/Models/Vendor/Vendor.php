@@ -18,7 +18,6 @@ class Vendor extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
-        'address_data' => 'array',
     ];
 
     public function getActivitylogOptions(): LogOptions
@@ -28,6 +27,17 @@ class Vendor extends Model
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
             ->setDescriptionForEvent(fn(string $eventName) => "Vendor {$eventName}");
+    }
+
+    public function getFullAddress(): string
+    {
+        $parts = [
+            $this->street ?? null,
+            $this->ward_name,
+            $this->province_name,
+        ];
+
+        return implode(', ', $parts) ?: '—';
     }
 
     public function discounts()

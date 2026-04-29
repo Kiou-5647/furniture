@@ -35,7 +35,6 @@ import UserMenuContent from '@/components/UserMenuContent.vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { getInitials } from '@/composables/useInitials';
 import { toUrl } from '@/lib/utils';
-import { dashboard as customerDashboard } from '@/routes/customer';
 import { dashboard as employeeDashboard } from '@/routes/employee';
 import type { BreadcrumbItem, NavItem } from '@/types';
 
@@ -55,7 +54,7 @@ const dashboard = computed(() => {
     if (auth.value.user.type == 'employee') {
         return employeeDashboard().url;
     }
-    return customerDashboard().url;
+    return employeeDashboard().url;
 })
 
 const activeItemStyles =

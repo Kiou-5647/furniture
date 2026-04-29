@@ -39,6 +39,7 @@ const LookupFormModal = createLazyComponent(
 
 const props = defineProps<{
     namespaces: LookupNamespace[];
+    categories: {id: string, display_name: string}[];
     lookups?: LookupPagination;
     filters: LookupFilterData;
 }>();
@@ -411,6 +412,7 @@ function handlePreviewImage(url: string) {
             :display_namespace="label"
             :lookup="selectedLookup"
             :namespaces="namespaces"
+            :categories="categories"
             @close="showFormModal = false"
             @delete="confirmDelete"
         />

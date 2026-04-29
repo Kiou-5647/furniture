@@ -50,6 +50,10 @@ class Lookup extends Model implements HasMedia
 
     public function registerMediaConversions(?Media $media = null): void
     {
+        if ($media && $media->mime_type === 'image/svg+xml') {
+            return;
+        }
+
         $this->addMediaConversion('thumb')
             ->width(300)
             ->height(300)
@@ -65,6 +69,6 @@ class Lookup extends Model implements HasMedia
             ->logOnly(['display_name', 'slug', 'description', 'is_active', 'namespace_id', 'metadata'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
-            ->setDescriptionForEvent(fn (string $eventName) => "Lookup {$eventName}");
+            ->setDescriptionForEvent(fn(string $eventName) => "Lookup {$eventName}");
     }
 }
