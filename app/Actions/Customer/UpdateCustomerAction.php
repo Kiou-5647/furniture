@@ -12,8 +12,7 @@ class UpdateCustomerAction
     {
         $avatarFile = $data['avatar'] ?? null;
         $avatarUrl = $data['avatar_url'] ?? null;
-        $street = $data['street'] ?? null;
-        unset($data['avatar'], $data['avatar_url'], $data['street']);
+        unset($data['avatar'], $data['avatar_url']);
 
         $userData = [];
         $customerData = [];
@@ -38,7 +37,8 @@ class UpdateCustomerAction
                 'provice_code',
                 'provice_name',
                 'ward_code',
-                'ward_name'
+                'ward_name',
+                'street'
             ] as $key
         ) {
             if (isset($data[$key])) {

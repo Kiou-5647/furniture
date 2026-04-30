@@ -21,6 +21,10 @@ class CancelShipmentAction
                 'status' => ShipmentStatus::Cancelled,
             ]);
 
+            $shipment->items()->update([
+                'status' => ShipmentStatus::Cancelled,
+            ]);
+
             // If all shipments are cancelled, revert order to Processing
             $this->checkOrderRevert($shipment);
         });

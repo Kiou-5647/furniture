@@ -51,8 +51,8 @@ class OrderBuilder extends Builder
     {
         return $this->where(function ($query) use ($search) {
             $query->where('order_number', 'ilike', "%{$search}%")
-                ->orWhereHas('customer', function ($q) use ($search) {
-                    $$q->where('full_name', 'ilike', "%{$search}%");
+                ->orWhereHas('customer.customer', function ($q) use ($search) {
+                    $q->where('full_name', 'ilike', "%{$search}%");
                 });
         });
     }

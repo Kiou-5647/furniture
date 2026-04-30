@@ -10,7 +10,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Str;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
@@ -68,22 +67,24 @@ class Location extends Model
         $prefix = match ($type) {
             LocationType::Warehouse->value => 'WH',
             LocationType::Retail->value => 'RT',
-            LocationType::Vendor->value => 'VN',
             default => 'LOC',
         };
 
-        $latest = self::where('code', 'like', "LOC-{$prefix}-%")
-            ->orWhere('code', 'like', "{$prefix}-%")
-            ->orderBy('code', 'desc')
-            ->first();
+        do {
+            $code = $prefix . '-' . self::randomToken();
+        } while (self::where('code', $code)->exists());
 
-        if ($latest) {
-            $lastNumber = (int) Str::afterLast($latest->code, '-');
-            $nextNumber = $lastNumber + 1;
-        } else {
-            $nextNumber = 1;
+        return $code;
+    }
+
+    protected static function randomToken(int $length = 8): string
+    {
+        $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        $token = '';
+        for ($i = 0; $i < $length; $i++) {
+            $token .= $chars[random_int(0, strlen($chars) - 1)];
         }
 
-        return sprintf('LOC-%s-%03d', $prefix, $nextNumber);
+        return $token;
     }
 }

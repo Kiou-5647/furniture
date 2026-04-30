@@ -103,6 +103,12 @@ const wardDisplayLabel = computed(() => {
     return 'Chọn Quận/Huyện';
 });
 
+const shippingMethodName = computed(() => {
+    if(!form.shipping_method_id) return 'Chọn phương thức vận chuyển...'
+    const method = props.shipping_methods.find((value) => form.shipping_method_id === value);
+    return method.name;
+})
+
 // 1. Watch Province: Update name and load wards
 watch(
     () => form.province_code,
@@ -461,7 +467,8 @@ onMounted(async () => {
                                             class="w-full"
                                         >
                                             <SelectValue
-                                                placeholder="Chọn phương thức..."
+                                                placeholder="'Chọn phương thức vận chuyển...'"
+
                                             />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -471,19 +478,11 @@ onMounted(async () => {
                                                 :value="method.id"
                                             >
                                                 <div
-                                                    class="flex w-full justify-between gap-4"
+                                                    class="flex w-full items-center justify-between gap-4"
                                                 >
                                                     <span>{{
                                                         method.name
                                                     }}</span>
-                                                    <span
-                                                        class="text-xs text-muted-foreground"
-                                                        >{{
-                                                            formatPrice(
-                                                                method.price,
-                                                            )
-                                                        }}</span
-                                                    >
                                                 </div>
                                             </SelectItem>
                                         </SelectContent>
@@ -519,9 +518,8 @@ onMounted(async () => {
                                             />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="cash"
-                                                >Thanh toán khi nhận hàng
-                                                (COD)</SelectItem
+                                            <SelectItem value="cod"
+                                                >Thanh toán khi nhận hàng</SelectItem
                                             >
                                             <SelectItem value="bank_transfer"
                                                 >Chuyển khoản /

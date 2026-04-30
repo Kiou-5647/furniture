@@ -107,9 +107,9 @@ class ProductVariant extends Model implements HasMedia
         return $this->morphMany(CartItem::class, 'purchasable');
     }
 
-    public function reviews(): MorphMany
+    public function reviews(): HasMany
     {
-        return $this->morphMany(Review::class, 'reviewable');
+        return $this->hasMany(Review::class, 'variant_id');
     }
 
     public function getTotalStock(): int

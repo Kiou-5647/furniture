@@ -147,7 +147,7 @@ function performDelete() {
             <div class="flex items-center justify-between">
                 <Heading
                     title="Nhà thiết kế"
-                    description="Quản lý nhà thiết kế nội bộ, freelancer và đối tác"
+                    description="Quản lý nhà thiết kế."
                 />
                 <Button @click="handleCreate">
                     <Plus class="mr-2 h-4 w-4" /> Thêm nhà thiết kế

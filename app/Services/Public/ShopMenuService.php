@@ -53,43 +53,43 @@ class ShopMenuService
 
         $rooms = $roomNs->activeLookups()->get();
 
+        // Get active categories and count products for each
         $categories = Category::where('is_active', true)
             ->with(['rooms', 'group'])
-            ->orderBy('display_name')
+            ->withCount('products')
             ->get();
 
         return $rooms->map(function (Lookup $room) use ($categories) {
-            // FIX: Check if the room ID exists within the category's rooms collection
+            // Filter categories belonging to this room
             $roomCategories = $categories->filter(fn(Category $c) => $c->rooms->contains('id', $room->id));
 
+            // Group them by their group_id
             $grouped = $roomCategories->groupBy('group_id');
 
+            // Process and sort groups
             $groups = $grouped->map(function (Collection $cats, $groupId) use ($roomCategories) {
                 $group = $roomCategories->firstWhere('group_id', $groupId)?->group;
-                if (! $group) {
-                    return [
-                        'id' => null,
-                        'label' => 'Khác',
-                        'slug' => 'other',
-                        'categories' => $cats->map(fn($c) => [
-                            'id' => $c->id,
-                            'label' => $c->display_name,
-                            'slug' => $c->slug,
-                        ])->values(),
-                    ];
-                }
 
                 return [
-                    'id' => $group->id,
-                    'label' => $group->display_name,
-                    'slug' => $group->slug,
-                    'categories' => $cats->map(fn($c) => [
+                    'group_obj' => $group,
+                    'count' => $cats->count(),
+                    'categories' => $cats->sortByDesc('products_count')->map(fn($c) => [
                         'id' => $c->id,
                         'label' => $c->display_name,
                         'slug' => $c->slug,
                     ])->values(),
                 ];
-            })->values();
+            })
+                ->sortByDesc('count') // Sort groups by the number of categories they contain
+                ->map(function ($data) {
+                    return [
+                        'id' => $data['group_obj']?->id,
+                        'label' => $data['group_obj']?->display_name ?? 'Khác',
+                        'slug' => $data['group_obj']?->slug ?? 'other',
+                        'categories' => $data['categories'],
+                    ];
+                })
+                ->values();
 
             return [
                 'id' => $room->id,
@@ -99,6 +99,14 @@ class ShopMenuService
                 'groups' => $groups,
                 'image_url' => $room->getFirstMediaUrl('image', 'webp') ?: null,
             ];
-        });
+        })
+            ->sortByDesc(function ($room) {
+                // Force 'trang-tri' to be last, otherwise sort by category count
+                if ($room['slug'] === 'trang-tri') {
+                    return -1;
+                }
+                return $room['count'];
+            })
+            ->values();
     }
 }

@@ -29,18 +29,7 @@ class CreateDesignerAction
                 $employee = Employee::findOrFail($data['employee_id']);
                 $data['user_id'] = $employee->user_id;
             } else {
-                // Freelancer: create new User
-                $user = User::create([
-                    'type' => UserType::Customer,
-                    'name' => $data['full_name'],
-                    'email' => $data['email'],
-                    'password' => Hash::make(Str::random(16)),
-                    'is_active' => true,
-                    'is_verified' => true,
-                    'email_verified_at' => now(),
-                ]);
-
-                $data['user_id'] = $user->id;
+                throw new \Exception('Vui lòng chọn nhân viên!');
             }
 
             $avatarFile = $data['avatar'] ?? null;

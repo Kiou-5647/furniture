@@ -56,17 +56,7 @@ class CheckoutController
             return Inertia::location(route('payment.vnpay.initiate', ['invoice' => $invoice->id]));
         }
 
-        return redirect()->route('customer.checkout.success', ['order' => $order->id])
+        return redirect()->route('customer.profile.orders', ['order' => $order->id])
             ->with('success', 'Đơn hàng của bạn đã được tạo thành công!');
-    }
-
-    /**
-     * Display the order success page.
-     */
-    public function success(string $order): Response
-    {
-        return Inertia::render('public/checkout/Success', [
-            'order_number' => $order,
-        ]);
     }
 }

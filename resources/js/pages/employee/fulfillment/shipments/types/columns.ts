@@ -78,7 +78,7 @@ export function getColumns(
             cell: ({ row }) => h(
                 'span',
                 { class: 'text-sm text-muted-foreground' },
-                row.original.handled_by ?? '—',
+                row.original.handled_by?.full_name ?? '—',
             ),
         },
         {

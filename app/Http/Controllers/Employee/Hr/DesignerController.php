@@ -47,11 +47,14 @@ class DesignerController
     public function store(StoreDesignerRequest $request, CreateDesignerAction $action)
     {
         Gate::authorize('create', Designer::class);
-
-        $action->execute(
-            $request->validated(),
-            $request->file('avatar'),
-        );
+        try {
+            $action->execute(
+                $request->validated(),
+                $request->file('avatar'),
+            );
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => $e->getMessage()]);
+        }
 
         return back()->with('success', 'Đã thêm nhà thiết kế.');
     }

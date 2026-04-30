@@ -35,14 +35,20 @@ Route::middleware(['auth', 'verified', 'user_type:customer'])->name('customer.')
         Route::get('thong-tin', [\App\Http\Controllers\Setting\CustomerProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('thong-tin', [\App\Http\Controllers\Setting\CustomerProfileController::class, 'update'])->name('profile.update');
         Route::get('don-hang', [\App\Http\Controllers\Customer\OrderController::class, 'index'])->name('profile.orders');
-        Route::get('dat-lich', [\App\Http\Controllers\Customer\BookingController::class, 'index'])->name('profile.bookings');
+        Route::get('don-hang/{order_number}', [\App\Http\Controllers\Customer\OrderController::class, 'show'])->name('profile.orders.show');
+        Route::get('lich-thiet-ke', [\App\Http\Controllers\Customer\BookingController::class, 'index'])->name('profile.bookings');
         Route::get('danh-gia', [\App\Http\Controllers\Customer\ReviewController::class, 'index'])->name('profile.reviews');
     });
 
-    Route::prefix('checkout')->group(function () {
+    Route::prefix('dat-hang')->group(function () {
         Route::get('/', [CheckoutController::class, 'index'])->name('checkout.index');
         Route::post('/', [CheckoutController::class, 'store'])->name('checkout.store');
-        Route::get('/success', [CheckoutController::class, 'success'])->name('checkout.success');
+    });
+
+    Route::prefix('danh-gia')->group(function () {
+        Route::post('/', [ReviewController::class, 'store'])->name('reviews.store');
+        Route::patch('/{review}', [ReviewController::class, 'update'])->name('reviews.update');
+        Route::delete('/{review}', [ReviewController::class, 'destroy'])->name('reviews.destroy');
     });
 });
 

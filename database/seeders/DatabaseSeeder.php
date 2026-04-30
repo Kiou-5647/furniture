@@ -24,9 +24,10 @@ class DatabaseSeeder extends Seeder
             LookupSeeder::class,
             CategorySeeder::class,
             CollectionSeeder::class,
-            TimberProductSeeder::class,
+            TimberProductDataSeeder::class,
             InventorySeeder::class,
             ShippingMethodSeeder::class,
+            InitialStockSeeder::class
         ]);
     }
 }

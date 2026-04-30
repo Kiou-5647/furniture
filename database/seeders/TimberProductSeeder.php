@@ -5,6 +5,8 @@ namespace Database\Seeders;
 use App\Enums\ProductStatus;
 use App\Models\Product\Product;
 use App\Models\Product\ProductVariant;
+use Carbon\Carbon;
+use DateInterval;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -27,6 +29,7 @@ class TimberProductSeeder extends Seeder
             'folder' => 'Sofa/Timber 90" Leather Sofa - Charme Black',
             'images' => [
                 'primary' => 'primary_image.jpg',
+                'hover' => 'hover_image.jpg',
                 'gallery' => [
                     'gallery_1.jpg',
                     'gallery_2.jpg',
@@ -36,6 +39,8 @@ class TimberProductSeeder extends Seeder
                     'gallery_6.jpg',
                     'gallery_7.jpg',
                     'gallery_8.jpg',
+                    'gallery_9.jpg',
+                    'gallery_10.jpg',
                 ],
                 'dimension' => 'dimension_image.jpg',
                 'swatch' => 'swatch_image.jpg',
@@ -92,6 +97,8 @@ class TimberProductSeeder extends Seeder
                     'gallery_6.jpg',
                     'gallery_7.jpg',
                     'gallery_8.jpg',
+                    'gallery_9.jpg',
+                    'gallery_10.jpg',
                 ],
                 'dimension' => 'dimension_image.jpg',
                 'swatch' => 'swatch_image.jpg',
@@ -149,6 +156,7 @@ class TimberProductSeeder extends Seeder
                     'gallery_7.jpg',
                     'gallery_8.jpg',
                     'gallery_9.jpg',
+                    'gallery_10.jpg',
                 ],
                 'dimension' => 'dimension_image.jpg',
                 'swatch' => 'swatch_image.jpg',
@@ -205,6 +213,8 @@ class TimberProductSeeder extends Seeder
                     'gallery_6.jpg',
                     'gallery_7.jpg',
                     'gallery_8.jpg',
+                    'gallery_9.jpg',
+                    'gallery_10.jpg',
                 ],
                 'dimension' => 'dimension_image.jpg',
                 'swatch' => 'swatch_image.jpg',
@@ -262,6 +272,7 @@ class TimberProductSeeder extends Seeder
                     'gallery_7.jpg',
                     'gallery_8.jpg',
                     'gallery_9.jpg',
+                    'gallery_10.jpg',
                 ],
                 'dimension' => 'dimension_image.jpg',
                 'swatch' => 'swatch_image.jpg',
@@ -312,6 +323,9 @@ class TimberProductSeeder extends Seeder
                     'gallery_5.jpg',
                     'gallery_6.jpg',
                     'gallery_7.jpg',
+                    'gallery_8.jpg',
+                    'gallery_9.jpg',
+                    'gallery_10.jpg',
                 ],
                 'dimension' => 'dimension_image.jpg',
                 'swatch' => 'swatch_image.jpg',
@@ -368,6 +382,8 @@ class TimberProductSeeder extends Seeder
                     'gallery_6.jpg',
                     'gallery_7.jpg',
                     'gallery_8.jpg',
+                    'gallery_9.jpg',
+                    'gallery_10.jpg',
                 ],
                 'dimension' => 'dimension_image.jpg',
                 'swatch' => 'swatch_image.jpg',
@@ -424,6 +440,8 @@ class TimberProductSeeder extends Seeder
                     'gallery_6.jpg',
                     'gallery_7.jpg',
                     'gallery_8.jpg',
+                    'gallery_9.jpg',
+                    'gallery_10.jpg',
                 ],
                 'dimension' => 'dimension_image.jpg',
                 'swatch' => 'swatch_image.jpg',
@@ -481,6 +499,7 @@ class TimberProductSeeder extends Seeder
                     'gallery_7.jpg',
                     'gallery_8.jpg',
                     'gallery_9.jpg',
+                    'gallery_10.jpg',
                 ],
                 'dimension' => 'dimension_image.jpg',
                 'swatch' => 'swatch_image.jpg',
@@ -537,6 +556,8 @@ class TimberProductSeeder extends Seeder
                     'gallery_6.jpg',
                     'gallery_7.jpg',
                     'gallery_8.jpg',
+                    'gallery_9.jpg',
+                    'gallery_10.jpg',
                 ],
                 'dimension' => 'dimension_image.jpg',
                 'swatch' => 'swatch_image.jpg',
@@ -592,6 +613,9 @@ class TimberProductSeeder extends Seeder
                     'gallery_5.jpg',
                     'gallery_6.jpg',
                     'gallery_7.jpg',
+                    'gallery_8.jpg',
+                    'gallery_9.jpg',
+                    'gallery_10.jpg',
                 ],
                 'dimension' => 'dimension_image.jpg',
                 'swatch' => 'swatch_image.jpg',
@@ -647,6 +671,9 @@ class TimberProductSeeder extends Seeder
                     'gallery_5.jpg',
                     'gallery_6.jpg',
                     'gallery_7.jpg',
+                    'gallery_8.jpg',
+                    'gallery_9.jpg',
+                    'gallery_10.jpg',
                 ],
                 'dimension' => 'dimension_image.jpg',
                 'swatch' => 'swatch_image.jpg',
@@ -710,6 +737,8 @@ class TimberProductSeeder extends Seeder
 
     private function createProduct(string $categoryId, ?string $collectionId, ?string $name): string
     {
+        $created_date = fake()->dateTimeBetween('-4 months', '-2 months');
+        $updated_date = fake()->dateTimeBetween($created_date, 'now');
         $product = Product::updateOrCreate(
             ['name' => "Ghế {$name} Timber"],
             [
@@ -804,11 +833,10 @@ class TimberProductSeeder extends Seeder
                 ],
                 'warranty_months' => 12,
                 'is_featured' => false,
-                'is_new_arrival' => false,
-                'published_date' => null,
-                'new_arrival_until' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
+                'published_date' => $updated_date,
+                'new_arrival_until' => Carbon::instance($updated_date)->addMonths(fake()->randomElement([1, 2, 3])),
+                'created_at' => $created_date,
+                'updated_at' => $updated_date,
             ]
         );
 
@@ -856,26 +884,31 @@ class TimberProductSeeder extends Seeder
 
         // Primary
         if (isset($images['primary'])) {
+            $variant->clearMediaCollection('primary_image');
             $this->addMediaToVariant($variant, $disk, $basePath . '/' . $images['primary'], 'primary_image');
         }
 
         // Hover
         if (isset($images['hover'])) {
+            $variant->clearMediaCollection('hover_image');
             $this->addMediaToVariant($variant, $disk, $basePath . '/' . $images['hover'], 'hover_image');
         }
 
         // Gallery
         foreach ($images['gallery'] as $file) {
+            $variant->clearMediaCollection('gallery');
             $this->addMediaToVariant($variant, $disk, $basePath . '/' . $file, 'gallery');
         }
 
         // Dimension
         if (isset($images['dimension'])) {
+            $variant->clearMediaCollection('dimension_image');
             $this->addMediaToVariant($variant, $disk, $basePath . '/' . $images['dimension'], 'dimension_image');
         }
 
         // Swatch
         if (isset($images['swatch'])) {
+            $variant->clearMediaCollection('swatch_image');
             $this->addMediaToVariant($variant, $disk, $basePath . '/' . $images['swatch'], 'swatch_image');
         }
     }
@@ -889,7 +922,7 @@ class TimberProductSeeder extends Seeder
         }
 
         $fullPath = $disk->path($path);
-
+        $this->command->info("Found: {$path}");
         $variant->addMedia($fullPath)
             ->preservingOriginal()
             ->toMediaCollection($collection, 'public');

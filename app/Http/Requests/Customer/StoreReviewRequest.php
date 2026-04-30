@@ -15,13 +15,10 @@ class StoreReviewRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'reviewable_id' => ['required', 'string', 'uuid'],
-            'reviewable_type' => ['required', 'string', Rule::in([
-                \App\Models\Product\ProductVariant::class,
-                \App\Models\Product\Bundle::class,
-            ])],
+            'variant_id' => ['required', 'string', 'uuid', 'exists:product_variants,id'],
             'rating' => ['required', 'integer', 'min:1', 'max:5'],
             'comment' => ['nullable', 'string', 'max:2000'],
+            'is_published' => ['boolean'],
         ];
     }
 }

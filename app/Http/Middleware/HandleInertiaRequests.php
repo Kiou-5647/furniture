@@ -62,6 +62,12 @@ class HandleInertiaRequests extends Middleware
                         : $user->getAllPermissions()->pluck('name'),
                 ] : null,
             ],
+            'flash' => [
+                'success' => fn() => session('success'),
+                'error' => fn() => session('error'),
+                'info' => fn() => session('info'),
+                'warning' => fn() => session('warning'),
+            ],
             'settings' => [
                 'freeship_threshold' => $this->settings->freeship_threshold,
                 'default_warranty' => $this->settings->default_warranty,

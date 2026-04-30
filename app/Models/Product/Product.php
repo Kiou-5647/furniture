@@ -154,13 +154,21 @@ class Product extends Model implements HasMedia
     public function syncMetricsFromVariants(): void
     {
         $metrics = $this->variants()
-            ->selectRaw('SUM(views_count) as total_views, SUM(reviews_count) as total_reviews, AVG(average_rating) as avg_rating')
+            ->selectRaw('
+            SUM(views_count) as total_views,
+            SUM(reviews_count) as total_reviews,
+            SUM(average_rating * reviews_count) as total_stars
+        ')
             ->first();
+
+        $avgRating = ($metrics->total_reviews > 0)
+            ? $metrics->total_stars / $metrics->total_reviews
+            : 0;
 
         $this->update([
             'views_count' => $metrics->total_views ?? 0,
             'reviews_count' => $metrics->total_reviews ?? 0,
-            'average_rating' => $metrics->avg_rating ?? 0,
+            'average_rating' => $avgRating,
         ]);
     }
 

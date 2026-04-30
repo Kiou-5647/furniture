@@ -21,7 +21,7 @@ class MarkOrderAsPaidAction
         $customerId = $order->customer_id;
         if (! $customerId) {
             $admin = User::where('type', 'employee')
-                ->whereHas('roles', fn ($q) => $q->where('name', 'super_admin'))
+                ->whereHas('roles', fn($q) => $q->where('name', 'super_admin'))
                 ->first();
             $customerId = $admin?->id;
 
@@ -38,8 +38,11 @@ class MarkOrderAsPaidAction
             }
 
             // Update invoice payment
+            $paymentAmount = $invoice->amount_due;
+
+            // Update invoice payment
             $invoice->update([
-                'amount_paid' => $order->total_amount,
+                'amount_paid' => $paymentAmount,
                 'validated_by' => $performedBy?->id,
             ]);
 
@@ -55,7 +58,7 @@ class MarkOrderAsPaidAction
             $payment = Payment::create([
                 'customer_id' => $customerId,
                 'gateway' => 'cash',
-                'transaction_id' => 'CASH-'.now()->format('YmdHis').'-'.substr(md5($order->id), 0, 8),
+                'transaction_id' => 'CASH-' . now()->format('YmdHis') . '-' . substr(md5($order->id), 0, 8),
                 'amount' => $order->total_amount,
                 'gateway_payload' => null,
             ]);

@@ -46,13 +46,15 @@ class ShipmentItemObserver
             return;
         }
 
-        $invoice = $orderItem->order->invoices()->first();
+        $order = $orderItem->order; // Get the order reference
+        $invoice = $order->invoices()->first();
         if (! $invoice || $invoice->amount_due <= 0) {
             return;
         }
 
         $itemValue = $this->calculateItemValue($orderItem, $shipmentItem);
         $invoice->decrement('amount_due', $itemValue);
+        $order->decrement('total_amount', $itemValue);
 
         // Refresh to get updated values
         $invoice->refresh();

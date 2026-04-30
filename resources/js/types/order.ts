@@ -47,6 +47,10 @@ export interface Refund {
 
 export interface Order {
     id: string;
+    can_cancel: boolean;
+    can_complete: boolean;
+    is_fully_paid: boolean;
+    is_cod: boolean;
     order_number: string;
     customer: {
         id: string;

@@ -3,6 +3,7 @@
 namespace App\Models\Customer;
 
 use App\Models\Customer\Customer;
+use App\Models\Product\ProductVariant;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -29,9 +30,9 @@ class Review extends Model implements HasMedia
     /**
      * Get the parent reviewable model (ProductVariant or Bundle).
      */
-    public function reviewable(): MorphTo
+    public function variant(): BelongsTo
     {
-        return $this->morphTo();
+        return $this->belongsTo(ProductVariant::class, 'variant_id');
     }
 
     public function customer(): BelongsTo

@@ -31,6 +31,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import ShopLayout from '@/layouts/ShopLayout.vue';
 import { formatPrice } from '@/lib/utils';
+import { useCartStore } from '@/stores/cart';
 import type { BreadcrumbItem } from '@/types';
 import { AssemblyDifficultyLabels } from '@/types';
 import type { Feature, ProductPage } from '@/types/public/product';
@@ -39,6 +40,7 @@ const props = defineProps<{
     product_page: ProductPage;
 }>();
 
+const { state, addToCart } = useCartStore();
 // --- COMPUTED ---
 const activeVariant = computed(() => props.product_page.active_variant);
 
@@ -101,12 +103,12 @@ const allImages = computed(() => {
 
 // --- NAVIGATION ---
 function navigateToVariant(sku: string, slug: string) {
-    router.visit(`/san-pham/${sku}/${slug}`);
+    router.visit(`/san-pham/${sku}/${slug}`, {replace: true});
 }
 
 function navigateViaMap(namespace: string, value: string) {
     const url = props.product_page.navigation_map[namespace]?.[value];
-    if (url) router.visit(url);
+    if (url) router.visit(url, {replace: true});
 }
 
 // --- CAROUSEL LOGIC ---
@@ -116,7 +118,7 @@ const carouselApi = ref<CarouselApi | null>(null);
 const isMobile = ref(false);
 
 const updateScreenSize = () => {
-    isMobile.value = window.innerWidth < 1024; // 1024px is Tailwind's @lg
+    isMobile.value = window.innerWidth < 1024;
 };
 
 onMounted(() => {
@@ -322,7 +324,10 @@ function getSwatchVisual(swatch: any) {
                         <h1 class="text-lg font-bold">{{ displayName }}</h1>
                         <div class="text-md font-semibold">
                             <span
-                                v-if="activeVariant.sale_price"
+                                v-if="
+                                    activeVariant.sale_price <
+                                    activeVariant.price
+                                "
                                 class="text-orange-500"
                                 >{{
                                     formatPrice(
@@ -332,7 +337,8 @@ function getSwatchVisual(swatch: any) {
                             >
                             <span
                                 :class="
-                                    activeVariant.sale_price
+                                    activeVariant.sale_price <
+                                    activeVariant.price
                                         ? 'text-md ml-2 text-zinc-400 line-through'
                                         : 'text-zinc-900'
                                 "
@@ -499,6 +505,14 @@ function getSwatchVisual(swatch: any) {
                     </div>
                     <div class="flex items-center gap-4">
                         <Button
+                            @click="
+                                addToCart({
+                                    purchasable_id: activeVariant.id,
+                                    purchasable_type:
+                                        'App\\Models\\Product\\ProductVariant',
+                                    quantity: 1,
+                                })
+                            "
                             class="h-10 flex-1 rounded-full border-none bg-orange-400 text-base font-semibold text-white hover:bg-orange-300"
                             :disabled="!activeVariant.in_stock"
                         >
@@ -507,13 +521,6 @@ function getSwatchVisual(swatch: any) {
                                     ? 'Thêm vào giỏ hàng'
                                     : 'Hết hàng'
                             }}
-                        </Button>
-
-                        <Button
-                            variant="ghost"
-                            class="h-10 w-10 rounded-full border"
-                        >
-                            <ShoppingCart class="h-8 w-8" />
                         </Button>
                     </div>
                     <span class="text-sm text-orange-400"

@@ -1,4 +1,4 @@
-import { createInertiaApp } from '@inertiajs/vue3';
+import { createInertiaApp, router } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import type { DefineComponent } from 'vue';
 import { createApp, h } from 'vue';
@@ -44,6 +44,19 @@ createInertiaApp({
     progress: {
         color: '#4B5563',
     },
+});
+
+router.on('success', (event) => {
+    // The page object is passed in the event argument
+    const page = event.detail.page;
+    const flash = page.props.flash as any;
+
+    if (flash) {
+        if (flash.success) toast.success(flash.success);
+        if (flash.error) toast.error(flash.error);
+        if (flash.info) toast.info(flash.info);
+        if (flash.warning) toast.warning(flash.warning);
+    }
 });
 
 window.addEventListener('unhandledrejection', (event) => {

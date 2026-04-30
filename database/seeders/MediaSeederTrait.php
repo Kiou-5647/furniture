@@ -9,7 +9,7 @@ trait MediaSeederTrait
 {
     protected array $commonImageExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'];
 
-    protected function attachMedia(Model $model, string $path, string $collection = 'image', string $disk = 'local'): void
+    protected function attachMedia(Model $model, string $path, string $collection = 'image', string $disk = 'local', bool $clear = true): void
     {
         $storage = Storage::disk($disk);
         $finalPath = $path;
@@ -32,6 +32,11 @@ trait MediaSeederTrait
             return;
         }
         $this->command->info("Found: {$finalPath}");
+
+        if ($clear) {
+            $model->clearMediaCollection($collection);
+            $this->command->info("Clear: {$collection}");
+        }
 
         $model->addMedia($storage->path($finalPath))
             ->preservingOriginal()

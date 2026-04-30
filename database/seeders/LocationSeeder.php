@@ -16,6 +16,7 @@ class LocationSeeder extends Seeder
     public function run(): void
     {
         $this->seedLocations();
+        Location::factory()->warehouse()->count(20)->create();
     }
 
     protected function seedLocations(): void
@@ -46,7 +47,5 @@ class LocationSeeder extends Seeder
                 ]
             );
         }
-
-        $this->command->info('Created ' . count($data) . ' locations.');
     }
 }

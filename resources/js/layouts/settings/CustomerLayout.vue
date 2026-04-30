@@ -4,9 +4,8 @@ import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
-import ShopLayout from '@/layouts/ShopLayout.vue';
 import { toUrl } from '@/lib/utils';
-import { edit, orders, reviews } from '@/routes/customer/profile';
+import { bookings, edit, orders, reviews } from '@/routes/customer/profile';
 import type { NavItem } from '@/types';
 
 const sidebarNavItems: NavItem[] = [
@@ -20,7 +19,7 @@ const sidebarNavItems: NavItem[] = [
     },
     {
         title: 'Đặt lịch',
-        href: orders(),
+        href: bookings(),
     },
     {
         title: 'Đánh giá sản phẩm',
@@ -32,7 +31,7 @@ const { isCurrentOrParentUrl } = useCurrentUrl();
 </script>
 
 <template>
-    <div class="mx-auto max-w-[1200px] px-4 py-6">
+    <div class="mx-auto px-4 py-6">
         <Heading
             title="Hồ sơ của tôi"
             description="Quản lý thông tin cá nhân, theo dõi đơn hàng và đánh giá"

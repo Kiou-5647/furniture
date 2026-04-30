@@ -14,6 +14,10 @@ class OrderResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'can_cancel' => $this->canBeCancelled(),
+            'can_complete' => $this->canBeCompleted(),
+            'is_fully_paid' => $this->isFullyPaid(),
+            'is_cod' => $this->isCod(),
             'order_number' => $this->order_number,
             'customer' => $this->whenLoaded('customer', fn() => [
                 'id' => $this->customer->id,

@@ -4,6 +4,7 @@ namespace App\Services\Public;
 
 use App\Data\Product\BundleFilterData;
 use App\Data\Public\CartTotalsData;
+use App\Enums\UserType;
 use App\Models\Auth\User;
 use App\Models\Public\Cart;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -108,6 +109,8 @@ class CartService
             ->first();
 
         if (!$guestCart) return;
+
+        if ($user->type !== UserType::Customer) return;
 
         $userCart = $this->getOrCreateForUser($user);
 

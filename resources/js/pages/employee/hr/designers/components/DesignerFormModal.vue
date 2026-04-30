@@ -10,6 +10,7 @@ import {
     Users,
 } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
+import { toast } from 'vue-sonner';
 import ImageUploader from '@/components/custom/ImageUploader.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -62,7 +63,6 @@ const props = defineProps<{
 
 const emit = defineEmits(['close', 'refresh']);
 
-const designerType = ref<'freelancer' | 'employee'>('freelancer');
 const selectedEmployeeId = ref<string | undefined>(undefined);
 const avatarPreview = ref<string | null>(null);
 const weeklySlots = ref<WeeklySlots>({});
@@ -143,13 +143,8 @@ watch(
             form.is_active = newDes.is_active;
             avatarPreview.value = newDes.avatar_url ?? null;
             form.avatar = null;
-
             if (newDes.employee) {
-                designerType.value = 'employee';
                 selectedEmployeeId.value = newDes.employee.id;
-            } else {
-                designerType.value = 'freelancer';
-                selectedEmployeeId.value = undefined;
             }
 
             if (newDes.id) {
@@ -194,7 +189,6 @@ function resetForm() {
     form.reset();
     form.clearErrors();
     form.avatar = null;
-    designerType.value = 'freelancer';
     selectedEmployeeId.value = undefined;
     avatarPreview.value = null;
     weeklySlots.value = {};
@@ -245,11 +239,6 @@ function clearDay(day: number) {
 }
 
 function submit() {
-    form.employee_id =
-        designerType.value === 'employee'
-            ? selectedEmployeeId.value
-            : undefined;
-
     form.availabilities = flattenSlots();
 
     if (props.designer) {
@@ -259,6 +248,7 @@ function submit() {
                 emit('refresh');
                 closeModal();
             },
+            onError: (errors) => toast.error(errors.error),
         });
     } else {
         form.post(store().url, {
@@ -267,6 +257,7 @@ function submit() {
                 emit('refresh');
                 closeModal();
             },
+            onError: (errors) => toast.error(errors.error),
         });
     }
 }
@@ -276,7 +267,6 @@ function closeModal() {
     form.clearErrors();
     form.avatar = null;
     avatarPreview.value = null;
-    designerType.value = 'freelancer';
     selectedEmployeeId.value = undefined;
     weeklySlots.value = {};
     emit('close');
@@ -300,7 +290,7 @@ function closeModal() {
                             {{
                                 designer
                                     ? 'Cập nhật thông tin nhà thiết kế'
-                                    : 'Thêm nhà thiết kế mới (freelancer hoặc nhân viên)'
+                                    : 'Thêm nhà thiết kế mới'
                             }}
                         </DialogDescription>
                     </div>
@@ -321,33 +311,6 @@ function closeModal() {
                 <div
                     class="w-full px-4 py-4 sm:min-h-0 sm:flex-1 sm:overflow-y-auto sm:border-r sm:px-5 sm:py-5"
                 >
-                    <div v-if="!designer" class="mb-4 flex gap-2">
-                        <Button
-                            type="button"
-                            :variant="
-                                designerType === 'freelancer'
-                                    ? 'default'
-                                    : 'outline'
-                            "
-                            class="flex-1"
-                            @click="designerType = 'freelancer'"
-                        >
-                            <User class="mr-2 h-4 w-4" /> Freelancer
-                        </Button>
-                        <Button
-                            type="button"
-                            :variant="
-                                designerType === 'employee'
-                                    ? 'default'
-                                    : 'outline'
-                            "
-                            class="flex-1"
-                            @click="designerType = 'employee'"
-                        >
-                            <Users class="mr-2 h-4 w-4" /> Nhân viên
-                        </Button>
-                    </div>
-
                     <div
                         v-if="designer && props.designer?.employee"
                         class="mb-4 flex items-center gap-3"
@@ -408,7 +371,6 @@ function closeModal() {
                     </div>
 
                     <div
-                        v-if="!designer && designerType === 'employee'"
                         class="mb-4"
                     >
                         <Field>

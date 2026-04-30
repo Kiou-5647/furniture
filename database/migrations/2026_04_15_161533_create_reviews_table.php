@@ -10,16 +10,14 @@ return new class extends Migration
     {
         Schema::create('reviews', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('reviewable_id');
-            $table->string('reviewable_type');
+            $table->foreignUuid('variant_id')->constrained('product_variants')->onDelete('cascade');
             $table->foreignUuid('customer_id')->constrained('customers')->onDelete('cascade');
             $table->integer('rating');
             $table->text('comment')->nullable();
             $table->boolean('is_published')->default(true);
             $table->timestamps();
 
-            // Prevent a customer from reviewing the same variant multiple times
-            $table->unique(['reviewable_id', 'customer_id']);
+            $table->unique(['variant_id', 'customer_id'], 'reviews_variant_id_customer_id_unique');
         });
     }
 

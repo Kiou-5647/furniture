@@ -173,14 +173,17 @@ class Order extends Model
 
         // For shipping orders: require shipments to exist AND all items resolved
         if ($this->shipping_method_id) {
-            if ($this->shipments()->doesntExist()) {
+            if ($this->shipments()->where('status', '!=', ShipmentStatus::Cancelled)->doesntExist()) {
+                // If there are NO active shipments at all, it can't be completed unless it's an in-store order
                 return false;
             }
-            $allResolved = $this->shipments()
-                ->whereHas('items', fn($q) => $q->whereNotIn('status', [ShipmentStatus::Delivered, ShipmentStatus::Returned]))
-                ->doesntExist();
 
-            return $allResolved;
+            $hasPendingItems = $this->shipments()
+                ->where('status', '!=', ShipmentStatus::Cancelled)
+                ->whereHas('items', fn($q) => $q->whereNotIn('status', [ShipmentStatus::Delivered, ShipmentStatus::Returned]))
+                ->exists();
+
+            return ! $hasPendingItems;
         }
 
         // For in-store orders: no shipments needed

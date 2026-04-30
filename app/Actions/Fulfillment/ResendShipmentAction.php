@@ -32,13 +32,13 @@ class ResendShipmentAction
             foreach ($originalShipment->items as $item) {
                 ShipmentItem::create([
                     'shipment_id' => $newShipment->id,
+                    'variant_id' => $item->variant_id,
                     'order_item_id' => $item->order_item_id,
-                    'source_location_id' => $item->source_location_id,
                     'quantity_shipped' => $item->quantity_shipped,
                 ]);
             }
 
-            return $newShipment->load(['items.orderItem', 'items.sourceLocation', 'originLocation']);
+            return $newShipment->load(['items.orderItem', 'originLocation']);
         });
     }
 }

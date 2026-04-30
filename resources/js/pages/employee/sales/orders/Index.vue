@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
-import { Plus, Trash2 } from '@lucide/vue';
+import { Head, router } from '@inertiajs/vue3';
+import { Plus } from '@lucide/vue';
 import { debounce } from 'lodash';
 import { computed, ref, watch } from 'vue';
 import DataTableGroup from '@/components/custom/data-table/DataTableGroup.vue';
@@ -12,7 +12,6 @@ import { createLazyComponent } from '@/composables/createLazyComponent';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { cleanQuery, setCookie } from '@/lib/utils';
 import { index, destroy, cancel, complete, show, catalog as catalogRoute } from '@/routes/employee/sales/orders';
-import {index as TrashIndex} from '@/routes/employee/sales/orders/trash';
 import type { BreadcrumbItem } from '@/types';
 import type {
     Order,
@@ -231,11 +230,6 @@ function performDelete() {
                     description="Quản lý đơn hàng và trạng thái giao dịch"
                 />
                 <div class="flex items-center gap-2">
-                    <Button variant="outline" as-child>
-                        <Link :href="TrashIndex().url">
-                            <Trash2 class="mr-2 h-4 w-4" /> Thùng rác
-                        </Link>
-                    </Button>
                     <Button @click="handleCreate">
                         <Plus class="mr-2 h-4 w-4" /> Tạo đơn hàng
                     </Button>

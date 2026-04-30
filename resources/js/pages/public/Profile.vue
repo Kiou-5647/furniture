@@ -166,7 +166,7 @@ function submit() {
 <template>
     <ShopLayout>
         <CustomerLayout>
-            <div class="flex flex-col space-y-6">
+            <div class="mx-auto flex max-w-[600px] flex-col space-y-6">
                 <Card>
                     <CardHeader class="m-2">
                         <CardTitle>Thông tin hồ sơ</CardTitle>
@@ -375,13 +375,6 @@ function submit() {
                     </CardContent>
                     <CardFooter>
                         <div class="mt-6 flex w-full justify-end">
-                            <Button
-                                @click="submit"
-                                :disabled="form.processing"
-                                data-test="update-profile-button"
-                                >Lưu
-                            </Button>
-
                             <Transition
                                 enter-active-class="transition ease-in-out"
                                 enter-from-class="opacity-0"
@@ -395,6 +388,12 @@ function submit() {
                                     Đã lưu.
                                 </p>
                             </Transition>
+                            <Button
+                                @click="submit"
+                                :disabled="form.processing"
+                                data-test="update-profile-button"
+                                >Lưu
+                            </Button>
                         </div>
                     </CardFooter>
                 </Card>
