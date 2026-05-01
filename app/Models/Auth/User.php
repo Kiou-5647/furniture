@@ -76,11 +76,6 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->type === UserType::Customer;
     }
 
-    public function isDesiger(): bool
-    {
-        return $this->type === UserType::Designer;
-    }
-
     public function employee(): HasOne
     {
         return $this->hasOne(Employee::class);

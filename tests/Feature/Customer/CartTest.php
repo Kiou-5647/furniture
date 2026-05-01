@@ -112,7 +112,6 @@ test('user can update item quantity', function () {
         'purchasable_type' => ProductVariant::class,
         'purchasable_id' => $this->variant->id,
         'quantity' => 1,
-        'unit_price' => 5000000,
     ]);
 
     $this->patch("/gio-hang/{$item->id}", ['quantity' => 5])
@@ -132,7 +131,6 @@ test('user can remove an item from the cart', function () {
         'purchasable_type' => ProductVariant::class,
         'purchasable_id' => $this->variant->id,
         'quantity' => 1,
-        'unit_price' => 5000000,
     ]);
 
     $this->delete("/gio-hang/{$item->id}")
@@ -153,7 +151,6 @@ test('cart items return a composite name for variants', function () {
         'purchasable_type' => ProductVariant::class,
         'purchasable_id' => $this->variant->id,
         'quantity' => 1,
-        'unit_price' => 5000000,
     ]);
 
     $response = $this->get('/gio-hang/data');

@@ -29,7 +29,7 @@ class StorefrontService
 
         $cards = $query->limit($filter->limit)->get();
 
-        return $cards->map(fn(ProductCard $card) => $this->attachMatchingData($card, $filter))->values();
+        return $cards->map(fn(ProductCard $card) => $this->attachMatchingData($card, $filter))->filter()->values();
     }
 
     private function attachMatchingData(ProductCard $card, ProductCardFilterData $filter): array
@@ -37,14 +37,39 @@ class StorefrontService
         $filters = $filter->filters;
         $product = $card->product;
 
-        $matchingVariants = $card->variants->filter(function ($variant) use ($filters, $product) {
-            foreach ($filters as $namespace => $slug) {
-                if (!$this->isFilterSatisfied($namespace, $slug, $variant, $product)) {
+        // 1. Pre-calculate which filters are satisfied GLOBALLY by the product
+        // This avoids re-checking product specs for every single variant
+        $globalMatches = [];
+        foreach ($filters as $namespace => $slugs) {
+            $slugArray = is_array($slugs) ? $slugs : [$slugs];
+            if ($this->isProductGloballySatisfied($namespace, $slugArray, $product)) {
+                $globalMatches[$namespace] = true;
+            }
+        }
+
+        // 2. Filter variants based on the remaining requirements
+        $matchingVariants = $card->variants->filter(function ($variant) use ($filters, $product, $globalMatches) {
+            foreach ($filters as $namespace => $slugs) {
+                $slugArray = is_array($slugs) ? $slugs : [$slugs];
+
+                // If the product already satisfies this filter globally, move to next namespace
+                if (isset($globalMatches[$namespace])) {
+                    continue;
+                }
+
+                // Otherwise, the SPECIFIC variant must satisfy this filter
+                if (!$this->isVariantSatisfied($namespace, $slugArray, $variant)) {
                     return false;
                 }
             }
             return true;
         });
+
+        // 3. Determine if the card should be shown
+        // If no variants match all filters, this card is not a match
+        if ($matchingVariants->isEmpty()) {
+            return []; // Return empty to be filtered out by the caller
+        }
 
         return [
             'type' => 'product',
@@ -76,31 +101,38 @@ class StorefrontService
         ];
     }
 
-    private function isFilterSatisfied(string $namespace, string $slug, $variant, $product): bool
+    private function isProductGloballySatisfied(string $namespace, array $slugs, $product): bool
     {
-        // 1. Check Product Level (Global Specs)
         if ($namespace === 'tinh-nang') {
-            if (collect($product->features ?? [])->contains('lookup_slug', $slug)) return true;
-        } else {
-            $spec = $product->specifications[$namespace] ?? null;
-            if ($spec && ($spec['is_filterable'] ?? false) && collect($spec['items'] ?? [])->contains('lookup_slug', $slug)) {
-                return true;
-            }
+            return collect($product->features ?? [])->whereIn('lookup_slug', $slugs)->isNotEmpty();
         }
 
-        // 2. Check Variant Level
-        // Option Values (Swatches/Non-swatches)
-        if (($variant->option_values[$namespace] ?? null) === $slug) return true;
+        $spec = $product->specifications[$namespace] ?? null;
+        if ($spec && ($spec['is_filterable'] ?? false)) {
+            return collect($spec['items'] ?? [])->whereIn('lookup_slug', $slugs)->isNotEmpty();
+        }
 
-        // Features (tinh-nang)
+        return false;
+    }
+
+    private function isVariantSatisfied(string $namespace, array $slugs, $variant): bool
+    {
+        // 1. Check Option Values (The most common filter: color, material)
+        if (in_array($variant->option_values[$namespace] ?? null, $slugs)) {
+            return true;
+        }
+
+        // 2. Check Variant-specific Features
         if ($namespace === 'tinh-nang') {
-            if (collect($variant->features ?? [])->contains('lookup_slug', $slug)) return true;
+            if (collect($variant->features ?? [])->whereIn('lookup_slug', $slugs)->isNotEmpty()) {
+                return true;
+            }
         } else {
-            // Specifications
+            // 3. Check Variant-specific Specifications
             foreach ($variant->specifications ?? [] as $data) {
                 if (($data['lookup_namespace'] ?? null) === $namespace &&
                     ($data['is_filterable'] ?? false) &&
-                    collect($data['items'] ?? [])->contains('lookup_slug', $slug)
+                    collect($data['items'] ?? [])->intersect($slugs)->isNotEmpty()
                 ) {
                     return true;
                 }

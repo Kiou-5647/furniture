@@ -16,9 +16,9 @@ class CategoryFactory extends Factory
         return [
             'group_id' => Lookup::factory(),
             'display_name' => $this->faker->words(2, true),
-            'slug' => $this->faker->slug(),
+            'slug' => $this->faker->slug(6),
             'description' => $this->faker->sentence(),
-            'product_type' => ProductType::Furniture, // Or use ProductType enum
+            'product_type' => ProductType::Furniture,
             'is_active' => true,
         ];
     }

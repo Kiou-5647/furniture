@@ -13,9 +13,13 @@ class ProductCardFilterData
 
     public static function fromRequest($request): self
     {
-        // Extract all query parameters that aren't reserved keywords as filters
         $reserved = ['type', 'limit', 'category'];
-        $filters = collect($request->query())->except($reserved)->toArray();
+        $rawFilters = collect($request->query())->except($reserved)->toArray();
+
+        // Normalize all filters to be arrays of strings
+        $filters = collect($rawFilters)->map(function ($value) {
+            return is_array($value) ? $value : [$value];
+        })->toArray();
 
         return new self(
             type: $request->query('type'),
