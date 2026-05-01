@@ -11,7 +11,7 @@ class UpdateGeneralSettingRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->user()->can('Cấu hình hệ thống');
     }
 
     /**

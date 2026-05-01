@@ -13,7 +13,7 @@ class StoreCollectionRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()->can('collections.manage');
+        return $this->user()->can('Quản lý bộ sưu tập');
     }
 
     public function prepareForValidation()

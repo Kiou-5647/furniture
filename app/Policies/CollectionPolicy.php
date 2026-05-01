@@ -9,13 +9,11 @@ class CollectionPolicy
 {
     public function create(User $user): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('collections.create');
+        return $user->hasPermissionTo('Quản lý bộ sưu tập');
     }
 
     public function manage(User $user, Collection $collection): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('collections.manage');
+        return $user->hasPermissionTo('Quản lý bộ sưu tập');
     }
 }

@@ -24,7 +24,7 @@ class OrderService
         $orderDirection = $filter->order_direction === 'asc' ? 'asc' : 'desc';
 
         return Order::query()
-            ->with(['customer', 'acceptedBy', 'items.sourceLocation', 'storeLocation'])
+            ->with(['customer', 'acceptedBy', 'invoices', 'items.sourceLocation', 'storeLocation'])
             ->when($filter->customer_id, fn($q) => $q->byCustomerId($filter->customer_id))
             ->when($filter->status, fn($q) => $q->byStatus($filter->status))
             ->when($filter->source, fn($q) => $q->bySource($filter->source))

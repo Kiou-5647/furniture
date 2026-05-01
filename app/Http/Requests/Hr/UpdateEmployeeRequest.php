@@ -9,7 +9,7 @@ class UpdateEmployeeRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('employees.manage');
+        return $this->user()->can('Quản lý nhân viên');
     }
 
     public function rules(): array

@@ -8,7 +8,7 @@ class StockOptionsRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('orders.view');
+        return $this->user()->can('Xem đơn hàng');
     }
 
     public function rules(): array

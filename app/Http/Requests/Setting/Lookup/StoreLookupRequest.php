@@ -11,7 +11,7 @@ class StoreLookupRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('lookups.manage', $this->route('lookup'));
+        return $this->user()->can('Quản lý tra cứu');
     }
 
     public function prepareForValidation()

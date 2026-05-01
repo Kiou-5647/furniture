@@ -28,14 +28,9 @@ export function getColumns(
                         : h('div', {
                             class: 'flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-medium',
                         }, (item.full_name ?? item.display_name).charAt(0).toUpperCase()),
-                    h('div', { class: 'flex flex-col gap-0.5 min-w-0' }, [
+                    h('div', { class: 'flex flex-col gap-0.5 min-w-0' },
                         h('span', { class: 'font-medium truncate' }, item.full_name ?? item.display_name),
-                        (() => {
-                            if (item.user) return h('span', { class: 'text-xs text-muted-foreground' }, 'Freelancer');
-                            if (item.employee) return h('span', { class: 'text-xs text-muted-foreground' }, `Nhân viên · ${item.employee.full_name}`);
-                            return null;
-                        })(),
-                    ]),
+                    ),
                 ]);
             },
         },
@@ -108,9 +103,9 @@ export function getColumns(
                             ]),
                             h(DropdownMenuSeparator),
                             h(DropdownMenuItem, { class: 'text-destructive', onClick: () => onDelete(item) }, () => [
-                                    h(Trash2, { class: 'mr-2 h-4 w-4' }),
-                                    'Xóa',
-                                ]),
+                                h(Trash2, { class: 'mr-2 h-4 w-4' }),
+                                'Xóa',
+                            ]),
                         ]),
                     ],
                 });

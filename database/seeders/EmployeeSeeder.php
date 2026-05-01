@@ -26,10 +26,8 @@ class EmployeeSeeder extends Seeder
         $salesDept = Department::where('code', 'SALES')->first();
 
         $data = [
-            ['email' => 'admin@furniture.com', 'name' => 'Quản trị viên', 'full_name' => 'Quản trị viên', 'role' => 'super_admin', 'dept' => $salesDept?->id, 'loc' => $store?->id],
-            ['email' => 'manager@furniture.com', 'name' => 'Lan', 'full_name' => 'Nguyễn Thị Lan', 'role' => 'store_manager', 'dept' => $salesDept?->id, 'loc' => $store?->id],
-            ['email' => 'warehouse1@furniture.com', 'name' => 'Hùng', 'full_name' => 'Trần Văn Hùng', 'role' => 'warehouse_staff', 'dept' => null, 'loc' => null],
-            ['email' => 'support1@furniture.com', 'name' => 'Mai', 'full_name' => 'Lê Thị Mai', 'role' => 'support', 'dept' => null, 'loc' => null],
+            ['email' => 'admin@furniture.com', 'name' => 'Quản trị viên', 'full_name' => 'Quản trị viên', 'role' => 'Quản trị viên', 'dept' => $salesDept?->id, 'loc' => $store?->id],
+            ['email' => 'manager@furniture.com', 'name' => 'Lan', 'full_name' => 'Quản lý cửa hàng', 'role' => 'Quản lý cửa hàng', 'dept' => $salesDept?->id, 'loc' => $store?->id],
         ];
 
         foreach ($data as $d) {

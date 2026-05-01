@@ -9,55 +9,36 @@ class ShipmentPolicy
 {
     public function ship(User $user, Shipment $shipment): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('shipments.ship');
+        return $user->hasPermissionTo('Quản lý vận chuyển');
     }
 
     public function deliver(User $user, Shipment $shipment): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('shipments.deliver');
+        return $user->hasPermissionTo('Quản lý vận chuyển');
     }
 
     public function cancel(User $user, Shipment $shipment): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('shipments.cancel');
+        return $user->hasPermissionTo('Quản lý vận chuyển');
     }
 
     public function resend(User $user, Shipment $shipment): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('shipments.resend');
+        return $user->hasPermissionTo('Quản lý vận chuyển');
     }
 
     public function returnItem(User $user, Shipment $shipment): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('shipments.return_item');
+        return $user->hasPermissionTo('Quản lý vận chuyển');
     }
 
     public function updateLocation(User $user, Shipment $shipment): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('shipments.update_location');
+        return $user->hasPermissionTo('Quản lý vận chuyển');
     }
 
     public function delete(User $user, Shipment $shipment): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('shipments.delete');
-    }
-
-    public function restore(User $user, Shipment $shipment): bool
-    {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('shipments.restore');
-    }
-
-    public function forceDelete(User $user, Shipment $shipment): bool
-    {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('shipments.force_delete');
+        return $user->hasPermissionTo('Quản lý vận chuyển');
     }
 }

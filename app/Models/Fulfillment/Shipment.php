@@ -34,7 +34,7 @@ class Shipment extends Model
             ->logOnly(['shipment_number', 'status', 'shipped_by', 'delivered_by'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
-            ->setDescriptionForEvent(fn (string $eventName) => "Shipment {$eventName}");
+            ->setDescriptionForEvent(fn(string $eventName) => "Shipment {$eventName}");
     }
 
     public function order(): BelongsTo
@@ -74,14 +74,24 @@ class Shipment extends Model
 
     public static function generateShipmentNumber(): string
     {
-        $date = now()->format('Ymd');
-        $last = self::whereDate('created_at', today())
-            ->orderBy('shipment_number', 'desc')
-            ->first();
+        $date = now()->format('dmy');
 
-        $sequence = $last ? (int) substr($last->shipment_number, -4) + 1 : 1;
+        do {
+            $number = 'SHP-' . $date . '-' . self::randomToken();
+        } while (self::where('shipment_number', $number)->exists());
 
-        return 'SHP-'.$date.'-'.str_pad($sequence, 4, '0', STR_PAD_LEFT);
+        return $number;
+    }
+
+    protected static function randomToken(int $length = 8): string
+    {
+        $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        $token = '';
+        for ($i = 0; $i < $length; $i++) {
+            $token .= $chars[random_int(0, strlen($chars) - 1)];
+        }
+
+        return $token;
     }
 
     public function canBeShipped(): bool

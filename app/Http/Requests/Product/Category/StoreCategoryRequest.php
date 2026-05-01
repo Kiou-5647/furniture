@@ -14,7 +14,7 @@ class StoreCategoryRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()->can('categories.manage');
+        return $this->user()->can('Quản lý danh mục');
     }
 
     public function prepareForValidation()

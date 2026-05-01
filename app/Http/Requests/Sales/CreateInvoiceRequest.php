@@ -9,7 +9,7 @@ class CreateInvoiceRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('invoices.create');
+        return $this->user()->can('Quản lý hóa đơn');
     }
 
     public function rules(): array

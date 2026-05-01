@@ -18,7 +18,7 @@ class InitialStockSeeder extends Seeder
         $locations = Location::all();
         $variants = ProductVariant::all();
         $superAdmin = User::whereHas('roles', function ($q) {
-            $q->where('name', 'super_admin');
+            $q->where('name', 'Quản trị viên');
         })->first();
 
         if (!$superAdmin || !$superAdmin->employee) {

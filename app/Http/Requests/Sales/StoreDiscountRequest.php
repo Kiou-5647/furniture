@@ -12,7 +12,7 @@ class StoreDiscountRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('discounts.manage');
+        return $this->user()->can('Quản lý khuyến mãi');
     }
 
     public function rules(): array

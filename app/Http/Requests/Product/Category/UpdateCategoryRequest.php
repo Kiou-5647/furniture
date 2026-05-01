@@ -14,7 +14,7 @@ class UpdateCategoryRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()->can('lookups.manage', $this->route('category'));
+        return $this->user()->can('Quản lý danh mục', $this->route('category'));
     }
 
     public function prepareForValidation()

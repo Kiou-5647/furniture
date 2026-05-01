@@ -24,8 +24,10 @@ class OrderDetailsResource extends JsonResource
             'order_number' => $this->order_number,
             'total_amount' => $this->total_amount,
             'paid_at' => $this->paid_at,
+            'payment_method' => $this->payment_method?->value,
             'status' => $this->status,
             'status_label' => $this->status->label(),
+            'can_cancel' => $this->canBeCancelled(),
             'created_at' => $this->created_at->toDateTimeString(),
 
             'recipient' => [
@@ -103,16 +105,16 @@ class OrderDetailsResource extends JsonResource
         $components = [];
 
         foreach ($bundle->contents as $content) {
-            $variantId = $item->configuration[$content->id]['variant_id'] ?? null;
+            $configValue = $item->configuration[$content->id];
+            $variantId = $configValue['variant_id'] ?? null;
             if (!$variantId) continue;
 
-            // Use the eager-loaded shipment items to find the variant
-            // This avoids calling ProductVariant::find() in a loop
             $shipmentItem = $item->shipmentItems
                 ->where('variant_id', $variantId)
                 ->first();
 
-            $variant = $shipmentItem?->variant;
+            $variant = $shipmentItem?->variant ?? ProductVariant::find($variantId);
+
             if (!$variant) continue;
 
             $components[] = [
@@ -140,6 +142,7 @@ class OrderDetailsResource extends JsonResource
 
         return [
             'id' => $review->id,
+            'variant_id' => $review->variant_id,
             'rating' => $review->rating,
             'comment' => $review->comment,
             'is_published' => $review->is_published,

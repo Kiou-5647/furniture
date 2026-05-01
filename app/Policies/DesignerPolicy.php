@@ -9,13 +9,11 @@ class DesignerPolicy
 {
     public function create(User $user): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('designers.create');
+        return $user->hasPermissionTo('Quản lý nhà thiết kế');
     }
 
     public function manage(User $user, Designer $designer): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('designers.manage');
+        return $user->hasPermissionTo('Quản lý nhà thiết kế');
     }
 }

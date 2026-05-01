@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import AuthSplitLayout from '@/layouts/auth/AuthSplitLayout.vue';
-import { register } from '@/routes';
+import { home, register } from '@/routes';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
 
@@ -30,28 +30,39 @@ defineProps<{
 
         <!-- Override left panel with hero image -->
         <template #left>
-            <div class="relative hidden h-full flex-col p-10 text-white lg:flex">
+            <div
+                class="relative hidden h-full flex-col p-10 text-white lg:flex"
+            >
                 <img
                     :src="heroImage"
                     alt="Nội thất sang trọng"
                     class="absolute inset-0 h-full w-full object-cover brightness-[.65]"
                 />
-                <div class="absolute inset-0 bg-gradient-to-t from-gray-700/80 via-gray-700/30 to-gray-700/10" />
-                <div class="relative z-20 flex items-center text-lg font-semibold tracking-tight">
+                <div
+                    class="absolute inset-0 bg-gradient-to-t from-gray-700/80 via-gray-700/30 to-gray-700/10"
+                />
+                <div
+                    class="relative z-20 flex items-center text-lg font-semibold tracking-tight"
+                >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 40 42"
                         class="mr-2 h-6 w-6 fill-current text-white"
                     >
-                        <path d="M17.2 5.633 8.6.855 0 5.633v26.51l16.2 9 16.2-9v-8.442l7.6-4.223V9.856l-8.6-4.777-8.6 4.777V18.3l-5.6 3.111V5.633ZM38 18.301l-5.6 3.11v-6.157l5.6-3.11V18.3Zm-1.06-7.856-5.54 3.078-5.54-3.079 5.54-3.078 5.54 3.079ZM24.8 18.3v-6.157l5.6 3.111v6.158L24.8 18.3Zm-1 1.732 5.54 3.078-13.14 7.302-5.54-3.078 13.14-7.3v-.002Zm-16.2 7.89 7.6 4.222V38.3L2 30.966V7.92l5.6 3.111v16.892ZM8.6 9.3 3.06 6.222 8.6 3.143l5.54 3.08L8.6 9.3Zm21.8 15.51-13.2 7.334V38.3l13.2-7.334v-6.156ZM9.6 11.034l5.6-3.11v14.6l-5.6 3.11v-14.6Z" />
+                        <path
+                            d="M17.2 5.633 8.6.855 0 5.633v26.51l16.2 9 16.2-9v-8.442l7.6-4.223V9.856l-8.6-4.777-8.6 4.777V18.3l-5.6 3.111V5.633ZM38 18.301l-5.6 3.11v-6.157l5.6-3.11V18.3Zm-1.06-7.856-5.54 3.078-5.54-3.079 5.54-3.078 5.54 3.079ZM24.8 18.3v-6.157l5.6 3.111v6.158L24.8 18.3Zm-1 1.732 5.54 3.078-13.14 7.302-5.54-3.078 13.14-7.3v-.002Zm-16.2 7.89 7.6 4.222V38.3L2 30.966V7.92l5.6 3.111v16.892ZM8.6 9.3 3.06 6.222 8.6 3.143l5.54 3.08L8.6 9.3Zm21.8 15.51-13.2 7.334V38.3l13.2-7.334v-6.156ZM9.6 11.034l5.6-3.11v14.6l-5.6 3.11v-14.6Z"
+                        />
                     </svg>
                     Nội thất
                 </div>
                 <div class="relative z-20 mt-auto">
-                    <blockquote class="text-lg font-light leading-relaxed tracking-tight text-white/90">
-                        "Kiến tạo không gian sống tinh tế và hiện đại cho ngôi nhà của bạn."
+                    <blockquote
+                        class="text-lg leading-relaxed font-light tracking-tight text-white/90"
+                    >
+                        "Kiến tạo không gian sống tinh tế và hiện đại cho ngôi
+                        nhà của bạn."
                     </blockquote>
-                    <p class="mt-3 text-sm text-white/60 font-medium">
+                    <p class="mt-3 text-sm font-medium text-white/60">
                         — Nội Thất & Trang Trí
                     </p>
                 </div>
@@ -90,7 +101,9 @@ defineProps<{
 
                 <div class="grid gap-2">
                     <div class="flex items-center justify-between">
-                        <Label for="password" class="font-medium">Mật khẩu</Label>
+                        <Label for="password" class="font-medium"
+                            >Mật khẩu</Label
+                        >
                         <TextLink
                             v-if="canResetPassword"
                             :href="request()"
@@ -116,22 +129,33 @@ defineProps<{
                     <Checkbox id="remember" name="remember" :tabindex="3" />
                     <label
                         for="remember"
-                        class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        class="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                     >
                         Ghi nhớ đăng nhập
                     </label>
                 </div>
 
-                <Button
-                    type="submit"
-                    class="mt-2 h-10 w-full"
-                    :tabindex="4"
-                    :disabled="processing"
-                    data-test="login-button"
-                >
-                    <Spinner v-if="processing" />
-                    {{ processing ? 'Đang xử lý...' : 'Đăng nhập' }}
-                </Button>
+                <div class="flex flex-col items-center gap-2">
+                    <Button
+                        type="submit"
+                        class="mt-2 h-10 w-full"
+                        :tabindex="4"
+                        :disabled="processing"
+                        data-test="login-button"
+                    >
+                        <Spinner v-if="processing" />
+                        {{ processing ? 'Đang xử lý...' : 'Đăng nhập' }}
+                    </Button>
+                    <div>
+                        <TextLink
+                            :href="home()"
+                            :tabindex="5"
+                            class="text-sm text-muted-foreground"
+                        >
+                            Về trang chủ
+                        </TextLink>
+                    </div>
+                </div>
             </div>
 
             <div
@@ -141,37 +165,49 @@ defineProps<{
                 <div class="absolute inset-0 flex items-center">
                     <span class="w-full border-t" />
                 </div>
-                <span class="relative bg-background px-2">
-                    Hoặc
-                </span>
+                <span class="relative bg-background px-2"> Hoặc </span>
             </div>
             <div
                 v-if="canRegister"
-                class="text-center text-sm text-muted-foreground -mt-4"
+                class="text-center text-sm text-muted-foreground"
             >
                 Chưa có tài khoản?
-                <TextLink :href="register()" :tabindex="5" class="font-semibold">
+                <TextLink
+                    :href="register()"
+                    :tabindex="5"
+                    class="font-semibold"
+                >
                     Đăng ký ngay
                 </TextLink>
             </div>
         </Form>
-        <div class="mt-6">
+        <div class="">
             <div class="relative">
                 <div class="absolute inset-0 flex items-center">
-                    <div class="w-full border-t border-gray-300 dark:border-gray-700"></div>
+                    <div
+                        class="w-full border-t border-gray-300 dark:border-gray-700"
+                    ></div>
                 </div>
                 <div class="relative flex justify-center text-sm">
-                    <span class="px-2 bg-white dark:bg-gray-900 text-gray-500">Hoặc đăng nhập với</span>
+                    <span class="bg-white px-2 text-gray-500 dark:bg-gray-900"
+                        >Hoặc đăng nhập với</span
+                    >
                 </div>
             </div>
 
             <div class="mt-6">
                 <a
                     href="api/auth/google/redirect"
-                    class="flex items-center justify-center w-full px-4 py-2 space-x-2 transition-colors border border-gray-300 rounded-lg bg-white hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:hover:bg-gray-700"
+                    class="flex w-full items-center justify-center space-x-2 rounded-lg border border-gray-300 bg-white px-4 py-2 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700"
                 >
-                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5" alt="Google">
-                    <span class="text-gray-700 dark:text-gray-200 font-medium">Sign in with Google</span>
+                    <img
+                        src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                        class="h-5 w-5"
+                        alt="Google"
+                    />
+                    <span class="font-medium text-gray-700 dark:text-gray-200"
+                        >Đăng nhập với Google</span
+                    >
                 </a>
             </div>
         </div>

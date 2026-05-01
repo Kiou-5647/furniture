@@ -27,7 +27,7 @@ class InitiateVnPayPaymentAction
                 $invoice->save();
             }
 
-            $txnRef = $invoice->invoice_number;
+            $txnRef = $invoice->invoice_number . '_' . now()->format('YmdHis');
 
             // Determine order info text
             $modelClass = class_basename($invoice->invoiceable_type);

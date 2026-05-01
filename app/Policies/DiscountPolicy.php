@@ -9,19 +9,16 @@ class DiscountPolicy
 {
     public function viewDiscount(User $user)
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('discounts.view');
+        return $user->hasPermissionTo('Xem khuyến mãi');
     }
 
     public function createDiscount(User $user)
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('discounts.manage');
+        return $user->hasPermissionTo('Quản lý khuyến mãi');
     }
 
     public function manageDiscount(User $user, Discount $discount)
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('discounts.manage');
+        return $user->hasPermissionTo('Quản lý khuyến mãi');
     }
 }

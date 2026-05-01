@@ -9,14 +9,15 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import StarRating from '../StarRating.vue';
 import reviews from '@/routes/customer/reviews';
+import StarRating from '../StarRating.vue';
 
 interface Props {
     modelValue: boolean; // For v-model:open
     variantId: string;
     initialReview?: {
         id: string;
+        variant_id: string;
         rating: number;
         comment: string;
         is_published: boolean;
@@ -27,7 +28,7 @@ const props = defineProps<Props>();
 const emit = defineEmits(['update:modelValue', 'close']);
 
 const form = useForm({
-    variant_id: props.variantId,
+    variant_id: props.initialReview?.variant_id ?? props.variantId,
     rating: props.initialReview?.rating ?? 0,
     comment: props.initialReview?.comment ?? '',
     is_published: props.initialReview?.is_published ?? true,
@@ -65,6 +66,14 @@ watch(
     { immediate: true }
 );
 
+watch(
+    () => props.variantId,
+    (newId) => {
+        form.variant_id = newId;
+    },
+    { immediate: true }
+);
+
 function setRating(val: number) {
     form.rating = val;
 }
@@ -88,6 +97,7 @@ function submit() {
         form.patch(url, {
             onSuccess: () => {
                 toast.success('Cập nhật đánh giá thành công!');
+                emit('close');
             },
             onError: (errors) => {
                 toast.error(Object.values(errors).flat().join(' '));
@@ -101,6 +111,7 @@ function submit() {
             onSuccess: () => {
                 toast.success('Đăng tải đánh giá thành công!');
                 form.reset('rating', 'comment');
+                emit('close');
             },
             onError: (errors) => {
                 toast.error(Object.values(errors).flat().join(' '));
@@ -215,7 +226,7 @@ function handleClose() {
 
             <!-- Internal Confirmation Dialog -->
             <Dialog v-model:open="isCancelDialogOpen">
-                <DialogContent>
+                <DialogContent class="max-w-[300px]">
                     <DialogHeader>
                         <DialogTitle>Xác nhận hủy đánh giá</DialogTitle>
                         <DialogDescription>
@@ -223,7 +234,7 @@ function handleClose() {
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter class="flex flex-col sm:flex-row gap-2">
-                        <Button variant="outline" class="flex-1" @click="isCancelDialogOpen = false">
+                        <Button variant="outline" class="flex-1" @click="isCancelDialogOpen = false;">
                             Quay lại
                         </Button>
                         <Button v-if="props.initialReview" variant="ghost" class="flex-1 text-red-500 hover:text-red-600 hover:bg-red-50" @click="confirmRemove">

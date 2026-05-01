@@ -9,49 +9,41 @@ class OrderPolicy
 {
     public function create(User $user): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('orders.create');
+        return $user->hasPermissionTo('Quản lý đơn hàng');
     }
 
     public function updateStatus(User $user, Order $order): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('orders.update_status');
+        return $user->hasPermissionTo('Quản lý đơn hàng');
     }
 
     public function cancel(User $user, Order $order): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('orders.cancel');
+        return $user->hasPermissionTo('Quản lý đơn hàng');
     }
 
     public function complete(User $user, Order $order): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('orders.complete');
+        return $user->hasPermissionTo('Quản lý đơn hàng');
     }
 
     public function markAsPaid(User $user, Order $order): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('orders.mark_paid');
+        return $user->hasPermissionTo('Quản lý đơn hàng');
     }
 
     public function manage(User $user, Order $order): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('orders.manage');
+        return $user->hasPermissionTo('Quản lý đơn hàng');
     }
 
     public function createShipments(User $user, Order $order): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('shipments.create');
+        return $user->hasPermissionTo('Quản lý đơn hàng');
     }
 
     public function storeShipments(User $user, Order $order): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('shipments.create');
+        return $user->hasPermissionTo('Quản lý đơn hàng');
     }
 }

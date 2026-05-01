@@ -23,7 +23,6 @@ class CreateBookingAction
 
     public function execute(CreateBookingData $data): Booking
     {
-        Log::info('Start create booking!');
         $designer = Designer::with('employee')->findOrFail($data->designer_id);
 
         $startAt = Carbon::parse($data->date . ' ' . $data->start_time);
@@ -33,15 +32,13 @@ class CreateBookingAction
             throw new \InvalidArgumentException('Nhà thiết kế không sẵn sàng vào khung giờ này.');
         }
 
-        Log::info('Before DB transaction!');
-
         return DB::transaction(function () use ($designer, $data, $startAt, $endAt) {
-            Log::info('Start DB transaction!');
 
             $totalPrice = $designer->hourly_rate * $data->duration;
 
 
             $booking = Booking::create([
+                'booking_number' => Booking::generateBookingNumber(),
                 'customer_id'    => $data->customer_id,
                 'customer_name'  => $data->customer_name,
                 'customer_email' => $data->customer_email,

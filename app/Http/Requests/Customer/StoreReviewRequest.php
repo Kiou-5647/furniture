@@ -2,13 +2,16 @@
 
 namespace App\Http\Requests\Customer;
 
+use App\Enums\UserType;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Auth;
 
 class StoreReviewRequest extends FormRequest
 {
     public function authorize(): bool
     {
+        if (Auth::user()->type !== UserType::Customer)
+            return false;
         return true;
     }
 

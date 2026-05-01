@@ -25,7 +25,7 @@ const DesignerFormModal = createLazyComponent(
 );
 
 const props = defineProps<{
-    workHours: any[],
+    workHours: any,
     employeeOptions: { id: string; full_name: string; phone: string | null; email: string | null }[];
     designers?: DesignerPagination;
     filters: DesignerFilterData;

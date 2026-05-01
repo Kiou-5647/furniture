@@ -10,7 +10,7 @@ class StoreLookupNamespaceRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('lookups.manage');
+        return $this->user()->can('Quản lý tra cứu');
     }
 
     public function prepareForValidation()

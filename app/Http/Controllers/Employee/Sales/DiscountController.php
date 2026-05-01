@@ -21,7 +21,7 @@ class DiscountController
 
     public function index(Request $request): Response
     {
-        Gate::authorize('discounts.view');
+        Gate::authorize('Xem khuyến mãi');
 
         $filter = DiscountFilterData::fromRequest($request);
 

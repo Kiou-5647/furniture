@@ -9,13 +9,11 @@ class BundlePolicy
 {
     public function create(User $user): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('bundles.create');
+        return $user->hasPermissionTo('Quản lý gói sản phẩm');
     }
 
     public function manage(User $user, Bundle $bundle): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('bundles.manage');
+        return $user->hasPermissionTo('Quản lý gói sản phẩm');
     }
 }

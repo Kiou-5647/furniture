@@ -9,13 +9,11 @@ class LocationPolicy
 {
     public function manage(User $user, Location $location): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('inventory.manage');
+        return $user->hasPermissionTo('Quản lý kho hàng');
     }
 
     public function create(User $user): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('inventory.manage');
+        return $user->hasPermissionTo('Quản lý kho hàng');
     }
 }

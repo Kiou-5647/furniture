@@ -18,7 +18,7 @@ class CreateOrderRequest extends FormRequest
             return true;
         }
 
-        return $this->user()->can('orders.create');
+        return $this->user()->can('Quản lý đơn hàng');
     }
 
     public function rules(): array

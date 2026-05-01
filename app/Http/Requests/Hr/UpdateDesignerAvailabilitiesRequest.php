@@ -8,7 +8,7 @@ class UpdateDesignerAvailabilitiesRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('designers.manage');
+        return $this->user()->can('Quản lý nhà thiết kế');
     }
 
     public function rules(): array

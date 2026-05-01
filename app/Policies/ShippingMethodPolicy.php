@@ -9,13 +9,11 @@ class ShippingMethodPolicy
 {
     public function manage(User $user, ShippingMethod $shippingMethod): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('shipping_methods.manage');
+        return $user->hasPermissionTo('Quản lý phương thức vận chuyển');
     }
 
     public function create(User $user): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('shipping_methods.manage');
+        return $user->hasPermissionTo('Quản lý phương thức vận chuyển');
     }
 }

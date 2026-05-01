@@ -9,13 +9,11 @@ class InvoicePolicy
 {
     public function create(User $user): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('invoices.create');
+        return $user->hasPermissionTo('Quản lý hóa đơn');
     }
 
     public function manage(User $user, Invoice $invoice): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('invoices.manage');
+        return $user->hasPermissionTo('Quản lý hóa đơn');
     }
 }

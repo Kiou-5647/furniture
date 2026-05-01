@@ -8,7 +8,7 @@ class ProcessPaymentRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('payments.create');
+        return $this->user()->can('Quản lý thanh toán');
     }
 
     public function rules(): array

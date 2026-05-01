@@ -113,4 +113,26 @@ class Booking extends Model
     {
         return in_array($this->status, [BookingStatus::PendingDeposit, BookingStatus::PendingConfirmation], true);
     }
+
+    public static function generateBookingNumber(): string
+    {
+        $date = now()->format('dmy');
+
+        do {
+            $number = 'BKG-' . $date . '-' . self::randomToken();
+        } while (self::where('booking_number', $number)->exists());
+
+        return $number;
+    }
+
+    protected static function randomToken(int $length = 8): string
+    {
+        $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        $token = '';
+        for ($i = 0; $i < $length; $i++) {
+            $token .= $chars[random_int(0, strlen($chars) - 1)];
+        }
+
+        return $token;
+    }
 }

@@ -9,7 +9,7 @@ class UpdateOrderStatusRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('orders.update');
+        return $this->user()->can('Quản lý đơn hàng');
     }
 
     public function rules(): array

@@ -23,9 +23,9 @@ import {
 } from '@/components/ui/navigation-menu';
 import { getInitials } from '@/composables/useInitials';
 import { home, login, logout } from '@/routes';
+import { edit } from '@/routes/customer/profile';
 import { dashboard } from '@/routes/employee';
 import { useCartStore } from '@/stores/cart';
-import { edit } from '@/routes/customer/profile';
 
 const page = usePage();
 const auth = computed(() => page.props.auth);
@@ -110,14 +110,14 @@ interface ShopMenuRoom {
                             </div>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem v-if="auth.user.type == 'employee'" as-child>
-                                <Link :href="dashboard()" class="cursor-pointer flex items-center gap-2">
+                                <Link :href="dashboard()" class="w-full cursor-pointer flex items-center gap-2">
                                     <LayoutGrid class="h-4 w-4" />
                                     Bảng điều khiển
                                 </Link>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator v-if="auth.user.type == 'employee'" />
                             <DropdownMenuItem v-if="auth.user.type == 'customer'" as-child>
-                                <Link :href="edit()" class="cursor-pointer flex items-center gap-2">
+                                <Link :href="edit()" class="w-full cursor-pointer flex items-center gap-2">
                                     <LayoutGrid class="h-4 w-4" />
                                     Hồ sơ cá nhân
                                 </Link>
@@ -125,7 +125,7 @@ interface ShopMenuRoom {
                             <DropdownMenuSeparator v-if="auth.user.type == 'customer'" />
                             <DropdownMenuItem as-child>
                                 <Link :href="logout().url" method="post" as="button"
-                                    class="cursor-pointer flex items-center gap-2 text-red-600">
+                                    class="w-full cursor-pointer flex items-center gap-2 text-red-600">
                                     <LogOut class="h-4 w-4" />
                                     Đăng xuất
                                 </Link>

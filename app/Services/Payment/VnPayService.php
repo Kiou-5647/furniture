@@ -48,7 +48,7 @@ class VnPayService
         $inputData = [
             'vnp_Version' => $this->version,
             'vnp_TmnCode' => $this->tmnCode,
-            'vnp_Amount' => (int) ($params['amount'] * 100), // VND * 100
+            'vnp_Amount' => (int) ceil($params['amount'] * 100),
             'vnp_Command' => 'pay',
             'vnp_CreateDate' => now()->format('YmdHis'),
             'vnp_CurrCode' => 'VND',
@@ -84,10 +84,10 @@ class VnPayService
         $first = true;
         foreach ($returnData as $key => $value) {
             if ($first) {
-                $hashData .= urlencode($key).'='.urlencode($value);
+                $hashData .= urlencode($key) . '=' . urlencode($value);
                 $first = false;
             } else {
-                $hashData .= '&'.urlencode($key).'='.urlencode($value);
+                $hashData .= '&' . urlencode($key) . '=' . urlencode($value);
             }
         }
 
@@ -104,12 +104,12 @@ class VnPayService
     public function queryTransaction(string $txnRef, string $transDate): array
     {
         $requestData = [
-            'vnp_RequestId' => now()->format('YmdHis').'_'.rand(1, 99999),
+            'vnp_RequestId' => now()->format('YmdHis') . '_' . rand(1, 99999),
             'vnp_Version' => $this->version,
             'vnp_Command' => 'querydr',
             'vnp_TmnCode' => $this->tmnCode,
             'vnp_TxnRef' => $txnRef,
-            'vnp_OrderInfo' => 'Kiem tra ket qua GD:'.$txnRef,
+            'vnp_OrderInfo' => 'Kiem tra ket qua GD:' . $txnRef,
             'vnp_TransDate' => $transDate,
             'vnp_TransactionNo' => '0',
             'vnp_CreateDate' => now()->format('YmdHis'),
@@ -120,10 +120,10 @@ class VnPayService
         $first = true;
         foreach ($requestData as $key => $value) {
             if ($first) {
-                $hashData .= urlencode($key).'='.urlencode($value);
+                $hashData .= urlencode($key) . '=' . urlencode($value);
                 $first = false;
             } else {
-                $hashData .= '&'.urlencode($key).'='.urlencode($value);
+                $hashData .= '&' . urlencode($key) . '=' . urlencode($value);
             }
         }
 
@@ -152,17 +152,17 @@ class VnPayService
             $encodedValue = urlencode($value);
 
             if ($first) {
-                $hashData .= $encodedKey.'='.$encodedValue;
-                $query .= $encodedKey.'='.$encodedValue;
+                $hashData .= $encodedKey . '=' . $encodedValue;
+                $query .= $encodedKey . '=' . $encodedValue;
                 $first = false;
             } else {
-                $hashData .= '&'.$encodedKey.'='.$encodedValue;
-                $query .= '&'.$encodedKey.'='.$encodedValue;
+                $hashData .= '&' . $encodedKey . '=' . $encodedValue;
+                $query .= '&' . $encodedKey . '=' . $encodedValue;
             }
         }
 
         $secureHash = hash_hmac('sha512', $hashData, $this->hashSecret);
 
-        return $this->payUrl.'?'.$query.'&vnp_SecureHash='.$secureHash;
+        return $this->payUrl . '?' . $query . '&vnp_SecureHash=' . $secureHash;
     }
 }

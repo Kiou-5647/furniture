@@ -9,7 +9,7 @@ class UpdateDepartmentRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('departments.manage');
+        return $this->user()->can('Quản lý phòng ban');
     }
 
     public function rules(): array

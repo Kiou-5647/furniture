@@ -9,13 +9,11 @@ class CategoryPolicy
 {
     public function create(User $user): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('categories.create');
+        return $user->hasPermissionTo('Quản lý danh mục');
     }
 
     public function manage(User $user, Category $category): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('categories.manage');
+        return $user->hasPermissionTo('Quản lý danh mục');
     }
 }

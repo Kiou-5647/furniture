@@ -255,20 +255,33 @@ async function loadDesignerAvailability() {
     }
 }
 
-function handleSlotClick(day: number, hour: number) {
-    // Only allow selection if the designer is actually available (1)
-    if (designerAvailability.value[day]?.[hour] != 1) return;
+async function handleSlotClick(day: number, hour: number) {
+    if (designerAvailability.value[day]?.[hour] != 1) {
+        toast.error('Khung giờ này không khả dụng. Vui lòng chọn giờ khác.');
+        return;
+    }
 
-    selectedSlot.value = { day, hour };
-    if(!form.date){
+    const selectedDate = form.date ? new Date(form.date) : null;
+    if (!selectedDate || selectedDate.getDay() !== day) {
         form.date = getNextDateForDay(day);
     }
-    form.start_time = `${String(hour).padStart(2, '0')}:00`;
-}
 
-function handleDayClick(day: number) {
-    form.date = getNextDateForDay(day);
-    selectedSlot.value = null; // Clear selection when just changing the day
+    try {
+        const response = await fetch(
+            `/api/designers/${form.designer_id}/available-slots?date=${form.date}`,
+        );
+        const data = await response.json();
+        if (!data.slots || !data.slots[hour]) {
+            toast.error(
+                'Rất tiếc, khung giờ này vừa mới bị đặt. Vui lòng chọn giờ khác.',
+            );
+            return;
+        }
+    } catch (e) {
+        console.error('Availability check failed', e);
+    }
+
+    form.start_time = `${String(hour).padStart(2, '0')}:00`;
 }
 
 watch(
@@ -302,15 +315,12 @@ async function submit() {
             },
             {
                 preserveScroll: true,
-                onSuccess: () => {
-                    toast.success('Đã tạo đặt lịch thành công!');
-                    emit('close');
-                    emit('created');
+                preserveState: true,
+                onError: (errors) => {
+                    console.error(`Lỗi: ${errors}`)
                 },
-                onError: (error) => {
-                    toast.error(
-                        'Có lỗi xảy ra, vui lòng kiểm tra lại thông tin.',
-                    );
+                onFinish: () => {
+                    form.processing = false;
                 },
             },
         );
@@ -349,7 +359,9 @@ watch(
 
 <template>
     <Dialog :open="open" @update:open="(val) => !val && emit('close')">
-        <DialogContent class="max-h-[90vh] w-fit overflow-y-auto sm:max-w-[75vw]">
+        <DialogContent
+            class="max-h-[90vh] w-fit overflow-y-auto sm:max-w-[75vw]"
+        >
             <DialogHeader>
                 <DialogTitle>Tạo đặt lịch mới</DialogTitle>
                 <DialogDescription>
@@ -641,41 +653,59 @@ watch(
                         />
                     </div>
 
-                    <div v-if="!loadingAvailability && designerAvailability.length > 0" class="space-y-4">
-                        <!-- Day Selector Header -->
-                        <div class="grid grid-cols-7 gap-1">
-                            <button v-for="day in DAYS" :key="day.key"
-                                class="rounded p-1 text-center text-xs transition-colors"
-                                :class="form.date && new Date(form.date).getDay() === day.key ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'"
-                                @click="handleDayClick(day.key)">
-                                {{ day.label }}
-                            </button>
-                        </div>
-
+                    <div
+                        v-if="
+                            !loadingAvailability &&
+                            designerAvailability.length > 0
+                        "
+                        class="space-y-4"
+                    >
                         <!-- The Availability Grid -->
-                        <div class="grid grid-cols-[40px_repeat(7,minmax(35px,1fr))] gap-px bg-border border rounded-md overflow-hidden">
-                            <!-- Header Row: Labels -->
-                            <div class="bg-muted p-1 text-right text-[10px] text-muted-foreground font-medium">Hour</div>
-                            <div v-for="day in DAYS" :key="day.key" class="bg-muted p-1 text-center text-[10px] font-medium">
+                        <div
+                            class="grid grid-cols-[40px_repeat(7,minmax(35px,1fr))] gap-px overflow-hidden rounded-md border bg-border"
+                        >
+                            <div
+                                class="bg-muted p-1 text-right text-[10px] font-medium text-muted-foreground"
+                            >
+                                Hour
+                            </div>
+                            <div
+                                v-for="day in DAYS"
+                                :key="day.key"
+                                class="bg-muted p-1 text-center text-[10px] font-medium"
+                            >
                                 {{ day.label }}
                             </div>
 
-                            <!-- Hour Rows -->
                             <template v-for="hour in HOURS" :key="hour">
-                                <!-- Hour Label -->
-                                <div class="bg-muted p-1 text-right text-[10px] text-muted-foreground font-medium">
+                                <div
+                                    class="bg-muted p-1 text-right text-[10px] font-medium text-muted-foreground"
+                                >
                                     {{ String(hour).padStart(2, '0') }}:00
                                 </div>
-                                <!-- Slots -->
-                                <div v-for="day in DAYS" :key="`${day.key}-${hour}`"
-                                     class="cursor-pointer bg-background p-0.5 hover:bg-muted/50 transition-colors"
-                                     @click="handleSlotClick(day.key, hour)">
-                                    <div class="h-5 w-full rounded-sm transition-all"
+                                <div
+                                    v-for="day in DAYS"
+                                    :key="`${day.key}-${hour}`"
+                                    class="cursor-pointer bg-background p-0.5 transition-colors hover:bg-muted/50"
+                                    @click="handleSlotClick(day.key, hour)"
+                                >
+                                    <div
+                                        class="h-4 w-full rounded-sm transition-all"
                                         :class="[
-                                            designerAvailability[day.key]?.[hour] == 1 ? 'bg-green-500' : 'bg-gray-200',
-                                            selectedSlot?.day === day.key && selectedSlot?.hour === hour ? 'ring-2 ring-primary ring-offset-1' : ''
-                                        ]">
-                                    </div>
+                                            designerAvailability[day.key]?.[
+                                                hour
+                                            ] == 1
+                                                ? 'bg-green-600'
+                                                : 'bg-gray-200',
+                                            form.date &&
+                                            new Date(form.date).getDay() ===
+                                                day.key &&
+                                            form.start_time ===
+                                                `${String(hour).padStart(2, '0')}:00`
+                                                ? 'ring-2 ring-primary ring-offset-1'
+                                                : '',
+                                        ]"
+                                    ></div>
                                 </div>
                             </template>
                         </div>
@@ -712,7 +742,7 @@ function getNextDateForDay(dayOfWeek: number): string {
     const currentDay = now.getDay();
 
     let daysToAdd = dayOfWeek - currentDay;
-    if (daysToAdd < 0) {
+    if (daysToAdd <= 0) {
         daysToAdd += 7;
     }
 

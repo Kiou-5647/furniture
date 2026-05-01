@@ -9,13 +9,11 @@ class ProductPolicy
 {
     public function create(User $user): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('products.create');
+        return $user->hasPermissionTo('Quản lý sản phẩm');
     }
 
     public function manage(User $user, Product $product): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('products.manage');
+        return $user->hasPermissionTo('Quản lý sản phẩm');
     }
 }

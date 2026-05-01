@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
-import { Package, Truck } from '@lucide/vue';
+import { Head, router } from '@inertiajs/vue3';
+import { ChevronLeft, Package, Truck } from '@lucide/vue';
 import { ref } from 'vue';
 import ReviewForm from '@/components/custom/product/ReviewForm.vue';
 import {
@@ -12,17 +12,33 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import CustomerLayout from '@/layouts/settings/CustomerLayout.vue';
 import ShopLayout from '@/layouts/ShopLayout.vue';
 import { formatDateTime } from '@/lib/date-utils';
 import { formatPrice } from '@/lib/utils';
-import { show } from '@/routes/products';
+import { show as showBundle } from '@/routes/bundles';
+import { orders as ordersProfile } from '@/routes/customer/profile';
+import { cancel } from '@/routes/customer/profile/orders';
+import { initiate } from '@/routes/payment/vnpay';
+import { show as showProduct } from '@/routes/products';
 
 const props = defineProps<{
     order: any;
 }>();
 
 function resolveShipmentStatus(status: string) {
+    if (props.order.status === 'cancelled') {
+        return 'Đã hủy';
+    }
+
     switch (status) {
         case 'pending':
             return 'Chờ xử lý';
@@ -40,8 +56,9 @@ function resolveShipmentStatus(status: string) {
     }
 }
 
-function canReview(status: string, review: any = null) {
+function canReview(type: string, status: string, review: any = null) {
     return (
+        type === 'App\\Models\\Product\\ProductVariant' &&
         props.order.status === 'completed' &&
         status === 'delivered' &&
         (!review || !review.is_published)
@@ -51,6 +68,7 @@ function canReview(status: string, review: any = null) {
 const isReviewDialogOpen = ref(false);
 const selectedVariantId = ref<string | null>(null);
 const selectedReview = ref<any>(null);
+const isCancelConfirming = ref(false);
 
 function openReview(variantId: string, item: any) {
     selectedVariantId.value = variantId;
@@ -73,6 +91,34 @@ function openReview(variantId: string, item: any) {
     selectedReview.value = reviewData;
     isReviewDialogOpen.value = true;
 }
+
+function visitProduct(type: string, sku: string | null, slug: string | null) {
+    if (type === 'App\\Models\\Product\\Bundle') {
+        router.visit(showBundle(slug!).url);
+    } else if (type === 'App\\Models\\Product\\ProductVariant') {
+        router.visit(showProduct({ sku: sku!, variant_slug: slug! }).url);
+    }
+}
+
+function openCancelConfirm() {
+    isCancelConfirming.value = true;
+}
+
+// Create the actual API call function
+function confirmCancel() {
+    router.post(
+        cancel(props.order.order_number),
+        {},
+        {
+            onSuccess: () => {
+                isCancelConfirming.value = false;
+            },
+            onError: (errors) => {
+                console.error('Lỗi:', errors);
+            },
+        },
+    );
+}
 </script>
 
 <template>
@@ -82,21 +128,45 @@ function openReview(variantId: string, item: any) {
             <div class="space-y-8 p-6">
                 <!-- Header Section -->
                 <div class="flex items-center justify-between">
-                    <div>
-                        <h1 class="text-2xl font-bold tracking-tight">
-                            Chi tiết đơn hàng
-                        </h1>
-                        <p class="text-muted-foreground">
-                            Mã đơn: {{ order.order_number }}
-                        </p>
+                    <div class="flex items-center gap-4">
+                        <!-- Wrap in a div for alignment -->
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            @click="router.visit(ordersProfile().url)"
+                            class="flex items-center gap-1"
+                        >
+                            <ChevronLeft />
+                        </Button>
+                        <div>
+                            <h1 class="text-2xl font-bold tracking-tight">
+                                Chi tiết đơn hàng
+                            </h1>
+                            <p class="text-muted-foreground">
+                                Mã đơn: {{ order.order_number }}
+                            </p>
+                        </div>
                     </div>
-                    <Badge
-                        :variant="
-                            order.status === 'completed' ? 'default' : 'outline'
-                        "
-                    >
-                        {{ order.status_label }}
-                    </Badge>
+                    <div class="flex items-center gap-4">
+                        <Badge
+                            :variant="
+                                order.status === 'completed'
+                                    ? 'default'
+                                    : 'outline'
+                            "
+                        >
+                            {{ order.status_label }}
+                        </Badge>
+                        <Button
+                            v-if="order.can_cancel"
+                            variant="destructive"
+                            size="sm"
+                            class="h-8 w-24 px-2 text-sm"
+                            @click="openCancelConfirm"
+                        >
+                            Hủy đơn
+                        </Button>
+                    </div>
                 </div>
 
                 <div class="grid gap-6 lg:grid-cols-12">
@@ -174,6 +244,31 @@ function openReview(variantId: string, item: any) {
                                     <Badge v-else variant="outline"
                                         >Chưa thanh toán</Badge
                                     >
+                                </div>
+                                <div
+                                    v-if="
+                                        order.payment_method ===
+                                            'bank_transfer' &&
+                                        !order.paid_at &&
+                                        order.invoices?.length
+                                    "
+                                    class="pt-4"
+                                >
+                                    <a
+                                        :href="
+                                            initiate({
+                                                invoice: order.invoices[0].id,
+                                            }).url
+                                        "
+                                        class="block w-full"
+                                    >
+                                        <Button
+                                            variant="default"
+                                            class="w-full"
+                                        >
+                                            Thanh toán qua VNPay
+                                        </Button>
+                                    </a>
                                 </div>
                                 <div
                                     v-if="order.paid_at"
@@ -269,15 +364,15 @@ function openReview(variantId: string, item: any) {
                                 <CardContent class="p-4">
                                     <div class="flex gap-4">
                                         <!-- Product Image Link -->
-                                        <Link
-                                            :href="
-                                                show({
-                                                    sku: item.purchasable.sku,
-                                                    variant_slug:
-                                                        item.purchasable.slug,
-                                                }).url
+                                        <div
+                                            @click="
+                                                visitProduct(
+                                                    item.purchasable_type,
+                                                    item.purchasable.sku,
+                                                    item.purchasable.slug,
+                                                )
                                             "
-                                            class="h-20 w-20 shrink-0 overflow-hidden rounded-lg border bg-muted"
+                                            class="h-20 w-20 shrink-0 cursor-pointer overflow-hidden rounded-lg border bg-muted"
                                         >
                                             <img
                                                 v-if="
@@ -288,7 +383,7 @@ function openReview(variantId: string, item: any) {
                                                 "
                                                 class="h-full w-full object-cover"
                                             />
-                                        </Link>
+                                        </div>
 
                                         <div
                                             class="flex flex-1 flex-col justify-center"
@@ -296,21 +391,20 @@ function openReview(variantId: string, item: any) {
                                             <div
                                                 class="flex items-start justify-between"
                                             >
-                                                <Link
-                                                    :href="
-                                                        show({
-                                                            sku: item
-                                                                .purchasable
+                                                <span
+                                                    @click="
+                                                        visitProduct(
+                                                            item.purchasable_type,
+                                                            item.purchasable
                                                                 .sku,
-                                                            variant_slug:
-                                                                item.purchasable
-                                                                    .slug,
-                                                        }).url
+                                                            item.purchasable
+                                                                .slug,
+                                                        )
                                                     "
-                                                    class="text-sm leading-tight font-bold hover:underline"
+                                                    class="cursor-pointer text-sm leading-tight font-bold hover:underline"
                                                 >
                                                     {{ item.purchasable.name }}
-                                                </Link>
+                                                </span>
                                                 <div
                                                     class="flex items-center gap-2"
                                                 >
@@ -328,8 +422,10 @@ function openReview(variantId: string, item: any) {
                                                     <Button
                                                         v-if="
                                                             canReview(
+                                                                item.purchasable_type,
                                                                 item.shipment_status,
-                                                                item.purchasable?.review,
+                                                                item.purchasable
+                                                                    ?.review,
                                                             )
                                                         "
                                                         @click="
@@ -346,8 +442,11 @@ function openReview(variantId: string, item: any) {
                                                     </Button>
                                                     <span
                                                         v-else-if="
-                                                            item.shipment_status === 'delivered' &&
-                                                            item.purchasable?.review?.is_published
+                                                            item.shipment_status ===
+                                                                'delivered' &&
+                                                            item.purchasable
+                                                                ?.review
+                                                                ?.is_published
                                                         "
                                                         class="text-xs text-muted-foreground italic"
                                                     >
@@ -410,15 +509,15 @@ function openReview(variantId: string, item: any) {
                                                     <div
                                                         class="flex items-center gap-3"
                                                     >
-                                                        <Link
-                                                            :href="
-                                                                show({
-                                                                    sku: v.sku,
-                                                                    variant_slug:
-                                                                        v.slug,
-                                                                }).url
+                                                        <div
+                                                            @click="
+                                                                visitProduct(
+                                                                    'App\\Models\\Product\\ProductVariant',
+                                                                    v.sku,
+                                                                    v.slug,
+                                                                )
                                                             "
-                                                            class="h-10 w-10 shrink-0 overflow-hidden rounded border bg-muted"
+                                                            class="h-10 w-10 shrink-0 cursor-pointer overflow-hidden rounded border bg-muted"
                                                         >
                                                             <img
                                                                 v-if="
@@ -429,22 +528,22 @@ function openReview(variantId: string, item: any) {
                                                                 "
                                                                 class="h-full w-full object-cover"
                                                             />
-                                                        </Link>
+                                                        </div>
                                                         <div
                                                             class="flex flex-col"
                                                         >
-                                                            <Link
-                                                                :href="
-                                                                    show({
-                                                                        sku: v.sku,
-                                                                        variant_slug:
-                                                                            v.slug,
-                                                                    }).url
+                                                            <span
+                                                                @click="
+                                                                    visitProduct(
+                                                                        'App\\Models\\Product\\ProductVariant',
+                                                                        v.sku,
+                                                                        v.slug,
+                                                                    )
                                                                 "
-                                                                class="text-xs font-medium hover:underline"
+                                                                class="cursor-pointer text-xs font-medium hover:underline"
                                                             >
                                                                 {{ v.name }}
-                                                            </Link>
+                                                            </span>
                                                             <span
                                                                 class="text-[10px] text-muted-foreground"
                                                                 >{{ v.sku }} x{{
@@ -461,15 +560,23 @@ function openReview(variantId: string, item: any) {
                                                             class="text-[10px]"
                                                         >
                                                             {{
-                                                                v.shipment_status ||
-                                                                'Chờ giao'
+                                                                resolveShipmentStatus(
+                                                                    v.shipment_status,
+                                                                )
                                                             }}
                                                         </Badge>
                                                         <Button
                                                             v-if="
                                                                 canReview(
+                                                                    'App\\Models\\Product\\ProductVariant',
                                                                     v.shipment_status,
                                                                     v.review,
+                                                                )
+                                                            "
+                                                            @click="
+                                                                openReview(
+                                                                    v.id,
+                                                                    item,
                                                                 )
                                                             "
                                                             variant="secondary"
@@ -480,8 +587,10 @@ function openReview(variantId: string, item: any) {
                                                         </Button>
                                                         <span
                                                             v-else-if="
-                                                                v.shipment_status === 'delivered' &&
-                                                                v.review?.is_published
+                                                                v.shipment_status ===
+                                                                    'delivered' &&
+                                                                v.review
+                                                                    ?.is_published
                                                             "
                                                             class="text-xs text-muted-foreground italic"
                                                         >
@@ -514,5 +623,28 @@ function openReview(variantId: string, item: any) {
         @update:model-value="isReviewDialogOpen = $event"
         :variant-id="selectedVariantId || ''"
         :initial-review="selectedReview"
+        @close="isReviewDialogOpen = false"
     />
+    <Dialog
+        :open="isCancelConfirming"
+        @update:open="(val) => (isCancelConfirming = val)"
+    >
+        <DialogContent class="max-w-sm">
+            <DialogHeader>
+                <DialogTitle>Xác nhận hủy đơn hàng</DialogTitle>
+                <DialogDescription>
+                    Bạn có chắc chắn muốn hủy đơn hàng này không? Hành động này
+                    không thể hoàn tác.
+                </DialogDescription>
+            </DialogHeader>
+            <DialogFooter class="flex gap-2 sm:justify-end">
+                <Button variant="ghost" @click="isCancelConfirming = false">
+                    Quay lại
+                </Button>
+                <Button variant="destructive" @click="confirmCancel">
+                    Xác nhận hủy
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
 </template>

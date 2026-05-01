@@ -9,7 +9,7 @@ class ActivityLogIndexRequest extends FormRequest
     public function authorize(): bool
     {
         // Đảm bảo user có quyền xem nhật ký
-        return $this->user()->can('activities.manage');
+        return $this->user()->can('Quản lý nhật ký');
     }
 
     public function rules(): array

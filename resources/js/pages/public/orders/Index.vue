@@ -15,6 +15,7 @@ import { formatDateTime } from '@/lib/date-utils';
 import { cleanQuery, formatPrice } from '@/lib/utils';
 import { orders as orderRoute } from '@/routes/customer/profile';
 import { show } from '@/routes/customer/profile/orders';
+import { initiate } from '@/routes/payment/vnpay';
 
 type Props = {
     orders: any;
@@ -97,13 +98,65 @@ const columns: ColumnDef<any, any>[] = [
         },
         cell: ({ row }) => {
             const paidAt = row.getValue('paid_at');
+            const method = row.original.payment_method;
+            const invoiceId = row.original.invoices?.[0]?.id;
+
+            // Case 1: Order is already paid
+            if (paidAt) {
+                return h(
+                    Badge,
+                    {
+                        variant: 'default',
+                        class: 'bg-green-500',
+                    },
+                    () => 'Đã thanh toán',
+                );
+            }
+
+            // Case 2: Order is unpaid and can be paid via VNPay
+            if (method === 'bank_transfer' && invoiceId) {
+                return h(
+                    'div',
+                    { class: 'flex items-center justify-center gap-2' },
+                    [
+                        h(
+                            Badge,
+                            {
+                                variant: 'outline',
+                                class: 'text-muted-foreground',
+                            },
+                            () => 'Chưa thanh toán',
+                        ),
+                        h(
+                            'a',
+                            {
+                                href: initiate({ invoice: invoiceId }).url,
+                                class: 'inline-block',
+                            },
+                            [
+                                h(
+                                    Button,
+                                    {
+                                        variant: 'default',
+                                        size: 'sm',
+                                        class: 'h-7 px-2 text-[10px]',
+                                    },
+                                    () => 'Thanh toán',
+                                ),
+                            ],
+                        ),
+                    ],
+                );
+            }
+
+            // Case 3: Order is unpaid but not via bank transfer (e.g., COD)
             return h(
                 Badge,
                 {
-                    variant: paidAt ? 'default' : 'outline',
-                    class: paidAt ? 'bg-green-500' : 'text-muted-foreground',
+                    variant: 'outline',
+                    class: 'text-muted-foreground',
                 },
-                () => (paidAt ? 'Đã thanh toán' : 'Chưa thanh toán'),
+                () => 'Chưa thanh toán',
             );
         },
     },
@@ -147,7 +200,7 @@ const updateFilters = debounce(() => {
     );
 }, 500);
 
-function updateTabs () {
+function updateTabs() {
     router.get(
         orderRoute().url,
         cleanQuery({

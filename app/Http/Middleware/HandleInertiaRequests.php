@@ -57,7 +57,7 @@ class HandleInertiaRequests extends Middleware
                     'type' => $user->type->value,
                     'avatar_url' => $user->avatar_url,
                     'email_verified_at' => $user->email_verified_at,
-                    'permissions' => $user->hasRole('super_admin')
+                    'permissions' => $user->hasRole('Quản trị viên')
                         ? ['*']
                         : $user->getAllPermissions()->pluck('name'),
                 ] : null,

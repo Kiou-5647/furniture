@@ -38,14 +38,14 @@ class VnPayPaymentController
 
         // For orders: check orders.manage permission
         if ($invoiceable instanceof Order) {
-            if ($user->type !== UserType::Customer && ! $user->can('orders.manage')) {
+            if ($user->type !== UserType::Customer && ! $user->can('Quản lý đơn hàng')) {
                 abort(403, 'Không đủ quyền hạn tạo đơn hàng!');
             }
         }
 
         // For bookings: check bookings.manage permission
         if ($invoiceable instanceof Booking) {
-            if ($user->type !== UserType::Customer && ! $user->can('bookings.manage')) {
+            if ($user->type !== UserType::Customer && ! $user->can('Quản lý lịch thiết kế')) {
                 abort(403, 'Không đủ quyền hạn tạo lịch thiết kế!');
             }
         }

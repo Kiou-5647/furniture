@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Auth\GoogleAuthController;
+use App\Http\Controllers\Customer\BookingController;
+use App\Http\Controllers\Customer\OrderController;
 use App\Http\Controllers\Customer\ReviewController;
 use App\Http\Controllers\Payment\VnPayPaymentController;
 use App\Http\Controllers\Payment\VnPayReturnController;
@@ -9,6 +11,7 @@ use App\Http\Controllers\Public\CartController;
 use App\Http\Controllers\Public\CheckoutController;
 use App\Http\Controllers\Public\ProductController;
 use App\Http\Controllers\Public\WelcomeController;
+use App\Http\Controllers\Setting\CustomerProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [WelcomeController::class, '__invoke'])->name('home');
@@ -32,17 +35,27 @@ Route::get('/goi-san-pham/{bundle:slug}', [BundleController::class, 'show'])
 
 Route::middleware(['auth', 'verified', 'user_type:customer'])->name('customer.')->group(function () {
     Route::prefix('ho-so')->group(function () {
-        Route::get('thong-tin', [\App\Http\Controllers\Setting\CustomerProfileController::class, 'edit'])->name('profile.edit');
-        Route::patch('thong-tin', [\App\Http\Controllers\Setting\CustomerProfileController::class, 'update'])->name('profile.update');
-        Route::get('don-hang', [\App\Http\Controllers\Customer\OrderController::class, 'index'])->name('profile.orders');
-        Route::get('don-hang/{order_number}', [\App\Http\Controllers\Customer\OrderController::class, 'show'])->name('profile.orders.show');
-        Route::get('lich-thiet-ke', [\App\Http\Controllers\Customer\BookingController::class, 'index'])->name('profile.bookings');
-        Route::get('danh-gia', [\App\Http\Controllers\Customer\ReviewController::class, 'index'])->name('profile.reviews');
+        Route::get('thong-tin', [CustomerProfileController::class, 'edit'])->name('profile.edit');
+        Route::patch('thong-tin', [CustomerProfileController::class, 'update'])->name('profile.update');
+        Route::get('don-hang', [OrderController::class, 'index'])->name('profile.orders');
+        Route::get('don-hang/{order_number}', [OrderController::class, 'show'])->name('profile.orders.show');
+        Route::post('don-hang/{order_number}/cancel', [OrderController::class, 'cancel'])->name('profile.orders.cancel');
+        Route::get('lich-thiet-ke', [BookingController::class, 'profileIndex'])->name('profile.bookings');
+        Route::get('lich-thiet-ke/{booking_number}', [BookingController::class, 'show'])->name('profile.bookings.show');
+        Route::post('lich-thiet-ke/{booking_number}/cancel', [BookingController::class, 'cancel'])->name('profile.bookings.cancel');
+        Route::get('danh-gia', [ReviewController::class, 'index'])->name('profile.reviews');
     });
 
     Route::prefix('dat-hang')->group(function () {
         Route::get('/', [CheckoutController::class, 'index'])->name('checkout.index');
         Route::post('/', [CheckoutController::class, 'store'])->name('checkout.store');
+    });
+
+    Route::prefix('dat-lich')->group(function () {
+        Route::get('/', [BookingController::class, 'index'])->name('bookings.index');
+        Route::post('/', [BookingController::class, 'store'])->name('bookings.store');
+        Route::get('/designers/{designer}/availability', [BookingController::class, 'availabilities']);
+        Route::get('/designers/{designer}/available-slots', [BookingController::class, 'availableSlots']);
     });
 
     Route::prefix('danh-gia')->group(function () {

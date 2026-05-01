@@ -9,7 +9,7 @@ class StoreBundleRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('bundles.create');
+        return $this->user()->can('Quản lý gói sản phẩm');
     }
 
     public function rules(): array

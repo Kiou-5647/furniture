@@ -9,25 +9,21 @@ class EmployeePolicy
 {
     public function create(User $user): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('employees.create');
+        return $user->hasPermissionTo('Quản lý nhân viên');
     }
 
     public function manage(User $user, Employee $employee): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('employees.manage');
+        return $user->hasPermissionTo('Quản lý nhân viên');
     }
 
     public function terminate(User $user, Employee $employee): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('employees.terminate');
+        return $user->hasPermissionTo('Quản lý nhân viên');
     }
 
     public function syncPermissions(User $user, Employee $employee): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('roles.manage');
+        return $user->hasPermissionTo('Quản lý nhân viên');
     }
 }

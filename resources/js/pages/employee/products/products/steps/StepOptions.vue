@@ -40,7 +40,7 @@ const emit = defineEmits<{
 
 const canManageLookups = computed(() => {
     const permissions = page.props.auth?.user?.permissions ?? [];
-    return permissions.includes('*') || permissions.includes('lookups.manage');
+    return permissions.includes('*') || permissions.includes('Quản lý tra cứu');
 });
 
 const hasColorOptions = computed(() => {

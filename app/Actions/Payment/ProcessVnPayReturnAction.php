@@ -35,8 +35,8 @@ class ProcessVnPayReturnAction
         $bankCode = $returnData['vnp_BankCode'] ?? '';
         $payDate = $returnData['vnp_PayDate'] ?? '';
 
-        // Look up invoice by txn_ref (which is the invoice_number)
-        $invoice = Invoice::where('invoice_number', $txnRef)->first();
+        $invoiceNumber = explode('_', $txnRef)[0];
+        $invoice = Invoice::where('invoice_number', $invoiceNumber)->first();
         if (! $invoice) {
             return ['success' => false, 'message' => 'Hóa đơn không tồn tại.'];
         }
@@ -128,7 +128,7 @@ class ProcessVnPayReturnAction
             '75' => 'Ngân hàng thanh toán đang bảo trì.',
             '79' => 'Khách hàng nhập sai mật khẩu thanh toán quá số lần quy định.',
             '99' => 'Lỗi không xác định.',
-            default => 'Giao dịch không thành công (Mã: '.$code.').',
+            default => 'Giao dịch không thành công (Mã: ' . $code . ').',
         };
     }
 }

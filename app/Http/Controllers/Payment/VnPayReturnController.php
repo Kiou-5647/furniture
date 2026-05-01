@@ -50,6 +50,16 @@ class VnPayReturnController
             return route('home');
         }
 
+        $invoiceable = $invoice->invoiceable;
+
+        if ($invoiceable instanceof Order) {
+            return route('customer.profile.orders.show', $invoiceable->order_number);
+        }
+
+        if ($invoiceable instanceof Booking) {
+            return route('customer.profile.bookings.show', $invoiceable->booking_number);
+        }
+
         return route('home');
     }
 

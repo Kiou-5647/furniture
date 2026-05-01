@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Customer;
 
+use App\Actions\Sales\CancelOrderAction;
 use App\Data\Sales\OrderFilterData;
 use App\Enums\OrderStatus;
 use App\Http\Resources\Public\Sales\OrderDetailsResource;
@@ -9,6 +10,7 @@ use App\Http\Resources\Public\Sales\OrderResource;
 use App\Models\Sales\Order;
 use App\Services\Sales\OrderService;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -83,5 +85,22 @@ class OrderController
         return Inertia::render('public/orders/Show', [
             'order' => new OrderDetailsResource($order, $customerReviews),
         ]);
+    }
+
+    public function cancel(string $order_number, Request $request, CancelOrderAction $action): RedirectResponse
+    {
+        $order = Order::where('order_number', $order_number)->firstOrFail();
+
+        if ($order->customer_id !== Auth::user()->id) {
+            abort(403);
+        }
+
+        try {
+            $action->execute($order, null);
+
+            return back()->with('success', 'Đơn hàng đã được hủy thành công.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => $e->getMessage()]);
+        }
     }
 }

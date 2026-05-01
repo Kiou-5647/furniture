@@ -21,7 +21,7 @@ class MarkOrderAsPaidAction
         $customerId = $order->customer_id;
         if (! $customerId) {
             $admin = User::where('type', 'employee')
-                ->whereHas('roles', fn($q) => $q->where('name', 'super_admin'))
+                ->whereHas('roles', fn($q) => $q->where('name', 'Quản trị viên'))
                 ->first();
             $customerId = $admin?->id;
 

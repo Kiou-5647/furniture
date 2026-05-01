@@ -8,7 +8,11 @@ class StoreShipmentsRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('orders.manage');
+        $user = $this->user();
+        if ($user->can('Quản lý đơn hàng') || $user->can('Quản lý vận chuyển'))
+            return true;
+
+        return false;
     }
 
     public function rules(): array

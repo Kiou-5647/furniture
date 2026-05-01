@@ -39,8 +39,10 @@ import {
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
+import { formatNumber, handleNumericInput } from '@/lib/utils';
 import { availabilities, store, update } from '@/routes/employee/hr/designers';
 import type { WeeklySlots } from '@/types/designer';
+import { Textarea } from '@/components/ui/textarea';
 
 interface WorkHours {
     morning_start: number;
@@ -87,7 +89,6 @@ const form = useForm({
     bio: undefined as string | undefined,
     portfolio_url: undefined as string | undefined,
     hourly_rate: '',
-    auto_confirm_bookings: false,
     is_active: true,
     avatar: null as File | null,
     availabilities: [] as any[],
@@ -139,7 +140,6 @@ watch(
             form.bio = newDes.bio ?? undefined;
             form.portfolio_url = newDes.portfolio_url ?? undefined;
             form.hourly_rate = newDes.hourly_rate?.toString() ?? '';
-            form.auto_confirm_bookings = newDes.auto_confirm_bookings;
             form.is_active = newDes.is_active;
             avatarPreview.value = newDes.avatar_url ?? null;
             form.avatar = null;
@@ -330,9 +330,6 @@ function closeModal() {
                             />
                             <ChevronRight v-else class="ml-1 h-3 w-3" />
                         </Button>
-                        <p class="text-xs text-muted-foreground">
-                            Nhà thiết kế này được liên kết với nhân viên
-                        </p>
                     </div>
 
                     <div
@@ -373,7 +370,7 @@ function closeModal() {
                     <div
                         class="mb-4"
                     >
-                        <Field>
+                        <Field v-if="!props.designer.employee">
                             <FieldLabel>
                                 Chọn nhân viên
                                 <span class="text-destructive">*</span>
@@ -403,25 +400,15 @@ function closeModal() {
                     </div>
 
                     <form @submit.prevent="submit" class="space-y-4">
-                        <div class="flex items-center gap-4">
+                        <div class="flex flex-col items-center justify-center">
                             <ImageUploader
                                 v-model="form.avatar"
                                 :preview-url="avatarPreview"
                                 aspect-ratio="square"
-                                label="Ảnh đại diện"
-                                hint="1:1 · Max 2MB"
-                                class="w-24 shrink-0"
+                                hint=" "
+                                class="w-30 shrink-0"
                             />
-                            <div class="min-w-0 flex-1">
-                                <p
-                                    class="text-sm font-medium text-muted-foreground"
-                                >
-                                    Ảnh hồ sơ
-                                </p>
-                                <p class="text-xs text-muted-foreground">
-                                    Upload ảnh vuông, tối đa 2MB
-                                </p>
-                            </div>
+                            <span class="text-sm text-muted-foreground">Ảnh đại diện</span>
                         </div>
 
                         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -486,9 +473,11 @@ function closeModal() {
                             </FieldLabel>
                             <FieldContent>
                                 <Input
-                                    v-model="form.hourly_rate"
-                                    type="number"
+                                :model-value="formatNumber(form.hourly_rate)"
+                                    type="text"
+                                    inputmode="numeric"
                                     placeholder="500000"
+                                    @input="handleNumericInput($event, 'hourly_rate', form)"
                                     class="w-full"
                                 />
                                 <FieldError
@@ -500,7 +489,7 @@ function closeModal() {
                         <Field>
                             <FieldLabel>Tiểu sử</FieldLabel>
                             <FieldContent>
-                                <Input
+                                <Textarea
                                     v-model="form.bio"
                                     placeholder="Giới thiệu ngắn về nhà thiết kế"
                                     class="w-full"
@@ -537,21 +526,6 @@ function closeModal() {
                                 </p>
                             </div>
                             <Switch v-model="form.is_active" />
-                        </div>
-
-                        <div
-                            class="flex items-center justify-between rounded-lg border p-3"
-                        >
-                            <div class="space-y-0.5">
-                                <Label class="text-sm font-medium"
-                                    >Tự động xác nhận</Label
-                                >
-                                <p class="text-xs text-muted-foreground">
-                                    Tự động duyệt lịch đặt mà không cần xác nhận
-                                    thủ công
-                                </p>
-                            </div>
-                            <Switch v-model="form.auto_confirm_bookings" />
                         </div>
                     </form>
                 </div>

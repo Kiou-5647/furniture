@@ -9,13 +9,11 @@ class VendorPolicy
 {
     public function create(User $user): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('vendors.create');
+        return $user->hasPermissionTo('Quản lý nhà cung cấp');
     }
 
     public function manage(User $user, Vendor $vendor): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('vendors.manage');
+        return $user->hasPermissionTo('Quản lý nhà cung cấp');
     }
 }

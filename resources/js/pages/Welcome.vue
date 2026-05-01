@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import heroImage from '@images/4787421-interior-2685521.jpg';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import {
     ArrowRight,
     Truck,
@@ -17,6 +17,8 @@ import {
 } from '@/components/ui/carousel';
 import ShopLayout from '@/layouts/ShopLayout.vue';
 import ProductSection from '@/layouts/storefront/ProductSection.vue';
+import { index } from '@/routes/customer/bookings';
+import { formatPrice } from '@/lib/utils';
 
 const props = defineProps<{
     rooms: {
@@ -35,13 +37,16 @@ const props = defineProps<{
     >;
 }>();
 
+const page = usePage();
+const settings = page.props.settings;
+
 const features = [
     {
         icon: Truck,
         title: 'Miễn phí vận chuyển',
-        desc: 'Cho đơn hàng trên 2 triệu',
+        desc: `Cho đơn hàng trên ${formatPrice(settings.freeship_threshold)}`,
     },
-    { icon: ShieldCheck, title: 'Bảo hành 2 năm', desc: 'Cam kết chất lượng' },
+    { icon: ShieldCheck, title: `Bảo hành tối thiểu ${settings.default_warranty} tháng`, desc: 'Cam kết chất lượng' },
     { icon: Headphones, title: 'Hỗ trợ 24/7', desc: 'Tư vấn miễn phí' },
     { icon: RotateCcw, title: 'Đổi trả dễ dàng', desc: 'Trong 30 ngày' },
 ];
@@ -246,7 +251,7 @@ const getLayoutPropsForKey = (key: string) => {
                         thiết kế không gian sống phù hợp với phong cách của bạn.
                     </p>
                     <Link
-                        href="/dat-lich"
+                        :href="index().url"
                         class="mt-8 inline-flex items-center gap-2 rounded-lg bg-white px-6 py-3 text-sm font-semibold text-zinc-900 shadow-sm transition-colors hover:bg-zinc-100"
                     >
                         Đặt lịch tư vấn

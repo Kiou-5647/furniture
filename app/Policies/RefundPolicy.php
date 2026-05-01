@@ -9,19 +9,16 @@ class RefundPolicy
 {
     public function approve(User $user, Refund $refund): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('refunds.approve');
+        return $user->hasPermissionTo('Quản lý hoàn tiền');
     }
 
     public function reject(User $user, Refund $refund): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('refunds.reject');
+        return $user->hasPermissionTo('Quản lý hoàn tiền');
     }
 
     public function process(User $user, Refund $refund): bool
     {
-        return $user->hasRole('super_admin')
-            || $user->hasPermissionTo('refunds.process');
+        return $user->hasPermissionTo('Quản lý hoàn tiền');
     }
 }

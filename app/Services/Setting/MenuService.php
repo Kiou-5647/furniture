@@ -32,7 +32,7 @@ class MenuService
         ];
 
         // HR Group
-        if ($user->canAny(['employees.view', 'departments.view', 'designers.view'])) {
+        if ($user->canAny(['Quản lý nhân viên', 'departments.view', 'Xem nhà thiết kế'])) {
             $hrItems = [];
 
             if ($user->can('departments.view')) {
@@ -43,7 +43,7 @@ class MenuService
                 ];
             }
 
-            if ($user->can('employees.view')) {
+            if ($user->can('Quản lý nhân viên')) {
                 $hrItems[] = [
                     'title' => 'Nhân viên',
                     'href' => route('employee.hr.employees.index'),
@@ -51,7 +51,7 @@ class MenuService
                 ];
             }
 
-            if ($user->can('designers.view')) {
+            if ($user->can('Xem nhà thiết kế')) {
                 $hrItems[] = [
                     'title' => 'Nhà thiết kế',
                     'href' => route('employee.hr.designers.index'),
@@ -69,10 +69,10 @@ class MenuService
         }
 
         // Product Management Group
-        if ($user->canAny(['categories.view', 'collections.view', 'products.view'])) {
+        if ($user->canAny(['Xem danh mục', 'collections.view', 'Xem sản phẩm'])) {
             $productItems = [];
 
-            if ($user->can('products.view')) {
+            if ($user->can('Xem sản phẩm')) {
                 $productItems[] = [
                     'title' => 'Danh sách sản phẩm',
                     'href' => route('employee.products.index'),
@@ -80,7 +80,7 @@ class MenuService
                 ];
             }
 
-            if ($user->can('categories.view')) {
+            if ($user->can('Xem danh mục')) {
                 $productItems[] = [
                     'title' => 'Danh mục',
                     'href' => route('employee.categories.index'),
@@ -96,7 +96,7 @@ class MenuService
                 ];
             }
 
-            if ($user->can('bundles.view')) {
+            if ($user->can('Xem gói sản phẩm')) {
                 $productItems[] = [
                     'title' => 'Gói sản phẩm',
                     'href' => route('employee.bundles.index'),
@@ -114,7 +114,7 @@ class MenuService
         }
 
         // Booking Group
-        if ($user->canAny(['bookings.view'])) {
+        if ($user->canAny(['Xem lịch thiết kế'])) {
             $bookingItems = [];
 
             $menu[] = [
@@ -127,10 +127,10 @@ class MenuService
         }
 
         // Sales Group
-        if ($user->canAny(['discounts.view', 'orders.view', 'invoices.view', 'payments.view', 'payments.manage'])) {
+        if ($user->canAny(['Xem khuyến mãi', 'Xem đơn hàng', 'Xem hóa đơn', 'Xem thanh toán', 'Quản lý thanh toán'])) {
             $salesItems = [];
 
-            if ($user->can('orders.view')) {
+            if ($user->can('Xem đơn hàng')) {
                 $salesItems[] = [
                     'title' => 'Đơn hàng',
                     'href' => route('employee.sales.orders.index'),
@@ -138,7 +138,7 @@ class MenuService
                 ];
             }
 
-            if ($user->can('discounts.view')) {
+            if ($user->can('Xem khuyến mãi')) {
                 $salesItems[] = [
                     'title' => 'Giảm giá',
                     'href' => route('employee.sales.discounts.index'),
@@ -146,7 +146,7 @@ class MenuService
                 ];
             }
 
-            if ($user->can('invoices.view')) {
+            if ($user->can('Xem hóa đơn')) {
                 $salesItems[] = [
                     'title' => 'Hóa đơn',
                     'href' => route('employee.sales.invoices.index'),
@@ -154,7 +154,7 @@ class MenuService
                 ];
             }
 
-            if ($user->can('payments.view')) {
+            if ($user->can('Xem thanh toán')) {
                 $salesItems[] = [
                     'title' => 'Thanh toán',
                     'href' => route('employee.sales.payments.index'),
@@ -162,7 +162,7 @@ class MenuService
                 ];
             }
 
-            if ($user->can('payments.manage')) {
+            if ($user->can('Quản lý thanh toán')) {
                 $salesItems[] = [
                     'title' => 'Hoàn tiền',
                     'href' => route('employee.sales.refunds.index'),
@@ -180,10 +180,10 @@ class MenuService
         }
 
         // Fulfillment Group
-        if ($user->canAny(['shipments.view', 'shipping_methods.view'])) {
+        if ($user->canAny(['Xem vận chuyển', 'Xem phương thức vận chuyển'])) {
             $fulfillmentItems = [];
 
-            if ($user->can('shipments.view')) {
+            if ($user->can('Xem vận chuyển')) {
                 $fulfillmentItems[] = [
                     'title' => 'Vận chuyển',
                     'href' => route('employee.fulfillment.shipments.index'),
@@ -191,7 +191,7 @@ class MenuService
                 ];
             }
 
-            if ($user->can('shipping_methods.view')) {
+            if ($user->can('Xem phương thức vận chuyển')) {
                 $fulfillmentItems[] = [
                     'title' => 'Phương thức vận chuyển',
                     'href' => route('employee.fulfillment.shipping-methods.index'),
@@ -209,10 +209,10 @@ class MenuService
         }
 
         // Inventory Management Group
-        if ($user->can('inventory.view')) {
+        if ($user->can('Xem kho hàng')) {
             $inventoryItems = [];
 
-            if ($user->can('inventory.view')) {
+            if ($user->can('Xem kho hàng')) {
                 $inventoryItems[] = [
                     'title' => 'Nhà cung cấp',
                     'href' => route('employee.inventory.vendor.index'),
@@ -248,7 +248,7 @@ class MenuService
         }
 
         // Settings Group
-        if ($user->can('lookups.view')) {
+        if ($user->can('Xem tra cứu')) {
             $menu[] = [
                 'title' => 'Cấu hình',
                 'href' => '#',
