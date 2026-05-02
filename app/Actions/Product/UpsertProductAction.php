@@ -31,6 +31,14 @@ class UpsertProductAction
         $user = Auth::guard('web')->user();
         $performedBy = $user?->employee;
 
+        if (isset($data['new_arrival_until'])) {
+            $until = $data['new_arrival_until'];
+            if ($until && strtotime($until) < strtotime('today')) {
+                // If date is in the past, it cannot be a new arrival
+                $data['is_new_arrival'] = false;
+            }
+        }
+
         DB::beginTransaction();
 
         try {

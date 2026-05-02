@@ -17,8 +17,8 @@ import {
 } from '@/components/ui/carousel';
 import ShopLayout from '@/layouts/ShopLayout.vue';
 import ProductSection from '@/layouts/storefront/ProductSection.vue';
-import { index } from '@/routes/customer/bookings';
 import { formatPrice } from '@/lib/utils';
+import { index } from '@/routes/customer/bookings';
 
 const props = defineProps<{
     rooms: {
@@ -220,7 +220,7 @@ const getLayoutPropsForKey = (key: string) => {
                 v-for="(section, key) in sections"
                 :key="key"
                 :title="section.title"
-                :cards="section.cards"
+                :cards="section.cards.data"
                 :more-url="section.moreUrl"
                 :layout="getLayoutForKey(key)"
                 :layout-props="getLayoutPropsForKey(key)"

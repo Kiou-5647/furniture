@@ -10,6 +10,7 @@ use App\Http\Controllers\Public\BundleController;
 use App\Http\Controllers\Public\CartController;
 use App\Http\Controllers\Public\CheckoutController;
 use App\Http\Controllers\Public\ProductController;
+use App\Http\Controllers\Public\ProductDiscoveryController;
 use App\Http\Controllers\Public\WelcomeController;
 use App\Http\Controllers\Setting\CustomerProfileController;
 use Illuminate\Support\Facades\Route;
@@ -24,6 +25,10 @@ Route::prefix('gio-hang')->group(function () {
     Route::delete('/{itemId}', [CartController::class, 'destroy'])->name('cart.destroy');
     Route::delete('/clear', [CartController::class, 'clear'])->name('cart.clear');
 });
+
+//Discovery
+Route::get('/api/discovery/variants/search', [ProductDiscoveryController::class, 'search'])->name('discovery.variants.search');
+
 
 Route::get('/san-pham', [ProductController::class, 'index'])->name('products.index');
 Route::get('/san-pham/{sku}/{variant_slug}', [ProductController::class, 'show'])

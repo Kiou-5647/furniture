@@ -1033,7 +1033,7 @@ defineExpose({ checkPriceAndSubmit });
                     </DialogDescription>
                 </DialogHeader>
 
-                <div class="space-y-3 py-4">
+                <div class="space-y-3 py-4 max-h-[600px] overflow-y-auto">
                     <div
                         v-for="item in priceConfirmData.variants"
                         :key="item.index"
@@ -1066,14 +1066,6 @@ defineExpose({ checkPriceAndSubmit });
                                 >
                                 <span class="ml-2">{{
                                     formatCurrency(item.newCost)
-                                }}</span>
-                            </div>
-                            <div>
-                                <span class="text-muted-foreground"
-                                    >Giá sàn:</span
-                                >
-                                <span class="ml-2">{{
-                                    formatCurrency(item.floorPrice)
                                 }}</span>
                             </div>
                         </div>

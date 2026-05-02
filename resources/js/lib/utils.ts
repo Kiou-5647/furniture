@@ -70,6 +70,10 @@ export function cleanQuery(query: Record<string, any>) {
                 return false;
             }
 
+            if (key === 'limit' && Number(value) === 0) {
+                return false;
+            }
+
             return true;
         })
     );

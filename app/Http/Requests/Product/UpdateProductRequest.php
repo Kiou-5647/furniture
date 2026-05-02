@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Product;
 
+use App\Models\Product\Product;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -125,7 +126,7 @@ class UpdateProductRequest extends FormRequest
             'is_featured' => ['boolean'],
             'is_new_arrival' => ['boolean'],
             'published_date' => ['nullable', 'date'],
-            'new_arrival_until' => ['nullable', 'date', 'after_or_equal:today'],
+            'new_arrival_until' => ['nullable', 'date'],
             'variants' => ['nullable', 'array'],
             'variants.*.id' => ['nullable', 'exists:product_variants,id'],
             'variants.*.sku' => [

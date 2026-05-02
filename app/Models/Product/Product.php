@@ -49,7 +49,6 @@ class Product extends Model implements HasMedia
             'filterable_options' => 'array',
             'care_instructions' => 'array',
             'assembly_info' => 'array',
-            'search_keywords' => 'array',
             'warranty_months' => 'integer',
             'views_count' => 'integer',
             'sales_count' => 'integer',

@@ -3,78 +3,208 @@
 namespace App\Services\Public;
 
 use App\Data\Public\ProductCardFilterData;
-use App\Models\Product\ProductCard;
+use App\Enums\ProductSortType;
 use App\Models\Product\Bundle;
-use Illuminate\Support\Collection;
+use App\Models\Product\ProductCard;
+use App\Models\Product\ProductVariant;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class StorefrontService
 {
-    public function getProductCards(ProductCardFilterData $filter): Collection
+    public function getTotalCount(ProductCardFilterData $filter): int
     {
-        $query = ProductCard::query()
-            ->whereHas('product', fn($q) => $q->active())
-            ->with(['product', 'variants', 'options']);
+        $pool = $this->fetchStorefrontPool();
 
-        if ($filter->category) {
-            $query->whereHas('product.categories', fn($q) => $q->where('slug', $filter->category));
-        }
+        $count = $pool->filter(function ($variant) use ($filter) {
+            if ($filter->min_price !== null && $variant->effective_price < $filter->min_price) return false;
+            if ($filter->max_price !== null && $variant->effective_price > $filter->max_price) return false;
 
-        $query = match ($filter->type) {
-            'top_seller' => $query->orderByDesc('sales_count'),
-            'new' => $query->join('products', 'product_cards.product_id', '=', 'products.id')
-                ->orderByDesc('products.created_at')
-                ->select('product_cards.*'),
-            default => $query,
-        };
+            foreach ($filter->filters as $namespace => $slugs) {
+                $slugArray = is_array($slugs) ? $slugs : [$slugs];
+                if (!$this->isVariantSatisfiedInPool($namespace, $slugArray, $variant)) {
+                    return false;
+                }
+            }
+            return true;
+        })->count();
 
-        $cards = $query->limit($filter->limit)->get();
-
-        return $cards->map(fn(ProductCard $card) => $this->attachMatchingData($card, $filter))->filter()->values();
+        return $count;
     }
 
-    private function attachMatchingData(ProductCard $card, ProductCardFilterData $filter): array
+    public function getPurchasables(ProductCardFilterData $filter): LengthAwarePaginator
     {
-        $filters = $filter->filters;
-        $product = $card->product;
+        $paginatedProducts = $this->getProductCards($filter);
+        $products = $paginatedProducts->items();
 
-        // 1. Pre-calculate which filters are satisfied GLOBALLY by the product
-        // This avoids re-checking product specs for every single variant
-        $globalMatches = [];
-        foreach ($filters as $namespace => $slugs) {
-            $slugArray = is_array($slugs) ? $slugs : [$slugs];
-            if ($this->isProductGloballySatisfied($namespace, $slugArray, $product)) {
-                $globalMatches[$namespace] = true;
+
+        $bundles = Bundle::query()
+            ->where('is_active', true)
+            ->get()
+            ->map(fn(Bundle $bundle) => [
+                'type' => 'bundle',
+                'id' => $bundle->id,
+                'name' => $bundle->name,
+                'slug' => $bundle->slug,
+                'price' => $bundle->calculateBundlePrice(),
+                'images' => [
+                    'primary' => $bundle->getFirstMediaUrl('primary_image', 'webp'),
+                    'hover' => $bundle->getFirstMediaUrl('hover_image', 'webp')
+                ],
+            ]);
+
+        if ($bundles->isEmpty()) {
+            return $paginatedProducts;
+        }
+
+        $result = collect();
+        $bundleIndex = 0;
+        $injectionInterval = rand(3, 10);
+
+        foreach ($products as $index => $product) {
+            $result->push($product);
+
+            if (($index + 1) % $injectionInterval === 0 && $bundleIndex < $bundles->count()) {
+                $result->push($bundles[$bundleIndex]);
+                $bundleIndex++;
             }
         }
 
-        // 2. Filter variants based on the remaining requirements
-        $matchingVariants = $card->variants->filter(function ($variant) use ($filters, $product, $globalMatches) {
+        return new LengthAwarePaginator(
+            $result->values(),
+            $paginatedProducts->total(),
+            $paginatedProducts->perPage(),
+            $paginatedProducts->currentPage(),
+            ['path' => $paginatedProducts->getPath(), 'query' => $paginatedProducts->getQueryString()]
+        );
+    }
+
+    /**
+     * Fetch product cards that match the given filters.
+     * Uses an in-memory pool to ensure 100% consistency with filter summaries.
+     */
+    public function getProductCards(ProductCardFilterData $filter): LengthAwarePaginator
+    {
+        $pool = $this->fetchStorefrontPool();
+
+        // Identify variants that satisfy ALL active filters
+        $matchingVariantIds = [];
+        foreach ($pool as $variant) {
+            $isMatch = true;
+
+            if ($filter->min_price !== null && $variant->effective_price < $filter->min_price) {
+                $isMatch = false;
+            }
+            if ($isMatch && $filter->max_price !== null && $variant->effective_price > $filter->max_price) {
+                $isMatch = false;
+            }
+
+            foreach ($filter->filters as $namespace => $slugs) {
+                $slugArray = is_array($slugs) ? $slugs : [$slugs];
+                if (!$this->isVariantSatisfiedInPool($namespace, $slugArray, $variant)) {
+                    $isMatch = false;
+                    break;
+                }
+            }
+            if ($isMatch) {
+                $matchingVariantIds[] = $variant->variant_id;
+            }
+        }
+
+        $total = count($matchingVariantIds);
+        if ($total === 0) {
+            return new LengthAwarePaginator([], 0, $filter->limit ?? 24);
+        }
+
+        $limit = $filter->limit > 0 ? $filter->limit : 24;
+        $offset = ($filter->page - 1) * $limit;
+
+        $slicedVariantIds = array_slice($matchingVariantIds, $offset, $limit);
+
+        if (empty($slicedVariantIds)) {
+            return new LengthAwarePaginator([], 0, $filter->limit ?? 24);
+        }
+
+        // Map matching variants back to their parent products
+        $productIds = $pool->whereIn('variant_id', $slicedVariantIds)->pluck('product_id')->unique();
+
+        $cards = ProductCard::query()
+            ->whereIn('product_id', $productIds)
+            ->with(['product', 'variants', 'options'])
+            ->get();
+
+        if ($filter->type === ProductSortType::HIGH_LOW || $filter->type === ProductSortType::LOW_HIGH) {
+            $cards = $cards->sortBy(function ($card) use ($filter) {
+                $prices = $card->variants->map(fn($v) => $v->getEffectivePrice())->toArray();
+                $price = empty($prices) ? 0 : ($filter->type === ProductSortType::HIGH_LOW ? max($prices) : min($prices));
+                return $filter->type === ProductSortType::HIGH_LOW ? -$price : $price;
+            });
+        } elseif ($filter->type === ProductSortType::NEWEST) {
+            $cards = $cards->sortByDesc(function ($card) {
+                return [
+                    $card->product->is_new_arrival ? 1 : 0,
+                    $card->product->published_date
+                ];
+            });
+        } elseif ($filter->type === ProductSortType::POPULARITY) {
+            $cards = $cards->sortByDesc('sales_count');
+        }
+
+        $finalCollection = $cards->map(fn(ProductCard $card) => $this->attachMatchingData($card, $filter))
+            ->filter()
+            ->values();
+
+        // 6. Return the Paginator
+        return new LengthAwarePaginator(
+            $finalCollection,
+            $total,
+            $filter->limit,
+            $filter->page,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+    }
+
+    private function attachMatchingData(ProductCard $card, ProductCardFilterData $filterData): array
+    {
+        $filters = $filterData->filters;
+        $product = $card->product;
+
+
+        $matchingVariants = $card->variants->filter(function ($variant) use ($filters, $filterData) {
+
+            if ($filterData->min_price !== null && $variant->getEffectivePrice() < $filterData->min_price) return false;
+            if ($filterData->max_price !== null && $variant->getEffectivePrice() > $filterData->max_price) return false;
+
+            $variantObj = (object) [
+                'option_values' => $variant->option_values,
+                'features' => $variant->features,
+                'specifications' => $variant->specifications,
+                'prod_features' => $variant->product->features,
+                'prod_specifications' => $variant->product->specifications,
+                'category_id' => $variant->product->category_id,
+                'category_slug' => $variant->product->category->slug,
+                'collection_id' => $variant->product->collection_id,
+                'collection_slug' => $variant->product->collection->slug,
+                'filterable_options' => $variant->product->filterable_options,
+            ];
+
             foreach ($filters as $namespace => $slugs) {
                 $slugArray = is_array($slugs) ? $slugs : [$slugs];
-
-                // If the product already satisfies this filter globally, move to next namespace
-                if (isset($globalMatches[$namespace])) {
-                    continue;
-                }
-
-                // Otherwise, the SPECIFIC variant must satisfy this filter
-                if (!$this->isVariantSatisfied($namespace, $slugArray, $variant)) {
+                if (!$this->isVariantSatisfiedInPool($namespace, $slugArray, $variantObj)) {
                     return false;
                 }
             }
             return true;
         });
 
-        // 3. Determine if the card should be shown
-        // If no variants match all filters, this card is not a match
         if ($matchingVariants->isEmpty()) {
-            return []; // Return empty to be filtered out by the caller
+            return [];
         }
 
         return [
             'type' => 'product',
             'id' => $card->id,
             'matching_variants_count' => $matchingVariants->count(),
+            'matched_variant_ids' => $matchingVariants->pluck('id')->toArray(),
             'default_variant_id' => $matchingVariants->first()?->id,
             'product' => [
                 'name' => $product->name,
@@ -101,40 +231,108 @@ class StorefrontService
         ];
     }
 
-    private function isProductGloballySatisfied(string $namespace, array $slugs, $product): bool
+    public function getFilterSummary(ProductCardFilterData $filter): array
     {
-        if ($namespace === 'tinh-nang') {
-            return collect($product->features ?? [])->whereIn('lookup_slug', $slugs)->isNotEmpty();
-        }
+        $filterHash = md5(json_encode($filter->filters));
+        $cacheKey = "summary:{$filterHash}";
 
-        $spec = $product->specifications[$namespace] ?? null;
-        if ($spec && ($spec['is_filterable'] ?? false)) {
-            return collect($spec['items'] ?? [])->whereIn('lookup_slug', $slugs)->isNotEmpty();
-        }
+        return \Illuminate\Support\Facades\Cache::tags([\App\Support\CacheTag::CategoryFilters->value])
+            ->remember($cacheKey, now()->addHours(24), function () use ($filter) {
+                $pool = $this->fetchStorefrontPool();
+                $namespaces = \App\Models\Setting\LookupNamespace::where('slug', '!=', 'nhom-danh-muc')->get();
+                $summary = [];
 
-        return false;
+                $special = [
+                    'danh-muc' => 'Danh mục',
+                    'bo-suu-tap' => 'Bộ sưu tập',
+                ];
+
+                $allNamespaceSlugs = $namespaces->pluck('slug')->toArray();
+                $allNamespaceLabels = $namespaces->pluck('display_name', 'slug')->toArray();
+
+                foreach (array_merge($allNamespaceSlugs, array_keys($special)) as $nsSlug) {
+                    $label = $allNamespaceLabels[$nsSlug] ?? $special[$nsSlug] ?? $nsSlug;
+                    $otherFilters = collect($filter->filters)->except([$nsSlug])->toArray();
+
+                    $filteredPool = $pool->filter(function ($variant) use ($otherFilters) {
+                        foreach ($otherFilters as $ns => $slugs) {
+                            $slugArray = is_array($slugs) ? $slugs : [$slugs];
+                            if (!$this->isVariantSatisfiedInPool($ns, $slugArray, $variant)) {
+                                return false;
+                            }
+                        }
+                        return true;
+                    });
+
+                    if ($filteredPool->isEmpty()) continue;
+
+                    $counts = [];
+                    foreach ($filteredPool as $variant) {
+                        $vals = $this->extractValuesFromVariant($nsSlug, $variant);
+                        foreach ($vals as $val) {
+                            $counts[$val] = ($counts[$val] ?? 0) + 1;
+                        }
+                    }
+
+                    if (empty($counts)) continue;
+
+                    // 3. Resolve labels and build options
+                    $options = [];
+                    if ($nsSlug === 'danh-muc') {
+                        $lookups = \App\Models\Product\Category::whereIn('slug', array_keys($counts))->get();
+                        foreach ($lookups as $l) $options[] = ['slug' => $l->slug, 'label' => $l->display_name, 'count' => $counts[$l->slug]];
+                    } elseif ($nsSlug === 'bo-suu-tap') {
+                        $lookups = \App\Models\Product\Collection::whereIn('slug', array_keys($counts))->get();
+                        foreach ($lookups as $l) $options[] = ['slug' => $l->slug, 'label' => $l->display_name, 'count' => $counts[$l->slug]];
+                    } else {
+                        $nsModel = \App\Models\Setting\LookupNamespace::where('slug', $nsSlug)->first();
+                        if ($nsModel) {
+                            $options = $nsModel->activeLookups()->get()->map(fn($l) => [
+                                'slug' => $l->slug,
+                                'label' => $l->display_name,
+                                'count' => $counts[$l->slug] ?? 0
+                            ])->filter(fn($o) => $o['count'] > 0)->values()->toArray();
+                        }
+                    }
+
+                    if (!empty($options)) {
+                        $summary[] = ['namespace' => $nsSlug, 'label' => $label, 'options' => $options];
+                    }
+                }
+
+                return $summary;
+            });
     }
 
-    private function isVariantSatisfied(string $namespace, array $slugs, $variant): bool
+    private function isVariantSatisfiedInPool(string $namespace, array $slugs, $variant): bool
     {
-        // 1. Check Option Values (The most common filter: color, material)
-        if (in_array($variant->option_values[$namespace] ?? null, $slugs)) {
+        if ($namespace === 'danh-muc') {
+            return in_array($variant->category_slug, $slugs);
+        }
+        if ($namespace === 'bo-suu-tap') {
+            return in_array($variant->collection_slug, $slugs);
+        }
+
+        // 2. Option Values
+        if (isset($variant->option_values[$namespace]) && in_array($variant->option_values[$namespace], $slugs)) {
             return true;
         }
 
-        // 2. Check Variant-specific Features
+        // 3. Features (tinh-nang)
         if ($namespace === 'tinh-nang') {
-            if (collect($variant->features ?? [])->whereIn('lookup_slug', $slugs)->isNotEmpty()) {
-                return true;
+            $allFeatures = array_merge((array)($variant->features ?? []), (array)($variant->prod_features ?? []));
+            foreach ($allFeatures as $feat) {
+                if (isset($feat['lookup_slug']) && in_array($feat['lookup_slug'], $slugs)) return true;
             }
         } else {
-            // 3. Check Variant-specific Specifications
-            foreach ($variant->specifications ?? [] as $data) {
-                if (($data['lookup_namespace'] ?? null) === $namespace &&
-                    ($data['is_filterable'] ?? false) &&
-                    collect($data['items'] ?? [])->intersect($slugs)->isNotEmpty()
-                ) {
-                    return true;
+            // 4. Specifications (Variant + Product)
+            $allSpecs = array_merge((array)($variant->specifications ?? []), (array)($variant->prod_specifications ?? []));
+            foreach ($allSpecs as $spec) {
+                if (isset($spec['lookup_namespace']) && $spec['lookup_namespace'] === $namespace && ($spec['is_filterable'] ?? false)) {
+                    $items = $spec['items'] ?? [];
+                    foreach ($items as $item) {
+                        if (isset($item['lookup_slug']) && in_array($item['lookup_slug'], $slugs)) return true;
+                    }
                 }
             }
         }
@@ -142,45 +340,85 @@ class StorefrontService
         return false;
     }
 
-    public function getPurchasables(ProductCardFilterData $filter): Collection
+    private function extractValuesFromVariant(string $namespace, $variant): array
     {
-
-        // 1. Get sorted products (Maintain the order from DTO)
-        $products = $this->getProductCards($filter);
-
-        // 2. Get active bundles (Remove metrics as requested)
-        $bundles = Bundle::query()
-            ->where('is_active', true)
-            ->get()
-            ->map(fn(Bundle $bundle) => [
-                'type' => 'bundle',
-                'id' => $bundle->id,
-                'name' => $bundle->name,
-                'slug' => $bundle->slug,
-                'price' => $bundle->calculateBundlePrice(),
-                'images' => [
-                    'primary' => $bundle->getFirstMediaUrl('primary_image', 'webp'),
-                    'hover' => $bundle->getFirstMediaUrl('hover_image', 'webp')
-                ],
-            ]);
-
-        if ($bundles->isEmpty()) {
-            return $products;
-        }
-
-        $result = collect();
-        $bundleIndex = 0;
-        $injectionInterval = rand(3, 10);
-
-        foreach ($products as $index => $product) {
-            $result->push($product);
-
-            if (($index + 1) % $injectionInterval === 0 && $bundleIndex < $bundles->count()) {
-                $result->push($bundles[$bundleIndex]);
-                $bundleIndex++;
+        $values = [];
+        $values = [];
+        if ($namespace === 'danh-muc') {
+            if ($variant->category_slug) $values[] = $variant->category_slug;
+        } elseif ($namespace === 'bo-suu-tap') {
+            if ($variant->collection_slug) $values[] = $variant->collection_slug;
+        } elseif (isset($variant->option_values[$namespace])) {
+            $values[] = $variant->option_values[$namespace];
+        } elseif ($namespace === 'tinh-nang') {
+            $allFeatures = array_merge((array)($variant->features ?? []), (array)($variant->prod_features ?? []));
+            foreach ($allFeatures as $feat) {
+                if (isset($feat['lookup_slug'])) $values[] = $feat['lookup_slug'];
+            }
+        } else {
+            $allSpecs = array_merge((array)($variant->specifications ?? []), (array)($variant->prod_specifications ?? []));
+            foreach ($allSpecs as $spec) {
+                if (isset($spec['lookup_namespace']) && $spec['lookup_namespace'] === $namespace && ($spec['is_filterable'] ?? false)) {
+                    $items = $spec['items'] ?? [];
+                    foreach ($items as $item) {
+                        if (isset($item['lookup_slug'])) $values[] = $item['lookup_slug'];
+                    }
+                }
             }
         }
 
-        return $result->values();
+        return array_unique($values);
+    }
+
+    private function fetchStorefrontPool(): \Illuminate\Support\Collection
+    {
+        $rawPool = \App\Models\Product\ProductVariant::query()
+            ->join('products', 'product_variants.product_id', '=', 'products.id')
+            ->leftJoin('categories', 'products.category_id', '=', 'categories.id')
+            ->leftJoin('collections', 'products.collection_id', '=', 'collections.id')
+            ->where('products.status', 'published')
+            ->where('product_variants.status', 'active')
+            ->whereNull('product_variants.deleted_at')
+            ->select([
+                'product_variants.id as variant_id',
+                'product_variants.option_values',
+                'product_variants.features',
+                'product_variants.specifications',
+                'products.id as product_id',
+                'products.category_id',
+                'categories.slug as category_slug',
+                'products.collection_id',
+                'collections.slug as collection_slug',
+                'products.features as prod_features',
+                'products.specifications as prod_specifications',
+                'products.filterable_options',
+            ])
+            ->get();
+
+        return $rawPool->map(function ($item) {
+            $decode = function ($value) {
+                if (is_string($value)) return json_decode($value, true) ?? [];
+                return is_array($value) ? $value : [];
+            };
+
+            $variantModel = ProductVariant::find($item->variant_id);
+            $effectivePrice = $variantModel ? $variantModel->getEffectivePrice() : 0;
+
+            return (object) [
+                'variant_id' => $item->variant_id,
+                'effective_price' => $effectivePrice,
+                'product_id' => $item->product_id,
+                'category_id' => $item->category_id,
+                'category_slug' => $item->category_slug,
+                'collection_id' => $item->collection_id,
+                'collection_slug' => $item->collection_slug,
+                'option_values' => $decode($item->option_values),
+                'features' => $decode($item->features),
+                'specifications' => $decode($item->specifications),
+                'prod_features' => $decode($item->prod_features),
+                'prod_specifications' => $decode($item->prod_specifications),
+                'filterable_options' => $decode($item->filterable_options),
+            ];
+        });
     }
 }

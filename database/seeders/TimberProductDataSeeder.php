@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\Product\Product;
 use App\Models\Product\ProductVariant;
+use Carbon\Carbon;
+use Database\Seeders\MediaSeederTrait;
 use Illuminate\Database\Seeder;
 
 class TimberProductDataSeeder extends Seeder
@@ -38,6 +40,22 @@ class TimberProductDataSeeder extends Seeder
         $data['filterable_options'] = json_decode($data['filterable_options'], true);
         $data['care_instructions'] = json_decode($data['care_instructions'], true);
         $data['assembly_info'] = json_decode($data['assembly_info'], true);
+
+        $createdAt = Carbon::now()->subMonths(rand(1, 3));
+
+        $oneMonthAgo = Carbon::now()->subMonth();
+        $updatedAt = Carbon::createFromTimestamp(
+            rand($createdAt->timestamp, $oneMonthAgo->timestamp)
+        );
+        $publishedDate = $updatedAt->copy();
+        $newArrivalUntil = $publishedDate->copy()->addMonths(rand(1, 3));
+        $isNewArrival = $newArrivalUntil->isFuture();
+
+        $data['created_at'] = $createdAt;
+        $data['updated_at'] = $updatedAt;
+        $data['published_date'] = $publishedDate;
+        $data['new_arrival_until'] = $newArrivalUntil;
+        $data['is_new_arrival'] = $isNewArrival;
 
         return Product::updateOrCreate(
             ['id' => $data['id']],

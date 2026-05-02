@@ -4,7 +4,12 @@ import { ImageOff, ShoppingCart } from '@lucide/vue';
 import { computed, ref, onMounted } from 'vue';
 import StarRating from '@/components/custom/StarRating.vue';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { formatPrice } from '@/lib/utils';
 import type { ProductCard, ProductCardVariant } from '@/types/public/product';
 import VariantSelectorDialog from './VariantSelectorDialog.vue';
@@ -78,7 +83,7 @@ function openSelector() {
 </script>
 
 <template>
-    <div class="product-item overflow-hidden rounded-lg border">
+    <div class="product-item min-w-[300px] overflow-hidden">
         <!-- Product Image -->
         <div
             class="relative aspect-square overflow-hidden"
@@ -115,7 +120,9 @@ function openSelector() {
                 <Tooltip>
                     <TooltipTrigger as-child>
                         <Link :href="productUrl()" class="block">
-                            <h3 class="transition-color truncate text-sm font-medium">
+                            <h3
+                                class="transition-color truncate text-sm font-medium"
+                            >
                                 {{ displayName }}
                             </h3>
                         </Link>
@@ -153,7 +160,13 @@ function openSelector() {
             </div>
 
             <!-- Rating -->
-            <div v-if="productCard.metrics.average_rating || productCard.metrics.sales_count > 0" class="flex items-center justify-between py-1">
+            <div
+                v-if="
+                    productCard.metrics.average_rating ||
+                    productCard.metrics.sales_count > 0
+                "
+                class="flex items-center justify-between py-1"
+            >
                 <!-- Left Side: Rating -->
                 <div v-if="productCard.metrics.average_rating">
                     <StarRating
@@ -164,14 +177,18 @@ function openSelector() {
                         size="h-5 w-5 text-xs"
                     />
                 </div>
-                <div v-else class="w-0"></div> <!-- Spacer to keep sales count on the right if no rating exists -->
+                <div v-else class="w-0"></div>
+                <!-- Spacer to keep sales count on the right if no rating exists -->
 
                 <!-- Right Side: Sell Count -->
                 <div
                     v-if="productCard.metrics.sales_count > 0"
                     class="text-xs text-zinc-500"
                 >
-                    Đã bán {{ productCard.metrics.sales_count.toLocaleString('vi-VN') }}
+                    Đã bán
+                    {{
+                        productCard.metrics.sales_count.toLocaleString('vi-VN')
+                    }}
                 </div>
             </div>
 
@@ -184,7 +201,7 @@ function openSelector() {
                 class="flex flex-wrap gap-1.5"
             >
                 <button
-                    v-for="swatch in activeCard.swatches"
+                    v-for="swatch in activeCard.swatches.slice(0, 8)"
                     :key="swatch.id"
                     type="button"
                     :title="swatch.label! || swatch.name!"
@@ -203,6 +220,13 @@ function openSelector() {
                         class="h-full w-full object-cover"
                     />
                     <span v-else class="block h-full w-full bg-zinc-200" />
+                </button>
+                <button
+                    v-if="activeCard.swatches.length > 8"
+                    @click="openSelector"
+                    class="text-xs"
+                >
+                    +{{ activeCard.swatches.length - 8 }}
                 </button>
             </div>
 

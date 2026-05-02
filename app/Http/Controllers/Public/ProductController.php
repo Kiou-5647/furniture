@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Public;
 use App\Data\Public\ProductCardFilterData;
 use App\Http\Resources\Public\Product\ProductPageResource;
 use App\Models\Product\ProductVariant;
+use App\Services\Public\ShopMenuService;
 use App\Services\Public\StorefrontService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -12,21 +13,24 @@ use Inertia\Response;
 
 class ProductController
 {
-    public function __construct(protected StorefrontService $storefrontService) {}
+    public function __construct(
+        protected StorefrontService $storefrontService,
+        protected ShopMenuService $shopMenuService
+    ) {}
 
     public function index(Request $request)
     {
-        // We use the DTO to handle the filtering from the URL
         $filter = ProductCardFilterData::fromRequest($request);
 
-        $cards = $this->storefrontService->getProductCards($filter);
+        $purchasables = $this->storefrontService->getPurchasables($filter);
+
+        $filterSummary = $this->storefrontService->getFilterSummary($filter);
 
         return Inertia::render('public/product/Index', [
-            'cards' => $cards,
-            'filters' => [
-                'type' => $request->query('type'),
-                'category' => $request->query('category'),
-            ]
+            'cards' => $purchasables,
+            'filters' => $filter,
+            'filterSummary' => $filterSummary,
+            'totalItems' => $purchasables->total(),
         ]);
     }
 

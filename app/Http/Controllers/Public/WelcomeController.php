@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Public;
 
 use App\Data\Public\ProductCardFilterData;
+use App\Enums\ProductSortType;
 use App\Services\Public\ShopMenuService;
 use App\Services\Public\StorefrontService;
 use Illuminate\Http\Request;
@@ -26,21 +27,21 @@ class WelcomeController
                 'newArrivals' => [
                     'title' => 'Sản phẩm & Combo mới',
                     'cards' => $this->storefrontService->getPurchasables(
-                        new ProductCardFilterData(type: 'new', limit: 20)
+                        new ProductCardFilterData(type: ProductSortType::NEWEST, limit: 20)
                     ),
-                    'moreUrl' => route('products.index', ['type' => 'new']),
+                    'moreUrl' => route('products.index', ['type' => ProductSortType::NEWEST->value]),
                 ],
                 'topSellers' => [
                     'title' => 'Bán chạy nhất',
                     'cards' => $this->storefrontService->getPurchasables(
-                        new ProductCardFilterData(type: 'top_seller', limit: 20)
+                        new ProductCardFilterData(type: ProductSortType::POPULARITY, limit: 20)
                     ),
-                    'moreUrl' => route('products.index', ['type' => 'top_seller']),
+                    'moreUrl' => route('products.index', ['type' => ProductSortType::POPULARITY->value]),
                 ],
                 'allProducts' => [
                     'title' => 'Tất cả sản phẩm',
                     'cards' => $this->storefrontService->getPurchasables(
-                        new ProductCardFilterData(type: 'all', limit: 20)
+                        new ProductCardFilterData(type: null, limit: 20)
                     ),
                     'moreUrl' => route('products.index'),
                 ],

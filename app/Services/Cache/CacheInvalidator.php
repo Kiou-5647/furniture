@@ -20,6 +20,7 @@ class CacheInvalidator
         CacheTag::SpecNamespaces->flush();
         CacheTag::AllSpecLookups->flush();
         CacheTag::ShopMenu->flush();
+        CacheTag::CategoryFilters->flush();
     }
 
     public function onLookupNamespaceChanged(?LookupNamespace $namespace = null): void
@@ -36,6 +37,7 @@ class CacheInvalidator
             CacheTag::AllSpecLookups->flush();
             CacheTag::CategoryRooms->flush();
             CacheTag::ShopMenu->flush();
+            CacheTag::CategoryFilters->flush();
 
             return;
         }
@@ -62,6 +64,8 @@ class CacheInvalidator
             CacheTag::CategoryRooms->flush();
             CacheTag::ShopMenu->flush();
         }
+        
+        CacheTag::CategoryFilters->flush();
     }
 
     public function onCategoryChanged(?Category $category = null): void
@@ -81,6 +85,7 @@ class CacheInvalidator
     public function onCollectionChanged(): void
     {
         CacheTag::Collections->flush();
+        CacheTag::CategoryFilters->flush();
     }
 
     public function onVendorChanged(): void
@@ -102,5 +107,10 @@ class CacheInvalidator
     public function onGeodataChanged(): void
     {
         CacheTag::Geodata->flush();
+    }
+
+    public function onProductChanged(): void
+    {
+        CacheTag::CategoryFilters->flush();
     }
 }

@@ -117,6 +117,8 @@ class AppServiceProvider extends ServiceProvider
         StockTransfer::observe(CacheInvalidationObserver::class);
         Province::observe(CacheInvalidationObserver::class);
         Ward::observe(CacheInvalidationObserver::class);
+        Product::observe(CacheInvalidationObserver::class);
+        ProductVariant::observe(CacheInvalidationObserver::class);
 
         // Fulfillment observers
         Shipment::observe(ShipmentObserver::class);

@@ -904,7 +904,7 @@ function setSpecGroupWithLabel(ns: string) {
                                     "
                                 >
                                     <Checkbox
-                                        :checked="
+                                        :model-value="
                                             ctx.specSelectedValues.includes(
                                                 opt.slug,
                                             )
