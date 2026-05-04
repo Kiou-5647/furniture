@@ -17,7 +17,8 @@ export interface Employee {
     } | null;
     full_name: string;
     phone: string | null;
-    location_id: string | null;
+    store_location_id: string | null;
+    warehouse_location_id: string | null;
     hire_date: string | null;
     termination_date: string | null;
     avatar_url?: string;

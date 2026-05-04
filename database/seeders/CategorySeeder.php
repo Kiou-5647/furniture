@@ -22,7 +22,6 @@ class CategorySeeder extends Seeder
     {
         $this->seedCategories();
         $this->seedRoomPlacements();
-        $this->seedFilterableSpecs();
     }
 
     protected function seedCategories(): void
@@ -76,37 +75,11 @@ class CategorySeeder extends Seeder
             $lookup = Lookup::find($placement['room_id']);
 
             if ($category && $lookup) {
-                // Use a pivot table logic or a specific model if exists
-                // Assuming a many-to-many relationship: category_room_placements
                 $category->rooms()->syncWithoutDetaching([$lookup->id]);
             } else {
                 $this->command->warn("Could not find Category or Lookup for placement: " . json_encode($placement));
             }
         }
         $this->command->info('Seeded category room placements');
-    }
-
-    protected function seedFilterableSpecs(): void
-    {
-        $path = base_path('docs/database/category_filterable_specs.php');
-        if (!File::exists($path)) {
-            $this->command->warn("Filterable specs file not found at: {$path}");
-            return;
-        }
-
-        require $path;
-
-        foreach ($specs as $spec) {
-            $category = Category::find($spec['category_id']);
-            $lookup = LookupNamespace::find($spec['namespace_id']);
-
-            if ($category && $lookup) {
-                // Assuming a many-to-many relationship: category_filterable_specs
-                $category->filterableSpecs()->syncWithoutDetaching([$lookup->id]);
-            } else {
-                $this->command->warn("Could not find Category or Lookup for spec: " . json_encode($spec));
-            }
-        }
-        $this->command->info('Seeded category filterable specs');
     }
 }

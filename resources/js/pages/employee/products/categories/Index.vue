@@ -3,9 +3,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import {
     Plus,
     LayoutGrid,
-    Package,
     Sparkles,
-    Lamp,
     CheckCircle2,
     CircleDashed,
 } from '@lucide/vue';
@@ -45,7 +43,6 @@ const CategoryFormModal = createLazyComponent(
 const props = defineProps<{
     categoryGroups: any[];
     roomOptions: any[];
-    specOptions: any[];
     categories?: CategoryPagination;
     filters: CategoryFilterData;
     currentGroup?: any;
@@ -69,13 +66,6 @@ const mappedRoomOptions = computed(() => {
     return props.roomOptions.map((room) => ({
         label: room.display_name,
         value: room.id,
-    }));
-});
-
-const mappedSpecOptions = computed(() => {
-    return props.specOptions.map((spec) => ({
-        label: spec.display_name,
-        value: spec.id,
     }));
 });
 
@@ -381,12 +371,6 @@ function handlePreviewImage(url: string) {
                                     :options="mappedRoomOptions"
                                     icon_location="end"
                                 />
-                                <DataTableFacetedFilter
-                                    title="Thông số lọc"
-                                    v-model="selectedSpecs"
-                                    :options="mappedSpecOptions"
-                                    icon_location="end"
-                                />
                             </template>
                         </DataTableGroup>
                     </div>
@@ -400,7 +384,6 @@ function handlePreviewImage(url: string) {
             :open="showFormModal"
             :category-groups="categoryGroups"
             :room-options="mappedRoomOptions"
-            :specOptions="mappedSpecOptions"
             :category="selectedCategory"
             @close="showFormModal = false"
             @delete="confirmDelete"

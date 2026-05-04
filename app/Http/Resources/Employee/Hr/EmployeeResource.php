@@ -12,7 +12,7 @@ class EmployeeResource extends JsonResource
         return [
             'id' => $this->id,
             'user_id' => $this->user_id,
-            'user' => $this->whenLoaded('user', fn () => [
+            'user' => $this->whenLoaded('user', fn() => [
                 'id' => $this->user->id,
                 'name' => $this->user->name,
                 'email' => $this->user->email,
@@ -21,15 +21,16 @@ class EmployeeResource extends JsonResource
                 'roles' => $this->user->getRoleNames(),
                 'permissions' => $this->user->getAllPermissions()->pluck('name'),
             ]),
-            'department' => $this->whenLoaded('department', fn () => [
+            'department' => $this->whenLoaded('department', fn() => [
                 'id' => $this->department->id,
                 'name' => $this->department->name,
                 'code' => $this->department->code,
             ]),
             'full_name' => $this->full_name,
             'phone' => $this->phone,
-            'location_id' => $this->location_id,
-            'avatar_url' => $this->when($this->hasMedia('avatar'), fn () => $this->getFirstMediaUrl('avatar')),
+            'store_location_id' => $this->store_location_id,
+            'warehouse_location_id' => $this->warehouse_location_id,
+            'avatar_url' => $this->when($this->hasMedia('avatar'), fn() => $this->getFirstMediaUrl('avatar')),
             'hire_date' => $this->hire_date?->format('d/m/Y'),
             'termination_date' => $this->termination_date?->format('d/m/Y'),
             'created_at' => $this->created_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),

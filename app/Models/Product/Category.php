@@ -57,16 +57,6 @@ class Category extends Model implements HasMedia
         return $this->hasMany(\App\Models\Product\Product::class);
     }
 
-    public function filterableSpecs()
-    {
-        return $this->belongsToMany(
-            LookupNamespace::class,
-            'category_filterable_specs',
-            'category_id',
-            'namespace_id'
-        );
-    }
-
     public function newEloquentBuilder($query): CategoryBuilder
     {
         return new CategoryBuilder($query);

@@ -17,7 +17,7 @@ class CategoryService
     public function getFiltered(CategoryFilterData $filter): LengthAwarePaginator
     {
         return Category::query()
-            ->with(['group', 'rooms', 'filterableSpecs'])
+            ->with(['group', 'rooms'])
             ->when($filter->group_id, fn($q) => $q->where('group_id', $filter->group_id))
             ->when($filter->product_type, fn($q) => $q->byProductType($filter->product_type))
             ->when($filter->search, fn($q) => $q->search($filter->search))
@@ -31,7 +31,7 @@ class CategoryService
     public function getTrashedFiltered(CategoryFilterData $filter): LengthAwarePaginator
     {
         return Category::onlyTrashed()
-            ->with(['group', 'rooms', 'filterableSpecs'])
+            ->with(['group', 'rooms'])
             ->when($filter->group_id, fn($q) => $q->where('group_id', $filter->group_id))
             ->when($filter->product_type, fn($q) => $q->byProductType($filter->product_type))
             ->when($filter->search, fn($q) => $q->search($filter->search))

@@ -74,8 +74,12 @@ class OrderSeeder extends Seeder
             
             // Set processed_at close to the order's paid_at date (1-3 days after)
             if ($order && $order->paid_at) {
+                $processedAt = $order->paid_at->copy()->addDays(rand(1, 3))->addHours(rand(1, 23));
+                if ($processedAt->isFuture()) {
+                    $processedAt = Carbon::now();
+                }
                 $refund->update([
-                    'processed_at' => $order->paid_at->copy()->addDays(rand(1, 3))->addHours(rand(1, 23))
+                    'processed_at' => $processedAt
                 ]);
             } else {
                 $refund->update(['processed_at' => Carbon::now()]);
@@ -173,6 +177,9 @@ class OrderSeeder extends Seeder
 
         // Distribute payment date naturally (0-3 days after order creation)
         $paymentDate = $date->copy()->addDays(rand(0, 3))->addHours(rand(1, 23));
+        if ($paymentDate->isFuture()) {
+            $paymentDate = Carbon::now();
+        }
 
         // Backdate the order payment and the payment records in DB
         $order->update(['paid_at' => $paymentDate]);

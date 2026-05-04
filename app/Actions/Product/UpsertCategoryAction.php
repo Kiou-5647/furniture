@@ -13,8 +13,7 @@ class UpsertCategoryAction
         $imageFile = $data['image'] ?? null;
         $imageUrl = $data['image_url'] ?? null;
         $roomIds = $data['room_ids'] ?? [];
-        $specsIds = $data['filterable_specs'] ?? [];
-        unset($data['image'], $data['image_url'], $data['room_ids'], $data['filterable_specs']);
+        unset($data['image'], $data['image_url'], $data['room_ids']);
 
         DB::beginTransaction();
 
@@ -26,7 +25,6 @@ class UpsertCategoryAction
             }
 
             $category->rooms()->sync($roomIds);
-            $category->filterableSpecs()->sync($specsIds);
 
             if ($imageFile instanceof UploadedFile) {
                 $category->addMedia($imageFile)->toMediaCollection('image');

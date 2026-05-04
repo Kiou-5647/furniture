@@ -28,7 +28,7 @@ class UpdateEmployeeAction
             $userData['is_active'] = (bool) $data['is_active'];
         }
 
-        foreach (['full_name', 'phone', 'department_id', 'hire_date'] as $key) {
+        foreach (['full_name', 'phone', 'department_id', 'store_location_id', 'warehouse_location_id', 'hire_date'] as $key) {
             if (isset($data[$key])) {
                 $employeeData[$key] = $data[$key];
             }

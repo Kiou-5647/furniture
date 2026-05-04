@@ -49,7 +49,6 @@ const props = defineProps<{
     open: boolean;
     categoryGroups: any[];
     roomOptions: any[];
-    specOptions: any[];
     category: Category | null;
 }>();
 
@@ -58,7 +57,6 @@ const emit = defineEmits(['close', 'delete']);
 const form = useForm({
     group_id: null as string | null,
     room_ids: [] as string[],
-    filterable_specs: [] as string[],
     product_type: 'noi-that' as ProductType,
     slug: '',
     display_name: '',
@@ -81,8 +79,6 @@ watch(
         if (newCategory && props.open) {
             form.group_id = newCategory.group_id;
             form.room_ids = newCategory.rooms?.map((r) => r.id) ?? [];
-            form.filterable_specs =
-                newCategory.filterable_specs?.map((s) => s.id) ?? [];
             form.product_type = newCategory.product_type;
             form.slug = newCategory.slug;
             form.display_name = newCategory.display_name;
@@ -111,7 +107,6 @@ watch(
 );
 
 const previewUrl = computed(() => {
-    console.info(form.image)
     if (form.image) return URL.createObjectURL(form.image);
     return props.category?.image_url ?? null;
 });
@@ -365,25 +360,6 @@ function handleEmitError(message: string) {
                                     />
                                     <FieldError
                                         :errors="[form.errors.room_ids]"
-                                    />
-                                </FieldContent>
-                            </Field>
-                            <Field>
-                                <FieldLabel>
-                                    <Tag
-                                        class="h-3.5 w-3.5 shrink-0 text-muted-foreground"
-                                    />
-                                    Thông số lọc
-                                </FieldLabel>
-                                <FieldContent>
-                                    <MultiSelect
-                                        title="Thông số lọc"
-                                        :options="specOptions"
-                                        v-model="form.filterable_specs!"
-                                        placeholder="Thêm thông số..."
-                                    />
-                                    <FieldError
-                                        :errors="[form.errors.filterable_specs]"
                                     />
                                 </FieldContent>
                             </Field>

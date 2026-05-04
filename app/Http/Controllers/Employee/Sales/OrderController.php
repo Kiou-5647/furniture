@@ -38,7 +38,7 @@ class OrderController
     public function index(Request $request): Response
     {
         $filter = OrderFilterData::fromRequest($request);
-        $employeeLocationId = $request->user()->employee?->location_id;
+        $employeeLocationId = $request->user()->employee?->store_location_id;
 
         return Inertia::render('employee/sales/orders/Index', [
             'statusOptions' => $this->service->getStatusOptions(),
@@ -126,7 +126,7 @@ class OrderController
     public function catalog(Request $request)
     {
         $employee = $request->user()->employee;
-        $employeeLocationId = $employee?->location_id;
+        $employeeLocationId = $employee?->store_location_id;
         $shippingMethods = ShippingMethod::where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name', 'estimated_delivery_days', 'price']);
@@ -137,7 +137,7 @@ class OrderController
             'bundleContents' => $this->service->getBundleContents(),
             'shippingMethods' => $shippingMethods,
             'employeeLocationId' => $employeeLocationId,
-            'employeeLocationName' => $employee?->location?->name,
+            'employeeLocationName' => $employee?->storeLocation?->name,
         ]);
     }
 
@@ -163,7 +163,7 @@ class OrderController
 
         // Merge store location into request data before creating DTO
         if (! $request->input('store_location_id') && $employee) {
-            $request->merge(['store_location_id' => $employee->location_id]);
+            $request->merge(['store_location_id' => $employee->store_location_id]);
         }
 
         $data = CreateOrderData::fromRequest($request);

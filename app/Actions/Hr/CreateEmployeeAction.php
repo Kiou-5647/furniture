@@ -44,7 +44,8 @@ class CreateEmployeeAction
             $employee = Employee::create([
                 'user_id' => $user->id,
                 'department_id' => $data->department_id,
-                'location_id' => $data->location_id,
+                'store_location_id' => $data->store_location_id,
+                'warehouse_location_id' => $data->warehouse_location_id,
                 'full_name' => $data->full_name,
                 'phone' => $data->phone,
                 'hire_date' => $data->hire_date ?: now()->format('Y-m-d'),

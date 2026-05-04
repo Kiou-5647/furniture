@@ -11,9 +11,18 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 /**
  * @method static ShippingMethodBuilder|ShippingMethod query()
  */
+
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;;
+
 class ShippingMethod extends Model
 {
-    use HasUuids, SoftDeletes;
+    use HasUuids, SoftDeletes, LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()->logAll();
+    }
 
     protected $table = 'shipping_methods';
 

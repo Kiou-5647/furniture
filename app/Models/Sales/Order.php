@@ -136,7 +136,7 @@ class Order extends Model
 
     public function canBeCancelled(): bool
     {
-        if ($this->status === OrderStatus::Cancelled) {
+        if ($this->status === OrderStatus::Cancelled || $this->status = OrderStatus::Completed) {
             return false;
         }
 

@@ -36,8 +36,6 @@ class StoreCategoryRequest extends FormRequest
             'product_type' => ['required', Rule::enum(ProductType::class)],
             'room_ids' => ['nullable', 'array'],
             'room_ids.*' => ['exists:lookups,id'],
-            'filterable_specs' => ['nullable', 'array'],
-            'filterable_specs.*' => ['exists:lookup_namespaces,id'],
             'display_name' => ['required', 'string', 'max:255'],
             'slug' => [
                 'required',

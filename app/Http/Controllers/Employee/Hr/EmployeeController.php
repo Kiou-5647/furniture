@@ -32,21 +32,13 @@ class EmployeeController
             'departmentOptions' => $this->service->getDepartmentOptions(),
             'roleOptions' => $this->service->getRoleOptions(),
             'permissionOptions' => $this->service->getPermissionOptions(),
-            'locationOptions' => $this->service->getLocationOptions(),
+            'storeLocationOptions' => $this->service->getStoreLocationOptions(),
+            'warehouseLocationOptions' => $this->service->getWarehouseLocationOptions(),
             'rolePermissions' => $this->service->getRolePermissionsMap(),
-            'employees' => Inertia::defer(fn () => EmployeeResource::collection(
+            'employees' => Inertia::defer(fn() => EmployeeResource::collection(
                 $this->service->getFiltered($filter)
             )),
             'filters' => $filter,
-        ]);
-    }
-
-    public function show(Employee $employee): Response
-    {
-        $employee = $this->service->getById($employee->id);
-
-        return Inertia::render('employee/hr/employees/Show', [
-            'employee' => new EmployeeResource($employee),
         ]);
     }
 

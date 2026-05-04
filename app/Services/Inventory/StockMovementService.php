@@ -10,12 +10,16 @@ use App\Models\Product\ProductVariant;
 use App\Support\CacheKeys;
 use App\Support\CacheTag;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
 class StockMovementService
 {
     public function getFiltered(StockMovementFilterData $filter): LengthAwarePaginator
     {
+        $user = Auth::user();
+        $employee = $user?->employee;
+
         return StockMovement::query()
             ->with([
                 'variant:id,sku,name,product_id',
@@ -23,11 +27,20 @@ class StockMovementService
                 'location:id,code,name',
                 'performedBy:id,full_name',
             ])
-            ->when($filter->type, fn ($q) => $q->byType(StockMovementType::from($filter->type)))
-            ->when($filter->location_id, fn ($q) => $q->byLocation($filter->location_id))
-            ->when($filter->variant_id, fn ($q) => $q->byVariant($filter->variant_id))
-            ->when($filter->search, fn ($q) => $q->search($filter->search))
-            ->when($filter->date_from && $filter->date_to, fn ($q) => $q->byDateRange($filter->date_from, $filter->date_to))
+            ->when(!$user->hasAnyRole(['Quản trị viên', 'Quản lý']), function ($q) use ($employee) {
+                $storeId = $employee?->store_location_id;
+                $warehouseId = $employee?->warehouse_location_id;
+
+                return $q->where(function ($sub) use ($storeId, $warehouseId) {
+                    $sub->where('location_id', $storeId)
+                        ->orWhere('location_id', $warehouseId);
+                });
+            })
+            ->when($filter->type, fn($q) => $q->byType(StockMovementType::from($filter->type)))
+            ->when($filter->location_id, fn($q) => $q->byLocation($filter->location_id))
+            ->when($filter->variant_id, fn($q) => $q->byVariant($filter->variant_id))
+            ->when($filter->search, fn($q) => $q->search($filter->search))
+            ->when($filter->date_from && $filter->date_to, fn($q) => $q->byDateRange($filter->date_from, $filter->date_to))
             ->orderBy($filter->order_by ?? 'created_at', $filter->order_direction ?? 'desc')
             ->paginate($filter->per_page ?? 15);
     }
@@ -40,11 +53,11 @@ class StockMovementService
     public function getLocationOptions(): array
     {
         return Cache::tags([CacheTag::Locations->value])
-            ->remember(CacheTag::Locations->key('movement_options'), CacheKeys::TTL, fn () => Location::query()
+            ->remember(CacheTag::Locations->key('movement_options'), CacheKeys::TTL, fn() => Location::query()
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get(['id', 'code', 'name'])
-                ->map(fn (Location $location) => [
+                ->map(fn(Location $location) => [
                     'id' => $location->id,
                     'label' => "{$location->code} - {$location->name}",
                 ])
@@ -58,7 +71,7 @@ class StockMovementService
             ->with('product:id,name')
             ->orderBy('sku')
             ->get(['id', 'sku', 'name', 'product_id'])
-            ->map(fn (ProductVariant $variant) => [
+            ->map(fn(ProductVariant $variant) => [
                 'id' => $variant->id,
                 'label' => "{$variant->sku} - {$variant->name}",
                 'product_name' => $variant->product?->name,

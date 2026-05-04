@@ -24,7 +24,8 @@ class EmployeeFactory extends Factory
             'full_name' => fake()->name(),
             'phone' => fake()->phoneNumber(),
             'department_id' => Department::inRandomOrder()->first()?->id,
-            'location_id' => Location::inRandomOrder()->first()?->id,
+            'store_location_id' => fake()->boolean(50) ? Location::factory() : null,
+            'warehouse_location_id' => fake()->boolean(50) ? Location::factory() : null,
             'hire_date' => fake()->date(),
         ];
     }

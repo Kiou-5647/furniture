@@ -35,6 +35,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
+import SearchableSelect from '@/components/ui/SearchableSelect.vue';
 import {
     Select,
     SelectContent,
@@ -50,7 +51,8 @@ const props = defineProps<{
     open: boolean;
     employee: any | null;
     departmentOptions: { id: string; label: string }[];
-    locationOptions: { id: string; label: string }[];
+    storeLocationOptions: { id: string; label: string, address: string }[];
+    warehouseLocationOptions: { id: string; label: string, address: string }[];
     roleOptions: { id: string; label: string }[];
     permissionOptions: { id: string; label: string }[];
     rolePermissions: Record<string, string[]>;
@@ -70,7 +72,8 @@ const form = useForm({
     full_name: '',
     phone: undefined as string | undefined,
     department_id: undefined as string | undefined,
-    location_id: undefined as string | undefined,
+    store_location_id: null as string | null,
+    warehouse_location_id: null as string | null,
     hire_date: '',
     is_active: true,
     roles: [] as string[],
@@ -98,7 +101,8 @@ watch(
             form.full_name = newEmp.full_name;
             form.phone = newEmp.phone ?? undefined;
             form.department_id = newEmp.department?.id ?? undefined;
-            form.location_id = newEmp.location_id ?? undefined;
+            form.store_location_id = newEmp.store_location_id ?? null;
+            form.warehouse_location_id = newEmp.warehouse_location_id ?? null;
             form.hire_date =
                 parseHireDate(newEmp.hire_date)?.toISOString().split('T')[0] ??
                 '';
@@ -127,6 +131,8 @@ watch(
 function submit() {
     form.roles = selectedRoles.value;
     form.permissions = selectedPermissions.value;
+
+    console.info(form.warehouse_location_id)
 
     if (props.employee) {
         form.put(update(props.employee).url, {
@@ -203,6 +209,7 @@ function clearAll() {
     selectedRoles.value = [];
     selectedPermissions.value = [];
 }
+console.info(props.storeLocationOptions)
 </script>
 
 <template>
@@ -365,24 +372,52 @@ function clearAll() {
                                     Cửa hàng
                                 </FieldLabel>
                                 <FieldContent>
-                                    <Select v-model="form.location_id">
-                                        <SelectTrigger class="w-full">
-                                            <SelectValue
-                                                placeholder="Chọn cửa hàng..."
-                                            />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem
-                                                v-for="loc in locationOptions"
-                                                :key="loc.id"
-                                                :value="loc.id"
-                                            >
-                                                {{ loc.label }}
-                                            </SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                    <SearchableSelect
+                                        v-model="form.store_location_id"
+                                        :options="storeLocationOptions"
+                                        value-key="id"
+                                        label-key="label"
+                                        :searchable-keys="['label', 'address']"
+                                        placeholder="Chọn cửa hàng..."
+                                    >
+                                        <template #item="{ option }">
+                                            <div class="flex flex-col">
+                                                <span class="font-medium">{{ option.label }}</span>
+                                                <span class="text-xs text-muted-foreground">{{ option.address || 'Không có địa chỉ' }}</span>
+                                            </div>
+                                        </template>
+                                    </SearchableSelect>
                                     <FieldError
-                                        :errors="[form.errors.location_id]"
+                                        :errors="[form.errors.store_location_id]"
+                                    />
+                                </FieldContent>
+                            </Field>
+
+                            <Field>
+                                <FieldLabel>
+                                    <MapPin
+                                        class="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                                    />
+                                    Kho hàng
+                                </FieldLabel>
+                                <FieldContent>
+                                    <SearchableSelect
+                                        v-model="form.warehouse_location_id"
+                                        :options="warehouseLocationOptions"
+                                        value-key="id"
+                                        label-key="label"
+                                        :searchable-keys="['label', 'address']"
+                                        placeholder="Chọn kho hàng..."
+                                    >
+                                        <template #item="{ option }">
+                                            <div class="flex flex-col">
+                                                <span class="font-medium">{{ option.label }}</span>
+                                                <span class="text-xs text-muted-foreground">{{ option.address || 'Không có địa chỉ' }}</span>
+                                            </div>
+                                        </template>
+                                    </SearchableSelect>
+                                    <FieldError
+                                        :errors="[form.errors.warehouse_location_id]"
                                     />
                                 </FieldContent>
                             </Field>

@@ -67,7 +67,6 @@ class InitialStockSeeder extends Seeder
         $margin = (float) $variant->profit_margin_value;
 
         if ($variant->profit_margin_unit === 'percentage') {
-            // Cost = Price / (1 + margin%)
             return $price / (1 + ($margin / 100));
         }
 

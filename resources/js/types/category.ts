@@ -7,10 +7,6 @@ export interface Category {
     group?: Lookup;
 
     rooms: Lookup[];
-    filterable_specs: {
-        id: string;
-        display_name: string;
-    }[];
 
     product_type: ProductType;
     product_type_label: string;

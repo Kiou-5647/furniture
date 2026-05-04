@@ -42,7 +42,7 @@ class RecordStockMovementAction
 
             // Capture BEFORE any modifications
             $quantityBefore = $inventory?->quantity ?? 0;
-            $costPerUnitBefore = $inventory->cost_per_unit !== null && $inventory->cost_per_unit > 0
+            $costPerUnitBefore = $inventory?->cost_per_unit !== null && $inventory->cost_per_unit > 0
                 ? (float) $inventory->cost_per_unit
                 : null;
 

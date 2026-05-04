@@ -32,7 +32,8 @@ const props = defineProps<{
     departmentOptions: { id: string; label: string }[];
     roleOptions: { id: string; label: string }[];
     permissionOptions: { id: string; label: string }[];
-    locationOptions: { id: string; label: string }[];
+    storeLocationOptions: { id: string; label: string }[];
+    warehouseLocationOptions: { id: string; label: string }[];
     rolePermissions: Record<string, string[]>;
     employees?: EmployeePagination;
     filters: EmployeeFilterData;
@@ -233,7 +234,8 @@ function performTerminate() {
             :open="showFormModal"
             :employee="selectedEmployee"
             :department-options="departmentOptions"
-            :location-options="locationOptions"
+            :store-location-options="storeLocationOptions"
+            :warehouse-location-options="warehouseLocationOptions"
             :role-options="roleOptions"
             :permission-options="permissionOptions"
             :role-permissions="rolePermissions"

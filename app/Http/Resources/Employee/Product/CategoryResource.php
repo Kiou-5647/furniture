@@ -20,7 +20,6 @@ class CategoryResource extends JsonResource
             'product_type_label' => $this->product_type->label(),
 
             'rooms' => LookupResource::collection($this->whenLoaded('rooms'))->resolve(),
-            'filterable_specs' => LookupNamespaceResource::collection($this->whenLoaded('filterableSpecs')),
 
             'display_name' => $this->display_name,
             'slug' => $this->slug,

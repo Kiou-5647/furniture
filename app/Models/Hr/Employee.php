@@ -34,9 +34,14 @@ class Employee extends Model implements HasMedia
         return $this->belongsTo(User::class);
     }
 
-    public function location(): BelongsTo
+    public function storeLocation(): BelongsTo
     {
-        return $this->belongsTo(Location::class, 'location_id');
+        return $this->belongsTo(Location::class, 'store_location_id');
+    }
+
+    public function warehouseLocation(): BelongsTo
+    {
+        return $this->belongsTo(Location::class, 'warehouse_location_id');
     }
 
     public function department(): BelongsTo

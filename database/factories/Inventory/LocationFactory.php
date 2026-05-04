@@ -35,7 +35,7 @@ class LocationFactory extends Factory
             'street' => fake()->streetAddress(),
             'phone' => $this->faker->phoneNumber(),
             'is_active' => true,
-            'manager_id' => Employee::factory(),
+            'manager_id' => null,
             'created_at' => $this->faker->dateTimeBetween('-2 months', '-1 months'),
             'updated_at' => $this->faker->dateTimeBetween('-1 months', 'now'),
         ];
