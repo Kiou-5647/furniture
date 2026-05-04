@@ -35,7 +35,7 @@ export function getColumns(
             cell: ({ row }) => {
                 const customer = row.original.customer;
                 return h('div', { class: 'flex flex-col gap-0.5' }, [
-                    h('span', { class: 'font-medium' }, customer!.name ?? row.original.guest_name),
+                    h('span', { class: 'font-medium' }, row.original.guest_name ?? customer?.name ?? 'Khách vãng lai' ),
                     customer?.email
                         ? h('span', { class: 'text-xs text-muted-foreground truncate max-w-[180px]' }, customer.email)
                         : null,

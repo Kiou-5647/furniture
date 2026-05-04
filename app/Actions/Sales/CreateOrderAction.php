@@ -82,6 +82,44 @@ class CreateOrderAction
                 if ($itemData['original_unit_price']) {
                     unset($itemData['original_unit_price']);
                 }
+
+                // For in-store orders, record the cost per unit immediately upon creation
+                if (!$data->shipping_method_id && $data->store_location_id) {
+                    $purchasable = $this->resolvePurchasable($itemData['purchasable_type'], $itemData['purchasable_id']);
+                    if ($purchasable instanceof ProductVariant) {
+                        $itemData['cost_per_unit'] = \App\Models\Inventory\Inventory::where('variant_id', $purchasable->id)
+                            ->where('location_id', $data->store_location_id)
+                            ->value('cost_per_unit') ?? 0;
+                    } elseif ($purchasable instanceof Bundle) {
+                        $bundleCost = 0;
+                        foreach ($purchasable->contents as $content) {
+                            $variantId = $itemData['configuration'][$content->id]['variant_id'] ?? null;
+                            if ($variantId) {
+                                $bundleCost += (\App\Models\Inventory\Inventory::where('variant_id', $variantId)
+                                    ->where('location_id', $data->store_location_id)
+                                    ->value('cost_per_unit') ?? 0) * $content->quantity;
+                            }
+                        }
+                        $itemData['cost_per_unit'] = $bundleCost;
+
+                        // Also record individual component costs in configuration for later return calculations
+                        $enrichedConfig = [];
+                        foreach ($purchasable->contents as $content) {
+                            $variantId = $itemData['configuration'][$content->id]['variant_id'] ?? null;
+                            if ($variantId) {
+                                $enrichedConfig[$content->id] = [
+                                    'variant_id' => $variantId,
+                                    'cost' => \App\Models\Inventory\Inventory::where('variant_id', $variantId)
+                                        ->where('location_id', $data->store_location_id)
+                                        ->value('cost_per_unit') ?? 0,
+                                    'quantity' => $content->quantity,
+                                ];
+                            }
+                        }
+                        $itemData['configuration'] = $enrichedConfig;
+                    }
+                }
+
                 $order->items()->create($itemData);
             }
 
@@ -131,7 +169,7 @@ class CreateOrderAction
                 foreach ($purchasable->contents as $content) {
                     $variantId = $config[$content->id] ?? null;
                     if ($variantId) {
-                        $variant = \App\Models\Product\ProductVariant::find($variantId);
+                        $variant = ProductVariant::find($variantId);
                         $originalUnitPrice += (float) ($variant->price ?? 0) * $content->quantity;
                     }
                 }
@@ -191,7 +229,7 @@ class CreateOrderAction
                     $variantId = $finalConfiguration[$content->id] ?? null;
                     if ($variantId) {
                         /** @var \App\Models\Product\ProductVariant */
-                        $variant = \App\Models\Product\ProductVariant::find($variantId);
+                        $variant = ProductVariant::find($variantId);
                         $totalIndividualValue += ($variant ? (float) $variant->getEffectivePrice() : 0) * $content->quantity;
                     }
                 }
@@ -200,7 +238,7 @@ class CreateOrderAction
                     $variantId = $finalConfiguration[$content->id] ?? null;
                     if ($variantId) {
                         /** @var \App\Models\Product\ProductVariant */
-                        $variant = \App\Models\Product\ProductVariant::find($variantId);
+                        $variant = ProductVariant::find($variantId);
                         $originalPrice = $variant ? (float) $variant->getEffectivePrice() : 0;
 
                         $discountedUnitPrice = $totalIndividualValue > 0
@@ -210,6 +248,8 @@ class CreateOrderAction
                         $enrichedConfig[$content->id] = [
                             'variant_id' => $variantId,
                             'price' => round($discountedUnitPrice, -3),
+                            'cost' => $variant ? $variant->getAverageCostPerUnit() : 0,
+                            'quantity' => $content->quantity,
                         ];
                     }
                 }

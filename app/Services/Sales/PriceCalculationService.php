@@ -54,14 +54,22 @@ class PriceCalculationService
         // Universal
         $discounts = $discounts->merge(Discount::whereNull('discountable_id')->active($now)->get());
 
-        if ($product->category) {
-            $discounts = $discounts->merge($product->category->discounts()->active($now)->get());
-        }
-        if ($product->collection) {
-            $discounts = $discounts->merge($product->collection->discounts()->active($now)->get());
-        }
-        if ($product->vendor) {
-            $discounts = $discounts->merge($product->vendor->discounts()->active($now)->get());
+        // Product Variant
+        $discounts = $discounts->merge($variant->discounts()->active($now)->get());
+
+        if ($product) {
+            // Product
+            $discounts = $discounts->merge($product->discounts()->active($now)->get());
+
+            if ($product->category) {
+                $discounts = $discounts->merge($product->category->discounts()->active($now)->get());
+            }
+            if ($product->collection) {
+                $discounts = $discounts->merge($product->collection->discounts()->active($now)->get());
+            }
+            if ($product->vendor) {
+                $discounts = $discounts->merge($product->vendor->discounts()->active($now)->get());
+            }
         }
 
         return $discounts;

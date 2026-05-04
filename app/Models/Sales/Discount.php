@@ -42,6 +42,8 @@ class Discount extends Model
     public static function getDiscountableTypes(): array
     {
         return [
+            \App\Models\Product\ProductVariant::class => 'Biến thể sản phẩm',
+            \App\Models\Product\Product::class => 'Sản phẩm',
             \App\Models\Product\Category::class => 'Danh mục',
             \App\Models\Product\Collection::class => 'Bộ sưu tập',
             \App\Models\Vendor\Vendor::class => 'Nhà cung cấp',

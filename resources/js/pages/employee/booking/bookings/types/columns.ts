@@ -21,12 +21,12 @@ export function getColumns(
                     h(
                         'div',
                         { class: 'font-medium text-sm' },
-                        row.original.customer.name,
+                        row.original.customer?.name,
                     ),
                     h(
                         'div',
                         { class: 'text-xs text-muted-foreground' },
-                        row.original.customer.email,
+                        row.original.customer?.email,
                     ),
                 ]),
         },
@@ -41,7 +41,7 @@ export function getColumns(
                 h(
                     'span',
                     { class: 'text-sm font-medium' },
-                    row.original.designer.name,
+                    row.original.designer?.name ?? 'Không tìm thấy',
                 ),
         },
         {

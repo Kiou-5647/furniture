@@ -9,7 +9,7 @@ class UpdateCustomerTotalSpentAction
 {
     public function execute(Order $order): void
     {
-        $customer = $order->customer->customer;
+        $customer = $order->customer?->customer;
 
         if (! $customer) {
             return;

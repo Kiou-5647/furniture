@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import SearchableSelect from '@/components/ui/SearchableSelect.vue';
 import {
     Select,
     SelectContent,
@@ -49,10 +50,10 @@ const form = useForm({
 });
 
 // Dynamic Targets State
-const targetOptions = ref<{ label: string; value: string }[]>([]);
+const targetOptions = ref<any[]>([]);
 const isLoadingTargets = ref(false);
 
-async function fetchTargets() {
+async function fetchTargets(search = '') {
     if (!form.discountable_type || form.discountable_type === 'null') {
         targetOptions.value = [];
         return;
@@ -66,10 +67,12 @@ async function fetchTargets() {
         if (type.includes('Category')) url = '/nhan-vien/ban-hang/giam-gia/targets/categories';
         else if (type.includes('Collection')) url = '/nhan-vien/ban-hang/giam-gia/targets/collections';
         else if (type.includes('Vendor')) url = '/nhan-vien/ban-hang/giam-gia/targets/vendors';
+        else if (type.includes('ProductVariant')) url = '/nhan-vien/ban-hang/giam-gia/targets/variants';
+        else if (type.includes('Product')) url = '/nhan-vien/ban-hang/giam-gia/targets/products';
 
         if (!url) throw new Error('Unsupported target type');
 
-        const response = await fetch(url, {
+        const response = await fetch(`${url}?search=${encodeURIComponent(search)}`, {
             headers: {
                 'Accept': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
@@ -91,6 +94,7 @@ watch(() => form.discountable_type, () => {
     form.discountable_id = null;
     fetchTargets();
 });
+
 
 onMounted(() => {
     if (form.discountable_type) {
@@ -129,98 +133,120 @@ function handleConfirmDelete() {
                 </DialogDescription>
             </DialogHeader>
 
-            <form @submit.prevent="submit" class="grid gap-4 py-4">
-                <!-- Name -->
-                <div class="grid gap-2">
-                    <Label for="name">Tên chương trình</Label>
-                    <Input id="name" v-model="form.name" placeholder="Ví dụ: Sale Hè 2026" />
+            <form @submit.prevent="submit" class="grid gap-6 py-4">
+                <!-- General Information -->
+                <div class="grid gap-4 p-4 rounded-lg border bg-muted/30">
+                    <div class="grid gap-2">
+                        <Label for="name" class="text-sm font-semibold">Tên chương trình</Label>
+                        <Input id="name" v-model="form.name" placeholder="Ví dụ: Sale Hè 2026" class="bg-background" />
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="grid gap-2">
+                            <Label class="text-sm font-semibold">Loại giảm giá</Label>
+                            <Select v-model="form.type">
+                                <SelectTrigger class="bg-background">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="percentage">Phần trăm (%)</SelectItem>
+                                    <SelectItem value="fixed_amount">Số tiền cố định</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div class="grid gap-2">
+                            <Label for="value" class="text-sm font-semibold">Giá trị</Label>
+                            <Input id="value" type="number" v-model.number="form.value" step="0.01" class="bg-background" />
+                        </div>
+                    </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <!-- Type -->
+                <!-- Target Configuration -->
+                <div class="grid gap-4 p-4 rounded-lg border bg-muted/30">
                     <div class="grid gap-2">
-                        <Label>Loại giảm giá</Label>
-                        <Select v-model="form.type">
-                            <SelectTrigger>
-                                <SelectValue />
+                        <Label class="text-sm font-semibold">Đối tượng áp dụng</Label>
+                        <Select v-model="form.discountable_type">
+                            <SelectTrigger class="bg-background">
+                                <SelectValue placeholder="Chọn loại đối tượng" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="percentage">Phần trăm (%)</SelectItem>
-                                <SelectItem value="fixed_amount">Số tiền cố định</SelectItem>
+                                <SelectItem value="null">Toàn bộ sản phẩm (Universal)</SelectItem>
+                                <SelectItem
+                                    v-for="(label, value) in discountableTypes"
+                                    :key="value"
+                                    :value="value"
+                                >
+                                    {{ label }}
+                                </SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
 
-                    <!-- Value -->
-                    <div class="grid gap-2">
-                        <Label for="value">Giá trị</Label>
-                        <Input id="value" type="number" v-model.number="form.value" step="0.01" />
+                    <div v-if="form.discountable_type && form.discountable_type !== 'null'" class="grid gap-2">
+                        <Label class="text-sm font-semibold">Chọn mục tiêu cụ thể</Label>
+                        <SearchableSelect
+                            v-model="form.discountable_id"
+                            :options="targetOptions"
+                            :is-loading="isLoadingTargets"
+                            placeholder="Tìm kiếm mục tiêu..."
+                            value-key="id"
+                            label-key="name"
+                            server-search
+                            @search="fetchTargets"
+                        >
+                            <template #item="{ option }">
+                                <div class="flex items-center gap-2 overflow-hidden">
+                                    <img
+                                        v-if="option.primary_image || option.image"
+                                        :src="option.primary_image || option.image"
+                                        class="size-8 rounded-md object-cover bg-muted"
+                                    />
+                                    <div class="flex flex-col overflow-hidden text-left">
+                                        <span class="truncate font-medium">
+                                            <template v-if="option.product_name">
+                                                {{ option.product_name }}
+                                                <span v-if="option.name && option.name !== option.product_name" class="text-muted-foreground">
+                                                    ({{ option.name }})
+                                                </span>
+                                            </template>
+                                            <template v-else>
+                                                {{ option.name }}
+                                            </template>
+                                        </span>
+                                        <span v-if="option.sku" class="text-xs text-muted-foreground truncate">
+                                            {{ option.sku }} - {{ option.price }}
+                                        </span>
+                                        <span v-if="option.variants_count !== undefined" class="text-xs text-muted-foreground truncate">
+                                            ({{ option.variants_count }} Variants)
+                                        </span>
+                                    </div>
+                                </div>
+                            </template>
+                        </SearchableSelect>
                     </div>
                 </div>
 
-                <!-- Target Type -->
-                <div class="grid gap-2">
-                    <Label>Đối tượng áp dụng</Label>
-                    <Select v-model="form.discountable_type">
-                        <SelectTrigger>
-                            <SelectValue placeholder="Chọn loại đối tượng" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="null">Toàn bộ sản phẩm (Universal)</SelectItem>
-                            <SelectItem
-                                v-for="(label, value) in discountableTypes"
-                                :key="value"
-                                :value="value"
-                            >
-                                {{ label }}
-                            </SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <!-- Target Specific ID (Only show if a type is selected) -->
-                <div v-if="form.discountable_type && form.discountable_type !== 'null'" class="grid gap-2">
-                    <Label>Chọn mục tiêu cụ thể</Label>
-                    <Select v-model="form.discountable_id" :disabled="isLoadingTargets">
-                        <SelectTrigger>
-                            <SelectValue :placeholder="isLoadingTargets ? 'Đang tải...' : 'Chọn mục tiêu'" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem
-                                v-for="opt in targetOptions"
-                                :key="opt.value"
-                                :value="opt.value"
-                            >
-                                {{ opt.label }}
-                            </SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <!-- Start Date -->
-                    <div class="grid gap-2">
-                        <Label>Ngày bắt đầu</Label>
-                        <div class="relative">
-                            <Input type="date" v-model="form.start_at!" />
+                <!-- Schedule & Status -->
+                <div class="grid gap-4 p-4 rounded-lg border bg-muted/30">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="grid gap-2">
+                            <Label class="text-sm font-semibold">Ngày bắt đầu</Label>
+                            <Input type="date" v-model="form.start_at!" class="bg-background" />
+                        </div>
+                        <div class="grid gap-2">
+                            <Label class="text-sm font-semibold">Ngày kết thúc</Label>
+                            <Input type="date" v-model="form.end_at!" class="bg-background" />
                         </div>
                     </div>
-                    <!-- End Date -->
-                    <div class="grid gap-2">
-                        <Label>Ngày kết thúc</Label>
-                        <div class="relative">
-                            <Input type="date" v-model="form.end_at!" />
-                        </div>
+
+                    <div class="flex items-center space-x-2 pt-2">
+                        <Checkbox id="is_active" v-model="form.is_active" @update:checked="form.is_active = $event" />
+                        <Label for="is_active" class="cursor-pointer text-sm font-medium">Kích hoạt giảm giá này</Label>
                     </div>
                 </div>
 
-                <!-- Active Toggle -->
-                <div class="flex items-center space-x-2">
-                    <Checkbox id="is_active" v-model="form.is_active" @update:checked="form.is_active = $event" />
-                    <Label for="is_active" class="cursor-pointer">Kích hoạt giảm giá này</Label>
-                </div>
-
-                <DialogFooter class="flex flex-col gap-2 sm:flex-row">
+                <DialogFooter class="flex flex-col gap-2 sm:flex-row pt-2">
                     <Button
                         v-if="discount"
                         variant="destructive"
@@ -231,7 +257,7 @@ function handleConfirmDelete() {
                     </Button>
                     <div class="flex gap-2 sm:ml-auto">
                         <Button variant="outline" @click="emit('close')">Hủy</Button>
-                        <Button type="submit" :disabled="form.processing">
+                        <Button type="submit" :disabled="form.processing" class="px-8">
                             {{ discount ? 'Cập nhật' : 'Tạo mới' }}
                         </Button>
                     </div>

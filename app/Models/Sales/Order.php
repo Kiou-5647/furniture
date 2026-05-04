@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
@@ -28,7 +29,7 @@ use Spatie\Activitylog\Support\LogOptions;
  */
 class Order extends Model
 {
-    use HasUuids, LogsActivity, SoftDeletes;
+    use HasUuids, HasFactory, LogsActivity, SoftDeletes;
 
     protected $table = 'orders';
 
@@ -106,7 +107,9 @@ class Order extends Model
             $this->province_name,
         ];
 
-        return implode(', ', $parts) ?: '—';
+        $filteredParts = array_filter($parts);
+
+        return implode(', ', $filteredParts) ?: '—';
     }
 
     public static function generateOrderNumber(): string

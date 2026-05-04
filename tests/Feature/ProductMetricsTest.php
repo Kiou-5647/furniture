@@ -53,12 +53,15 @@ it('increments sales count across the chain when shipment is delivered', functio
     ShipmentItem::create([
         'shipment_id' => $shipment->id,
         'order_item_id' => $orderItem->id,
+        'variant_id' => $this->variant->id,
         'quantity_shipped' => 2,
         'status' => ShipmentStatus::Pending,
     ]);
 
     // Execution: Mark Order Completed and Shipment Delivered
-    $shipment->items()->update(['status' => ShipmentStatus::Delivered]);
+    foreach ($shipment->items as $item) {
+        $item->update(['status' => ShipmentStatus::Delivered]);
+    }
 
     // 2. Mark order as completed
     $order->update(['status' => OrderStatus::Completed]);
@@ -103,11 +106,15 @@ it('decrements sales count when delivered shipment is returned', function () {
     ShipmentItem::create([
         'shipment_id' => $shipment->id,
         'order_item_id' => $orderItem->id,
+        'variant_id' => $this->variant->id,
         'quantity_shipped' => 2,
         'status' => ShipmentStatus::Delivered,
     ]);
 
     // Execution: Mark as Returned
+    foreach ($shipment->items as $item) {
+        $item->update(['status' => ShipmentStatus::Returned]);
+    }
     $shipment->update(['status' => ShipmentStatus::Returned]);
 
     $this->variant->refresh();

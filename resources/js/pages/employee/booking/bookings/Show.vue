@@ -157,16 +157,16 @@ const fullAddress = computed(() => props.booking.address.full_address);
                     <div class="space-y-2">
                         <div class="flex items-center gap-2">
                             <User class="h-4 w-4 text-muted-foreground" />
-                            <span>{{ booking.customer.name }}</span>
+                            <span>{{ booking.customer?.name }}</span>
                         </div>
                         <div class="text-sm text-muted-foreground">
-                            {{ booking.customer.email }}
+                            {{ booking.customer?.email }}
                         </div>
                         <div
                             v-if="booking.customer.phone"
                             class="text-sm text-muted-foreground"
                         >
-                            {{ booking.customer.phone }}
+                            {{ booking.customer?.phone }}
                         </div>
                         <div class="text-sm text-muted-foreground italic">
                             {{ fullAddress }}
@@ -208,11 +208,11 @@ const fullAddress = computed(() => props.booking.address.full_address);
                         <div class="flex items-center gap-2">
                             <User class="h-4 w-4 text-muted-foreground" />
                             <span class="font-medium">{{
-                                booking.designer.name
+                                booking.designer?.name ?? 'Không tìm thấy'
                             }}</span>
                         </div>
                         <div
-                            v-if="booking.designer.auto_confirm_bookings"
+                            v-if="booking.designer?.auto_confirm_bookings"
                             class="text-xs text-green-600"
                         >
                             Tự động xác nhận

@@ -6,6 +6,7 @@ use App\Builders\Hr\DesignerBuilder;
 use App\Models\Auth\User;
 use App\Models\Booking\Booking;
 use App\Models\Booking\DesignerAvailabilitySlot;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -21,7 +22,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  */
 class Designer extends Model implements HasMedia
 {
-    use HasUuids, InteractsWithMedia, LogsActivity, SoftDeletes;
+    use HasUuids, HasFactory, InteractsWithMedia, LogsActivity, SoftDeletes;
 
     protected $table = 'designers';
 

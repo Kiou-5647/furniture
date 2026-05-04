@@ -83,16 +83,16 @@ function openSelector() {
 </script>
 
 <template>
-    <div class="product-item min-w-[300px] overflow-hidden">
+    <div class="group product-item min-w-[300px] overflow-hidden transition-all duration-300">
         <!-- Product Image -->
         <div
-            class="relative aspect-square overflow-hidden"
+            class="relative aspect-square overflow-hidden rounded-2xl bg-zinc-100"
             @mouseenter="isHovered = true"
             @mouseleave="isHovered = false"
         >
             <div
                 v-if="productCard.product.is_new_arrival"
-                class="absolute top-4 left-4 z-10 rounded-full bg-orange-400 px-2 py-0.5 text-sm font-bold tracking-wider text-white uppercase shadow-sm"
+                class="absolute top-3 left-3 z-10 rounded-full bg-orange-400 px-2.5 py-0.5 text-[10px] font-bold tracking-wider text-white uppercase shadow-sm"
             >
                 Mới ra mắt
             </div>
@@ -101,27 +101,27 @@ function openSelector() {
                     v-if="displayImage"
                     :src="displayImage"
                     :alt="productCard.product.name"
-                    class="h-full w-full object-cover transition-all duration-300 hover:scale-105"
+                    class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     loading="lazy"
                 />
                 <div
                     v-else
                     class="flex h-full w-full items-center justify-center"
                 >
-                    <ImageOff class="h-12 w-12" />
+                    <ImageOff class="h-12 w-12 text-zinc-300" />
                 </div>
             </Link>
         </div>
 
         <!-- Product Details -->
-        <div class="space-y-2 p-3">
+        <div class="flex flex-col gap-2 py-4">
             <!-- Product Name -->
             <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger as-child>
                         <Link :href="productUrl()" class="block">
                             <h3
-                                class="transition-color truncate text-sm font-medium"
+                                class="transition-colors truncate text-sm font-semibold text-zinc-800 hover:text-orange-500"
                             >
                                 {{ displayName }}
                             </h3>
@@ -151,65 +151,60 @@ function openSelector() {
                         currentSwatch &&
                         Number(currentSwatch.sale_price) <
                             Number(currentSwatch.price)
-                            ? 'text-sm line-through'
-                            : 'text-base font-bold'
+                            ? 'text-xs text-zinc-400 line-through'
+                            : 'text-base font-bold text-zinc-900'
                     "
                 >
                     {{ formatPrice(Number(currentSwatch?.price)) }}
                 </span>
             </div>
 
-            <!-- Rating -->
+            <!-- Rating & Sales -->
             <div
                 v-if="
                     productCard.metrics.average_rating ||
                     productCard.metrics.sales_count > 0
                 "
-                class="flex items-center justify-between py-1"
+                class="flex items-center justify-between"
             >
-                <!-- Left Side: Rating -->
-                <div v-if="productCard.metrics.average_rating">
+                <div v-if="productCard.metrics.average_rating" class="flex items-center gap-1">
                     <StarRating
                         :rating="productCard.metrics.average_rating"
                         :count="productCard.metrics.reviews_count ?? 0"
                         show-count
                         show-rating
-                        size="h-5 w-5 text-xs"
+                        size="h-3 w-3 text-[10px]"
                     />
                 </div>
                 <div v-else class="w-0"></div>
-                <!-- Spacer to keep sales count on the right if no rating exists -->
 
-                <!-- Right Side: Sell Count -->
                 <div
                     v-if="productCard.metrics.sales_count > 0"
-                    class="text-xs text-zinc-500"
+                    class="text-[11px] text-zinc-500"
                 >
-                    Đã bán
-                    {{
-                        productCard.metrics.sales_count.toLocaleString('vi-VN')
-                    }}
+                    Đã bán {{ productCard.metrics.sales_count.toLocaleString('vi-VN') }}
                 </div>
             </div>
 
+            <!-- Variant Swatches -->
             <div
                 v-if="
                     hasCards &&
                     activeCard?.swatches &&
                     activeCard.swatches.length > 0
                 "
-                class="flex flex-wrap gap-1.5"
+                class="flex flex-wrap gap-1.5 py-1"
             >
                 <button
                     v-for="swatch in activeCard.swatches.slice(0, 8)"
                     :key="swatch.id"
                     type="button"
                     :title="swatch.label! || swatch.name!"
-                    class="h-7 w-7 overflow-hidden rounded-md border-2 transition-all"
+                    class="h-5 w-5 overflow-hidden rounded-full border-2 transition-all"
                     :class="
                         selectedVariantId === swatch.id
-                            ? 'border-zinc-900 ring-1 ring-zinc-900/20 dark:border-zinc-100 dark:ring-zinc-100/20'
-                            : 'border-transparent hover:border-zinc-300 dark:hover:border-zinc-700'
+                            ? 'border-orange-400 ring-1 ring-orange-400/30'
+                            : 'border-transparent hover:border-zinc-300'
                     "
                     @mouseenter="previewSwatch(swatch)"
                 >
@@ -224,21 +219,21 @@ function openSelector() {
                 <button
                     v-if="activeCard.swatches.length > 8"
                     @click="openSelector"
-                    class="text-xs"
+                    class="text-[10px] font-medium text-zinc-500 hover:text-zinc-800"
                 >
                     +{{ activeCard.swatches.length - 8 }}
                 </button>
             </div>
 
-            <!-- Add to Cart -->
+            <!-- Add to Cart Button -->
             <Button
                 @click="openSelector"
                 variant="outline"
-                class="w-full rounded-md border-gray-400 py-2 text-sm font-medium transition-colors"
+                class="mt-1 w-full rounded-full border-zinc-200 py-2 text-xs font-semibold text-zinc-700 transition-all hover:border-orange-400 hover:text-orange-500 hover:bg-orange-50"
             >
                 <span class="flex items-center justify-center gap-2">
                     Thêm vào giỏ hàng
-                    <ShoppingCart class="h-4 w-4" />
+                    <ShoppingCart class="h-3.5 w-3.5" />
                 </span>
             </Button>
         </div>

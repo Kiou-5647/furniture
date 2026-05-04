@@ -5,7 +5,7 @@ namespace App\Observers;
 use App\Enums\InvoiceStatus;
 use App\Enums\ShipmentStatus;
 use App\Models\Fulfillment\ShipmentItem;
-use App\Models\Product\Bundle;
+use App\Models\Product\ProductVariant;
 use App\Models\Sales\OrderItem;
 
 class ShipmentItemObserver
@@ -22,6 +22,30 @@ class ShipmentItemObserver
         if ($wasNotReturned && $shipmentItem->status === ShipmentStatus::Returned) {
             $this->reduceInvoiceAmount($shipmentItem);
             $this->updateShipmentStatus($shipmentItem);
+        }
+
+        $oldStatus = $shipmentItem->getOriginal('status');
+        $newStatus = $shipmentItem->status;
+
+        if ($oldStatus !== $newStatus) {
+
+            if ($newStatus === ShipmentStatus::Delivered && $oldStatus !== ShipmentStatus::Delivered) {
+                $variant = ProductVariant::find($shipmentItem->variant_id);
+                if ($variant) {
+                    $variant->increment('sales_count', $shipmentItem->quantity_shipped);
+                    $variant->productCard?->syncSalesCount();
+                    $variant->product?->syncSalesCount();
+                }
+            }
+
+            if ($newStatus === ShipmentStatus::Returned && $oldStatus === ShipmentStatus::Delivered) {
+                $variant = ProductVariant::find($shipmentItem->variant_id);
+                if ($variant) {
+                    $variant->decrement('sales_count', $shipmentItem->quantity_shipped);
+                    $variant->productCard?->syncSalesCount();
+                    $variant->product?->syncSalesCount();
+                }
+            }
         }
     }
 

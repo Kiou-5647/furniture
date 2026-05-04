@@ -48,7 +48,7 @@ class VnPayService
         $inputData = [
             'vnp_Version' => $this->version,
             'vnp_TmnCode' => $this->tmnCode,
-            'vnp_Amount' => (int) ceil($params['amount'] * 100),
+            'vnp_Amount' => (int) ceil($params['amount'])  * 100,
             'vnp_Command' => 'pay',
             'vnp_CreateDate' => now()->format('YmdHis'),
             'vnp_CurrCode' => 'VND',

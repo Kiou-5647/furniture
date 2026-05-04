@@ -1,3 +1,4 @@
+import { router } from '@inertiajs/vue3';
 import {
     CheckCircle2,
     CircleDashed,
@@ -5,6 +6,7 @@ import {
     Pencil,
     Phone,
     Trash2,
+    Eye,
 } from '@lucide/vue';
 import type { ColumnDef } from '@tanstack/vue-table';
 import { h } from 'vue';
@@ -18,6 +20,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { show } from '@/routes/employee/inventory/locations';
 import type { Location } from '@/types/location';
 
 export function getColumns(
@@ -57,7 +60,9 @@ export function getColumns(
 
                 return h('div', { class: 'flex flex-col gap-0.5' }, [
                     h('div', { class: 'flex items-center gap-2' }, [
-                        h('span', { class: 'font-medium' }, item.name),
+                        h('span', { class: 'font-medium cursor-pointer hover:text-orange-500 transition-colors', onClick: () => router.get(show(item).url) },
+                            item.name
+                        ),
                         h(
                             Badge,
                             {
@@ -75,22 +80,22 @@ export function getColumns(
                         [
                             item.full_address
                                 ? h(
-                                      'span',
-                                      { class: 'truncate max-w-[180px]' },
-                                      item.full_address,
-                                  )
+                                    'span',
+                                    { class: 'truncate max-w-[180px]' },
+                                    item.full_address,
+                                )
                                 : null,
                             item.phone
                                 ? h(
-                                      'span',
-                                      {
-                                          class: 'flex items-center gap-1 shrink-0',
-                                      },
-                                      [
-                                          h(Phone, { class: 'h-3 w-3' }),
-                                          item.phone,
-                                      ],
-                                  )
+                                    'span',
+                                    {
+                                        class: 'flex items-center gap-1 shrink-0',
+                                    },
+                                    [
+                                        h(Phone, { class: 'h-3 w-3' }),
+                                        item.phone,
+                                    ],
+                                )
                                 : null,
                         ],
                     ),
@@ -179,6 +184,18 @@ export function getColumns(
                                 { align: 'end', class: 'w-45' },
                                 () => [
                                     h(DropdownMenuLabel, () => 'Thao tác'),
+                                    h(
+                                        DropdownMenuItem,
+                                        {
+                                            onClick: () => router.get(show(item).url)
+                                        },
+                                        () => [
+                                            h(Eye, {
+                                                class: 'mr-2 h-4 w-4',
+                                            }),
+                                            'Xem chi tiết',
+                                        ],
+                                    ),
                                     h(
                                         DropdownMenuItem,
                                         { onClick: () => onEdit(item) },

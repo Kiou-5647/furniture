@@ -38,19 +38,19 @@ function handleRowClick(row: any, event: MouseEvent) {
     <div class="w-full space-y-4">
         <slot name="toolbar" :table="table" />
         <!-- Table Container -->
-        <div class="rounded-md border bg-card">
-            <Table class="w-full table-fixed">
+        <div class="overflow-hidden">
+            <Table class="w-full table-fixed border-separate border-spacing-0">
                 <TableHeader>
-                    <TableRow v-for="headerGroup in table.getHeaderGroups()" :key="headerGroup.id">
+                    <TableRow v-for="headerGroup in table.getHeaderGroups()" :key="headerGroup.id" class="bg-muted/30 hover:bg-transparent">
                         <TableHead v-for="header in headerGroup.headers" :key="header.id" :style="{
                             width: `${header.column.getSize()}px`,
                         }" :class="[
-                            'h-11 px-4 font-bold transition-colors',
+                            'h-11 px-4 font-semibold text-zinc-600 transition-colors',
                             header.column.columnDef.meta?.align === 'center'
                                 ? 'text-center'
                                 : header.column.columnDef.meta?.align === 'right' ? 'text-right' : 'text-left',
                             header.column.getCanSort()
-                                ? 'cursor-pointer hover:bg-muted/50 hover:text-foreground'
+                                ? 'cursor-pointer hover:text-zinc-900'
                                 : '',
                         ]" @click="handleHeaderClick(header)">
                             <div :class="[
@@ -67,11 +67,11 @@ function handleRowClick(row: any, event: MouseEvent) {
                                     <ArrowUp v-if="
                                         order_by === header.id &&
                                         order_direction === 'asc'
-                                    " class="h-3.5 w-3.5 text-primary" />
+                                    " class="h-3.5 w-3.5 text-orange-500" />
                                     <ArrowDown v-else-if="
                                         order_by === header.id &&
                                         order_direction === 'desc'
-                                    " class="h-3.5 w-3.5 text-primary" />
+                                    " class="h-3.5 w-3.5 text-orange-500" />
                                     <ArrowUpDown v-else class="h-3 w-3 text-muted-foreground/30" />
                                 </template>
                             </div>
@@ -82,7 +82,7 @@ function handleRowClick(row: any, event: MouseEvent) {
                 <TableBody>
                     <template v-if="table.getRowModel().rows?.length">
                         <TableRow v-for="row in table.getRowModel().rows" :key="row.id"
-                            class="cursor-pointer transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
+                            class="cursor-pointer transition-colors hover:bg-muted/40 data-[state=selected]:bg-muted border-b border-zinc-100 last:border-0"
                             @click="handleRowClick(row, $event)">
                             <TableCell v-for="cell in row.getVisibleCells()" :key="cell.id" :style="{
                                 width: `${cell.column.getSize()}px`,

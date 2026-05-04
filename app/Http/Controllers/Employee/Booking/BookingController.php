@@ -39,7 +39,7 @@ class BookingController
             'customerOptions' => $this->service->getCustomerOptions(),
             'designerOptions' => $this->designerService->getActiveOptions()->toArray(),
             'bookings' => Inertia::defer(fn() => BookingResource::collection(
-                $this->service->getFiltered($filter)
+                $this->service->getFiltered($filter, $request->user())
             )),
             'filters' => $filter,
         ]);
@@ -67,15 +67,15 @@ class BookingController
 
         return Inertia::render('employee/booking/bookings/Trash', [
             'bookings' => Inertia::defer(fn() => BookingResource::collection(
-                $this->service->getTrashedFiltered($filter)
+                $this->service->getTrashedFiltered($filter, $request->user())
             )),
             'filters' => $filter,
         ]);
     }
 
-    public function show(Booking $booking): Response
+    public function show(Booking $booking, Request $request): Response
     {
-        $booking = $this->service->getById($booking->id);
+        $booking = $this->service->getById($booking->id, $request->user());
 
         return Inertia::render('employee/booking/bookings/Show', [
             'booking' => new BookingResource($booking),

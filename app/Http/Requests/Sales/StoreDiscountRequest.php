@@ -4,6 +4,8 @@ namespace App\Http\Requests\Sales;
 
 use App\Models\Product\Category;
 use App\Models\Product\Collection;
+use App\Models\Product\Product;
+use App\Models\Product\ProductVariant;
 use App\Models\Vendor\Vendor;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -25,6 +27,8 @@ class StoreDiscountRequest extends FormRequest
             'end_at' => ['nullable', 'date', 'after_or_equal:start_at'],
             'is_active' => ['boolean'],
             'discountable_type' => ['nullable', Rule::in([
+                Product::class,
+                ProductVariant::class,
                 Category::class,
                 Collection::class,
                 Vendor::class,

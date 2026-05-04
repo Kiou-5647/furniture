@@ -37,7 +37,9 @@ class Vendor extends Model
             $this->province_name,
         ];
 
-        return implode(', ', $parts) ?: '—';
+        $filteredParts = array_filter($parts);
+
+        return implode(', ', $filteredParts) ?: '—';
     }
 
     public function discounts()

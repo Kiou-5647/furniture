@@ -61,33 +61,28 @@ class DiscountController
         return back()->with('success', 'Đã xóa giảm giá.');
     }
 
-    public function getCategories(): JsonResponse
+    public function getProducts(Request $request): JsonResponse
     {
-        return response()->json(
-            \App\Models\Product\Category::all()->map(fn($item) => [
-                'label' => $item->display_name ?? $item->name,
-                'value' => $item->id,
-            ])
-        );
+        return response()->json($this->service->getTargetProducts($request->query('search', '')));
     }
 
-    public function getCollections(): JsonResponse
+    public function getVariants(Request $request): JsonResponse
     {
-        return response()->json(
-            \App\Models\Product\Collection::all()->map(fn($item) => [
-                'label' => $item->display_name ?? $item->name,
-                'value' => $item->id,
-            ])
-        );
+        return response()->json($this->service->getTargetVariants($request->query('search', '')));
     }
 
-    public function getVendors(): JsonResponse
+    public function getCategories(Request $request): JsonResponse
     {
-        return response()->json(
-            \App\Models\Vendor\Vendor::all()->map(fn($item) => [
-                'label' => $item->name,
-                'value' => $item->id,
-            ])
-        );
+        return response()->json($this->service->getTargetCategories($request->query('search', '')));
+    }
+
+    public function getCollections(Request $request): JsonResponse
+    {
+        return response()->json($this->service->getTargetCollections($request->query('search', '')));
+    }
+
+    public function getVendors(Request $request): JsonResponse
+    {
+        return response()->json($this->service->getTargetVendors($request->query('search', '')));
     }
 }

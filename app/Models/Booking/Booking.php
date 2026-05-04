@@ -8,6 +8,7 @@ use App\Enums\InvoiceStatus;
 use App\Models\Auth\User;
 use App\Models\Hr\Designer;
 use App\Models\Sales\Invoice;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -18,7 +19,7 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class Booking extends Model
 {
-    use HasUuids, LogsActivity, SoftDeletes;
+    use HasUuids, HasFactory, LogsActivity, SoftDeletes;
 
     protected $table = 'bookings';
 
@@ -71,7 +72,9 @@ class Booking extends Model
             $this->province_name,
         ];
 
-        return implode(', ', $parts) ?: '—';
+        $filteredParts = array_filter($parts);
+
+        return implode(', ', $filteredParts) ?: '—';
     }
 
     public function depositInvoice(): BelongsTo

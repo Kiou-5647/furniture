@@ -27,7 +27,22 @@ enum StockMovementType: string
         };
     }
 
+    public function sampleNotes(): array
+    {
+        return match ($this) {
+            self::Receive => ['Nhập bổ sung', 'Hàng trả về', 'Nhập từ nhà cung cấp'],
+            self::Adjust => ['Kiểm kê định kỳ', 'Điều chỉnh sai sót', 'Sai lệch kho'],
+            self::Damage => ['Hàng hỏng', 'Hàng hết hạn', 'Hư hỏng vận chuyển'],
+            self::Sell => ['Bán lẻ', 'Bán sỉ', 'Đơn hàng website'],
+            self::Return => ['Khách trả hàng', 'Hàng lỗi trả về'],
+            self::TransferIn => ['Nhận từ kho khác'],
+            self::TransferOut => ['Chuyển sang kho khác'],
+            self::Restock => ['Nhập bổ sung tồn kho'],
+        };
+    }
+
     public function color(): string
+
     {
         return match ($this) {
             self::Receive, self::Restock, self::TransferIn, self::Return => 'green',

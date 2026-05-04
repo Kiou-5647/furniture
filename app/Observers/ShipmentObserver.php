@@ -25,38 +25,6 @@ class ShipmentObserver
         if ($wasNotDelivered && $shipment->status === ShipmentStatus::Delivered || $shipment->status === ShipmentStatus::Returned) {
             $this->checkOrderCompletion($shipment);
         }
-
-        if ($shipment->isDirty('status')) {
-            $oldStatus = $shipment->getOriginal('status');
-            $newStatus = $shipment->status;
-
-            // Increment when delivered and order is complete
-            if ($newStatus === ShipmentStatus::Delivered && $shipment->order?->status === OrderStatus::Completed) {
-                $this->updateSalesCounts($shipment, 'increment');
-            }
-
-            // Decrement when a delivered shipment is returned or cancelled
-            if ($oldStatus === ShipmentStatus::Delivered && in_array($newStatus, [ShipmentStatus::Cancelled, ShipmentStatus::Returned])) {
-                $this->updateSalesCounts($shipment, 'decrement');
-            }
-        }
-    }
-
-    protected function updateSalesCounts(Shipment $shipment, string $direction): void
-    {
-        foreach ($shipment->items as $item) {
-            if ($item->status !== ShipmentStatus::Delivered) continue;
-
-            $variant = $item->orderItem->purchasable;
-            if (!$variant instanceof ProductVariant) continue;
-
-            $method = $direction === 'increment' ? 'increment' : 'decrement';
-            $variant->$method('sales_count', $item->quantity_shipped);
-
-            // Bubble up the sales count
-            $variant->productCard?->syncSalesCount();
-            $variant->product?->syncSalesCount();
-        }
     }
 
     protected function checkOrderCompletion(Shipment $shipment): void

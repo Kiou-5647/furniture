@@ -3,12 +3,14 @@
 namespace App\Services\Inventory;
 
 use App\Data\Inventory\LocationFilterData;
+use App\Data\Inventory\LocationInventoryFilterData;
 use App\Enums\LocationType;
 use App\Enums\UserType;
 use App\Models\Auth\User;
+use App\Models\Inventory\Inventory;
 use App\Models\Inventory\Location;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection as EloquentCollection;
+use Illuminate\Support\Collection;
 
 class LocationService
 {
@@ -75,7 +77,50 @@ class LocationService
         return LocationType::options();
     }
 
-    public function getManagerOptions(): EloquentCollection
+    public function getInventoryByLocation(Location $location, LocationInventoryFilterData $filter): LengthAwarePaginator
+    {
+        $query = Inventory::query()
+            ->where('location_id', $location->id)
+            ->with(['variant', 'variant.product']);
+
+        $orderBy = $filter->order_by ?? 'quantity';
+        $direction = $filter->order_direction ?? 'desc';
+
+        if ($orderBy === 'product_name') {
+            $query->join('product_variants', 'inventories.variant_id', '=', 'product_variants.id')
+                ->join('products', 'product_variants.product_id', '=', 'products.id')
+                ->select('inventories.*')
+                ->orderBy('products.name', $direction);
+        } elseif ($orderBy === 'total_value') {
+            $query->orderBy(\Illuminate\Support\Facades\DB::raw('quantity * cost_per_unit'), $direction);
+        } else {
+            $query->orderBy($orderBy, $direction);
+        }
+
+        return $query->when($filter->search, function ($q) use ($filter) {
+            $q->where(function ($sq) use ($filter) {
+                $sq->whereHas('variant.product', fn($pq) => $pq->where('name', 'ilike', "%{$filter->search}%"))
+                    ->orWhereHas('variant', fn($vq) => $vq->where('name', 'ilike', "%{$filter->search}%")
+                        ->orWhere('sku', 'ilike', "%{$filter->search}%"));
+            });
+        })
+            ->paginate($filter->per_page ?? 12);
+    }
+
+    public function getLocationStats(Location $location): array
+    {
+        $statsQuery = \App\Models\Inventory\Inventory::query()
+            ->where('location_id', $location->id);
+
+        return [
+            'total_sku' => $statsQuery->count(),
+            'total_quantity' => $statsQuery->sum('quantity'),
+            'total_value' => $statsQuery->sum(\Illuminate\Support\Facades\DB::raw('quantity * cost_per_unit')),
+            'low_stock_count' => $statsQuery->where('quantity', '<=', 5)->count(),
+        ];
+    }
+
+    public function getManagerOptions(): Collection
     {
         return User::query()
             ->where('type', UserType::Employee)

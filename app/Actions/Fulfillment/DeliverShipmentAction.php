@@ -17,9 +17,13 @@ class DeliverShipmentAction
 
         DB::transaction(function () use ($shipment, $performedBy) {
             // Mark only non-cancelled items as delivered
-            $shipment->items()
+            $items = $shipment->items()
                 ->whereNotIn('status', [ShipmentStatus::Cancelled, ShipmentStatus::Returned])
-                ->update(['status' => ShipmentStatus::Delivered]);
+                ->get();
+
+            foreach ($items as $item) {
+                $item->update(['status' => ShipmentStatus::Delivered]);
+            }
 
             $shipment->update([
                 'status' => ShipmentStatus::Delivered,

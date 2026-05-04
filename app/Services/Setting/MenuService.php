@@ -32,10 +32,10 @@ class MenuService
         ];
 
         // HR Group
-        if ($user->canAny(['Quản lý nhân viên', 'departments.view', 'Xem nhà thiết kế'])) {
+        if ($user->canAny(['Xem nhân viên', 'Quản lý nhân viên', 'Xem phòng ban', 'Quản lý phòng ban', 'Xem nhà thiết kế', 'Quản lý nhà thiết kế'])) {
             $hrItems = [];
 
-            if ($user->can('departments.view')) {
+            if ($user->can('Quản lý phòng ban')) {
                 $hrItems[] = [
                     'title' => 'Phòng ban',
                     'href' => route('employee.hr.departments.index'),
@@ -69,7 +69,7 @@ class MenuService
         }
 
         // Product Management Group
-        if ($user->canAny(['Xem danh mục', 'collections.view', 'Xem sản phẩm'])) {
+        if ($user->canAny(['Xem danh mục', 'Xem bộ sưu tập', 'Xem sản phẩm'])) {
             $productItems = [];
 
             if ($user->can('Xem sản phẩm')) {
@@ -88,7 +88,7 @@ class MenuService
                 ];
             }
 
-            if ($user->can('collections.view')) {
+            if ($user->can('Xem bộ sưu tập')) {
                 $productItems[] = [
                     'title' => 'Bộ sưu tập',
                     'href' => route('employee.collections.index'),
@@ -212,12 +212,14 @@ class MenuService
         if ($user->can('Xem kho hàng')) {
             $inventoryItems = [];
 
-            if ($user->can('Xem kho hàng')) {
-                $inventoryItems[] = [
-                    'title' => 'Nhà cung cấp',
-                    'href' => route('employee.inventory.vendor.index'),
-                    'isActive' => Route::is('employee.vendor.*'),
-                ];
+            if ($user->canAny(['Xem kho hàng', 'Quản lý kho hàng'])) {
+                if ($user->canAny(['Xem nhà cung cấp', 'Quản lý nhà cung cấp'])) {
+                    $inventoryItems[] = [
+                        'title' => 'Nhà cung cấp',
+                        'href' => route('employee.inventory.vendor.index'),
+                        'isActive' => Route::is('employee.vendor.*'),
+                    ];
+                }
 
                 $inventoryItems[] = [
                     'title' => 'Vị trí kho hàng',

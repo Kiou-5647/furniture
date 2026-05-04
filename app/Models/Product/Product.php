@@ -113,7 +113,13 @@ class Product extends Model implements HasMedia
         return $this->hasMany(BundleContent::class);
     }
 
+    public function discounts(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(\App\Models\Sales\Discount::class, 'discountable');
+    }
+
     public function isInAnyBundle(): bool
+
     {
         return $this->bundleContents()->exists();
     }

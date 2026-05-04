@@ -71,44 +71,48 @@ class ProductPageResource extends JsonResource
                 'manual_url' => $this->getFirstMediaUrl('manual_file') ?? null,
             ],
 
-            'active_variant' => [
-                'id' => $activeVariant->id,
-                'sku' => $activeVariant->sku,
-                'slug' => $activeVariant->slug,
-                'name' => $activeVariant->name,
-                'description' => $activeVariant->description ?? null,
-                'swatch_label' => $activeVariant->swatch_label ?? null,
-                'price' => $activeVariant->price,
-                'sale_price' => $activeVariant->getEffectivePrice(),
-                'in_stock' => $activeVariant->getAvailableStock() > 0,
-                'option_values' => $activeVariant->option_values,
-                'sales_count' => $activeVariant->sales_count,
-                'reviews_count' => $activeVariant->reviews_count ?? 0,
-                'average_rating' => $activeVariant->average_rating ?? 0,
-                'images' => [
-                    'primary' => [
-                        'full' => $activeVariant->getFirstMediaUrl('primary_image', 'webp') ?? $activeVariant->getFirstMediaUrl('primary_image'),
-                        'thumb' => $activeVariant->getFirstMediaUrl('primary_image', 'thumb'),
-                    ],
-                    'hover' => [
-                        'full' => $activeVariant->getFirstMediaUrl('hover_image', 'webp') ?? $activeVariant->getFirstMediaUrl('hover_image'),
-                        'thumb' => $activeVariant->getFirstMediaUrl('hover_image', 'thumb'),
-                    ],
-                    'dimension' => [
-                        'full' => $activeVariant->getFirstMediaUrl('dimension_image', 'webp') ?? $activeVariant->getFirstMediaUrl('dimension_image'),
-                        'thumb' => $activeVariant->getFirstMediaUrl('dimension_image', 'thumb'),
-                    ],
-                    'swatch' => [
-                        'full' => $activeVariant->getFirstMediaUrl('swatch_image', 'webp') ?? $activeVariant->getFirstMediaUrl('swatch_image'),
-                        'thumb' => $activeVariant->getFirstMediaUrl('swatch_image', 'thumb'),
-                        'swatch' => $activeVariant->getFirstMediaUrl('swatch_image', 'swatch'),
-                    ],
-                    'gallery' => $activeVariant->getMedia('gallery')->map(fn($media) => [
-                        'full' => $media->getUrl('webp') ?? $media->getUrl(),
-                        'thumb' => $media->getUrl('thumb'),
-                    ])->toArray(),
-                ]
-            ],
+            'active_variant' => (function() use ($activeVariant) {
+                $priceDetails = app(\App\Services\Sales\PriceCalculationService::class)->calculatePriceDetails($activeVariant);
+                return [
+                    'id' => $activeVariant->id,
+                    'sku' => $activeVariant->sku,
+                    'slug' => $activeVariant->slug,
+                    'name' => $activeVariant->name,
+                    'description' => $activeVariant->description ?? null,
+                    'swatch_label' => $activeVariant->swatch_label ?? null,
+                    'price' => $activeVariant->price,
+                    'sale_price' => $priceDetails['effective_price'],
+                    'discount' => $priceDetails['discount'],
+                    'in_stock' => $activeVariant->getAvailableStock() > 0,
+                    'option_values' => $activeVariant->option_values,
+                    'sales_count' => $activeVariant->sales_count,
+                    'reviews_count' => $activeVariant->reviews_count ?? 0,
+                    'average_rating' => $activeVariant->average_rating ?? 0,
+                    'images' => [
+                        'primary' => [
+                            'full' => $activeVariant->getFirstMediaUrl('primary_image', 'webp') ?? $activeVariant->getFirstMediaUrl('primary_image'),
+                            'thumb' => $activeVariant->getFirstMediaUrl('primary_image', 'thumb'),
+                        ],
+                        'hover' => [
+                            'full' => $activeVariant->getFirstMediaUrl('hover_image', 'webp') ?? $activeVariant->getFirstMediaUrl('hover_image'),
+                            'thumb' => $activeVariant->getFirstMediaUrl('hover_image', 'thumb'),
+                        ],
+                        'dimension' => [
+                            'full' => $activeVariant->getFirstMediaUrl('dimension_image', 'webp') ?? $activeVariant->getFirstMediaUrl('dimension_image'),
+                            'thumb' => $activeVariant->getFirstMediaUrl('dimension_image', 'thumb'),
+                        ],
+                        'swatch' => [
+                            'full' => $activeVariant->getFirstMediaUrl('swatch_image', 'webp') ?? $activeVariant->getFirstMediaUrl('swatch_image'),
+                            'thumb' => $activeVariant->getFirstMediaUrl('swatch_image', 'thumb'),
+                            'swatch' => $activeVariant->getFirstMediaUrl('swatch_image', 'swatch'),
+                        ],
+                        'gallery' => $activeVariant->getMedia('gallery')->map(fn($media) => [
+                            'full' => $media->getUrl('webp') ?? $media->getUrl(),
+                            'thumb' => $media->getUrl('thumb'),
+                        ])->toArray(),
+                    ]
+                ];
+            })(),
             'variants' => $this->variants->map(fn($v) => [
                 'id' => $v->id,
                 'sku' => $v->sku,

@@ -244,8 +244,6 @@ async function loadDesignerAvailability() {
         );
         const data = await response.json();
         designerAvailability.value = data.weekly || [];
-
-        // After loading the grid, try to set a valid start time for the current date
         autoSelectFirstSlot();
     } catch (e) {
         console.error('Failed to load availability:', e);
@@ -317,7 +315,7 @@ async function submit() {
                 preserveScroll: true,
                 preserveState: true,
                 onError: (errors) => {
-                    console.error(`Lỗi: ${errors}`)
+                    toast.error('Rất tiếc, khung giờ này vừa mới bị đặt. Vui lòng chọn giờ khác.')
                 },
                 onFinish: () => {
                     form.processing = false;

@@ -370,7 +370,7 @@ function closeModal() {
                     <div
                         class="mb-4"
                     >
-                        <Field v-if="!props.designer.employee">
+                        <Field v-if="!props.designer?.employee">
                             <FieldLabel>
                                 Chọn nhân viên
                                 <span class="text-destructive">*</span>
@@ -473,7 +473,7 @@ function closeModal() {
                             </FieldLabel>
                             <FieldContent>
                                 <Input
-                                :model-value="formatNumber(form.hourly_rate)"
+                                    :model-value="formatNumber(form.hourly_rate)"
                                     type="text"
                                     inputmode="numeric"
                                     placeholder="500000"

@@ -12,6 +12,7 @@ use App\Data\Sales\CreateOrderData;
 use App\Data\Sales\OrderFilterData;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
+use App\Exports\Sales\OrderExport;
 use App\Http\Requests\Fulfillment\StoreShipmentsRequest;
 use App\Http\Requests\Sales\CreateOrderRequest;
 use App\Http\Requests\Sales\StockOptionsRequest;
@@ -26,6 +27,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
+use Maatwebsite\Excel\Facades\Excel;
 
 class OrderController
 {
@@ -218,6 +220,13 @@ class OrderController
         $order->delete();
 
         return back()->with('success', 'Đã xóa đơn hàng.');
+    }
+
+    public function export(Request $request)
+    {
+        $filter = OrderFilterData::fromRequest($request);
+
+        return Excel::download(new OrderExport($filter), 'orders_export_' . now()->format('Ymd_His') . '.xlsx');
     }
 
     public function forceDestroy(Order $order)

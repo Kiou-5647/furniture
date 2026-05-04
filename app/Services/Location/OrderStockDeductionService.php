@@ -38,7 +38,9 @@ class OrderStockDeductionService
 
         DB::transaction(function () use ($order, $performedBy, $location) {
             foreach ($order->items as $item) {
-                $this->deductItem($item, $location, $order, $performedBy);
+                // cost_per_unit is already recorded in CreateOrderAction for in-store orders.
+                // We only need to perform the stock movement.
+                $this->recordStockMovementForInStoreItem($item, $location, $order, $performedBy);
             }
         });
     }
@@ -74,6 +76,9 @@ class OrderStockDeductionService
         ?Employee $performedBy = null
     ): void {
         DB::transaction(function () use ($shipment, $performedBy) {
+            // Group by OrderItem to calculate total bundle cost if necessary
+            $itemCosts = [];
+
             foreach ($shipment->items as $shipmentItem) {
                 $sourceLocation = $shipment->originLocation
                     ?? $shipmentItem->orderItem?->sourceLocation;
@@ -89,6 +94,13 @@ class OrderStockDeductionService
                     continue;
                 }
 
+                // Track cost per OrderItem for bundles
+                if ($shipmentItem->orderItem) {
+                    $orderItemId = $shipmentItem->orderItem->id;
+                    $cost = ($variant->getAverageCostPerUnit() ?? 0) * $shipmentItem->quantity_shipped;
+                    $itemCosts[$orderItemId] = ($itemCosts[$orderItemId] ?? 0) + $cost;
+                }
+
                 $this->recordStockMovement->handle(
                     variant: $variant,
                     location: $sourceLocation,
@@ -99,6 +111,39 @@ class OrderStockDeductionService
                     referenceType: Shipment::class,
                     referenceId: $shipment->id,
                 );
+            }
+
+            // Update OrderItems with the calculated cost
+            foreach ($itemCosts as $orderItemId => $totalCost) {
+                $orderItem = \App\Models\Sales\OrderItem::find($orderItemId);
+                if ($orderItem) {
+                    if ($orderItem->purchasable_type === \App\Models\Product\ProductVariant::class) {
+                        $variant = \App\Models\Product\ProductVariant::find($orderItem->purchasable_id);
+                        $orderItem->update(['cost_per_unit' => $variant?->getAverageCostPerUnit()]);
+                    } else {
+                        // It's a bundle. 
+                        // Use the recorded costs in configuration if available, otherwise use the computed cost from this shipment.
+                        $recordedCost = 0;
+                        if (!empty($orderItem->configuration)) {
+                            foreach ($orderItem->configuration as $config) {
+                                if (isset($config['cost'])) {
+                                    $recordedCost += $config['cost'] * ($config['quantity'] ?? 1);
+                                }
+                            }
+                        }
+
+                        if ($recordedCost > 0) {
+                            $orderItem->update(['cost_per_unit' => $recordedCost]);
+                        } else {
+                            $shippedQty = \App\Models\Fulfillment\ShipmentItem::where('order_item_id', $orderItemId)
+                                ->where('shipment_id', $shipment->id)
+                                ->sum('quantity_shipped');
+                            if ($shippedQty > 0) {
+                                $orderItem->update(['cost_per_unit' => $totalCost / $shippedQty]);
+                            }
+                        }
+                    }
+                }
             }
         });
     }
@@ -149,11 +194,26 @@ class OrderStockDeductionService
 
         $variantId = $shipmentItem->variant_id;
 
-
         /** @var ProductVariant $variant */
         $variant = ProductVariant::find($variantId);
         if (! $variant) {
             return;
+        }
+
+        // Determine the cost this item had when it was sold
+        $cost = null;
+        $orderItem = $shipmentItem->orderItem;
+        if ($orderItem) {
+            if ($orderItem->purchasable_type === ProductVariant::class) {
+                $cost = $orderItem->cost_per_unit;
+            } elseif ($orderItem->purchasable_type === Bundle::class && !empty($orderItem->configuration)) {
+                foreach ($orderItem->configuration as $config) {
+                    if (isset($config['variant_id']) && $config['variant_id'] === $variantId) {
+                        $cost = $config['cost'] ?? null;
+                        break;
+                    }
+                }
+            }
         }
 
         $this->recordStockMovement->handle(
@@ -165,6 +225,7 @@ class OrderStockDeductionService
             performedBy: $performedBy,
             referenceType: Shipment::class,
             referenceId: $shipment->id,
+            costPerUnit: $cost,
         );
     }
 
@@ -172,7 +233,7 @@ class OrderStockDeductionService
      * Deduct a single order item from a specific location.
      * Handles both variants and bundles (expanding bundle into its selected variants).
      */
-    protected function deductItem(OrderItem $item, Location $location, Order $order, ?Employee $performedBy): void
+    protected function recordStockMovementForInStoreItem(OrderItem $item, Location $location, Order $order, ?Employee $performedBy): void
     {
         $variants = $this->resolveVariantsFromItem($item);
         foreach ($variants as [$variant, $qty]) {
@@ -196,6 +257,19 @@ class OrderStockDeductionService
     {
         $variants = $this->resolveVariantsFromItem($item);
         foreach ($variants as [$variant, $qty]) {
+            // Calculate the specific cost for this variant at the time of sale
+            $cost = null;
+            if ($item->purchasable_type === ProductVariant::class) {
+                $cost = $item->cost_per_unit;
+            } elseif ($item->purchasable_type === Bundle::class && !empty($item->configuration)) {
+                foreach ($item->configuration as $config) {
+                    if (isset($config['variant_id']) && $config['variant_id'] === $variant->id) {
+                        $cost = $config['cost'] ?? null;
+                        break;
+                    }
+                }
+            }
+
             $this->recordStockMovement->handle(
                 variant: $variant,
                 location: $location,
@@ -205,6 +279,7 @@ class OrderStockDeductionService
                 performedBy: $performedBy,
                 referenceType: Order::class,
                 referenceId: $order->id,
+                costPerUnit: $cost,
             );
         }
     }
@@ -239,16 +314,17 @@ class OrderStockDeductionService
     protected function resolveBundleVariants(OrderItem $bundleItem): array
     {
         $configuration = $bundleItem->configuration ?? [];
-        $selectedVariants = $configuration['selected_variants'] ?? [];
-
         $results = [];
-        foreach ($selectedVariants as $sv) {
-            $variant = ProductVariant::find($sv['variant_id'] ?? null);
-            if (! $variant) {
-                continue;
+
+        foreach ($configuration as $configValue) {
+            if (is_array($configValue) && isset($configValue['variant_id'])) {
+                $variant = ProductVariant::find($configValue['variant_id']);
+
+                if ($variant) {
+                    $qty = ($configValue['quantity'] ?? 1) * $bundleItem->quantity;
+                    $results[] = [$variant, $qty];
+                }
             }
-            $qty = ($sv['quantity'] ?? 1) * $bundleItem->quantity;
-            $results[] = [$variant, $qty];
         }
 
         return $results;

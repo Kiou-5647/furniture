@@ -112,7 +112,13 @@ class ProductVariant extends Model implements HasMedia
         return $this->hasMany(Review::class, 'variant_id');
     }
 
+    public function discounts(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(\App\Models\Sales\Discount::class, 'discountable');
+    }
+
     public function getTotalStock(): int
+
     {
         return $this->inventories()->sum('quantity');
     }

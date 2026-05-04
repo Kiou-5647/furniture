@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\CaptureGuestSession;
+use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\EnsureUserType;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -23,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->web(append: [
             CaptureGuestSession::class,
+            EnsureUserIsActive::class,
             SetUserTimezone::class,
             HandleAppearance::class,
             HandleInertiaRequests::class,

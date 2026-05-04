@@ -26,7 +26,7 @@ class InitialStockSeeder extends Seeder
             return;
         }
 
-        $quantities = [0, 0, 0, 0, 25, 50];
+        $quantities = [0, 1, 2, 5, 10, 15, 20];
 
         foreach ($variants as $variant) {
             foreach ($locations as $location) {

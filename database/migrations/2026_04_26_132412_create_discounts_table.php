@@ -20,7 +20,7 @@ return new class extends Migration
             $table->dateTime('end_at')->nullable();
             $table->boolean('is_active')->default(true);
 
-            $table->uuidMorphs('discountable');
+            $table->nullableUuidMorphs('discountable');
 
             $table->timestamps();
             $table->softDeletes();

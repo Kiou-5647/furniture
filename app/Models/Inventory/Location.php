@@ -59,7 +59,9 @@ class Location extends Model
             $this->province_name,
         ];
 
-        return implode(', ', $parts) ?: '—';
+        $filteredParts = array_filter($parts);
+
+        return implode(', ', $filteredParts) ?: '—';
     }
 
     public static function generateCode(string $type): string

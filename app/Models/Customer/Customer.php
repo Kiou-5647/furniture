@@ -43,7 +43,9 @@ class Customer extends Model implements HasMedia
             $this->province_name,
         ];
 
-        return implode(', ', $parts) ?: '—';
+        $filteredParts = array_filter($parts);
+
+        return implode(', ', $filteredParts) ?: '—';
     }
 
     public function registerMediaCollections(): void

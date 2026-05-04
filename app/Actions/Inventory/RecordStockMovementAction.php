@@ -30,11 +30,9 @@ class RecordStockMovementAction
         ?float $costPerUnit = null,
         bool $forceUpdatePrice = false,
     ): StockMovement {
-        if ($quantity === 0) {
+        if ($quantity === 0 && $type !== StockMovementType::Adjust) {
             throw new \InvalidArgumentException('Số lượng phải lớn hơn 0');
         }
-
-        Log::info('Start stock records');
 
         return DB::transaction(function () use ($variant, $location, $type, $quantity, $notes, $performedBy, $referenceType, $referenceId, $costPerUnit, $forceUpdatePrice) {
             $inventory = Inventory::where('variant_id', $variant->id)
@@ -44,22 +42,21 @@ class RecordStockMovementAction
 
             // Capture BEFORE any modifications
             $quantityBefore = $inventory?->quantity ?? 0;
-            $costPerUnitBefore = $inventory?->cost_per_unit !== null && $inventory?->cost_per_unit > 0
+            $costPerUnitBefore = $inventory->cost_per_unit !== null && $inventory->cost_per_unit > 0
                 ? (float) $inventory->cost_per_unit
                 : null;
-            $costPerUnitAfter = null;
 
             if ($type->isIncoming()) {
                 $result = $this->handleIncoming($inventory, $variant, $location, $quantity, $costPerUnit);
-                $costPerUnitAfter = $result['cost'];
+                $movementCost = $result['movement_cost'];
                 $inventory = $result['inventory'];
             } elseif ($type === StockMovementType::Adjust) {
-                $result = $this->handleAdjustment($inventory, $variant, $location, $quantity);
-                $costPerUnitAfter = $result['cost'];
+                $result = $this->handleAdjustment($inventory, $variant, $location, $quantity, $costPerUnit);
+                $movementCost = $result['movement_cost'];
                 $inventory = $result['inventory'];
             } else {
                 $result = $this->handleOutgoing($inventory, $variant, $location, $quantity);
-                $costPerUnitAfter = $result['cost'];
+                $movementCost = $result['movement_cost'];
                 $inventory = $result['inventory'];
             }
 
@@ -73,7 +70,7 @@ class RecordStockMovementAction
                 'quantity_before' => $quantityBefore,
                 'quantity_after' => $quantityAfter,
                 'cost_per_unit_before' => $costPerUnitBefore,
-                'cost_per_unit' => $costPerUnitAfter,
+                'cost_per_unit' => $movementCost,
                 'notes' => $notes,
                 'performed_by' => $performedBy?->id,
                 'reference_type' => $referenceType,
@@ -90,37 +87,37 @@ class RecordStockMovementAction
     {
         $oldQty = 0;
         $oldCost = 0.0;
-        $newCost = $costPerUnit ?? 0.0;
+        $movementCost = $costPerUnit ?? 0.0;
 
         if (! $inventory) {
             $inventory = Inventory::create([
                 'variant_id' => $variant->id,
                 'location_id' => $location->id,
                 'quantity' => 0,
-                'cost_per_unit' => $newCost > 0 ? $newCost : 0,
+                'cost_per_unit' => $movementCost > 0 ? $movementCost : 0,
             ]);
         } else {
             $oldQty = $inventory->quantity;
             $oldCost = (float) $inventory->cost_per_unit;
         }
 
-        if ($oldQty > 0 && $newCost > 0) {
-            $newAvgCost = ($oldCost * $oldQty + $newCost * $quantity) / ($oldQty + $quantity);
+        if ($oldQty > 0 && $movementCost > 0) {
+            $newAvgCost = ($oldCost * $oldQty + $movementCost * $quantity) / ($oldQty + $quantity);
             $inventory->cost_per_unit = $newAvgCost;
-        } elseif ($newCost > 0) {
-            $inventory->cost_per_unit = $newCost;
+        } elseif ($movementCost > 0) {
+            $inventory->cost_per_unit = $movementCost;
         }
 
         $inventory->quantity += $quantity;
         $inventory->save();
 
         return [
-            'cost' => (float) $inventory->cost_per_unit,
+            'movement_cost' => (float) $movementCost,
             'inventory' => $inventory,
         ];
     }
 
-    protected function handleAdjustment(?Inventory $inventory, ProductVariant $variant, Location $location, int $quantity): array
+    protected function handleAdjustment(?Inventory $inventory, ProductVariant $variant, Location $location, int $quantity, ?float $costPerUnit = null): array
     {
         if (! $inventory) {
             $inventory = Inventory::create([
@@ -130,11 +127,18 @@ class RecordStockMovementAction
             ]);
         }
 
+        $movementCost = (float) $inventory->cost_per_unit;
+
+        if ($costPerUnit !== null) {
+            $movementCost = $costPerUnit;
+            $inventory->cost_per_unit = $costPerUnit;
+        }
+
         $inventory->quantity = max(0, $inventory->quantity - $quantity);
         $inventory->save();
 
         return [
-            'cost' => (float) $inventory->cost_per_unit,
+            'movement_cost' => $movementCost,
             'inventory' => $inventory,
         ];
     }
@@ -147,11 +151,12 @@ class RecordStockMovementAction
             );
         }
 
+        $movementCost = (float) $inventory->cost_per_unit;
         $inventory->quantity -= $quantity;
         $inventory->save();
 
         return [
-            'cost' => (float) $inventory->cost_per_unit,
+            'movement_cost' => $movementCost,
             'inventory' => $inventory,
         ];
     }
@@ -171,8 +176,5 @@ class RecordStockMovementAction
 
             return;
         }
-
-        // Price would decrease and not forced - keep old price
-        // This is handled by not calling updateQuietly
     }
 }

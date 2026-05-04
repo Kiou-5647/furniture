@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { Plus } from '@lucide/vue';
+import { Plus, FileSpreadsheet } from '@lucide/vue';
 import { debounce } from 'lodash';
 import { computed, ref, watch } from 'vue';
 import DataTableGroup from '@/components/custom/data-table/DataTableGroup.vue';
@@ -72,6 +72,7 @@ const activeColumns = computed(() => getColumns(handleShow, handleCancel, handle
 
 const showFormModal = ref(false);
 const showDeleteDialog = ref(false);
+const loadingExport = ref(false);
 const selectedOrder = ref<Order | null>(null);
 const isActuallyLoading = ref(true);
 const search = ref(props.filters.search ?? '');
@@ -218,6 +219,26 @@ function performDelete() {
         },
     });
 }
+
+async function handleExport() {
+    loadingExport.value = true;
+    try {
+        const query = cleanQuery({
+            search: search.value,
+            status: selectedStatus.value ?? undefined,
+            customer_id: selectedCustomer.value ?? undefined,
+            source: selectedSource.value ?? undefined,
+            store_location_id: selectedStoreLocation.value ?? undefined,
+        });
+
+        const url = `${index().url}/export${query ? '?' + query : ''}`;
+        window.open(url, '_blank');
+    } finally {
+        setTimeout(() => {
+            loadingExport.value = false;
+        }, 1000);
+    }
+}
 </script>
 
 <template>
@@ -230,6 +251,14 @@ function performDelete() {
                     description="Quản lý đơn hàng và trạng thái giao dịch"
                 />
                 <div class="flex items-center gap-2">
+                    <Button
+                        variant="outline"
+                        @click="handleExport"
+                        :disabled="loadingExport"
+                    >
+                        <FileSpreadsheet class="mr-2 h-4 w-4" />
+                        {{ loadingExport ? 'Đang xuất...' : 'Xuất Excel' }}
+                    </Button>
                     <Button @click="handleCreate">
                         <Plus class="mr-2 h-4 w-4" /> Tạo đơn hàng
                     </Button>

@@ -6,6 +6,7 @@ use App\Data\Booking\BookingFilterData;
 use App\Enums\BookingStatus;
 use App\Models\Auth\User;
 use App\Models\Booking\Booking;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
@@ -22,7 +23,7 @@ class BookingService
             ->map(fn($user) => [
                 'id' => $user->id,
                 'name' => $user->customer?->full_name ?? $user->name,
-                'email' => $user->email,
+                'email' => $user->customer?->email ?? $user->email,
                 'phone' => $user->customer?->phone,
                 'address' => [
                     'province_code' => $user->customer?->province_code,
@@ -34,36 +35,58 @@ class BookingService
             ]);
     }
 
-    public function getFiltered(BookingFilterData $filter): LengthAwarePaginator
+    public function getFiltered(BookingFilterData $filter, User $user): LengthAwarePaginator
     {
-        return Booking::query()
+        $query = Booking::query()
             ->with(['customer', 'designer', 'depositInvoice', 'finalInvoice'])
             ->when($filter->designer_id, fn($q) => $q->byDesigner($filter->designer_id))
             ->when($filter->status, fn($q) => $q->byStatus($filter->status))
             ->when($filter->customer_id, fn($q) => $q->byCustomer($filter->customer_id))
-            ->when($filter->search, fn($q) => $q->search($filter->search))
-            ->orderBy($filter->order_by, $filter->order_direction)
+            ->when($filter->search, fn($q) => $q->search($filter->search));
+
+        $query = $this->applyRoleFilter($query, $user);
+
+        return $query->orderBy($filter->order_by, $filter->order_direction)
             ->paginate($filter->per_page);
     }
 
-    public function getTrashedFiltered(BookingFilterData $filter): LengthAwarePaginator
+    public function getTrashedFiltered(BookingFilterData $filter, User $user): LengthAwarePaginator
     {
-        return Booking::onlyTrashed()
+        $query = Booking::onlyTrashed()
             ->with(['customer', 'designer'])
-            ->when($filter->search, fn($q) => $q->search($filter->search))
-            ->orderBy($filter->order_by ?? 'deleted_at', $filter->order_direction ?? 'desc')
+            ->when($filter->search, fn($q) => $q->search($filter->search));
+
+        $query = $this->applyRoleFilter($query, $user);
+
+        return $query->orderBy($filter->order_by ?? 'deleted_at', $filter->order_direction ?? 'desc')
             ->paginate($filter->per_page);
     }
 
-    public function getById(string $id): Booking
+    public function getById(string $id, User $user): Booking
     {
-        return Booking::with([
+        $query = Booking::with([
             'customer',
             'designer.user',
             'designer.employee',
             'depositInvoice',
             'finalInvoice',
-        ])->findOrFail($id);
+        ]);
+
+        return $this->applyRoleFilter($query, $user)->findOrFail($id);
+    }
+
+    public function applyRoleFilter(Builder $query, User $user): Builder
+    {
+        if ($user->hasAnyRole(['Quản trị viên', 'Quản lý'])) {
+            return $query;
+        }
+
+        return $query->where(function ($q) use ($user) {
+            if ($designer = $user->designer) {
+                $q->orWhere('designer_id', $designer->id);
+            }
+            $q->orWhere('customer_id', $user->id);
+        });
     }
 
     public function getStatusOptions(): array

@@ -2,11 +2,16 @@
 
 namespace App\Observers;
 
+use App\Actions\Customer\UpdateCustomerTotalSpentAction;
 use App\Actions\Sales\CreateRefundRequestAction;
 use App\Enums\InvoiceStatus;
 use App\Enums\OrderStatus;
 use App\Enums\RefundStatus;
+use App\Enums\ShipmentStatus;
 use App\Models\Hr\Employee;
+use App\Models\Product\Bundle;
+use App\Models\Product\BundleContent;
+use App\Models\Product\ProductVariant;
 use App\Models\Sales\Order;
 
 class OrderObserver
@@ -21,15 +26,49 @@ class OrderObserver
     public function updated(Order $order): void
     {
         if ($order->isDirty('status') && $order->status === OrderStatus::Completed) {
-            app(\App\Actions\Customer\UpdateCustomerTotalSpentAction::class)->execute($order);
+            app(UpdateCustomerTotalSpentAction::class)->execute($order);
+
+            $hasDeliveredItems = $order->shipments()
+                ->whereHas('items', function ($q) {
+                    $q->where('status', ShipmentStatus::Delivered);
+                })->exists();
+
+            if (!$hasDeliveredItems) {
+                foreach ($order->items as $item) {
+                    $quantity = $item->quantity;
+
+                    if ($item->purchasable_type === Bundle::class) {
+                        $configuration = $item->configuration ?? [];
+                        foreach ($configuration as $configValue) {
+                            if (is_array($configValue) && isset($configValue['variant_id'])) {
+                                $variantId = $configValue['variant_id'];
+                                $totalIncrement = $quantity * ($configValue['quantity'] ?? 1);
+
+                                $this->incrementVariantSales($variantId, $totalIncrement);
+                            }
+                        }
+                    } else {
+                        $this->incrementVariantSales($item->purchasable_id, $quantity);
+                    }
+                }
+            }
+
+
 
             $this->createRefundForOverpaidInvoice($order);
         }
     }
 
-    /**
-     * When order completes with an overpaid invoice, create refund for excess amount.
-     */
+    protected function incrementVariantSales(string $variantId, int $quantity): void
+    {
+        $variant = ProductVariant::find($variantId);
+        if ($variant) {
+            $variant->increment('sales_count', $quantity);
+            $variant->productCard?->syncSalesCount();
+            $variant->product?->syncSalesCount();
+        }
+    }
+
     protected function createRefundForOverpaidInvoice(Order $order): void
     {
         $invoice = $order->invoices()->first();

@@ -74,7 +74,7 @@ class StorefrontService
             $paginatedProducts->total(),
             $paginatedProducts->perPage(),
             $paginatedProducts->currentPage(),
-            ['path' => $paginatedProducts->getPath(), 'query' => $paginatedProducts->getQueryString()]
+            ['path' => request()->url(), 'query' => request()->query()]
         );
     }
 
@@ -110,27 +110,40 @@ class StorefrontService
             }
         }
 
-        $total = count($matchingVariantIds);
-        if ($total === 0) {
+        $totalVariants = count($matchingVariantIds);
+        if ($totalVariants === 0) {
             return new LengthAwarePaginator([], 0, $filter->limit ?? 24);
         }
 
+        $orderedCardIds = [];
+        foreach ($pool as $variant) {
+            if (in_array($variant->variant_id, $matchingVariantIds)) {
+                $cardId = $variant->product_card_id;
+
+                if ($cardId && !in_array($cardId, $orderedCardIds)) {
+                    $orderedCardIds[] = $cardId;
+                }
+            }
+        }
+
+        $totalCards = count($orderedCardIds);
         $limit = $filter->limit > 0 ? $filter->limit : 24;
         $offset = ($filter->page - 1) * $limit;
 
-        $slicedVariantIds = array_slice($matchingVariantIds, $offset, $limit);
+        $slicedCardIds = array_slice($orderedCardIds, $offset, $limit);
 
-        if (empty($slicedVariantIds)) {
+        if (empty($slicedCardIds)) {
             return new LengthAwarePaginator([], 0, $filter->limit ?? 24);
         }
 
-        // Map matching variants back to their parent products
-        $productIds = $pool->whereIn('variant_id', $slicedVariantIds)->pluck('product_id')->unique();
+        $flatCardIds = collect($slicedCardIds)->flatten()->toArray();
 
         $cards = ProductCard::query()
-            ->whereIn('product_id', $productIds)
+            ->whereIn('id', $flatCardIds)
             ->with(['product', 'variants', 'options'])
             ->get();
+
+        $cards = $cards->sortBy(fn($card) => array_search($card->id, $slicedCardIds));
 
         if ($filter->type === ProductSortType::HIGH_LOW || $filter->type === ProductSortType::LOW_HIGH) {
             $cards = $cards->sortBy(function ($card) use ($filter) {
@@ -156,7 +169,7 @@ class StorefrontService
         // 6. Return the Paginator
         return new LengthAwarePaginator(
             $finalCollection,
-            $total,
+            $totalCards,
             $filter->limit,
             $filter->page,
             ['path' => request()->url(), 'query' => request()->query()]
@@ -181,9 +194,9 @@ class StorefrontService
                 'prod_features' => $variant->product->features,
                 'prod_specifications' => $variant->product->specifications,
                 'category_id' => $variant->product->category_id,
-                'category_slug' => $variant->product->category->slug,
+                'category_slug' => $variant->product->category?->slug,
                 'collection_id' => $variant->product->collection_id,
-                'collection_slug' => $variant->product->collection->slug,
+                'collection_slug' => $variant->product->collection?->slug,
                 'filterable_options' => $variant->product->filterable_options,
             ];
 
@@ -381,6 +394,7 @@ class StorefrontService
             ->whereNull('product_variants.deleted_at')
             ->select([
                 'product_variants.id as variant_id',
+                'product_variants.product_card_id as product_card_id',
                 'product_variants.option_values',
                 'product_variants.features',
                 'product_variants.specifications',
@@ -406,6 +420,7 @@ class StorefrontService
 
             return (object) [
                 'variant_id' => $item->variant_id,
+                'product_card_id' => $item->product_card_id,
                 'effective_price' => $effectivePrice,
                 'product_id' => $item->product_id,
                 'category_id' => $item->category_id,

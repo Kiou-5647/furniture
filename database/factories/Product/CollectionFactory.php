@@ -15,7 +15,6 @@ class CollectionFactory extends Factory
             'display_name' => $this->faker->words(3, true),
             'slug' => $this->faker->slug(),
             'is_active' => true,
-            'is_featured' => false,
         ];
     }
 }

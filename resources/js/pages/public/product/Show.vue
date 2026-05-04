@@ -323,28 +323,42 @@ function getSwatchVisual(swatch: any) {
                     <div class="hidden @lg:block">
                         <h1 class="text-lg font-bold">{{ displayName }}</h1>
                         <div class="text-md font-semibold">
-                            <span
-                                v-if="
-                                    activeVariant.sale_price <
-                                    activeVariant.price
-                                "
-                                class="text-orange-500"
+                            <div class="flex items-center gap-2">
+                                <span
+                                    v-if="
+                                        activeVariant.sale_price <
+                                        activeVariant.price
+                                    "
+                                    class="text-orange-500"
                                 >{{
                                     formatPrice(
                                         Number(activeVariant.sale_price),
                                     )
                                 }}</span
-                            >
-                            <span
-                                :class="
+                                >
+                                <span
+                                    :class="
+                                        activeVariant.sale_price <
+                                        activeVariant.price
+                                            ? 'text-md ml-2 text-zinc-400 line-through'
+                                            : 'text-zinc-900'
+                                    "
+                                >
+                                    {{ formatPrice(Number(activeVariant.price)) }}
+                                </span>
+                            </div>
+                            <div
+                                v-if="
                                     activeVariant.sale_price <
                                     activeVariant.price
-                                        ? 'text-md ml-2 text-zinc-400 line-through'
-                                        : 'text-zinc-900'
                                 "
+                                class="mt-1 flex items-center gap-1 text-xs font-bold text-orange-500"
                             >
-                                {{ formatPrice(Number(activeVariant.price)) }}
-                            </span>
+                                <span class="rounded bg-orange-100 px-1.5 py-0.5 uppercase">Sale</span>
+                                <span class="text-zinc-500 font-normal">
+                                    {{ activeVariant.discount?.name }}
+                                </span>
+                            </div>
                         </div>
                         <StarRating
                             :rating="activeVariant.average_rating"
