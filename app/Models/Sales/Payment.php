@@ -3,7 +3,8 @@
 namespace App\Models\Sales;
 
 use App\Builders\Sales\PaymentBuilder;
-use App\Models\Auth\User;
+use App\Models\Customer\Customer;
+use App\Models\Sales\PaymentAllocation;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -40,12 +41,12 @@ class Payment extends Model
             ->logOnly(['gateway', 'transaction_id', 'amount'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
-            ->setDescriptionForEvent(fn (string $eventName) => "Payment {$eventName}");
+            ->setDescriptionForEvent(fn(string $eventName) => "Payment {$eventName}");
     }
 
     public function customer(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Customer\Customer::class, 'customer_id');
+        return $this->belongsTo(Customer::class, 'customer_id');
     }
 
     public function allocations(): HasMany

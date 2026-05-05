@@ -52,12 +52,12 @@ export function getColumns(
             cell: ({ row }) => h('span', { class: 'text-sm tabular-nums' }, row.original.phone),
         },
         {
-            accessorKey: 'street',
+            accessorKey: 'address',
             header: 'Địa chỉ',
             size: 200,
             enableSorting: false,
             enableHiding: true,
-            cell: ({ row }) => h('span', { class: 'text-sm' }, row.original.street || '—'),
+            cell: ({ row }) => h('span', { class: 'text-sm' }, row.original.address || '—'),
         },
         {
             accessorKey: 'total_spent',
@@ -110,9 +110,9 @@ export function getColumns(
                                 'Chi tiết',
                             ]),
                             h(DropdownMenuSeparator),
-                            h(DropdownMenuItem, { 
-                                class: 'text-destructive', 
-                                onClick: () => onDeactivate(item) 
+                            h(DropdownMenuItem, {
+                                class: 'text-destructive',
+                                onClick: () => onDeactivate(item)
                             }, () => [
                                 h(UserX, { class: 'mr-2 h-4 w-4' }),
                                 'Vô hiệu hóa',

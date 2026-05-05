@@ -56,7 +56,6 @@ class TimberProductDataSeeder extends Seeder
         $data['published_date'] = $publishedDate;
         $data['new_arrival_until'] = $newArrivalUntil;
         $data['is_new_arrival'] = $isNewArrival;
-        $data['views_count'] = rand(1000, 3000);
 
         return Product::updateOrCreate(
             ['id' => $data['id']],
@@ -73,6 +72,7 @@ class TimberProductDataSeeder extends Seeder
         $data['features'] = json_decode($data['features'], true);
         $data['specifications'] = json_decode($data['specifications'], true);
         $data['care_instructions'] = json_decode($data['care_instructions'], true);
+        $data['views_count'] = rand(200, 400);
 
         $variant = ProductVariant::updateOrCreate(
             ['id' => $data['id']],

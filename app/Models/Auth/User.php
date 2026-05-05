@@ -90,9 +90,4 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasOne(Designer::class);
     }
-
-    public function orders(): HasMany
-    {
-        return $this->hasMany(Order::class, 'customer_id');
-    }
 }

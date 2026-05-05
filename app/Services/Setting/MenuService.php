@@ -169,6 +169,13 @@ class MenuService
                     'isActive' => Route::is('sales.refunds.*'),
                 ];
             }
+            if ($user->can('Xem khách hàng')) {
+                $salesItems[] = [
+                    'title' => 'Khách hàng',
+                    'href' => route('employee.customers.index'),
+                    'isActive' => Route::is('employee.customers.*'),
+                ];
+            }
 
             $menu[] = [
                 'title' => 'Bán hàng',

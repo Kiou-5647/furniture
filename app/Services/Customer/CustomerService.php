@@ -18,9 +18,9 @@ class CustomerService
             })
             ->when($filter->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('full_name', 'like', "%{$search}%")
-                      ->orWhere('phone', 'like', "%{$search}%")
-                      ->orWhereHas('user', fn($uq) => $uq->where('email', 'like', "%{$search}%"));
+                    $q->where('full_name', 'ilike', "%{$search}%")
+                        ->orWhere('phone', 'ilike', "%{$search}%")
+                        ->orWhereHas('user', fn($uq) => $uq->where('email', 'ilike', "%{$search}%"));
                 });
             })
             ->orderBy($filter->order_by, $filter->order_direction)
@@ -30,7 +30,7 @@ class CustomerService
     public function getById(string $id): Customer
     {
         return Customer::query()
-            ->with(['user', 'user.orders' => fn($q) => $q->latest()->limit(10)])
+            ->with(['orders' => fn($q) => $q->latest()->limit(10)])
             ->findOrFail($id);
     }
 }

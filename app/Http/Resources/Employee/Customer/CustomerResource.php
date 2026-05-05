@@ -13,16 +13,18 @@ class CustomerResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'user' => $this->whenLoaded('user', fn() => [
+            'user' =>  [
                 'id' => $this->user->id,
                 'name' => $this->user->name,
                 'email' => $this->user->email,
                 'is_active' => $this->user->is_active,
-            ]),
+            ],
             'full_name' => $this->full_name,
             'phone' => $this->phone,
             'province_name' => $this->province_name,
             'ward_name' => $this->ward_name,
+            'street' => $this->street,
+            'address' => $this->getFullAddress(),
             'total_spent' => $this->total_spent,
             'avatar_url' => $this->when($this->hasMedia('avatar'), fn() => $this->getFirstMediaUrl('avatar')),
             'created_at' => $this->created_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),

@@ -11,6 +11,7 @@ export interface Customer {
     street: string | null;
     province_name: string;
     ward_name: string;
+    address: string;
     total_spent: string;
     avatar_url: string | null;
     created_at: string;

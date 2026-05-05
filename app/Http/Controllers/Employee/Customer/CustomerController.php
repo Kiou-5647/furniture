@@ -36,7 +36,7 @@ class CustomerController
 
         return Inertia::render('employee/customers/Show', [
             'customer' => new CustomerResource($customer),
-            'recentOrders' => $customer->user->orders->map(fn($order) => [
+            'recentOrders' => $customer->orders->map(fn($order) => [
                 'id' => $order->id,
                 'order_number' => $order->order_number,
                 'total_amount' => $order->total_amount,

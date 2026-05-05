@@ -5,11 +5,11 @@ namespace App\Models\Booking;
 use App\Builders\Booking\BookingBuilder;
 use App\Enums\BookingStatus;
 use App\Enums\InvoiceStatus;
-use App\Models\Auth\User;
+use App\Models\Customer\Customer;
 use App\Models\Hr\Designer;
 use App\Models\Sales\Invoice;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
@@ -51,7 +51,7 @@ class Booking extends Model
 
     public function customer(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Customer\Customer::class, 'customer_id');
+        return $this->belongsTo(Customer::class, 'customer_id');
     }
 
     public function designer(): BelongsTo

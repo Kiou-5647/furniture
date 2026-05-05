@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { index, deactivate } from '@/routes/employee/customers';
 import type { BreadcrumbItem } from '@/types';
-import { Customer } from '@/types/customer';
+import type { Customer } from '@/types/customer';
 
 interface Order {
     id: string;
@@ -50,6 +50,7 @@ function confirmDeactivate() {
         preserveScroll: true,
     });
 }
+console.info(props.customer.user)
 </script>
 
 <template>
