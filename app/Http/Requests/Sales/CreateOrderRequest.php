@@ -24,7 +24,7 @@ class CreateOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'customer_id' => ['nullable', 'uuid', 'exists:users,id'],
+            'customer_id' => ['nullable', 'uuid', 'exists:customers,id'],
 
             'items' => ['required', 'array', 'min:1'],
             'items.*.purchasable_type' => ['required', Rule::in([

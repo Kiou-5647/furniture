@@ -15,9 +15,9 @@ class BookingResource extends JsonResource
             'id' => $this->id,
             'customer' => $this->whenLoaded('customer', fn() => [
                 'id' => $this->customer->id,
-                'name' => $this->customer_name ?? $this->customer->customer->full_name ?? $this->customer->name,
-                'email' => $this->customer_email ?? $this->customer->email,
-                'phone' => $this->customer_phone ?? $this->customer->customer->phone,
+                'name' => $this->customer_name ?? $this->customer->full_name ?? $this->customer->name,
+                'email' => $this->customer_email ?? $this->customer->user?->email,
+                'phone' => $this->customer_phone ?? $this->customer->phone,
             ]),
             'designer' => $this->whenLoaded('designer', fn() => [
                 'id' => $this->designer->id,

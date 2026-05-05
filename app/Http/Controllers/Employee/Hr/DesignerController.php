@@ -105,13 +105,17 @@ class DesignerController
             'date' => ['required', 'date'],
         ]);
 
-        $date = $request->input('date');
 
-        $slots = $this->checker->getAvailableSlotsForDate($designer, $date);
+        $slots = $this->checker->getAvailableSlotsForDate($designer, $request->input('date'));
+
+        $slotsMap = [];
+        for ($hour = 5; $hour <= 23; $hour++) {
+            $slotsMap[$hour] = in_array($hour, $slots) ? 1 : 0;
+        }
 
         return response()->json([
-            'date' => $date,
-            'slots' => $slots,
+            'date' => $request->input('date'),
+            'slots' => $slotsMap,
         ]);
     }
 

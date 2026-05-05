@@ -40,13 +40,13 @@ class BookingController
     public function index(Request $request): Response
     {
         $user = Auth::user();
-        if (!$user || $user->type !== UserType::Customer) {
+        if (! $user || $user->type !== UserType::Customer) {
             abort(403, 'Vui lòng đăng nhập để sử dụng tính năng này!');
         }
 
         $customer = $user->customer;
 
-        if (!$customer) {
+        if (! $customer) {
             abort(403, 'Không tìm thấy thông tin cá nhân!');
         }
 
@@ -67,9 +67,9 @@ class BookingController
         return Inertia::render('public/bookings/Index', [
             'deposit_percentage' => $this->settings->deposit_percentage,
             'customer' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
+                'id' => $customer->id,
+                'name' => $customer->user->name,
+                'email' => $customer->user->email,
                 'phone' => $customer->phone,
                 'province_code' => $customer->province_code,
                 'province_name' => $customer->province_name,
@@ -77,7 +77,7 @@ class BookingController
                 'ward_name' => $customer->ward_name,
                 'street' => $customer->street ?? null,
             ],
-            'designers' => $designers
+            'designers' => $designers,
         ]);
     }
 
@@ -94,7 +94,7 @@ class BookingController
             per_page: (int) ($request->query('per_page') ?? 15),
         );
 
-        $bookings = $this->bookingService->getFiltered($filter);
+        $bookings = $this->bookingService->getFiltered($filter, $request->user());
 
         return Inertia::render('public/bookings/ProfileIndex', [
             'bookings' => BookingResource::collection($bookings),
@@ -127,6 +127,7 @@ class BookingController
 
         try {
             $action->execute($booking, null);
+
             return back()->with('success', 'Lịch đặt đã được hủy thành công.');
         } catch (\Exception $e) {
             return back()->withErrors(['error' => $e->getMessage()]);

@@ -15,7 +15,7 @@ class BookingFactory extends Factory
     public function definition(): array
     {
         return [
-            'customer_id' => User::factory(),
+            'customer_id' => \App\Models\Customer\Customer::factory(),
             'designer_id' => Designer::factory(),
             'start_at' => now()->addDays(rand(1, 30)),
             'end_at' => now()->addDays(rand(31, 60)),

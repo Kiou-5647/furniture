@@ -131,92 +131,101 @@ function submit() {
                 </Button>
             </div>
 
-            <form class="space-y-6" @submit.prevent="submit">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Thông tin chuyển kho</CardTitle>
-                        <CardDescription>
-                            Chọn vị trí nguồn và đích cho phiếu chuyển kho
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent class="grid gap-6 sm:grid-cols-2">
-                        <div class="space-y-2">
-                            <Label for="from_location">Từ vị trí</Label>
-                            <Select v-model="form.from_location_id">
-                                <SelectTrigger id="from_location">
-                                    <SelectValue
-                                        placeholder="Chọn vị trí nguồn"
-                                    />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem
-                                        v-for="loc in locationOptions"
-                                        :key="loc.id"
-                                        :value="loc.id"
-                                    >
-                                        {{ loc.label }}
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <p
-                                v-if="form.errors.from_location_id"
-                                class="text-sm text-destructive"
-                            >
-                                {{ form.errors.from_location_id }}
-                            </p>
-                        </div>
+            <form
+                class="grid gap-6 lg:grid-cols-3 lg:items-start"
+                @submit.prevent="submit"
+            >
+                <!-- Left Column: General Information (Fixed Width) -->
+                <div class="space-y-4 lg:col-span-1">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Thông tin chung</CardTitle>
+                            <CardDescription>
+                                Thiết lập vị trí vận chuyển và ghi chú
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent class="space-y-4">
+                            <div class="space-y-2">
+                                <Label for="from_location">Từ vị trí</Label>
+                                <Select v-model="form.from_location_id">
+                                    <SelectTrigger id="from_location">
+                                        <SelectValue
+                                            placeholder="Chọn vị trí nguồn"
+                                        />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem
+                                            v-for="loc in locationOptions"
+                                            :key="loc.id"
+                                            :value="loc.id"
+                                        >
+                                            {{ loc.label }}
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <p
+                                    v-if="form.errors.from_location_id"
+                                    class="text-sm text-destructive"
+                                >
+                                    {{ form.errors.from_location_id }}
+                                </p>
+                            </div>
 
-                        <div class="space-y-2">
-                            <Label for="to_location">Đến vị trí</Label>
-                            <Select v-model="form.to_location_id">
-                                <SelectTrigger id="to_location">
-                                    <SelectValue
-                                        placeholder="Chọn vị trí đích"
-                                    />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem
-                                        v-for="loc in destinationOptions"
-                                        :key="loc.id"
-                                        :value="loc.id"
-                                    >
-                                        {{ loc.label }}
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <p
-                                v-if="form.errors.to_location_id"
-                                class="text-sm text-destructive"
-                            >
-                                {{ form.errors.to_location_id }}
-                            </p>
-                        </div>
+                            <div class="space-y-2">
+                                <Label for="to_location">Đến vị trí</Label>
+                                <Select v-model="form.to_location_id">
+                                    <SelectTrigger id="to_location">
+                                        <SelectValue
+                                            placeholder="Chọn vị trí đích"
+                                        />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem
+                                            v-for="loc in destinationOptions"
+                                            :key="loc.id"
+                                            :value="loc.id"
+                                        >
+                                            {{ loc.label }}
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <p
+                                    v-if="form.errors.to_location_id"
+                                    class="text-sm text-destructive"
+                                >
+                                    {{ form.errors.to_location_id }}
+                                </p>
+                            </div>
 
-                        <div class="space-y-2 sm:col-span-2">
-                            <Label for="notes">Ghi chú</Label>
-                            <Textarea
-                                id="notes"
-                                v-model="form.notes"
-                                placeholder="Ghi chú cho phiếu chuyển kho (không bắt buộc)"
-                                rows="3"
-                            />
-                            <p
-                                v-if="form.errors.notes"
-                                class="text-sm text-destructive"
-                            >
-                                {{ form.errors.notes }}
-                            </p>
-                        </div>
-                    </CardContent>
-                </Card>
+                            <div class="space-y-2">
+                                <Label for="notes">Ghi chú</Label>
+                                <Textarea
+                                    id="notes"
+                                    v-model="form.notes"
+                                    placeholder="Nhập ghi chú chi tiết..."
+                                    rows="4"
+                                />
+                                <p
+                                    v-if="form.errors.notes"
+                                    class="text-sm text-destructive"
+                                >
+                                    {{ form.errors.notes }}
+                                </p>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
 
-                <Card>
-                    <CardHeader>
-                        <div class="flex items-center justify-between">
+                <!-- Right Column: Products Section (Scrollable) -->
+                <div class="space-y-4 lg:col-span-2">
+                    <Card class="flex max-h-[calc(100vh-200px)] flex-col">
+                        <CardHeader
+                            class="flex shrink-0 flex-row items-center justify-between space-y-0 pb-4"
+                        >
                             <div>
-                                <CardTitle>Sản phẩm chuyển kho</CardTitle>
+                                <CardTitle>Danh sách sản phẩm</CardTitle>
                                 <CardDescription>
-                                    Chọn các sản phẩm và số lượng cần chuyển
+                                    Thêm các sản phẩm cần chuyển từ kho nguồn
                                 </CardDescription>
                             </div>
                             <Button
@@ -231,277 +240,264 @@ function submit() {
                             >
                                 <Plus class="mr-2 h-4 w-4" /> Thêm sản phẩm
                             </Button>
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <p
-                            v-if="form.errors.items"
-                            class="mb-4 text-sm text-destructive"
-                        >
-                            {{ form.errors.items }}
-                        </p>
-
-                        <div
-                            v-if="!form.from_location_id"
-                            class="py-8 text-center text-sm text-muted-foreground"
-                        >
-                            Vui lòng chọn vị trí nguồn trước
-                        </div>
-
-                        <div
-                            v-else-if="isLoadingVariants"
-                            class="py-8 text-center text-sm text-muted-foreground"
-                        >
-                            Đang tải danh sách sản phẩm...
-                        </div>
-
-                        <div
-                            v-else-if="
-                                availableVariants.length === 0 &&
-                                !isLoadingVariants
-                            "
-                            class="py-8 text-center text-sm text-muted-foreground"
-                        >
-                            Không có sản phẩm tồn kho tại vị trí này
-                        </div>
-
-                        <div v-else class="space-y-3">
-                            <div
-                                v-for="(item, idx) in form.items"
-                                :key="idx"
-                                class="flex items-start gap-3 rounded-lg border p-3"
+                        </CardHeader>
+                        <CardContent class="space-y-4 overflow-y-auto pr-2">
+                            <p
+                                v-if="form.errors.items"
+                                class="text-sm text-destructive"
                             >
-                                <div class="min-w-0 flex-1 space-y-2">
-                                    <Label>Sản phẩm</Label>
-                                    <Select v-model="item.variant_id">
-                                        <SelectTrigger>
-                                            <SelectValue
-                                                placeholder="Chọn sản phẩm"
-                                            >
-                                                <span
-                                                    v-if="item.variant_id"
-                                                    class="block truncate"
-                                                >
-                                                    {{
-                                                        getVariant(
-                                                            item.variant_id,
-                                                        )?.sku
-                                                    }}
-                                                    -
-                                                    {{
-                                                        getVariant(
-                                                            item.variant_id,
-                                                        )?.name
-                                                    }}
-                                                </span>
-                                            </SelectValue>
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem
-                                                v-for="v in [
-                                                    ...remainingVariants,
-                                                    ...(item.variant_id
-                                                        ? availableVariants.filter(
-                                                              (av) =>
-                                                                  av.id ===
-                                                                  item.variant_id,
-                                                          )
-                                                        : []),
-                                                ]"
-                                                :key="v.id"
-                                                :value="v.id"
-                                                class="py-2"
-                                            >
-                                                <div
-                                                    class="flex flex-col gap-1 pr-6"
-                                                >
-                                                    <span
-                                                        class="text-sm font-medium"
-                                                    >
-                                                        {{ v.sku }} -
-                                                        {{ v.name }}
-                                                    </span>
-                                                    <div
-                                                        class="flex flex-wrap items-center gap-2"
-                                                    >
-                                                        <span
-                                                            class="text-xs font-medium text-emerald-600 dark:text-emerald-500"
-                                                        >
-                                                            Tồn kho:
-                                                            {{
-                                                                v.available_quantity
-                                                            }}
-                                                        </span>
-                                                        <span
-                                                            v-if="v.price"
-                                                            class="border-l border-border pl-2 text-xs text-muted-foreground"
-                                                        >
-                                                            {{
-                                                                formatPrice(
-                                                                    v.price,
-                                                                )
-                                                            }}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                    <p
-                                        v-if="
-                                            getError(`items.${idx}.variant_id`)
-                                        "
-                                        class="text-sm text-destructive"
-                                    >
-                                        {{
-                                            getError(`items.${idx}.variant_id`)
-                                        }}
-                                    </p>
+                                {{ form.errors.items }}
+                            </p>
 
-                                    <!-- Panel below for selected variant -->
+                            <div
+                                v-if="!form.from_location_id"
+                                class="flex flex-col items-center justify-center py-12 text-center"
+                            >
+                                <div class="mb-4 rounded-full bg-muted p-4">
+                                    <ImageIcon
+                                        class="h-8 w-8 text-muted-foreground"
+                                    />
+                                </div>
+                                <p class="text-sm text-muted-foreground">
+                                    Vui lòng chọn vị trí nguồn trước để hiển thị
+                                    sản phẩm
+                                </p>
+                            </div>
+
+                            <div
+                                v-else-if="isLoadingVariants"
+                                class="flex flex-col items-center justify-center py-12 text-center"
+                            >
+                                <div
+                                    class="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"
+                                ></div>
+                                <p class="text-sm text-muted-foreground">
+                                    Đang tải danh sách sản phẩm...
+                                </p>
+                            </div>
+
+                            <div
+                                v-else-if="availableVariants.length === 0"
+                                class="flex flex-col items-center justify-center py-12 text-center"
+                            >
+                                <div class="mb-4 rounded-full bg-muted p-4">
+                                    <ImageIcon
+                                        class="h-8 w-8 text-muted-foreground"
+                                    />
+                                </div>
+                                <p class="text-sm text-muted-foreground">
+                                    Không có sản phẩm tồn kho tại vị trí này
+                                </p>
+                            </div>
+
+                            <div v-else class="space-y-3">
+                                <div
+                                    v-for="(item, idx) in form.items"
+                                    :key="idx"
+                                    class="group flex items-center gap-4 rounded-xl border bg-card p-3 transition-all hover:border-primary/50 hover:shadow-sm"
+                                >
                                     <div
-                                        v-if="item.variant_id"
-                                        class="mt-2 flex items-start gap-3 rounded-md border bg-muted/50 p-3"
+                                        class="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg border bg-muted"
                                     >
-                                        <div
+                                        <img
                                             v-if="
                                                 getVariant(item.variant_id)
                                                     ?.image_url
                                             "
-                                            class="relative h-12 w-12 shrink-0 overflow-hidden rounded border bg-background"
-                                        >
-                                            <img
-                                                :src="
+                                            :src="
+                                                getVariant(item.variant_id)
+                                                    ?.image_url!
+                                            "
+                                            class="h-full w-full object-cover"
+                                            @click="
+                                                openImagePreview(
                                                     getVariant(item.variant_id)
-                                                        ?.image_url!
-                                                "
-                                                class="h-full w-full cursor-zoom-in object-cover transition-all hover:scale-105"
-                                                @click="
-                                                    openImagePreview(
+                                                        ?.full_image_url ??
                                                         getVariant(
                                                             item.variant_id,
-                                                        )?.full_image_url ??
-                                                            getVariant(
-                                                                item.variant_id,
-                                                            )?.image_url,
-                                                    )
-                                                "
-                                            />
-                                        </div>
+                                                        )?.image_url,
+                                                )
+                                            "
+                                        />
                                         <div
                                             v-else
-                                            class="flex h-12 w-12 shrink-0 items-center justify-center rounded border bg-background"
+                                            class="flex h-full w-full items-center justify-center"
                                         >
                                             <ImageIcon
                                                 class="h-5 w-5 text-muted-foreground"
                                             />
                                         </div>
+                                    </div>
 
-                                        <div class="flex flex-col gap-1">
-                                            <span class="text-sm font-medium">
-                                                {{
-                                                    getVariant(item.variant_id)
-                                                        ?.sku
-                                                }}
-                                                -
-                                                {{
-                                                    getVariant(item.variant_id)
-                                                        ?.name
-                                                }}
-                                            </span>
-                                            <div
-                                                class="flex flex-wrap items-center gap-2"
+                                    <div class="flex-1 space-y-1">
+                                        <Select v-model="item.variant_id">
+                                            <SelectTrigger
+                                                class="h-10 w-full border-none bg-transparent px-0 font-medium focus:ring-0"
                                             >
-                                                <span
-                                                    class="text-xs font-medium text-emerald-600 dark:text-emerald-500"
+                                                <SelectValue
+                                                    placeholder="Chọn sản phẩm"
                                                 >
-                                                    Tồn kho:
-                                                    {{
-                                                        getVariant(
-                                                            item.variant_id,
-                                                        )?.available_quantity
-                                                    }}
-                                                </span>
-                                                <span
-                                                    v-if="
-                                                        getVariant(
-                                                            item.variant_id,
-                                                        )?.price
-                                                    "
-                                                    class="border-l border-border pl-2 text-xs text-muted-foreground"
-                                                >
-                                                    {{
-                                                        formatPrice(
+                                                    <span
+                                                        v-if="item.variant_id"
+                                                        class="truncate"
+                                                    >
+                                                        {{
                                                             getVariant(
                                                                 item.variant_id,
-                                                            )?.price!,
-                                                        )
-                                                    }}
-                                                </span>
-                                            </div>
-                                        </div>
+                                                            )?.sku
+                                                        }}
+                                                        -
+                                                        {{
+                                                            getVariant(
+                                                                item.variant_id,
+                                                            )?.name
+                                                        }}
+                                                    </span>
+                                                </SelectValue>
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem
+                                                    v-for="v in [
+                                                        ...remainingVariants,
+                                                        ...(item.variant_id
+                                                            ? availableVariants.filter(
+                                                                  (av) =>
+                                                                      av.id ===
+                                                                      item.variant_id,
+                                                              )
+                                                            : []),
+                                                    ]"
+                                                    :key="v.id"
+                                                    :value="v.id"
+                                                    class="py-3"
+                                                >
+                                                    <div
+                                                        class="flex flex-col gap-1 pr-6"
+                                                    >
+                                                        <span
+                                                            class="text-sm font-medium"
+                                                            >{{ v.sku }} -
+                                                            {{ v.name }}</span
+                                                        >
+                                                        <div
+                                                            class="flex items-center gap-2"
+                                                        >
+                                                            <span
+                                                                class="text-xs font-medium text-emerald-600"
+                                                            >
+                                                                Tồn:
+                                                                {{
+                                                                    v.available_quantity
+                                                                }}
+                                                            </span>
+                                                            <span
+                                                                v-if="v.price"
+                                                                class="text-xs text-muted-foreground"
+                                                            >
+                                                                {{
+                                                                    formatPrice(
+                                                                        v.price,
+                                                                    )
+                                                                }}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <p
+                                            v-if="
+                                                getError(
+                                                    `items.${idx}.variant_id`,
+                                                )
+                                            "
+                                            class="text-xs text-destructive"
+                                        >
+                                            {{
+                                                getError(
+                                                    `items.${idx}.variant_id`,
+                                                )
+                                            }}
+                                        </p>
                                     </div>
+
+                                    <div class="flex items-center gap-2">
+                                        <Label
+                                            class="hidden text-xs text-muted-foreground sm:block"
+                                            >Số lượng</Label
+                                        >
+                                        <Input
+                                            v-model.number="item.quantity"
+                                            type="number"
+                                            min="1"
+                                            :max="
+                                                getVariant(item.variant_id)
+                                                    ?.available_quantity ??
+                                                999999
+                                            "
+                                            class="h-10 w-24 text-center"
+                                        />
+                                        <p
+                                            v-if="
+                                                getError(
+                                                    `items.${idx}.quantity`,
+                                                )
+                                            "
+                                            class="absolute text-xs text-destructive"
+                                        >
+                                            {{
+                                                getError(
+                                                    `items.${idx}.quantity`,
+                                                )
+                                            }}
+                                        </p>
+                                    </div>
+
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        class="h-10 w-10 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-destructive"
+                                        @click="removeItem(idx)"
+                                    >
+                                        <Trash2 class="h-4 w-4" />
+                                    </Button>
                                 </div>
 
-                                <div class="w-32 space-y-2">
-                                    <Label>Số lượng</Label>
-                                    <Input
-                                        v-model.number="item.quantity"
-                                        type="number"
-                                        min="1"
-                                        :max="
-                                            getVariant(item.variant_id)
-                                                ?.available_quantity ?? 999999
-                                        "
-                                    />
-                                    <p
-                                        v-if="getError(`items.${idx}.quantity`)"
-                                        class="text-sm text-destructive"
-                                    >
-                                        {{ getError(`items.${idx}.quantity`) }}
+                                <div
+                                    v-if="
+                                        form.items.length === 0 &&
+                                        availableVariants.length > 0
+                                    "
+                                    class="flex flex-col items-center justify-center py-12 text-center"
+                                >
+                                    <p class="text-sm text-muted-foreground">
+                                        Danh sách trống. Hãy thêm sản phẩm để
+                                        bắt đầu chuyển kho.
                                     </p>
                                 </div>
-
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    class="mt-7 shrink-0 text-destructive hover:text-destructive"
-                                    @click="removeItem(idx)"
-                                >
-                                    <Trash2 class="h-4 w-4" />
-                                </Button>
                             </div>
-
-                            <div
-                                v-if="
-                                    form.items.length === 0 &&
-                                    availableVariants.length > 0
-                                "
-                                class="py-6 text-center text-sm text-muted-foreground"
-                            >
-                                Nhấn "Thêm sản phẩm" để bắt đầu
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <div class="flex justify-end gap-3">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        @click="router.get(index().url)"
-                    >
-                        Hủy
-                    </Button>
-                    <Button
-                        type="submit"
-                        :disabled="form.processing || form.items.length === 0"
-                    >
-                        Tạo phiếu chuyển kho
-                    </Button>
+                        </CardContent>
+                    </Card>
                 </div>
             </form>
+
+            <div class="flex justify-end gap-3">
+                <Button
+                    type="button"
+                    variant="outline"
+                    @click="router.get(index().url)"
+                >
+                    Hủy
+                </Button>
+                <Button
+                    type="submit"
+                    :disabled="form.processing || form.items.length === 0"
+                    class="px-8"
+                >
+                    Tạo phiếu chuyển kho
+                </Button>
+            </div>
         </div>
 
         <ImagePreviewDialog

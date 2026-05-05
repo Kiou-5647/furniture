@@ -11,6 +11,7 @@ use App\Http\Controllers\Public\CartController;
 use App\Http\Controllers\Public\CheckoutController;
 use App\Http\Controllers\Public\ProductController;
 use App\Http\Controllers\Public\ProductDiscoveryController;
+use App\Http\Controllers\Public\Product\PublicProductReviewController;
 use App\Http\Controllers\Public\WelcomeController;
 use App\Http\Controllers\Setting\CustomerProfileController;
 use Illuminate\Support\Facades\Route;
@@ -26,9 +27,9 @@ Route::prefix('gio-hang')->group(function () {
     Route::delete('/clear', [CartController::class, 'clear'])->name('cart.clear');
 });
 
-//Discovery
+// Discovery
 Route::get('/api/discovery/variants/search', [ProductDiscoveryController::class, 'search'])->name('discovery.variants.search');
-
+Route::get('/api/products/{sku}/reviews', [PublicProductReviewController::class, 'index'])->name('products.reviews.index');
 
 Route::get('/san-pham', [ProductController::class, 'index'])->name('products.index');
 Route::get('/san-pham/{sku}/{variant_slug}', [ProductController::class, 'show'])
@@ -70,8 +71,6 @@ Route::middleware(['auth', 'verified', 'user_type:customer'])->name('customer.')
     });
 });
 
-
-
 /**
  * VNPay payment routes (public - called by VNPay gateway)
  */
@@ -85,5 +84,5 @@ Route::inertia('/payment/vnpay/status', 'payment/vnpay-status')->name('payment.v
 Route::get('api/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
 Route::get('api/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
 
-require __DIR__ . '/employee.php';
-require __DIR__ . '/settings.php';
+require __DIR__.'/employee.php';
+require __DIR__.'/settings.php';

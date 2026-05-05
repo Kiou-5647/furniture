@@ -28,9 +28,9 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import ShopLayout from '@/layouts/ShopLayout.vue';
 import { store } from '@/routes/customer/bookings';
-import { Textarea } from '@/components/ui/textarea';
 
 interface Designer {
     id: string;
@@ -177,6 +177,7 @@ async function handleSlotClick(day: number, hour: number) {
             `/dat-lich/designers/${form.designer_id}/available-slots?date=${form.date}`,
         );
         const data = await response.json();
+        console.info(data);
         if (!data.slots || !data.slots[hour]) {
             toast.error(
                 'Rất tiếc, khung giờ này vừa mới bị đặt. Vui lòng chọn giờ khác.',
@@ -222,7 +223,7 @@ async function submit() {
         preserveScroll: true,
         preserveState: true,
         onError: (errors) => {
-            console.log('Full Errors:', errors);
+            toast.error(errors.error);
         },
         onFinish: () => {
             form.processing = false;

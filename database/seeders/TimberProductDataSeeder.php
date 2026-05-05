@@ -56,6 +56,7 @@ class TimberProductDataSeeder extends Seeder
         $data['published_date'] = $publishedDate;
         $data['new_arrival_until'] = $newArrivalUntil;
         $data['is_new_arrival'] = $isNewArrival;
+        $data['views_count'] = rand(1000, 3000);
 
         return Product::updateOrCreate(
             ['id' => $data['id']],

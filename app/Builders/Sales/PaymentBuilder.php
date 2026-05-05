@@ -10,7 +10,7 @@ class PaymentBuilder extends Builder
     {
         return $this->where(function ($query) use ($search) {
             $query->where('transaction_id', 'ilike', "%{$search}%")
-                ->orWhereHas('customer', fn ($q) => $q->whereHas('customer', fn ($cq) => $cq->where('full_name', 'ilike', "%{$search}%")));
+                ->orWhereHas('customer', fn ($q) => $q->where('full_name', 'ilike', "%{$search}%"));
         });
     }
 }

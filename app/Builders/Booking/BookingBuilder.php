@@ -50,11 +50,9 @@ class BookingBuilder extends Builder
     public function search(string $search): self
     {
         return $this->where(function ($query) use ($search) {
-            return $this->where(function ($query) use ($search) {
-                $query->whereHas('customer.customer', fn($q) => $q->where('name', 'ilike', "%{$search}%"))
-                    ->orWhereHas('customer.customer', fn($q) => $q->where('email', 'ilike', "%{$search}%"))
-                    ->orWhereHas('designer', fn($q) => $q->where('full_name', 'ilike', "%{$search}%"));
-            });
+            $query->whereHas('customer', fn($q) => $q->where('full_name', 'ilike', "%{$search}%"))
+                ->orWhereHas('customer', fn($q) => $q->where('email', 'ilike', "%{$search}%"))
+                ->orWhereHas('designer', fn($q) => $q->where('full_name', 'ilike', "%{$search}%"));
         });
     }
 }

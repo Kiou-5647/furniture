@@ -16,7 +16,7 @@ class PaymentService
         $orderDirection = $filter->order_direction === 'asc' ? 'asc' : 'desc';
 
         return Payment::query()
-            ->with(['customer.customer', 'allocations.invoice'])
+            ->with(['customer', 'allocations.invoice'])
             ->when($filter->customer_id, fn ($q) => $q->where('customer_id', $filter->customer_id))
             ->when($filter->gateway, fn ($q) => $q->where('gateway', $filter->gateway))
             ->when($filter->search, fn ($q) => $q->search($filter->search))

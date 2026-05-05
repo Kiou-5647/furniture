@@ -31,6 +31,8 @@ export interface ProductPage {
     };
     active_variant: ProductVariantDetail;
     variants: ProductVariantSummary[];
+    collection_products: ProductCard[];
+    similar_products: ProductCard[];
 }
 
 export interface ProductVariantDetail {
@@ -44,6 +46,7 @@ export interface ProductVariantDetail {
     sale_price: string | number;
     in_stock: boolean;
     option_values: Record<string, string>;
+    views_count: number
     reviews_count: number;
     sales_count: number;
     average_rating: number;

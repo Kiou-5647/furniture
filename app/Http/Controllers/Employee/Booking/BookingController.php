@@ -61,18 +61,6 @@ class BookingController
             ->with('success', 'Đã tạo đặt lịch.');
     }
 
-    public function trash(Request $request): Response
-    {
-        $filter = BookingFilterData::fromRequest($request);
-
-        return Inertia::render('employee/booking/bookings/Trash', [
-            'bookings' => Inertia::defer(fn() => BookingResource::collection(
-                $this->service->getTrashedFiltered($filter, $request->user())
-            )),
-            'filters' => $filter,
-        ]);
-    }
-
     public function show(Booking $booking, Request $request): Response
     {
         $booking = $this->service->getById($booking->id, $request->user());

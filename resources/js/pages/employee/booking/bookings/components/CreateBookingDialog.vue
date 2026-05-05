@@ -72,7 +72,6 @@ const DAYS = [
 ];
 
 const HOURS = Array.from({ length: 19 }, (_, i) => i + 5);
-const selectedSlot = ref<{ day: number; hour: number } | null>(null);
 
 const customerSearch = ref('');
 const showCustomerDropdown = ref(false);
@@ -266,9 +265,11 @@ async function handleSlotClick(day: number, hour: number) {
 
     try {
         const response = await fetch(
-            `/api/designers/${form.designer_id}/available-slots?date=${form.date}`,
+            `/nhan-vien/quan-ly-nhan-su/nha-thiet-ke/${form.designer_id}/available-slots?date=${form.date}`,
         );
+
         const data = await response.json();
+        console.info(data)
         if (!data.slots || !data.slots[hour]) {
             toast.error(
                 'Rất tiếc, khung giờ này vừa mới bị đặt. Vui lòng chọn giờ khác.',
@@ -304,6 +305,8 @@ async function submit() {
     }
 
     form.processing = true;
+
+    console.info(form.customer_id)
 
     try {
         await router.post(

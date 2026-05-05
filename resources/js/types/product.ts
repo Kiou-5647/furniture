@@ -1,6 +1,6 @@
 import type { ProductSpecifications, SpecItem } from './lookup';
 import type { ProductCard } from './public/product';
-import type { AssemblyDifficulty, ProductStatus, VariantStatus } from '.';
+import type { AssemblyDifficulty, ProductStatus, Status, VariantStatus } from '.';
 
 export interface Product {
     id: string;
@@ -40,6 +40,7 @@ export interface Product {
     views_count: number;
     reviews_count: number;
     average_rating: string | null;
+    sales_count: number;
     min_price: string;
     max_price: string;
     is_featured: boolean;
@@ -139,7 +140,7 @@ export interface ProductVariant {
     features: SpecItem[];
     specifications: ProductSpecifications;
     care_instructions: string[];
-    status: VariantStatus;
+    status: Status;
     primary_image_url?: string | null;
     primary_image_file?: File | null;
     hover_image_url?: string | null;
@@ -152,6 +153,7 @@ export interface ProductVariant {
     swatch_image_thumb_url?: string | null;
     swatch_image_file?: File | null;
     removed_gallery_ids?: number[];
+    sales_count: number;
     in_stock: boolean;
     stock?: VariantStock[];
     created_at: string;

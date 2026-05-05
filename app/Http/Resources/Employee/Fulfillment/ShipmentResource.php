@@ -23,8 +23,8 @@ class ShipmentResource extends JsonResource
                 'guest_phone' => $this->order->guest_phone,
                 'guest_email' => $this->order->guest_email,
                 'customer' => [
-                    'name' => $this->order->customer?->name,
-                    'email' => $this->order->customer?->email,
+                    'name' => $this->order->customer?->full_name ?? $this->order->customer?->name,
+                    'email' => $this->order->customer?->user?->email,
                 ],
                 'shipping_address_text' => $this->order->getShippingAddressText(),
                 'total_amount' => $this->order->total_amount,

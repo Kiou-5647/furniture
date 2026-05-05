@@ -15,7 +15,7 @@ class OrderFactory extends Factory
     public function definition(): array
     {
         return [
-            'customer_id' => User::factory()->state(['type' => 'customer']),
+            'customer_id' => \App\Models\Customer\Customer::factory(),
             'order_number' => 'ORD-' . now()->format('dmy') . '-' . strtoupper(\Str::random(8)),
             'total_amount' => fake()->randomFloat(2, 100000, 1000000),
             'total_items' => fake()->numberBetween(1, 5),

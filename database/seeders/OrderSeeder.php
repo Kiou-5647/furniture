@@ -11,7 +11,6 @@ use App\Actions\Fulfillment\ReturnShipmentItemAction;
 use App\Data\Sales\CreateOrderData;
 use App\Enums\PaymentMethod;
 use App\Enums\ShipmentStatus;
-use App\Models\Auth\User;
 use App\Models\Fulfillment\Shipment;
 use App\Models\Fulfillment\ShipmentItem;
 use App\Models\Fulfillment\ShippingMethod;
@@ -26,14 +25,14 @@ class OrderSeeder extends Seeder
 {
     public function run(): void
     {
-        $customers = User::where('type', 'customer')->get();
+        $customers = \App\Models\Customer\Customer::all();
         $employees = Employee::all();
         $variants = ProductVariant::all();
         $locations = Location::all();
         $shippingMethods = ShippingMethod::all();
 
         if ($customers->isEmpty() || $variants->isEmpty() || $employees->isEmpty()) {
-            $this->command->error('Required data missing. Please seed Users, ProductVariants, and Employees first.');
+            $this->command->error('Required data missing. Please seed Customers, ProductVariants, and Employees first.');
             return;
         }
 
@@ -71,7 +70,7 @@ class OrderSeeder extends Seeder
             $order = $refund->order;
             // Process the refund as completed
             $processRefundAction->approve($refund, $employee);
-            
+
             // Set processed_at close to the order's paid_at date (1-3 days after)
             if ($order && $order->paid_at) {
                 $processedAt = $order->paid_at->copy()->addDays(rand(1, 3))->addHours(rand(1, 23));

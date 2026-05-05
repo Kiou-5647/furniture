@@ -21,9 +21,9 @@ class BookingService
             ->orderBy('name')
             ->get(['id', 'name', 'email'])
             ->map(fn($user) => [
-                'id' => $user->id,
+                'id' => $user->customer->id,
                 'name' => $user->customer?->full_name ?? $user->name,
-                'email' => $user->customer?->email ?? $user->email,
+                'email' => $user->customer?->user?->email ?? $user->email,
                 'phone' => $user->customer?->phone,
                 'address' => [
                     'province_code' => $user->customer?->province_code,

@@ -51,7 +51,7 @@ class Booking extends Model
 
     public function customer(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'customer_id');
+        return $this->belongsTo(\App\Models\Customer\Customer::class, 'customer_id');
     }
 
     public function designer(): BelongsTo

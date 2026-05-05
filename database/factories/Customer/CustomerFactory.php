@@ -40,4 +40,9 @@ class CustomerFactory extends Factory
             'total_spent' => 0,
         ];
     }
+
+    public function withUser(): static
+    {
+        return $this->has(User::factory()->state(['type' => 'customer']));
+    }
 }

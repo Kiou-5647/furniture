@@ -13,8 +13,8 @@ class PaymentResource extends JsonResource
             'id' => $this->id,
             'customer' => $this->whenLoaded('customer', fn () => [
                 'id' => $this->customer->id,
-                'name' => $this->customer->customer?->full_name ?? $this->customer->name,
-                'email' => $this->customer->email,
+                'name' => $this->customer->full_name ?? $this->customer->name,
+                'email' => $this->customer->user?->email,
             ]),
             'gateway' => $this->gateway,
             'transaction_id' => $this->transaction_id,

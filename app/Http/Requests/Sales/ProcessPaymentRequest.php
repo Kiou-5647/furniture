@@ -14,7 +14,7 @@ class ProcessPaymentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'customer_id' => ['required', 'uuid', 'exists:users,id'],
+            'customer_id' => ['required', 'uuid', 'exists:customers,id'],
             'gateway' => ['required', 'string', 'max:255'],
             'transaction_id' => ['required', 'string', 'max:255'],
             'amount' => ['required', 'numeric', 'min:0'],

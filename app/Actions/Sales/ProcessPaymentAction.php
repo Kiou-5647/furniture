@@ -3,7 +3,7 @@
 namespace App\Actions\Sales;
 
 use App\Enums\InvoiceStatus;
-use App\Models\Auth\User;
+use App\Models\Customer\Customer;
 use App\Models\Sales\Invoice;
 use App\Models\Sales\Payment;
 use Illuminate\Support\Facades\DB;
@@ -13,7 +13,7 @@ class ProcessPaymentAction
     public function execute(array $data): Payment
     {
         return DB::transaction(function () use ($data) {
-            $customer = User::findOrFail($data['customer_id']);
+            $customer = Customer::findOrFail($data['customer_id']);
 
             $payment = Payment::create([
                 'customer_id' => $customer->id,

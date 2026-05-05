@@ -3,6 +3,7 @@
 namespace App\Http\Resources\Public\Product;
 
 use App\Models\Setting\Lookup;
+use App\Services\Sales\PriceCalculationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -23,7 +24,7 @@ class ProductPageResource extends JsonResource
             'option_groups' => collect($this->option_groups ?? [])->map(function ($group) {
                 $options = collect($group['options'])->map(function ($option) {
                     // Fetch the lookup record using the slug (the 'value' of the option)
-                    $lookup = \App\Models\Setting\Lookup::where('slug', $option['value'])->first();
+                    $lookup = Lookup::where('slug', $option['value'])->first();
 
                     return array_merge($option, [
                         'image_url' => $lookup ? $lookup->getFirstMediaUrl('image', 'webp') ?? $lookup->getFirstMediaUrl('image') : null,
@@ -38,7 +39,7 @@ class ProductPageResource extends JsonResource
                 'slug' => $this->category?->slug,
                 'product_type' => [
                     'name' => $this->category?->product_type->label(),
-                    'slug' => $this->category?->product_type->value
+                    'slug' => $this->category?->product_type->value,
                 ],
                 'room' => $this->category->room ? [
                     'name' => $this->category->room->display_name,
@@ -71,8 +72,9 @@ class ProductPageResource extends JsonResource
                 'manual_url' => $this->getFirstMediaUrl('manual_file') ?? null,
             ],
 
-            'active_variant' => (function() use ($activeVariant) {
-                $priceDetails = app(\App\Services\Sales\PriceCalculationService::class)->calculatePriceDetails($activeVariant);
+            'active_variant' => (function () use ($activeVariant) {
+                $priceDetails = app(PriceCalculationService::class)->calculatePriceDetails($activeVariant);
+
                 return [
                     'id' => $activeVariant->id,
                     'sku' => $activeVariant->sku,
@@ -85,6 +87,7 @@ class ProductPageResource extends JsonResource
                     'discount' => $priceDetails['discount'],
                     'in_stock' => $activeVariant->getAvailableStock() > 0,
                     'option_values' => $activeVariant->option_values,
+                    'views_count' => $activeVariant->views_count,
                     'sales_count' => $activeVariant->sales_count,
                     'reviews_count' => $activeVariant->reviews_count ?? 0,
                     'average_rating' => $activeVariant->average_rating ?? 0,
@@ -106,14 +109,14 @@ class ProductPageResource extends JsonResource
                             'thumb' => $activeVariant->getFirstMediaUrl('swatch_image', 'thumb'),
                             'swatch' => $activeVariant->getFirstMediaUrl('swatch_image', 'swatch'),
                         ],
-                        'gallery' => $activeVariant->getMedia('gallery')->map(fn($media) => [
+                        'gallery' => $activeVariant->getMedia('gallery')->map(fn ($media) => [
                             'full' => $media->getUrl('webp') ?? $media->getUrl(),
                             'thumb' => $media->getUrl('thumb'),
                         ])->toArray(),
-                    ]
+                    ],
                 ];
             })(),
-            'variants' => $this->variants->map(fn($v) => [
+            'variants' => $this->variants->map(fn ($v) => [
                 'id' => $v->id,
                 'sku' => $v->sku,
                 'slug' => $v->slug,
@@ -123,10 +126,12 @@ class ProductPageResource extends JsonResource
                 'images' => [
                     'swatch' => [
                         'full' => $v->getFirstMediaUrl('swatch_image', 'webp'),
-                        'thumb' => $v->getFirstMediaUrl('swatch_image', 'thumb')
+                        'thumb' => $v->getFirstMediaUrl('swatch_image', 'thumb'),
                     ],
                 ],
             ]),
+            'collection_products' => $request->attributes->get('collection_products', []),
+            'similar_products' => $request->attributes->get('similar_products', []),
         ];
     }
 
@@ -216,11 +221,13 @@ class ProductPageResource extends JsonResource
     {
         $map = [];
         foreach ($this->option_groups as $group) {
-            if ($group['is_swatches']) continue;
+            if ($group['is_swatches']) {
+                continue;
+            }
 
             foreach ($group['options'] as $option) {
                 $firstVariant = $this->variants
-                    ->where('option_values.' . $group['namespace'], $option['value'])
+                    ->where('option_values.'.$group['namespace'], $option['value'])
                     ->first();
 
                 if ($firstVariant) {
@@ -228,6 +235,7 @@ class ProductPageResource extends JsonResource
                 }
             }
         }
+
         return $map;
     }
 }

@@ -27,7 +27,7 @@ return new class extends Migration
 
         Schema::create('employees', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignIdFor(User::class, 'user_id')->unique()->constrained()->onDelete('cascade');
+            $table->foreignIdFor(User::class, 'user_id')->unique()->constrained()->onDelete('set null');
             $table->foreignIdFor(Department::class, 'department_id')->nullable()->constrained()->onDelete('set null');
             $table->string('full_name');
             $table->string('phone', 20)->nullable();
@@ -40,7 +40,7 @@ return new class extends Migration
 
         Schema::create('customers', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignIdFor(User::class, 'user_id')->unique()->constrained()->onDelete('cascade');
+            $table->foreignIdFor(User::class, 'user_id')->unique()->constrained()->onDelete('set null');
             $table->foreign('province_code')->references('province_code')->on('provinces')->onDelete('set null');
             $table->foreign('ward_code')->references('ward_code')->on('wards')->onDelete('set null');
             $table->string('full_name')->nullable();

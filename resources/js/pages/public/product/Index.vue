@@ -137,7 +137,7 @@ const handleBreadcrumbClick = (crumb: {
         <div class="mx-auto px-4 py-8 sm:px-6 lg:px-8">
             <div class="flex items-baseline justify-between">
                 <nav
-                    class="mb-1 flex items-center space-x-2 text-sm text-slate-500"
+                    class="mb-2 flex items-center space-x-2 text-sm text-zinc-400"
                 >
                     <template
                         v-for="(crumb, index) in breadcrumbs"
@@ -146,30 +146,30 @@ const handleBreadcrumbClick = (crumb: {
                         <div class="flex items-center space-x-2">
                             <a
                                 @click.prevent="handleBreadcrumbClick(crumb)"
-                                class="transition-colors hover:text-slate-900"
+                                class="transition-colors hover:text-zinc-900"
                                 :class="[
                                     index != breadcrumbs.length - 1
                                         ? 'cursor-pointer'
-                                        : 'cursor-default',
+                                        : 'cursor-default font-medium text-zinc-600',
                                 ]"
                             >
                                 {{ crumb.label }}
                             </a>
                             <ChevronRight
                                 v-if="index < breadcrumbs.length - 1"
-                                class="h-4 w-4 text-slate-300"
+                                class="h-4 w-4 text-zinc-300"
                             />
                         </div>
                     </template>
                 </nav>
             </div>
-            <h1 class="mb-6 text-2xl font-semibold text-slate-900">
+            <h1 class="mb-8 text-3xl font-bold tracking-tight text-zinc-900">
                 Tất cả sản phẩm
             </h1>
 
-            <div class="mb-6 flex items-center justify-end">
-                <div class="flex items-center gap-2">
-                    <span class="text-sm text-slate-500">Hiển thị</span>
+            <div class="mb-8 flex items-center justify-end">
+                <div class="flex items-center gap-3 rounded-full bg-zinc-50 px-4 py-1.5 border border-zinc-100">
+                    <span class="text-xs font-medium text-zinc-500">Hiển thị</span>
                     <select
                         :value="filters.limit"
                         @change="
@@ -177,20 +177,20 @@ const handleBreadcrumbClick = (crumb: {
                                 ($event.target as HTMLSelectElement).value,
                             )
                         "
-                        class="cursor-pointer border-none bg-transparent p-0 text-xs font-medium text-slate-600 hover:text-slate-900 focus:ring-0"
+                        class="cursor-pointer border-none bg-transparent p-0 text-xs font-bold text-zinc-900 hover:text-orange-500 focus:ring-0"
                     >
                         <option :value="12">12</option>
                         <option :value="24">24</option>
                         <option :value="48">48</option>
                         <option :value="96">96</option>
                     </select>
-                    <span class="text-xs text-slate-500">sản phẩm</span>
+                    <span class="text-xs font-medium text-zinc-500">sản phẩm</span>
                 </div>
             </div>
 
             <div class="flex gap-8">
                 <!-- Sidebar -->
-                <div class="hidden lg:block">
+                <div class="hidden lg:block w-64 shrink-0">
                     <ProductFilterSidebar
                         :filters="filters"
                         :filterSummary="filterSummary"
@@ -202,7 +202,7 @@ const handleBreadcrumbClick = (crumb: {
                 <!-- Main Content (Product Grid) -->
                 <div class="@container flex-1 gap-2">
                     <div
-                        class="grid grid-cols-1 gap-x-6 gap-y-10 @xl:grid-cols-2 @3xl:grid-cols-3 @4xl:grid-cols-4"
+                        class="grid grid-cols-1 gap-x-8 gap-y-12 @xl:grid-cols-2 @3xl:grid-cols-3 @4xl:grid-cols-4"
                     >
                         <!-- Render logic for mixed types -->
                         <template v-for="item in cards.data" :key="item.id">
@@ -218,7 +218,7 @@ const handleBreadcrumbClick = (crumb: {
                     </div>
 
                     <!-- Pagination UI: Using the project's standard DataTablePagination -->
-                    <div v-if="cards.total > cards.per_page" class="mt-12">
+                    <div v-if="cards.total > cards.per_page" class="mt-16">
                         <DataTablePagination
                             :total="cards.total"
                             :page-size="cards.per_page"
@@ -236,7 +236,7 @@ const handleBreadcrumbClick = (crumb: {
             <Sheet>
                 <SheetTrigger as-child>
                     <Button
-                        class="flex h-12 w-12 items-center justify-center rounded-full bg-orange-400 p-0 text-white shadow-xl hover:bg-orange-300"
+                        class="flex h-12 w-12 items-center justify-center rounded-full bg-orange-400 p-0 text-white shadow-xl hover:bg-orange-300 transition-transform active:scale-95"
                     >
                         <Filter class="h-8 w-8" />
                     </Button>
@@ -244,7 +244,7 @@ const handleBreadcrumbClick = (crumb: {
                 <SheetContent side="left" class="w-fit items-center p-0">
                     <SheetHeader class="w-full border-b p-6">
                         <SheetTitle
-                            class="text-lg font-semibold text-slate-900"
+                            class="text-lg font-semibold text-zinc-900"
                         >
                             Bộ lọc sản phẩm
                         </SheetTitle>

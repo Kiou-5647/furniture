@@ -11,7 +11,7 @@ return new class extends Migration
     {
         Schema::create('designers', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignUuid('user_id')->constrained('users')->onDelete('restrict');
+            $table->foreignUuid('user_id')->constrained('users')->onDelete('set null');
             $table->foreignUuid('employee_id')->nullable()->constrained('employees')->onDelete('set null');
             $table->string('full_name')->nullable()->after('user_id');
             $table->string('phone', 20)->nullable()->after('full_name');
@@ -29,7 +29,7 @@ return new class extends Migration
 
         Schema::create('bookings', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignUuid('customer_id')->constrained('users')->onDelete('restrict');
+            $table->foreignUuid('customer_id')->nullable()->constrained('customers')->onDelete('restrict');
             $table->foreignUuid('designer_id')->constrained('designers')->onDelete('restrict');
             $table->dateTime('start_at')->nullable();
             $table->dateTime('end_at')->nullable();

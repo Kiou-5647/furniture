@@ -72,7 +72,7 @@ class InvoiceService
         return Order::query()
             ->whereNotIn('status', ['cancelled'])
             ->whereDoesntHave('invoices')
-            ->with('customer.customer')
+            ->with('customer')
             ->orderByDesc('created_at')
             ->get(['id', 'order_number', 'total_amount', 'status'])
             ->map(fn($order) => [
@@ -80,7 +80,7 @@ class InvoiceService
                 'order_number' => $order->order_number,
                 'total_amount' => $order->total_amount,
                 'status' => $order->status,
-                'customer_name' => $order->customer?->customer?->full_name ?? $order->customer?->name ?? '—',
+                'customer_name' => $order->customer?->full_name ?? $order->customer?->name ?? '—',
             ]);
     }
 }

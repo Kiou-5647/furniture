@@ -94,7 +94,7 @@ class OrderService
                 $customerProfile = $user->customer;
 
                 return [
-                    'id' => $user->id,
+                    'id' => $customerProfile->id,
                     'name' => $customerProfile->full_name ?? $user->name,
                     'email' => $user->email,
                     'phone' => $customerProfile->phone ?? null,

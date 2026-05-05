@@ -12,7 +12,7 @@ return new class extends Migration
         Schema::create('orders', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('order_number')->unique();
-            $table->foreignUuid('customer_id')->constrained('users')->onDelete('restrict');
+            $table->foreignUuid('customer_id')->nullable()->constrained('customers')->onDelete('restrict');
             $table->uuid('shipping_address_id')->nullable();
             $table->decimal('total_amount', 15, 2)->default(0);
             $table->string('status', 50)->default('pending');

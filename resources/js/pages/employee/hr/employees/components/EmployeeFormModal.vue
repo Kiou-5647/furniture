@@ -132,8 +132,6 @@ function submit() {
     form.roles = selectedRoles.value;
     form.permissions = selectedPermissions.value;
 
-    console.info(form.warehouse_location_id)
-
     if (props.employee) {
         form.put(update(props.employee).url, {
             preserveScroll: true,

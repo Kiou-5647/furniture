@@ -21,8 +21,8 @@ class OrderResource extends JsonResource
             'order_number' => $this->order_number,
             'customer' => $this->whenLoaded('customer', fn() => [
                 'id' => $this->customer->id,
-                'name' => $this->customer->customer?->full_name ?? $this->customer->name,
-                'email' => $this->customer->email,
+                'name' => $this->customer->full_name ?? $this->customer->name,
+                'email' => $this->customer->user?->email,
             ]),
             'shipping_province_code' => $this->province_code,
             'shipping_ward_code' => $this->ward_code,

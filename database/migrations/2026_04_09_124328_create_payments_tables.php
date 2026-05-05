@@ -28,11 +28,11 @@ return new class extends Migration
 
         Schema::create('payments', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignUuid('customer_id')->constrained('users')->onDelete('restrict');
-            $table->string('gateway', 50)->comment('vnpay, momo, zalopay, stripe, manual');
+            $table->foreignUuid('customer_id')->nullable()->constrained('customers')->onDelete('restrict');
+            $table->string('gateway', 50);
             $table->string('transaction_id')->nullable();
             $table->decimal('amount', 15, 2)->default(0);
-            $table->string('status', 50)->default('pending')->comment('pending, successful, failed, refunded');
+            $table->string('status', 50)->default('pending');
             $table->jsonb('gateway_payload')->nullable();
             $table->timestamps();
             $table->softDeletes();

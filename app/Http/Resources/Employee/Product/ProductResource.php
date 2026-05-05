@@ -46,6 +46,7 @@ class ProductResource extends JsonResource
             'views_count' => $this->views_count,
             'reviews_count' => $this->reviews_count,
             'average_rating' => $this->average_rating,
+            'sales_count' => $this->sales_count,
             'min_price' => $this->min_price,
             'max_price' => $this->max_price,
             'is_featured' => $this->is_featured,

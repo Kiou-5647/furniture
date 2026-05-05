@@ -22,12 +22,16 @@ export type ProductStatus =
     | 'draft'
     | 'published'
     | 'archived';
-export type VariantStatus = 'active' | 'inactive';
-export type AssemblyDifficulty = 'easy' | 'medium' | 'hard';
-export type LocationType = 'warehouse' | 'retail' | 'vendor';
-
+export type Status = 'active' | 'inactive';
 export const AssemblyDifficultyLabels: Record<AssemblyDifficulty, string> = {
     easy: 'Dễ',
     medium: 'Trung bình',
     hard: 'Khó'
+}
+export type AssemblyDifficulty = 'easy' | 'medium' | 'hard';
+export type LocationType = 'warehouse' | 'retail' | 'vendor';
+
+export const StatusLabels: Record<Status, string> = {
+    active: 'Hoạt động',
+    inactive: 'Không hoạt động',
 }

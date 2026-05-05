@@ -26,7 +26,7 @@ class CreateBookingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'customer_id' => ['nullable', 'uuid', 'exists:users,id'],
+            'customer_id' => ['nullable', 'uuid', 'exists:customers,id'],
             'customer_name' => ['required_without:customer_id', 'nullable', 'string', 'max:255'],
             'customer_email' => ['required_without:customer_id', 'nullable', 'email', 'max:255'],
             'customer_phone' => ['required_without:customer_id', 'nullable', 'string', 'max:255'],

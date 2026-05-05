@@ -27,6 +27,7 @@ class VariantResource extends JsonResource
             'specifications' => $this->specifications ?? [],
             'care_instructions' => $this->care_instructions ?? [],
             'status' => $this->status,
+            'sales_count' => $this->sales_count,
             'primary_image_url' => $this->getFirstMediaUrl('primary_image'),
             'hover_image_url' => $this->getFirstMediaUrl('hover_image'),
             'gallery_urls' => $this->getMedia('gallery')->map(fn($media) => [
