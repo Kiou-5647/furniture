@@ -122,6 +122,7 @@ function performDeactivate() {
         },
     });
 }
+console.info(props.customers)
 </script>
 
 <template>

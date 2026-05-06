@@ -14,7 +14,6 @@ export interface Designer {
     display_name: string;
     avatar_url?: string;
     hourly_rate: string;
-    auto_confirm_bookings: boolean;
     is_active: boolean;
     availabilities?: Record<
         number,

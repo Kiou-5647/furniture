@@ -18,7 +18,6 @@ return new class extends Migration
             $table->text('bio')->nullable();
             $table->string('portfolio_url')->nullable();
             $table->decimal('hourly_rate', 15, 2)->nullable();
-            $table->boolean('auto_confirm_bookings')->default(false);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
             $table->softDeletes();

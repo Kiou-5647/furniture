@@ -15,7 +15,6 @@ export interface Booking {
         id: string;
         name: string;
         hourly_rate?: string;
-        auto_confirm_bookings?: boolean;
     };
     start_at?: string;
     end_at?: string;

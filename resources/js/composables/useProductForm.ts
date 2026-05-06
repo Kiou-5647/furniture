@@ -162,7 +162,6 @@ export function useProductForm(
             manual_file: null,
         },
         warranty_months: defaultWarrantyMonths.value as number | null,
-        is_featured: false,
         is_new_arrival: false,
         published_date: '',
         new_arrival_until: '',
@@ -234,7 +233,6 @@ export function useProductForm(
                     manual_file: null,
                 };
                 form.warranty_months = newProduct.warranty_months;
-                form.is_featured = newProduct.is_featured;
                 form.is_new_arrival = newProduct.is_new_arrival;
                 form.published_date = toISODate(newProduct.published_date ?? '');
                 form.new_arrival_until = toISODate(newProduct.new_arrival_until ?? '');
@@ -261,8 +259,6 @@ export function useProductForm(
                         price: v.price,
                         profit_margin_value: v.profit_margin_value ?? null,
                         profit_margin_unit: v.profit_margin_unit ?? 'fixed',
-                        weight: v.weight ?? {},
-                        dimensions: v.dimensions ?? {},
                         option_values: normalizedOptionValues,
                         swatch_label: v.swatch_label ?? null,
                         features: v.features ?? [],
@@ -504,8 +500,6 @@ export function useProductForm(
                 price: '',
                 profit_margin_value: null,
                 profit_margin_unit: 'fixed' as const,
-                weight: {},
-                dimensions: {},
                 option_values: optionValues,
                 swatch_label: null,
                 specifications: {},
@@ -535,8 +529,6 @@ export function useProductForm(
             price: '',
             profit_margin_value: null,
             profit_margin_unit: 'fixed' as const,
-            weight: {},
-            dimensions: {},
             option_values: combo,
             swatch_label: null,
             specifications: {},

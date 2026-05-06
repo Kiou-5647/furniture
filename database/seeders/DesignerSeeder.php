@@ -28,7 +28,6 @@ class DesignerSeeder extends Seeder
                     'full_name' => $emp->full_name,
                     'phone' => '090' . rand(1000000, 9999999),
                     'hourly_rate' => 500000,
-                    'auto_confirm_bookings' => false,
                     'is_active' => true,
                 ]
             );

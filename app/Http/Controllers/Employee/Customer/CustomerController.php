@@ -29,20 +29,25 @@ class CustomerController
         ]);
     }
 
-    public function show(Customer $customer): Response
+    public function show(Customer $customer, Request $request): Response
     {
         // Ensure the customer is loaded with user and orders as expected by the service
         $customer = $this->service->getById($customer->id);
 
-        return Inertia::render('employee/customers/Show', [
-            'customer' => new CustomerResource($customer),
-            'recentOrders' => $customer->orders->map(fn($order) => [
+        $orders = $customer->orders()
+            ->latest()
+            ->paginate($request->query('per_page', 15))
+            ->through(fn($order) => [
                 'id' => $order->id,
                 'order_number' => $order->order_number,
                 'total_amount' => $order->total_amount,
                 'status' => $order->status,
                 'created_at' => $order->created_at?->format('d/m/Y H:i'),
-            ]),
+            ]);
+
+        return Inertia::render('employee/customers/Show', [
+            'customer' => new CustomerResource($customer),
+            'orders' => $orders,
         ]);
     }
 

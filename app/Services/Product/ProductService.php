@@ -26,7 +26,6 @@ class ProductService
             ->when($filter->category_id, fn($q) => $q->where('category_id', $filter->category_id))
             ->when($filter->collection_id, fn($q) => $q->where('collection_id', $filter->collection_id))
             ->when($filter->status, fn($q) => $q->byStatus($filter->status))
-            ->when(! is_null($filter->is_featured), fn($q) => $q->where('is_featured', $filter->is_featured))
             ->when(! is_null($filter->is_new_arrival), fn($q) => $q->where('is_new_arrival', $filter->is_new_arrival))
             ->when($filter->search, fn($q) => $q->search($filter->search))
             ->orderBy($filter->order_by ?? 'created_at', $filter->order_direction ?? 'desc')

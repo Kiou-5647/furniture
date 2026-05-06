@@ -32,7 +32,6 @@ export interface CollectionPagination {
 export interface CollectionFilterData {
     search?: string;
     is_active?: boolean | null;
-    is_featured?: boolean | null;
     order_by?: string;
     order_direction?: 'asc' | 'desc' | null;
     per_page?: number;

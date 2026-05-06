@@ -65,9 +65,6 @@ class TimberProductDataSeeder extends Seeder
 
     private function seedVariant(Product $product, array $data): void
     {
-        // Decode JSONB columns
-        $data['weight'] = json_decode($data['weight'], true);
-        $data['dimensions'] = json_decode($data['dimensions'], true);
         $data['option_values'] = json_decode($data['option_values'], true);
         $data['features'] = json_decode($data['features'], true);
         $data['specifications'] = json_decode($data['specifications'], true);

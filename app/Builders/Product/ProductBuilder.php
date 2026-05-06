@@ -42,11 +42,6 @@ class ProductBuilder extends Builder
         });
     }
 
-    public function featured(): self
-    {
-        return $this->where('is_featured', true);
-    }
-
     public function newArrivals(): self
     {
         return $this->where('is_new_arrival', true);

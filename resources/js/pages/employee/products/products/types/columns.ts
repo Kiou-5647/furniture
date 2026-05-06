@@ -57,11 +57,6 @@ export function getColumns(
                             },
                             () => item.name,
                         ),
-                        item.is_featured
-                            ? h(Star, {
-                                class: 'h-4 w-4 fill-yellow-400 text-yellow-400 shrink-0',
-                            })
-                            : null,
                         item.is_new_arrival
                             ? h(
                                 Badge,

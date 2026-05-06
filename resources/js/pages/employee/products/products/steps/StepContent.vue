@@ -616,17 +616,6 @@ function setSpecGroupWithLabel(ns: string) {
             </div>
         </div>
 
-        <div class="flex flex-wrap gap-4 pt-1">
-            <div class="flex items-center gap-2">
-                <Switch
-                    id="is_featured"
-                    v-model="ctx.form.is_featured"
-                    class="h-4 w-7"
-                />
-                <Label for="is_featured">Nổi bật</Label>
-            </div>
-        </div>
-
         <!-- Content Section -->
         <Accordion
             type="single"

@@ -65,23 +65,6 @@ export function getColumns(
             },
         },
         {
-            accessorKey: 'auto_confirm_bookings',
-            header: 'Tự động xác nhận',
-            size: 120,
-            enableSorting: false,
-            enableHiding: true,
-            meta: { align: 'center' },
-            cell: ({ row }) => {
-                const auto = row.original.auto_confirm_bookings;
-                return h('div', { class: 'flex items-center justify-center gap-1.5' }, [
-                    h(auto ? CheckCircle2 : CircleDashed, {
-                        class: `h-3.5 w-3.5 ${auto ? 'text-blue-500' : 'text-muted-foreground'}`,
-                    }),
-                    h('span', { class: `text-xs ${auto ? 'text-blue-600 font-medium' : 'text-muted-foreground'}` }, auto ? 'Bật' : 'Tắt'),
-                ]);
-            },
-        },
-        {
             id: 'actions',
             header: 'Thao tác',
             size: 80,

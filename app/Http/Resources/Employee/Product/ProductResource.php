@@ -49,7 +49,6 @@ class ProductResource extends JsonResource
             'sales_count' => $this->sales_count,
             'min_price' => $this->min_price,
             'max_price' => $this->max_price,
-            'is_featured' => $this->is_featured,
             'is_new_arrival' => $this->is_new_arrival,
             'published_date' => $this->published_date?->format('d/m/Y'),
             'new_arrival_until' => $this->new_arrival_until?->format('d/m/Y'),

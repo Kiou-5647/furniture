@@ -74,9 +74,6 @@ const selectedCollection = ref<string | undefined>(
 const selectedNewArrival = ref<boolean | undefined>(
     props.filters.is_new_arrival ?? undefined,
 );
-const selectedFeatured = ref<boolean | undefined>(
-    props.filters.is_featured ?? undefined,
-);
 
 const hasActiveFilters = computed(() => {
     return (
@@ -85,7 +82,6 @@ const hasActiveFilters = computed(() => {
         !!props.filters.category_id ||
         !!props.filters.collection_id ||
         props.filters.is_new_arrival !== null ||
-        props.filters.is_featured !== null ||
         !!props.filters.search ||
         !!props.filters.order_by
     );
@@ -146,7 +142,6 @@ const updateSearch = debounce(() => {
         category_id: selectedCategory.value ?? undefined,
         collection_id: selectedCollection.value ?? undefined,
         is_new_arrival: selectedNewArrival.value ?? undefined,
-        is_featured: selectedFeatured.value ?? undefined,
         page: 1,
     };
 
@@ -162,7 +157,6 @@ watch(selectedVendor, () => updateSearch());
 watch(selectedCategory, () => updateSearch());
 watch(selectedCollection, () => updateSearch());
 watch(selectedNewArrival, () => updateSearch());
-watch(selectedFeatured, () => updateSearch());
 
 watch(
     () => props.products,
@@ -291,11 +285,6 @@ function performDelete() {
                         title="Mới"
                         v-model="selectedNewArrival"
                         :options="newArrivalOptions"
-                    />
-                    <DataTableSingleFilter
-                        title="Nổi bật"
-                        v-model="selectedFeatured"
-                        :options="featuredOptions"
                     />
                     <DataTableSingleFilter
                         title="Trạng thái"

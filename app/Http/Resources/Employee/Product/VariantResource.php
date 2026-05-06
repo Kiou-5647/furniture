@@ -20,8 +20,6 @@ class VariantResource extends JsonResource
             'price' => $this->price,
             'profit_margin_value' => $this->profit_margin_value,
             'profit_margin_unit' => $this->profit_margin_unit,
-            'weight' => $this->weight ?? [],
-            'dimensions' => $this->dimensions ?? [],
             'option_values' => $this->option_values ?? [],
             'features' => $this->features ?? [],
             'specifications' => $this->specifications ?? [],

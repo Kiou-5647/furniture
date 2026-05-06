@@ -56,8 +56,6 @@ class Product extends Model implements HasMedia
             'average_rating' => 'decimal:2',
             'min_price' => 'decimal:2',
             'max_price' => 'decimal:2',
-
-            'is_featured' => 'boolean',
             'is_new_arrival' => 'boolean',
             'published_date' => 'datetime',
             'new_arrival_until' => 'datetime',
@@ -77,7 +75,7 @@ class Product extends Model implements HasMedia
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['name', 'status', 'vendor_id', 'category_id', 'collection_id', 'average_rating', 'review_count', 'is_featured'])
+            ->logOnly(['name', 'status', 'vendor_id', 'category_id', 'collection_id', 'average_rating', 'review_count'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
             ->setDescriptionForEvent(fn(string $eventName) => "Product {$eventName}");

@@ -45,7 +45,6 @@ class Designer extends Model implements HasMedia
     {
         return [
             'hourly_rate' => 'decimal:2',
-            'auto_confirm_bookings' => 'boolean',
             'is_active' => 'boolean',
         ];
     }
@@ -88,9 +87,9 @@ class Designer extends Model implements HasMedia
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['full_name', 'phone', 'hourly_rate', 'auto_confirm_bookings', 'is_active'])
+            ->logOnly(['full_name', 'phone', 'hourly_rate', 'is_active'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
-            ->setDescriptionForEvent(fn (string $eventName) => "Designer {$eventName}");
+            ->setDescriptionForEvent(fn(string $eventName) => "Designer {$eventName}");
     }
 }

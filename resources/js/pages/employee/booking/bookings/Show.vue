@@ -211,12 +211,6 @@ const fullAddress = computed(() => props.booking.address.full_address);
                                 booking.designer?.name ?? 'Không tìm thấy'
                             }}</span>
                         </div>
-                        <div
-                            v-if="booking.designer?.auto_confirm_bookings"
-                            class="text-xs text-green-600"
-                        >
-                            Tự động xác nhận
-                        </div>
                     </div>
                 </div>
 

@@ -832,7 +832,6 @@ class TimberProductSeeder extends Seeder
                     'additional_information' => null
                 ],
                 'warranty_months' => 12,
-                'is_featured' => false,
                 'published_date' => $updated_date,
                 'new_arrival_until' => Carbon::instance($updated_date)->addMonths(fake()->randomElement([1, 2, 3])),
                 'created_at' => $created_date,
@@ -856,8 +855,6 @@ class TimberProductSeeder extends Seeder
                 'price' => $data['price'],
                 'profit_margin_value' => $data['profit_margin_value'] ?? null,
                 'profit_margin_unit' => $data['profit_margin_unit'] ?? 'fixed',
-                'weight' => ['value' => 128, 'unit' => 'lb'],
-                'dimensions' => ['length' => 90, 'width' => 35, 'height' => 32, 'unit' => 'inch'],
                 'option_values' => $data['option_values'],
                 'swatch_label' => $data['swatch_label'] ?? null,
                 'features' => $data['features'],

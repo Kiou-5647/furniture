@@ -21,7 +21,6 @@ class UpdateDesignerRequest extends FormRequest
             'bio' => ['nullable', 'string'],
             'portfolio_url' => ['nullable', 'url'],
             'hourly_rate' => ['required', 'numeric', 'min:0'],
-            'auto_confirm_bookings' => ['boolean'],
             'is_active' => ['boolean'],
             'avatar' => ['nullable', 'image', 'max:10240'],
             'availabilities' => ['nullable', 'array'],

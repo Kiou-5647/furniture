@@ -33,9 +33,7 @@ return new class extends Migration
             $table->unsignedInteger('reviews_count')->default(0)->check('review_count >= 0');
             $table->decimal('average_rating', 3, 2)->default(0.0);
 
-            $table->boolean('is_featured')->default(false);
             $table->boolean('is_new_arrival')->default(false);
-
             $table->timestamp('published_date')->nullable();
             $table->timestamp('new_arrival_until')->nullable();
             $table->timestamps();
@@ -56,7 +54,6 @@ return new class extends Migration
         DB::statement('CREATE INDEX idx_products_rating ON products (average_rating DESC) WHERE deleted_at IS NULL AND average_rating IS NOT NULL');
         DB::statement('CREATE INDEX idx_products_min_price ON products (min_price) WHERE deleted_at IS NULL');
         DB::statement('CREATE INDEX idx_products_max_price ON products (max_price) WHERE deleted_at IS NULL');
-        DB::statement('CREATE INDEX idx_products_is_featured ON products (is_featured) WHERE deleted_at IS NULL AND is_featured = true');
         DB::statement('CREATE INDEX idx_products_is_new_arrival ON products (is_new_arrival) WHERE deleted_at IS NULL AND is_new_arrival = true');
         DB::statement('CREATE INDEX idx_products_views_published ON products (views_count DESC) WHERE status = \'published\' AND deleted_at IS NULL');
         DB::statement('CREATE INDEX idx_products_rating_published ON products (average_rating DESC) WHERE status = \'published\' AND deleted_at IS NULL');
@@ -77,8 +74,6 @@ return new class extends Migration
             $table->decimal('profit_margin_value', 15, 2)->nullable();
             $table->string('profit_margin_unit', 20)->default('fixed');
 
-            $table->jsonb('weight')->default('{}');
-            $table->jsonb('dimensions')->default('{}');
             $table->jsonb('option_values')->default('{}');
             $table->jsonb('features')->default('[]');
             $table->jsonb('specifications')->default('{}');

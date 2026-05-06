@@ -23,7 +23,6 @@ class ProductFactory extends Factory
             'filterable_options' => [],
             'care_instructions' => [],
             'assembly_info' => [],
-            'is_featured' => fake()->boolean(),
             'is_new_arrival' => fake()->boolean(),
             'views_count' => fake()->numberBetween(0, 1000),
             'reviews_count' => fake()->numberBetween(0, 50),

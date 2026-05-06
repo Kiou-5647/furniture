@@ -18,8 +18,6 @@ class ProductVariantFactory extends Factory
             'name' => fake()->words(2, true),
             'price' => fake()->randomFloat(2, 100000, 10000000),
             'profit_margin_unit' => 'fixed',
-            'weight' => ['value' => fake()->randomFloat(2, 1, 50), 'unit' => 'kg'],
-            'dimensions' => ['length' => 10, 'width' => 10, 'height' => 10, 'unit' => 'cm'],
             'option_values' => [],
             'features' => [],
             'specifications' => [],

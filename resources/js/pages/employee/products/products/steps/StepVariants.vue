@@ -373,8 +373,6 @@ function copyVariantData(variant: any) {
         price: variant.price,
         profit_margin_value: variant.profit_margin_value,
         profit_margin_unit: variant.profit_margin_unit,
-        weight: { ...variant.weight },
-        dimensions: { ...variant.dimensions },
         features: JSON.parse(JSON.stringify(variant.features || [])),
         specifications: JSON.parse(
             JSON.stringify(variant.specifications || {}),
@@ -410,10 +408,6 @@ function pasteVariantData(variantIndex: number) {
         price: copiedVariantData.value.price,
         profit_margin_value: copiedVariantData.value.profit_margin_value,
         profit_margin_unit: copiedVariantData.value.profit_margin_unit,
-        weight: JSON.parse(JSON.stringify(copiedVariantData.value.weight)),
-        dimensions: JSON.parse(
-            JSON.stringify(copiedVariantData.value.dimensions),
-        ),
         features: JSON.parse(JSON.stringify(copiedVariantData.value.features)),
         specifications: JSON.parse(
             JSON.stringify(copiedVariantData.value.specifications),
@@ -448,8 +442,6 @@ function openAutoCreateDialog() {
             price: '',
             profit_margin_value: null,
             profit_margin_unit: 'fixed' as const,
-            weight: {},
-            dimensions: {},
             option_values: optionValues,
             features: [],
             specifications: {},
@@ -827,124 +819,6 @@ function canAddMoreImages(variant: any) {
                                 </Select>
                             </Field>
                         </div>
-
-                        <Field>
-                            <FieldLabel class="text-sm">Kích thước</FieldLabel>
-                            <div class="flex gap-2">
-                                <Input
-                                    :model-value="
-                                        variant.dimensions?.length ?? ''
-                                    "
-                                    @update:model-value="
-                                        variant.dimensions = {
-                                            ...variant.dimensions,
-                                            length: $event
-                                                ? Number($event)
-                                                : '',
-                                        }
-                                    "
-                                    placeholder="D"
-                                    class="text-sm"
-                                />
-                                <Input
-                                    :model-value="
-                                        variant.dimensions?.width ?? ''
-                                    "
-                                    @update:model-value="
-                                        variant.dimensions = {
-                                            ...variant.dimensions,
-                                            width: $event ? Number($event) : '',
-                                        }
-                                    "
-                                    placeholder="R"
-                                    class="text-sm"
-                                />
-                                <Input
-                                    :model-value="
-                                        variant.dimensions?.height ?? ''
-                                    "
-                                    @update:model-value="
-                                        variant.dimensions = {
-                                            ...variant.dimensions,
-                                            height: $event
-                                                ? Number($event)
-                                                : '',
-                                        }
-                                    "
-                                    placeholder="C"
-                                    class="text-sm"
-                                />
-                                <Select
-                                    :model-value="
-                                        variant.dimensions?.unit ?? 'cm'
-                                    "
-                                    @update:model-value="
-                                        variant.dimensions = {
-                                            ...variant.dimensions,
-                                            unit: $event,
-                                        }
-                                    "
-                                >
-                                    <SelectTrigger class="text-sm">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="cm" class="text-sm"
-                                            >cm</SelectItem
-                                        >
-                                        <SelectItem value="mm" class="text-sm"
-                                            >mm</SelectItem
-                                        >
-                                        <SelectItem value="m" class="text-sm"
-                                            >m</SelectItem
-                                        >
-                                        <SelectItem value="inch" class="text-sm"
-                                            >inch</SelectItem
-                                        >
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </Field>
-                        <Field>
-                            <FieldLabel class="text-sm">Cân nặng</FieldLabel>
-                            <div class="flex gap-2">
-                                <Input
-                                    :model-value="variant.weight?.value ?? ''"
-                                    @update:model-value="
-                                        variant.weight = {
-                                            ...variant.weight,
-                                            value: $event ? Number($event) : '',
-                                        }
-                                    "
-                                    placeholder="0"
-                                    class="text-sm"
-                                />
-                                <Select
-                                    :model-value="variant.weight?.unit ?? 'kg'"
-                                    @update:model-value="
-                                        variant.weight = {
-                                            ...variant.weight,
-                                            unit: $event,
-                                        }
-                                    "
-                                >
-                                    <SelectTrigger class="text-sm">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="kg" class="text-sm"
-                                            >kg</SelectItem
-                                        >
-                                        <SelectItem value="g" class="text-sm"
-                                            >g</SelectItem
-                                        >
-                                        <SelectItem value="lb" class="text-sm"
-                                            >lb</SelectItem
-                                        >
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </Field>
 
                         <Separator />
 

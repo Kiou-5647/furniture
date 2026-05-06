@@ -1,6 +1,6 @@
 import type { ProductSpecifications, SpecItem } from './lookup';
 import type { ProductCard } from './public/product';
-import type { AssemblyDifficulty, ProductStatus, Status, VariantStatus } from '.';
+import type { AssemblyDifficulty, ProductStatus, Status } from '.';
 
 export interface Product {
     id: string;
@@ -43,7 +43,6 @@ export interface Product {
     sales_count: number;
     min_price: string;
     max_price: string;
-    is_featured: boolean;
     is_new_arrival: boolean;
     published_date: string | null;
     new_arrival_until: string | null;
@@ -78,7 +77,6 @@ export interface ProductFilterData {
     category_id?: string | null;
     collection_id?: string | null;
     status?: ProductStatus | null;
-    is_featured?: boolean | null;
     is_new_arrival?: boolean | null;
     search?: string;
     order_by?: string;
@@ -134,8 +132,6 @@ export interface ProductVariant {
     sale_price: string | number;
     profit_margin_value: string | number | null;
     profit_margin_unit: 'fixed' | 'percentage';
-    weight: Record<string, any>;
-    dimensions: Record<string, any>;
     option_values: Record<string, any>;
     features: SpecItem[];
     specifications: ProductSpecifications;

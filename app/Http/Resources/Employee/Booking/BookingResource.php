@@ -23,7 +23,6 @@ class BookingResource extends JsonResource
                 'id' => $this->designer->id,
                 'name' => $this->designer->display_name,
                 'hourly_rate' => $this->designer->hourly_rate,
-                'auto_confirm_bookings' => $this->designer->auto_confirm_bookings,
             ]),
             'address' => [
                 'province_code' => $this->province_code,

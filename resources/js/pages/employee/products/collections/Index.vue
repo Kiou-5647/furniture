@@ -2,8 +2,6 @@
 import { Head, router } from '@inertiajs/vue3';
 import {
     Plus,
-    Star,
-    StarOff,
     CheckCircle2,
     CircleDashed,
 } from '@lucide/vue';
@@ -59,9 +57,7 @@ const hasActiveFilters = computed(() => {
         !!props.filters.search ||
         !!props.filters.order_by ||
         (props.filters.is_active !== undefined &&
-            props.filters.is_active !== null) ||
-        (props.filters.is_featured !== undefined &&
-            props.filters.is_featured !== null)
+            props.filters.is_active !== null)
     );
 });
 
@@ -69,9 +65,6 @@ const statusOptions = [
     { label: 'Đang hiện', value: 'true', icon: CheckCircle2 },
     { label: 'Đang ẩn', value: 'false', icon: CircleDashed },
 ];
-
-// Featured Filter
-const selectedFeatured = ref(props.filters.is_featured ?? undefined);
 
 // Status Filter
 const selectedStatus = ref(props.filters.is_active ?? undefined);
@@ -81,7 +74,6 @@ const updateSearch = debounce(() => {
     const rawQuery = {
         ...props.filters,
         search: search.value,
-        is_featured: selectedFeatured.value ?? undefined,
         is_active: selectedStatus.value ?? undefined,
         page: 1,
     };
@@ -94,7 +86,6 @@ const updateSearch = debounce(() => {
 
 // Watchers
 watch(search, (val) => val !== (props.filters.search ?? '') && updateSearch());
-watch(selectedFeatured, () => updateSearch());
 watch(selectedStatus, () => updateSearch());
 
 watch(

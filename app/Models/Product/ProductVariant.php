@@ -36,8 +36,6 @@ class ProductVariant extends Model implements HasMedia
             'price' => 'decimal:2',
             'profit_margin_value' => 'decimal:2',
             'profit_margin_unit' => 'string',
-            'weight' => 'array',
-            'dimensions' => 'array',
             'option_values' => 'array',
             'features' => 'array',
             'specifications' => 'array',

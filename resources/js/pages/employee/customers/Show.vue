@@ -11,32 +11,67 @@ import {
     DollarSign,
     Package,
 } from '@lucide/vue';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
+import DataTableGroup from '@/components/custom/data-table/DataTableGroup.vue';
 import Heading from '@/components/Heading.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { index, deactivate } from '@/routes/employee/customers';
+import { getCustomerOrderColumns, type CustomerOrder } from './types/customer-orders-columns';
 import type { BreadcrumbItem } from '@/types';
 import type { Customer } from '@/types/customer';
 
-interface Order {
-    id: string;
-    order_number: string;
-    total_amount: string;
-    status: string;
-    created_at: string;
+interface OrderPagination {
+    data: CustomerOrder[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
 }
 
 const props = defineProps<{
     customer: Customer;
-    recentOrders: Order[];
+    orders: OrderPagination;
 }>();
+
+const search = ref('');
+const isActuallyLoading = ref(false);
+const totalOrders = computed(() => {
+    if (!props.orders) return 0;
+    return typeof props.orders === 'number' ? props.orders : props.orders.total ?? 0;
+});
+const currentPage = computed(() => props.orders?.current_page ?? 1);
+const lastPage = computed(() => props.orders?.last_page ?? 1);
+const perPage = computed(() => props.orders?.per_page ?? 15);
 
 const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     { title: 'Khách hàng', href: index().url },
     { title: props.customer?.full_name ?? 'Chi tiết khách hàng', href: '#' },
 ]);
+
+function handlePageUpdate(page: number) {
+    router.get(index().url, {
+        customer_id: props.customer.id,
+        page
+    }, { preserveState: true });
+}
+
+function handlePageSizeUpdate(size: number) {
+    router.get(index().url, {
+        customer_id: props.customer.id,
+        per_page: size
+    }, { preserveState: true });
+}
+
+function handleSearchUpdate(value: string) {
+    search.value = value;
+    router.get(index().url, {
+        customer_id: props.customer.id,
+        search: value,
+        page: 1
+    }, { preserveState: true });
+}
 
 function goBack() {
     router.visit(index().url);
@@ -50,7 +85,7 @@ function confirmDeactivate() {
         preserveScroll: true,
     });
 }
-console.info(props.customer.user)
+console.info(props.orders)
 </script>
 
 <template>
@@ -148,58 +183,27 @@ console.info(props.customer.user)
                         </div>
                         <span class="text-sm text-muted-foreground">Số đơn hàng</span>
                         <span class="text-3xl font-bold tabular-nums">
-                            {{ recentOrders.length }}
+                            {{ props.orders?.total ?? 0 }}
                         </span>
                     </div>
                 </div>
             </div>
 
-            <!-- Recent Orders Table -->
-            <div class="rounded-lg border bg-card">
-                <div class="border-b px-4 py-3 flex items-center justify-between">
-                    <h3 class="flex items-center gap-2 text-sm font-medium">
-                        <Calendar class="h-4 w-4" /> Đơn hàng gần đây
-                    </h3>
-                </div>
-                <table class="w-full">
-                    <thead>
-                        <tr class="border-b bg-muted/50 text-xs text-muted-foreground">
-                            <th class="px-4 py-2 text-left">Mã đơn hàng</th>
-                            <th class="px-4 py-2 text-center">Ngày tạo</th>
-                            <th class="px-4 py-2 text-center">Trạng thái</th>
-                            <th class="px-4 py-2 text-right">Tổng tiền</th>
-                            <th class="px-4 py-2 text-center">Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="order in recentOrders" :key="order.id" class="border-b text-sm">
-                            <td class="px-4 py-3 font-mono text-xs">{{ order.order_number }}</td>
-                            <td class="px-4 py-3 text-center text-muted-foreground">{{ order.created_at }}</td>
-                            <td class="px-4 py-3 text-center">
-                                <Badge variant="outline" class="text-xs">{{ order.status }}</Badge>
-                            </td>
-                            <td class="px-4 py-3 text-right font-medium tabular-nums">
-                                {{ Number(order.total_amount).toLocaleString('vi-VN') }}đ
-                            </td>
-                            <td class="px-4 py-3 text-center">
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    class="h-7 text-xs"
-                                    @click="router.get(`/nhan-vien/ban-hang/don-hang/${order.id}`)"
-                                >
-                                    Xem
-                                </Button>
-                            </td>
-                        </tr>
-                        <tr v-if="recentOrders.length === 0">
-                            <td colspan="5" class="px-4 py-8 text-center text-sm text-muted-foreground">
-                                Không có đơn hàng nào
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            <!-- Orders Table -->
+            <DataTableGroup
+                :search="search"
+                @update:search="handleSearchUpdate"
+                :is-actually-loading="isActuallyLoading"
+                :columns="getCustomerOrderColumns()"
+                :data="orders.data ?? []"
+                :has-active-filters="!!search"
+                :total="totalOrders"
+                :page-size="perPage"
+                :current-page="currentPage"
+                :last-page="lastPage"
+                @update:page="handlePageUpdate"
+                @update:page-size="handlePageSizeUpdate"
+            />
         </div>
     </AppLayout>
 </template>

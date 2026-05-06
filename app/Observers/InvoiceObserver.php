@@ -91,14 +91,7 @@ class InvoiceObserver
             && $booking->status === BookingStatus::PendingDeposit
         ) {
 
-            $designer = $booking->designer;
-
-            if ($designer?->auto_confirm_bookings) {
-                $booking->updateQuietly(['status' => BookingStatus::Confirmed]);
-            } else {
-                $booking->updateQuietly(['status' => BookingStatus::PendingConfirmation]);
-            }
-
+            $booking->updateQuietly(['status' => BookingStatus::PendingConfirmation]);
             return;
         }
 
