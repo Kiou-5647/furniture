@@ -95,6 +95,20 @@ watch(
     { deep: true },
 );
 
+watch(
+    () => props.allSpecLookupOptions,
+    (newOptions) => {
+        ctx.updateSpecLookupOptionsMap(newOptions);
+    },
+    { deep: true },
+);
+
+watch(
+    () => props.lookupNamespaces,
+    () => {},
+    { deep: true },
+);
+
 const showConfirmClose = ref(false);
 const showLookupForm = ref(false);
 const lookupFormNamespace = ref('');
@@ -162,6 +176,7 @@ function handleLookupFormClosed() {
             'featureOptions',
             'specNamespaces',
             'allSpecLookupOptions',
+            'lookupNamespaces'
         ],
     });
 }
@@ -395,7 +410,7 @@ const currentStepTitle = computed(() => {
                         variant="outline"
                         size="sm"
                         class="text-xs font-medium transition-all hover:bg-primary/5 hover:text-primary"
-                        @click="handleOpenLookupForm('chat-lieu')"
+                        @click="handleOpenLookupForm('_null')"
                     >
                         <ListPlus class="mr-2 h-3.5 w-3.5" /> Quản lý tra cứu
                     </Button>
@@ -436,9 +451,7 @@ const currentStepTitle = computed(() => {
                                 <AlertTitle class="text-xs font-bold"
                                     >Thiếu thông tin bắt buộc</AlertTitle
                                 >
-                                <AlertDescription
-                                    class="text-[11px]"
-                                >
+                                <AlertDescription class="text-[11px]">
                                     <ul class="mt-1 list-none space-y-1 p-0">
                                         <li
                                             v-for="(
@@ -447,8 +460,9 @@ const currentStepTitle = computed(() => {
                                             :key="i"
                                             class="flex items-start gap-1"
                                         >
-                                            <span class="text-white/50">•</span>
-                                            {{ err }}
+                                            <span class="text-white"
+                                                >• {{ err }}</span
+                                            >
                                         </li>
                                     </ul>
                                 </AlertDescription>

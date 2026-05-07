@@ -140,7 +140,13 @@ function closeAddDialog() {
 function saveAddDialog() {
     if (addDialogVariantIndex.value === null) return;
 
-    ctx.form.variants[addDialogVariantIndex.value].stock.push({
+    const variant = ctx.form.variants[addDialogVariantIndex.value];
+
+    if (!variant.stock) {
+        variant.stock = [];
+    }
+
+    variant.stock.push({
         location_id: addDialogLocationId.value,
         quantity: addDialogQuantity.value,
         cost_per_unit: addDialogCost.value,
@@ -170,15 +176,6 @@ function formatCurrency(value: number): string {
         currency: 'VND',
         minimumFractionDigits: 0,
     }).format(value);
-}
-
-function getVariantLabel(variantIndex: number): string {
-    const variant = ctx.form.variants[variantIndex];
-    const optionLabels = ctx.getVariantOptionLabels(variant);
-    if (optionLabels.length > 0) {
-        return optionLabels.join(' / ');
-    }
-    return variant?.sku || `Biến thể ${variantIndex + 1}`;
 }
 
 function openAdjustment(variantIndex: number, locationId: string) {

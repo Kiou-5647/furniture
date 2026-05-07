@@ -11,7 +11,7 @@ import {
     Package,
     Truck,
 } from '@lucide/vue';
-import { inject, ref, watch } from 'vue';
+import { computed, inject, ref, watch } from 'vue';
 import Heading from '@/components/Heading.vue';
 import {
     Accordion,
@@ -263,7 +263,27 @@ function setSpecGroupWithLabel(ns: string) {
 }
 
 const fileInputRef = ref<HTMLInputElement | null>(null);
-const localPreviewUrl = ref<string | null>(null); // Track local preview
+const localPreviewUrl = ref<string | null>(null);
+
+const specLookupOptions = computed(() => {
+    const map = ctx.specLookupOptionsMap;
+    const ns = ctx.specGroupNamespace;
+    const actualNs = ns === '_null' ? '' : ns;
+
+    return map?.[actualNs] ?? [];
+});
+
+watch(
+    () => ctx.specLookupOptionsMap,
+    () => {},
+    { deep: true }
+);
+
+watch(
+    () => ctx.featureOptions,
+    () => {},
+    { deep: true }
+);
 
 function handleFileChange(event: Event) {
     const target = event.target as HTMLInputElement;
@@ -278,7 +298,6 @@ function handleFileChange(event: Event) {
 
         // Create a temporary URL for the browser to preview the local file
         localPreviewUrl.value = URL.createObjectURL(file);
-        console.info(localPreviewUrl.value);
     }
 }
 </script>
@@ -964,9 +983,9 @@ function handleFileChange(event: Event) {
                             >
                                 Chọn giá trị từ tra cứu:
                             </Label>
-                            <div class="grid grid-cols-1 gap-2">
+                            <div  v-if="specLookupOptions.length > 0" class="grid grid-cols-1 gap-2">
                                 <div
-                                    v-for="opt in ctx.specLookupOptions"
+                                    v-for="opt in specLookupOptions"
                                     :key="opt.id"
                                     class="flex items-center gap-3 rounded-lg border p-2 transition-all"
                                     :class="
