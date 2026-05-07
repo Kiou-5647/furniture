@@ -1,4 +1,5 @@
 export interface Booking {
+    booking_number: string;
     address_line: any;
     ward_name: any;
     province_name: any;

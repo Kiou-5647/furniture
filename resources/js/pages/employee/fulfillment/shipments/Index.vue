@@ -28,8 +28,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const activeColumns = computed(() => getColumns(handleShow, handleShip, handleDeliver, handleResend));
 
-const showDeleteDialog = ref(false);
-const selectedShipment = ref<Shipment | null>(null);
 const isActuallyLoading = ref(true);
 const search = ref(props.filters.search ?? '');
 const selectedStatus = ref<string | undefined>(props.filters.status ?? undefined);
@@ -124,13 +122,6 @@ function handleResend(shipment: Shipment) {
                     title="Vận chuyển"
                     description="Quản lý đơn vận chuyển hàng hóa"
                 />
-                <div class="flex items-center gap-2">
-                    <Button variant="outline" as-child>
-                        <Link :href="trashIndex().url">
-                            <Trash2 class="mr-2 h-4 w-4" /> Thùng rác
-                        </Link>
-                    </Button>
-                </div>
             </div>
 
             <DataTableGroup

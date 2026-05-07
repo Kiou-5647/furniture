@@ -188,6 +188,8 @@ class StorefrontService
             if ($filterData->max_price !== null && $variant->getEffectivePrice() > $filterData->max_price) return false;
 
             $variantObj = (object) [
+                'price' => $variant->price,
+                'effective_price' => $variant->getEffectivePrice(),
                 'option_values' => $variant->option_values,
                 'features' => $variant->features,
                 'specifications' => $variant->specifications,

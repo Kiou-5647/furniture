@@ -35,7 +35,7 @@ export function getColumns(
             size: 200,
             enableSorting: false,
             enableHiding: true,
-            cell: ({ row }) => h('span', { class: 'text-sm truncate block max-w-[200px]' }, row.original.reason || '—'),
+            cell: ({ row }) => h('span', { class: 'text-sm truncate block' }, row.original.reason || '—'),
         },
         {
             accessorKey: 'status',

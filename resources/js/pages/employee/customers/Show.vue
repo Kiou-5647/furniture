@@ -2,11 +2,9 @@
 import { Head, router } from '@inertiajs/vue3';
 import {
     ArrowLeft,
-    Calendar,
     Mail,
     MapPin,
     Phone,
-    User,
     UserX,
     DollarSign,
     Package,
@@ -18,9 +16,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { index, deactivate } from '@/routes/employee/customers';
-import { getCustomerOrderColumns, type CustomerOrder } from './types/customer-orders-columns';
 import type { BreadcrumbItem } from '@/types';
 import type { Customer } from '@/types/customer';
+import { getCustomerOrderColumns } from './types/customer-orders-columns';
+import type { CustomerOrder } from './types/customer-orders-columns';
 
 interface OrderPagination {
     data: CustomerOrder[];
@@ -39,7 +38,9 @@ const search = ref('');
 const isActuallyLoading = ref(false);
 const totalOrders = computed(() => {
     if (!props.orders) return 0;
-    return typeof props.orders === 'number' ? props.orders : props.orders.total ?? 0;
+    return typeof props.orders === 'number'
+        ? props.orders
+        : (props.orders.total ?? 0);
 });
 const currentPage = computed(() => props.orders?.current_page ?? 1);
 const lastPage = computed(() => props.orders?.last_page ?? 1);
@@ -51,26 +52,38 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => [
 ]);
 
 function handlePageUpdate(page: number) {
-    router.get(index().url, {
-        customer_id: props.customer.id,
-        page
-    }, { preserveState: true });
+    router.get(
+        index().url,
+        {
+            customer_id: props.customer.id,
+            page,
+        },
+        { preserveState: true },
+    );
 }
 
 function handlePageSizeUpdate(size: number) {
-    router.get(index().url, {
-        customer_id: props.customer.id,
-        per_page: size
-    }, { preserveState: true });
+    router.get(
+        index().url,
+        {
+            customer_id: props.customer.id,
+            per_page: size,
+        },
+        { preserveState: true },
+    );
 }
 
 function handleSearchUpdate(value: string) {
     search.value = value;
-    router.get(index().url, {
-        customer_id: props.customer.id,
-        search: value,
-        page: 1
-    }, { preserveState: true });
+    router.get(
+        index().url,
+        {
+            customer_id: props.customer.id,
+            search: value,
+            page: 1,
+        },
+        { preserveState: true },
+    );
 }
 
 function goBack() {
@@ -78,14 +91,22 @@ function goBack() {
 }
 
 function confirmDeactivate() {
-    if (!confirm(`Bạn có chắc chắn muốn vô hiệu hóa tài khoản của khách hàng ${props.customer.full_name}? Họ sẽ không thể đăng nhập.`)) {
+    if (
+        !confirm(
+            `Bạn có chắc chắn muốn vô hiệu hóa tài khoản của khách hàng ${props.customer.full_name}? Họ sẽ không thể đăng nhập.`,
+        )
+    ) {
         return;
     }
-    router.post(deactivate({ customer: props.customer.id }).url, {}, {
-        preserveScroll: true,
-    });
+    router.post(
+        deactivate({ customer: props.customer.id }).url,
+        {},
+        {
+            preserveScroll: true,
+        },
+    );
 }
-console.info(props.orders)
+console.info(props.orders);
 </script>
 
 <template>
@@ -109,12 +130,16 @@ console.info(props.orders)
                         :class="[
                             'text-xs',
                             customer.user?.is_active
-                                ? 'text-green-600 bg-green-50 border-green-200'
-                                : 'text-red-600 bg-red-50 border-red-200',
+                                ? 'border-green-200 bg-green-50 text-green-600'
+                                : 'border-red-200 bg-red-50 text-red-600',
                         ]"
                         variant="outline"
                     >
-                        {{ customer.user?.is_active ? 'Hoạt động' : 'Đã vô hiệu hóa' }}
+                        {{
+                            customer.user?.is_active
+                                ? 'Hoạt động'
+                                : 'Đã vô hiệu hóa'
+                        }}
                     </Badge>
                     <Button
                         v-if="customer.user?.is_active"
@@ -129,8 +154,10 @@ console.info(props.orders)
 
             <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
                 <!-- Profile Card -->
-                <div class="rounded-lg border p-6 bg-card">
-                    <div class="flex flex-col items-center text-center space-y-4">
+                <div class="rounded-lg border bg-card p-6">
+                    <div
+                        class="flex flex-col items-center space-y-4 text-center"
+                    >
                         <div class="relative">
                             <img
                                 v-if="customer.avatar_url"
@@ -145,8 +172,12 @@ console.info(props.orders)
                             </div>
                         </div>
                         <div>
-                            <h3 class="text-lg font-semibold">{{ customer.full_name }}</h3>
-                            <p class="text-sm text-muted-foreground">{{ customer.user?.email }}</p>
+                            <h3 class="text-lg font-semibold">
+                                {{ customer.full_name }}
+                            </h3>
+                            <p class="text-sm text-muted-foreground">
+                                {{ customer.user?.email }}
+                            </p>
                         </div>
                     </div>
 
@@ -161,27 +192,48 @@ console.info(props.orders)
                         </div>
                         <div class="flex items-center gap-3 text-sm">
                             <MapPin class="h-4 w-4 text-muted-foreground" />
-                            <span>{{ customer.province_name }} {{ customer.ward_name }}</span>
+                            <span
+                                >{{ customer.province_name }}
+                                {{ customer.ward_name }}</span
+                            >
                         </div>
                     </div>
                 </div>
 
                 <!-- Stats Card -->
-                <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="rounded-lg border p-6 bg-card flex flex-col justify-center items-center text-center">
-                        <div class="p-3 rounded-full bg-green-100 text-green-600 mb-3">
+                <div
+                    class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:col-span-2"
+                >
+                    <div
+                        class="flex flex-col items-center justify-center rounded-lg border bg-card p-6 text-center"
+                    >
+                        <div
+                            class="mb-3 rounded-full bg-green-100 p-3 text-green-600"
+                        >
                             <DollarSign class="h-6 w-6" />
                         </div>
-                        <span class="text-sm text-muted-foreground">Tổng chi tiêu</span>
+                        <span class="text-sm text-muted-foreground"
+                            >Tổng chi tiêu</span
+                        >
                         <span class="text-3xl font-bold tabular-nums">
-                            {{ Number(customer.total_spent).toLocaleString('vi-VN') }}đ
+                            {{
+                                Number(customer.total_spent).toLocaleString(
+                                    'vi-VN',
+                                )
+                            }}đ
                         </span>
                     </div>
-                    <div class="rounded-lg border p-6 bg-card flex flex-col justify-center items-center text-center">
-                        <div class="p-3 rounded-full bg-blue-100 text-blue-600 mb-3">
+                    <div
+                        class="flex flex-col items-center justify-center rounded-lg border bg-card p-6 text-center"
+                    >
+                        <div
+                            class="mb-3 rounded-full bg-blue-100 p-3 text-blue-600"
+                        >
                             <Package class="h-6 w-6" />
                         </div>
-                        <span class="text-sm text-muted-foreground">Số đơn hàng</span>
+                        <span class="text-sm text-muted-foreground"
+                            >Số đơn hàng</span
+                        >
                         <span class="text-3xl font-bold tabular-nums">
                             {{ props.orders?.total ?? 0 }}
                         </span>
@@ -191,6 +243,7 @@ console.info(props.orders)
 
             <!-- Orders Table -->
             <DataTableGroup
+                :searchable="false"
                 :search="search"
                 @update:search="handleSearchUpdate"
                 :is-actually-loading="isActuallyLoading"

@@ -20,9 +20,16 @@ export const AssemblyDifficultyLabels: Record<AssemblyDifficulty, string> = {
     hard: 'Khó'
 }
 export type AssemblyDifficulty = 'easy' | 'medium' | 'hard';
-export type LocationType = 'warehouse' | 'retail' | 'vendor';
+export type LocationType = 'warehouse' | 'retail';
 
 export const StatusLabels: Record<Status, string> = {
     active: 'Hoạt động',
     inactive: 'Không hoạt động',
 }
+
+export const Gateway: Record<string, string> = {
+    cash: 'Tiền mặt',
+    vnpay: 'VNPay',
+}
+
+

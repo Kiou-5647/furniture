@@ -41,7 +41,7 @@ class CustomerController
                 'id' => $order->id,
                 'order_number' => $order->order_number,
                 'total_amount' => $order->total_amount,
-                'status' => $order->status,
+                'status' => $order->status->label(),
                 'created_at' => $order->created_at?->format('d/m/Y H:i'),
             ]);
 

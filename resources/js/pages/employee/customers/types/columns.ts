@@ -57,7 +57,7 @@ export function getColumns(
             size: 200,
             enableSorting: false,
             enableHiding: true,
-            cell: ({ row }) => h('span', { class: 'text-sm' }, row.original.address || '—'),
+            cell: ({ row }) => h('span', { class: 'text-sm truncate' }, row.original.address || '—'),
         },
         {
             accessorKey: 'total_spent',

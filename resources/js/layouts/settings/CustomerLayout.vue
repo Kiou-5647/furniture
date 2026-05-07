@@ -14,7 +14,7 @@ const sidebarNavItems: NavItem[] = [
         href: edit(),
     },
     {
-        title: 'Đơn hàng & Đặt chỗ',
+        title: 'Đơn hàng',
         href: orders(),
     },
     {

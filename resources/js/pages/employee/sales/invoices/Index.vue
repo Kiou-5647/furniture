@@ -1,17 +1,13 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { Link } from '@inertiajs/vue3';
-import { Plus, Trash2 } from '@lucide/vue';
 import { debounce } from 'lodash';
 import { computed, ref, watch } from 'vue';
 import DataTableGroup from '@/components/custom/data-table/DataTableGroup.vue';
 import DataTableSingleFilter from '@/components/custom/data-table/DataTableSingleFilter.vue';
 import Heading from '@/components/Heading.vue';
-import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { cleanQuery, setCookie } from '@/lib/utils';
 import { index, show } from '@/routes/employee/sales/invoices';
-import { index as trashIndex } from '@/routes/employee/sales/invoices/trash';
 import type { BreadcrumbItem } from '@/types';
 import type {
     Invoice,
@@ -32,7 +28,6 @@ const props = defineProps<{
         status: string;
         customer_name: string;
     }[];
-    // bookingOptions: { ... }[]; // TODO: uncomment when Booking model exists
     invoices?: InvoicePagination;
     filters: InvoiceFilterData;
 }>();
@@ -126,10 +121,6 @@ function handleShow(invoice: Invoice) {
 
 const showCreateDialog = ref(false);
 
-function handleCreate() {
-    showCreateDialog.value = true;
-}
-
 function handleDialogClose() {
     showCreateDialog.value = false;
 }
@@ -144,16 +135,6 @@ function handleDialogClose() {
                     title="Hóa đơn"
                     description="Quản lý hóa đơn bán hàng"
                 />
-                <div class="flex items-center gap-2">
-                    <Button @click="handleCreate">
-                        <Plus class="mr-2 h-4 w-4" /> Tạo hóa đơn
-                    </Button>
-                    <Button variant="outline" as-child>
-                        <Link :href="trashIndex().url">
-                            <Trash2 class="mr-2 h-4 w-4" /> Thùng rác
-                        </Link>
-                    </Button>
-                </div>
             </div>
 
             <DataTableGroup

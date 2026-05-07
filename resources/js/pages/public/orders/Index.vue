@@ -81,6 +81,7 @@ const columns: ColumnDef<any, any>[] = [
             const labels: Record<string, string> = {
                 cod: 'Thanh toán khi nhận hàng',
                 bank_transfer: 'Chuyển khoản',
+                cash: 'Tiền mặt'
             };
             return h(
                 'span',

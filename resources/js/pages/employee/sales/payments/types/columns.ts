@@ -2,6 +2,7 @@ import type { ColumnDef } from '@tanstack/vue-table';
 import { h } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import type { Payment } from '@/types/payment';
+import { Gateway } from '@/types';
 
 export function getColumns(): ColumnDef<Payment>[] {
     return [
@@ -72,7 +73,7 @@ export function getColumns(): ColumnDef<Payment>[] {
                 h(
                     Badge,
                     { variant: 'outline' },
-                    () => row.original.gateway ?? '—',
+                    () => Gateway[row.original.gateway as keyof typeof Gateway] ?? '—',
                 ),
         },
         {

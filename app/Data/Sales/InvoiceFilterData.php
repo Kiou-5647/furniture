@@ -3,6 +3,7 @@
 namespace App\Data\Sales;
 
 use App\Enums\InvoiceStatus;
+use App\Enums\InvoiceType;
 use Illuminate\Http\Request;
 
 readonly class InvoiceFilterData

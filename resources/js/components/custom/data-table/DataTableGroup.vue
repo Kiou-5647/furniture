@@ -3,7 +3,7 @@
         <!-- Toolbar: Search + Filters + Actions -->
         <div class="flex flex-col gap-2 @lg:flex-row">
             <div class="flex w-full min-w-0 gap-2">
-                <DataTableSearchBar :search="search" @update:search="emit('update:search', $event)" />
+                <DataTableSearchBar v-if="searchable" :search="search" @update:search="emit('update:search', $event)" />
                 <!-- Mobile: Sheet for filters -->
                 <Sheet>
                     <SheetTrigger as-child>
@@ -68,10 +68,11 @@ import DataTablePagination from './DataTablePagination.vue';
 import DataTableSearchBar from './DataTableSearchBar.vue';
 import DataTableVisibility from './DataTableVisibility.vue';
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
     columns: ColumnDef<any, any>[];
     data: any[];
 
+    searchable?: boolean;
     search: string;
     hasActiveFilters: boolean;
     isActuallyLoading: boolean;
@@ -83,7 +84,9 @@ const props = defineProps<{
 
     order_by?: string;
     order_direction?: 'asc' | 'desc' | null;
-}>();
+}>(), {
+    searchable: true
+});
 
 const emit = defineEmits([
     'update:search',

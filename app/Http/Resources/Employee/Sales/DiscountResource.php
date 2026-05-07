@@ -39,7 +39,7 @@ class DiscountResource extends JsonResource
 
             'discountable_id' => $resource->discountable_id,
             'discountable_type' => $resource->discountable_type,
-            'created_at' => $resource->created_at,
+            'created_at' => $resource->created_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
         ];
     }
 }

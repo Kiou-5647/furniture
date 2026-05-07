@@ -13,6 +13,7 @@ class BookingResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'booking_number' => $this->booking_number,
             'customer' => $this->whenLoaded('customer', fn() => [
                 'id' => $this->customer->id,
                 'name' => $this->customer_name ?? $this->customer->full_name ?? $this->customer->name,

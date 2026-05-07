@@ -154,7 +154,7 @@ const fullAddress = computed(
                     <div>
                         <div class="flex items-center gap-2">
                             <Heading
-                                :title="`Đặt lịch #${booking.id.slice(0, 8)}`"
+                                :title="`Đặt lịch #${booking.booking_number}`"
                             />
                             <Badge
                                 :class="[

@@ -1,8 +1,8 @@
+import type { ColumnDef } from '@tanstack/vue-table';
 import { h } from 'vue';
 import { Badge } from '@/components/ui/badge';
-import type { ColumnDef } from '@tanstack/vue-table';
-import { formatPrice } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { formatPrice } from '@/lib/utils';
 
 export interface CustomerOrder {
     id: string;

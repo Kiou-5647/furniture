@@ -397,7 +397,7 @@ function handleReturn() {
                             {{
                                 state.isLoading
                                     ? 'Đang xử lý...'
-                                    : 'ADD BUNDLE TO CART'
+                                    : 'THÊM GÓI SẢN PHẨM VÀO GIỎ HÀNG'
                             }}
                         </Button>
                     </div>
