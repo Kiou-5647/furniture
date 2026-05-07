@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\Employee\Booking\BookingController;
-use App\Http\Controllers\Employee\Booking\DesignServiceController;
 use App\Http\Controllers\Employee\EmployeeDashboardController;
 use App\Http\Controllers\Employee\Fulfillment\ShipmentController;
 use App\Http\Controllers\Employee\Fulfillment\ShippingMethodController;
@@ -27,9 +26,12 @@ use App\Http\Controllers\Employee\Setting\LookupController;
 use App\Http\Controllers\Employee\Setting\LookupNamespaceController;
 use App\Http\Controllers\Employee\Customer\CustomerController;
 use App\Http\Controllers\Employee\Vendor\VendorController;
-use App\Http\Controllers\Payment\VnPayPaymentController;
 use App\Http\Controllers\Setting\EmployeeProfileController;
 use Illuminate\Support\Facades\Route;
+
+/**
+ * Trash routes haven't been implemented
+ */
 
 
 Route::middleware(['auth', 'user_type:employee'])->prefix('nhan-vien')->name('employee.')->group(function () {

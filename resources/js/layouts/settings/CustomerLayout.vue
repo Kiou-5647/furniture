@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { toUrl } from '@/lib/utils';
-import { bookings, edit, orders, reviews } from '@/routes/customer/profile';
+import { bookings, edit, orders } from '@/routes/customer/profile';
 import type { NavItem } from '@/types';
 
 const sidebarNavItems: NavItem[] = [
@@ -20,10 +20,6 @@ const sidebarNavItems: NavItem[] = [
     {
         title: 'Đặt lịch',
         href: bookings(),
-    },
-    {
-        title: 'Đánh giá sản phẩm',
-        href: reviews(),
     },
 ];
 

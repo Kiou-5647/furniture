@@ -24,7 +24,7 @@ class DatabaseSeeder extends Seeder
             LookupSeeder::class,
             CategorySeeder::class,
             CollectionSeeder::class,
-            TimberProductDataSeeder::class,
+            ProductDataSeeder::class,
             InventorySeeder::class,
             ShippingMethodSeeder::class,
             InitialStockSeeder::class,

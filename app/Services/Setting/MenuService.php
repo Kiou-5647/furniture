@@ -265,11 +265,6 @@ class MenuService
                 'isActive' => Route::is('employee.settings.*'),
                 'items' => [
                     [
-                        'title' => 'Cấu hình chung',
-                        'href' => route('employee.settings.general.index'),
-                        'isActive' => Route::is('employee.settings.general.*'),
-                    ],
-                    [
                         'title' => 'Tra cứu',
                         'href' => route('employee.settings.lookups.index'),
                         'isActive' => Route::is('employee.settings.lookups.*'),

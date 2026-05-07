@@ -21,7 +21,7 @@ class LookupSeeder extends Seeder
 
     protected function seedNamespaces(): void
     {
-        $path = base_path('docs/database/lookup_namespaces.php');
+        $path = base_path('database/seeders/data/lookup_namespaces.php');
         if (!File::exists($path)) {
             $this->command->warn("Lookup namespaces file not found at: {$path}");
             return;
@@ -44,7 +44,7 @@ class LookupSeeder extends Seeder
 
     protected function seedLookup(): void
     {
-        $path = base_path('docs/database/lookups.php');
+        $path = base_path('database/seeders/data/lookups.php');
         if (!File::exists($path)) {
             $this->command->warn("Lookups file not found at: {$path}");
             return;

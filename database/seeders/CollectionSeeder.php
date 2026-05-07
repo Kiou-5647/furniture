@@ -22,7 +22,7 @@ class CollectionSeeder extends Seeder
 
     protected function seedCollections(): void
     {
-        $path = base_path('docs/database/collections.php');
+        $path = base_path('database/seeders/data/collections.php');
         if (!File::exists($path)) {
             $this->command->warn("Collections file not found at: {$path}");
             return;

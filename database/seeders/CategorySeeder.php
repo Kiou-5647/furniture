@@ -26,7 +26,7 @@ class CategorySeeder extends Seeder
 
     protected function seedCategories(): void
     {
-        $path = base_path('docs/database/categories.php');
+        $path = base_path('database/seeders/data/categories.php');
         if (!File::exists($path)) {
             $this->command->warn("Categories file not found at: {$path}");
             return;
@@ -60,7 +60,7 @@ class CategorySeeder extends Seeder
 
     protected function seedRoomPlacements(): void
     {
-        $path = base_path('docs/database/category_room_placement.php');
+        $path = base_path('database/seeders/data/category_room_placement.php');
         if (!File::exists($path)) {
             $this->command->warn("Room placement file not found at: {$path}");
             return;

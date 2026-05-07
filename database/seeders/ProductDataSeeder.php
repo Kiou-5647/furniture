@@ -8,7 +8,7 @@ use Carbon\Carbon;
 use Database\Seeders\MediaSeederTrait;
 use Illuminate\Database\Seeder;
 
-class TimberProductDataSeeder extends Seeder
+class ProductDataSeeder extends Seeder
 {
     use MediaSeederTrait;
 
@@ -16,8 +16,8 @@ class TimberProductDataSeeder extends Seeder
 
     public function run(): void
     {
-        require base_path('docs/database/products.php');
-        require base_path('docs/database/product_variants.php');
+        require base_path('database/seeders/data/products.php');
+        require base_path('database/seeders/data/product_variants.php');
 
         foreach ($productsData as $data) {
             $product = $this->seedProduct($data);
