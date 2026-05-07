@@ -41,7 +41,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { index } from '@/routes/employee/products';
+import { edit, index } from '@/routes/employee/products';
 import {
     AssemblyDifficultyLabels,
     StatusLabels
@@ -81,15 +81,6 @@ function statusLabel(status: string): string {
     return map[status] ?? status;
 }
 
-function difficultyLabel(level: string): string {
-    const map: Record<string, string> = {
-        easy: 'Dễ',
-        medium: 'Trung bình',
-        hard: 'Khó',
-    };
-    return map[level?.toLowerCase()] ?? level;
-}
-
 function getOptionLabel(
     product: Product,
     namespace: string,
@@ -102,10 +93,6 @@ function getOptionLabel(
 
 function formatPrice(value: string | number): string {
     return Number(value).toLocaleString('vi-VN');
-}
-
-function formatPercentage(value: number | string): string {
-    return `${Number(value).toFixed(2)}%`;
 }
 
 // --- REVIEWS LOGIC ---
@@ -163,11 +150,6 @@ function updateRating(rating: number | null) {
     fetchReviews(1);
 }
 
-function updateVariant(id: string | null) {
-    selectedVariantId.value = id;
-    fetchReviews(1);
-}
-
 onMounted(() => {
     fetchReviews();
 });
@@ -211,7 +193,7 @@ onMounted(() => {
                 </div>
                 <div class="flex items-center gap-2">
                     <Link
-                        :href="`/employee/products/${product.id}/edit`"
+                        :href="edit(product.id).url"
                         class="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
                     >
                         Chỉnh sửa sản phẩm

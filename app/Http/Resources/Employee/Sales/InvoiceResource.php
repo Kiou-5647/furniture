@@ -25,8 +25,8 @@ class InvoiceResource extends JsonResource
             'amount_due' => $this->amount_due,
             'amount_paid' => $this->amount_paid,
             'remaining_balance' => $this->remainingBalance(),
-            'validated_by' => $this->whenLoaded('validatedBy', fn () => $this->validatedBy->full_name),
-            'allocations' => $this->whenLoaded('allocations', fn () => $this->allocations->map(fn ($allocation) => [
+            'validated_by' => $this->whenLoaded('validatedBy', fn() => $this->validatedBy->full_name),
+            'allocations' => $this->whenLoaded('allocations', fn() => $this->allocations->map(fn($allocation) => [
                 'id' => $allocation->id,
                 'amount_applied' => $allocation->amount_applied,
                 'applied_at' => $allocation->created_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
@@ -52,7 +52,7 @@ class InvoiceResource extends JsonResource
         return [
             'id' => $this->invoiceable->id,
             'type' => class_basename($this->invoiceable),
-            'number' => $this->invoiceable->order_number ?? $this->invoiceable->id,
+            'number' => $this->invoiceable->order_number ?? $this->invoiceable->booking_number,
         ];
     }
 }
