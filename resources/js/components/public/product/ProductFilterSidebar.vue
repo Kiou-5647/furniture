@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { debounce } from 'lodash';
 import { X } from 'lucide-vue-next';
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import {
     Accordion,
     AccordionItem,
@@ -25,6 +25,11 @@ const emit = defineEmits(['update-filter']);
 
 const localMinPrice = ref(props.filters.min_price);
 const localMaxPrice = ref(props.filters.max_price);
+const isSaleActive = ref(false);
+
+onMounted(() => {
+    isSaleActive.value = props.filters.filters['sale']?.includes('1') ?? false;
+})
 
 // Keep local state in sync if props change from outside (e.g. clear filters)
 watch(
@@ -48,7 +53,7 @@ const activeTags = computed(() => {
         const sortLabels: Record<string, string> = {
             'high-low': 'Giá: Cao - Thấp',
             'low-high': 'Giá: Thấp - Cao',
-            newest: 'Mới nhất',
+            'newest': 'Mới nhất',
         };
         tags.push({
             namespace: 'type',
@@ -75,6 +80,20 @@ const activeTags = computed(() => {
 
     return tags;
 });
+
+const toggleSaleFilter = () => {
+    isSaleActive.value = !isSaleActive.value;
+
+    const updatedFilters = {...props.filters};
+
+    if(isSaleActive.value) {
+        updatedFilters.filters['sale'] = '1';
+    } else {
+        delete updatedFilters.filters['sale'];
+    }
+
+    emit('update-filter', updatedFilters);
+}
 
 const updatePriceFilter = (key: 'min_price' | 'max_price', value: string) => {
     const numericValue = value === '' ? null : parseFloat(value);
@@ -229,6 +248,12 @@ const openAccordions = computed(() => {
                     </span>
                 </div>
             </RadioGroup>
+        </div>
+        <div class="mb-8">
+            <div class="mb-4 flex items-center justify-between">
+                <span class="text-sm font-semibold text-slate-900">Khuyến mãi</span>
+                <Checkbox :model-value="isSaleActive" @update:model-value="toggleSaleFilter" />
+            </div>
         </div>
 
         <div class="mb-8">

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed, ref } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import {
     ArrowLeft,
@@ -10,9 +11,13 @@ import {
     User,
     Calendar,
     FileText,
+    Loader2,
 } from '@lucide/vue';
-import { getCoreRowModel, useVueTable, VisibilityState } from '@tanstack/vue-table';
-import { computed, ref } from 'vue';
+import {
+    getCoreRowModel,
+    useVueTable,
+    VisibilityState,
+} from '@tanstack/vue-table';
 import DataTable from '@/components/custom/data-table/DataTable.vue';
 import ImagePreviewDialog from '@/components/custom/ImagePreviewDialog.vue';
 import Heading from '@/components/Heading.vue';
@@ -47,6 +52,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: props.transfer.transfer_number, href: '#' },
 ];
 
+// --- Status styling ---
 const statusColorMap: Record<string, string> = {
     gray: 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700',
     blue: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:border-blue-800',
@@ -54,6 +60,7 @@ const statusColorMap: Record<string, string> = {
     red: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900 dark:text-red-300 dark:border-red-800',
 };
 
+// --- State & Permissions ---
 const isDraft = computed(() => props.transfer.status === 'draft');
 const isInTransit = computed(() => props.transfer.status === 'in_transit');
 const canShip = computed(() => isDraft.value);
@@ -64,18 +71,21 @@ const showReceiveForm = ref(false);
 const previewImageOpen = ref(false);
 const previewImageSrc = ref<string | null>(null);
 
+// --- Image Preview ---
 function openImagePreview(url: string | null | undefined) {
     if (!url) return;
     previewImageSrc.value = url;
     previewImageOpen.value = true;
 }
 
+// --- Receipt Logic (The "Brain" of the page) ---
 const receiveForm = useForm({
     items: Array.isArray(props.transfer.items)
-        ? props.transfer.items.map((item) => ({
-            item_id: item.id,
-            quantity_received: item.quantity_shipped,
-        }))
+        ? props.transfer.items //Casting to ensure type safety
+              .map((item: any) => ({
+                  item_id: item.id,
+                  quantity_received: item.quantity_shipped,
+              }))
         : [],
 });
 
@@ -106,7 +116,6 @@ const viewTable = useVueTable({
     get columns() {
         return viewTableColumns.value;
     },
-
     state: {
         get columnVisibility() {
             return columnVisibility.value;
@@ -115,14 +124,9 @@ const viewTable = useVueTable({
     getCoreRowModel: getCoreRowModel(),
 });
 
+// --- Action Handlers ---
 function handleShip() {
-    router.post(
-        ship(props.transfer).url,
-        {},
-        {
-            preserveScroll: true,
-        },
-    );
+    router.post(ship(props.transfer).url, {}, { preserveScroll: true });
 }
 
 function handleReceive() {
@@ -135,62 +139,73 @@ function handleReceive() {
 }
 
 function handleCancel() {
-    router.post(
-        cancel(props.transfer).url,
-        {},
-        {
-            preserveScroll: true,
-        },
-    );
+    router.post(cancel(props.transfer).url, {}, { preserveScroll: true });
+}
+
+function goBack() {
+    router.visit(index().url);
 }
 </script>
 
 <template>
     <Head :title="`Phiếu ${transfer.transfer_number}`" />
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="space-y-4 p-4">
+        <div v-if="transfer" class="space-y-6 p-4 lg:p-6">
+            <!-- Top Action Bar -->
             <div
-                class="grid grid-cols-1 items-start sm:grid-cols-12 sm:gap-3"
-            ></div>
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
+                class="flex flex-col justify-between gap-4 rounded-xl border bg-card p-4 shadow-sm md:flex-row md:items-center"
+            >
+                <div class="flex items-center gap-4">
                     <Button
-                        variant="outline"
-                        @click="router.get(index().url)"
-                        class="flex h-8 w-8"
+                        variant="ghost"
+                        size="icon"
+                        @click="goBack"
+                        class="rounded-full"
                     >
                         <ArrowLeft class="h-4 w-4" />
                     </Button>
-                    <Heading
-                        :title="`Phiếu ${transfer.transfer_number}`"
-                        description="Chi tiết phiếu chuyển kho"
-                        class="mr-3"
-                    />
-                    <Badge
-                        variant="outline"
-                        :class="
-                            statusColorMap[transfer.status_color] ??
-                            statusColorMap.gray
-                        "
-                    >
-                        {{ transfer.status_label }}
-                    </Badge>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <Heading
+                                :title="`Phiếu ${transfer.transfer_number}`"
+                            />
+                            <Badge
+                                variant="outline"
+                                :class="
+                                    statusColorMap[transfer.status_color] ??
+                                    statusColorMap.gray
+                                "
+                            >
+                                {{ transfer.status_label }}
+                            </Badge>
+                        </div>
+                        <p class="text-xs text-muted-foreground">
+                            Tạo ngày {{ transfer.created_at }}
+                        </p>
+                    </div>
                 </div>
 
                 <div class="flex items-center gap-2">
                     <Button
                         v-if="canCancel"
-                        variant="outline"
-                        class="text-destructive hover:text-destructive"
+                        variant="ghost"
+                        class="text-destructive hover:bg-destructive/10"
                         @click="handleCancel"
                     >
                         <Ban class="mr-2 h-4 w-4" /> Hủy phiếu
                     </Button>
-                    <Button v-if="canShip" @click="handleShip">
+                    <Button
+                        v-if="canShip"
+                        variant="outline"
+                        class="border-blue-200 bg-blue-50/50 text-blue-600"
+                        @click="handleShip"
+                    >
                         <Truck class="mr-2 h-4 w-4" /> Xuất kho
                     </Button>
                     <Button
                         v-if="canReceive && !showReceiveForm"
+                        variant="default"
+                        class="bg-emerald-600 hover:bg-emerald-700"
                         @click="showReceiveForm = true"
                     >
                         <Package class="mr-2 h-4 w-4" /> Nhận hàng
@@ -198,227 +213,210 @@ function handleCancel() {
                 </div>
             </div>
 
-            <div class="@container">
-                <div class="flex flex-col gap-4 @lg:flex-row @lg:items-start">
-                    <!-- Sidebar Card -->
-                    <div class="w-full shrink-0 @lg:w-60">
-                        <Card class="overflow-hidden">
-                            <CardContent class="space-y-6 pt-5">
-                                <!-- Locations Stepper -->
+            <!-- Main Content Grid -->
+            <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
+                <!-- Left Column: Info Sidebar -->
+                <div class="space-y-6 lg:col-span-4">
+                    <Card class="overflow-hidden shadow-sm">
+                        <CardHeader class="bg-muted/30 pb-4">
+                            <CardTitle class="flex items-center gap-2 text-sm">
+                                <Warehouse class="h-4 w-4 text-primary" /> Thông
+                                tin vận chuyển
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent class="space-y-8 p-6">
+                            <!-- Source Location -->
+                            <div
+                                class="relative pl-8 before:absolute before:top-2 before:bottom-0 before:left-3 before:w-px before:bg-border"
+                            >
                                 <div
-                                    class="relative space-y-5 pl-6 before:absolute before:top-2 before:bottom-0.5 before:left-[11px] before:w-px before:bg-border"
+                                    class="absolute top-1 left-0 flex h-6 w-6 items-center justify-center rounded-full border bg-background shadow-sm"
                                 >
-                                    <div class="relative">
-                                        <div
-                                            class="absolute -top-[3px] -left-[23px] flex h-5 w-5 items-center justify-center rounded-full border bg-background shadow-xs"
-                                        >
-                                            <MapPin
-                                                class="h-3 w-3"
-                                            />
-                                        </div>
-                                        <p
-                                            class="mb-1 text-xs font-medium text-muted-foreground"
-                                        >
-                                            Từ vị trí
-                                        </p>
-                                        <div
-                                            class="flex flex-col items-start gap-1"
-                                        >
-                                            <span class="text-sm font-medium">{{
-                                                transfer.from_location?.name
-                                            }}</span>
-                                            <Badge
-                                                variant="secondary"
-                                                class="text-[10px]"
-                                                >{{
-                                                    transfer.from_location?.code
-                                                }}</Badge
-                                            >
-                                        </div>
-                                    </div>
+                                    <MapPin class="h-3 w-3 text-blue-600" />
+                                </div>
+                                <div class="space-y-1">
+                                    <p
+                                        class="text-[11px] font-bold tracking-wider text-muted-foreground uppercase"
+                                    >
+                                        Từ vị trí nguồn
+                                    </p>
+                                    <p class="text-sm font-bold">
+                                        {{ transfer.from_location?.name }}
+                                    </p>
+                                    <Badge
+                                        variant="secondary"
+                                        class="px-1.5 py-0 text-[10px]"
+                                        >{{
+                                            transfer.from_location?.code
+                                        }}</Badge
+                                    >
+                                </div>
+                            </div>
 
-                                    <div class="relative">
-                                        <div
-                                            class="absolute -top-[3px] -left-[23px] flex h-5 w-5 items-center justify-center rounded-full border bg-background shadow-xs"
-                                        >
-                                            <MapPin
-                                                class="h-3 w-3"
-                                            />
-                                        </div>
+                            <!-- Destination Location -->
+                            <div
+                                class="relative pl-8 before:absolute before:top-2 before:bottom-0 before:left-3 before:w-px before:bg-border"
+                            >
+                                <div
+                                    class="absolute top-1 left-0 flex h-6 w-6 items-center justify-center rounded-full border bg-background shadow-sm"
+                                >
+                                    <MapPin class="h-3 w-3 text-emerald-600" />
+                                </div>
+                                <div class="space-y-1">
+                                    <p
+                                        class="text-[11px] font-bold tracking-wider text-muted-foreground uppercase"
+                                    >
+                                        Đến vị trí đích
+                                    </p>
+                                    <p class="text-sm font-bold">
+                                        {{ transfer.to_location?.name }}
+                                    </p>
+                                    <Badge
+                                        variant="secondary"
+                                        class="px-1.5 py-0 text-[10px]"
+                                        >{{ transfer.to_location?.code }}</Badge
+                                    >
+                                </div>
+                            </div>
+
+                            <Separator />
+
+                            <!-- Metadata -->
+                            <div class="space-y-4">
+                                <div class="flex items-start gap-3">
+                                    <User
+                                        class="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground"
+                                    />
+                                    <div class="space-y-0.5">
                                         <p
-                                            class="mb-1 text-xs font-medium text-muted-foreground"
+                                            class="text-xs font-medium text-muted-foreground"
                                         >
-                                            Đến vị trí
+                                            Người tạo
                                         </p>
-                                        <div
-                                            class="flex flex-col items-start gap-1"
-                                        >
-                                            <span class="text-sm font-medium">{{
-                                                transfer.to_location?.name
-                                            }}</span>
-                                            <Badge
-                                                variant="secondary"
-                                                class="text-[10px]"
-                                                >{{
-                                                    transfer.to_location?.code
-                                                }}</Badge
-                                            >
-                                        </div>
+                                        <p class="text-sm">
+                                            {{
+                                                transfer.requested_by
+                                                    ?.full_name ?? '—'
+                                            }}
+                                        </p>
                                     </div>
                                 </div>
 
-                                <Separator />
-
-                                <!-- Metadata -->
-                                <div class="space-y-4">
-                                    <div class="flex items-start gap-3">
-                                        <User
-                                            class="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground"
-                                        />
-                                        <div class="space-y-0.5">
-                                            <p
-                                                class="text-xs font-medium text-muted-foreground"
-                                            >
-                                                Người tạo
-                                            </p>
-                                            <p class="text-sm">
-                                                {{
-                                                    transfer.requested_by
-                                                        ?.full_name ?? '—'
-                                                }}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div
-                                        v-if="transfer.received_by"
-                                        class="flex items-start gap-3"
-                                    >
-                                        <CheckCircle2
-                                            class="mt-0.5 h-4 w-4 shrink-0 text-emerald-600"
-                                        />
-                                        <div class="space-y-0.5">
-                                            <p
-                                                class="text-xs font-medium text-muted-foreground"
-                                            >
-                                                Người nhận
-                                            </p>
-                                            <p class="text-sm">
-                                                {{
-                                                    transfer.received_by
-                                                        .full_name
-                                                }}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div class="flex items-start gap-3">
-                                        <Calendar
-                                            class="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground"
-                                        />
-                                        <div class="space-y-0.5">
-                                            <p
-                                                class="text-xs font-medium text-muted-foreground"
-                                            >
-                                                Ngày tạo
-                                            </p>
-                                            <p class="text-sm tabular-nums">
-                                                {{ transfer.created_at }}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div
-                                        v-if="transfer.received_at"
-                                        class="flex items-start gap-3"
-                                    >
-                                        <Calendar
-                                            class="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground"
-                                        />
-                                        <div class="space-y-0.5">
-                                            <p
-                                                class="text-xs font-medium text-muted-foreground"
-                                            >
-                                                Ngày nhận
-                                            </p>
-                                            <p class="text-sm tabular-nums">
-                                                {{ transfer.received_at }}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div
-                                        v-if="transfer.notes"
-                                        class="flex items-start gap-3"
-                                    >
-                                        <FileText
-                                            class="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground"
-                                        />
-                                        <div class="space-y-0.5">
-                                            <p
-                                                class="text-xs font-medium text-muted-foreground"
-                                            >
-                                                Ghi chú
-                                            </p>
-                                            <p
-                                                class="text-sm text-foreground/90"
-                                            >
-                                                {{ transfer.notes }}
-                                            </p>
-                                        </div>
+                                <div
+                                    v-if="transfer.received_by"
+                                    class="flex items-start gap-3"
+                                >
+                                    <CheckCircle2
+                                        class="mt-0.5 h-4 w-4 shrink-0 text-emerald-600"
+                                    />
+                                    <div class="space-y-0.5">
+                                        <p
+                                            class="text-xs font-medium text-muted-foreground"
+                                        >
+                                            Người nhận
+                                        </p>
+                                        <p class="text-sm">
+                                            {{ transfer.received_by.full_name }}
+                                        </p>
                                     </div>
                                 </div>
-                            </CardContent>
-                        </Card>
-                    </div>
 
-                    <!-- Main Content -->
-                    <div class="w-full min-w-0 flex-1">
-                        <Card class="flex h-full flex-col">
-                            <CardHeader>
-                                <CardTitle class="text-base">
+                                <div class="flex items-start gap-3">
+                                    <Calendar
+                                        class="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground"
+                                    />
+                                    <div class="space-y-0.5">
+                                        <p
+                                            class="text-xs font-medium text-muted-foreground"
+                                        >
+                                            Ngày tạo
+                                        </p>
+                                        <p class="text-sm tabular-nums">
+                                            {{ transfer.created_at }}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div
+                                    v-if="transfer.notes"
+                                    class="flex items-start gap-3"
+                                >
+                                    <FileText
+                                        class="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground"
+                                    />
+                                    <div class="space-y-0.5">
+                                        <p
+                                            class="text-xs font-medium text-muted-foreground"
+                                        >
+                                            Ghi chú
+                                        </p>
+                                        <p
+                                            class="text-sm text-foreground/80 italic"
+                                        >
+                                            {{ transfer.notes }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                <!-- Right Column: Items Area -->
+                <div class="space-y-6 lg:col-span-8">
+                    <Card class="overflow-hidden shadow-sm">
+                        <CardHeader
+                            class="flex flex-row items-center justify-between space-y-0 pb-4"
+                        >
+                            <div>
+                                <CardTitle
+                                    class="flex items-center gap-2 text-base"
+                                >
+                                    <Package class="h-4 w-4 text-primary" />
                                     Danh sách sản phẩm
                                 </CardTitle>
                                 <CardDescription>
                                     {{ transfer.items?.length }} sản phẩm trong
                                     phiếu chuyển kho
                                 </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <form
-                                    v-if="showReceiveForm"
-                                    @submit.prevent="handleReceive"
-                                >
-                                    <DataTable
-                                        :table="receiveTable"
-                                    />
-                                    <div class="mt-4 flex justify-end gap-2">
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            @click="showReceiveForm = false"
-                                        >
-                                            Hủy
-                                        </Button>
-                                        <Button
-                                            type="submit"
-                                            :disabled="receiveForm.processing"
-                                        >
-                                            <CheckCircle2
-                                                class="mr-2 h-4 w-4"
-                                            />
-                                            Xác nhận nhận hàng
-                                        </Button>
-                                    </div>
-                                </form>
+                            </div>
+                            <Badge
+                                v-if="showReceiveForm"
+                                variant="default"
+                                class="bg-emerald-600"
+                            >
+                                Chế độ nhận hàng
+                            </Badge>
+                        </CardHeader>
+                        <CardContent>
+                            <form
+                                v-if="showReceiveForm"
+                                @submit.prevent="handleReceive"
+                                class="space-y-4"
+                            >
+                                <DataTable :table="receiveTable" />
+                                <div class="flex justify-end gap-3 pt-4">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        @click="showReceiveForm = false"
+                                    >
+                                        Hủy bỏ
+                                    </Button>
+                                    <Button
+                                        type="submit"
+                                        :disabled="receiveForm.processing"
+                                        class="bg-emerald-600 hover:bg-emerald-700"
+                                    >
+                                        <CheckCircle2 class="mr-2 h-4 w-4" />
+                                        Xác nhận nhận hàng
+                                    </Button>
+                                </div>
+                            </form>
 
-                                <DataTable
-                                    v-else
-                                    :table="viewTable"
-                                />
-                            </CardContent>
-                        </Card>
-                    </div>
+                            <DataTable v-else :table="viewTable" />
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
         </div>

@@ -56,6 +56,7 @@ export interface Order {
         id: string;
         name: string;
         email: string;
+        phone: string;
     } | null;
     shipping_province_code: string | null;
     shipping_ward_code: string | null;

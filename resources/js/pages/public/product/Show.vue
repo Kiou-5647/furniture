@@ -1,21 +1,20 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import {
-    ShoppingCart,
     Eye,
-    Star,
     TrendingUp,
     MessageSquare,
     ShieldCheck,
     Tag,
     CheckCircle2,
+    ShoppingCart,
 } from '@lucide/vue';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
-import StarRating from '@/components/custom/StarRating.vue';
-import ProductReviewItem from '@/components/custom/product/ProductReviewItem.vue';
-import ProductCard from '@/components/custom/product/ProductCard.vue';
 import ImagePreviewDialog from '@/components/custom/ImagePreviewDialog.vue';
+import ProductCard from '@/components/custom/product/ProductCard.vue';
+import ProductReviewItem from '@/components/custom/product/ProductReviewItem.vue';
+import StarRating from '@/components/custom/StarRating.vue';
 import Heading from '@/components/Heading.vue';
 import {
     Accordion,
@@ -23,6 +22,7 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from '@/components/ui/accordion';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Carousel,
@@ -41,7 +41,6 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
 import ShopLayout from '@/layouts/ShopLayout.vue';
 import { formatPrice } from '@/lib/utils';
 import { useCartStore } from '@/stores/cart';
@@ -53,7 +52,7 @@ const props = defineProps<{
     product_page: ProductPage;
 }>();
 
-const { state, addToCart } = useCartStore();
+const { addToCart } = useCartStore();
 // --- COMPUTED ---
 const activeVariant = computed(() => props.product_page.active_variant);
 
@@ -157,7 +156,7 @@ function openFeature(feature: Feature) {
 }
 
 function openImagePreview(src: string) {
-    const images = allImages.value.map(img => img.full);
+    const images = allImages.value.map((img) => img.full);
     const index = images.indexOf(src);
 
     previewState.value = {
@@ -246,8 +245,10 @@ async function fetchReviews(page = 1) {
         const params = new URLSearchParams();
         params.append('page', page.toString());
         params.append('scope', reviewScope.value);
-        if (selectedRating.value) params.append('rating', selectedRating.value.toString());
-        if (selectedVariantId.value) params.append('variant_id', selectedVariantId.value);
+        if (selectedRating.value)
+            params.append('rating', selectedRating.value.toString());
+        if (selectedVariantId.value)
+            params.append('variant_id', selectedVariantId.value);
 
         const response = await fetch(
             `/api/products/${activeVariant.value.sku}/reviews?${params.toString()}`,
@@ -272,14 +273,6 @@ function updateRating(rating: number | null) {
     selectedRating.value = rating;
     fetchReviews(1);
 }
-
-function updateVariant(id: string | null) {
-    selectedVariantId.value = id;
-    fetchReviews(1);
-}
-
-console.info(props.product_page.collection_products)
-console.info(props.product_page.similar_products)
 </script>
 
 <template>
@@ -297,7 +290,9 @@ console.info(props.product_page.similar_products)
                 class="grid max-w-[1400px] grid-cols-1 items-start gap-8 md:grid-cols-12 md:gap-16"
             >
                 <!-- Left Side: Pure Visuals -->
-                <div class="flex flex-col md:sticky md:top-24 gap-8 md:col-span-7">
+                <div
+                    class="flex flex-col gap-8 md:sticky md:top-24 md:col-span-7"
+                >
                     <!-- Image Gallery -->
                     <div class="select-none">
                         <div class="flex flex-col gap-4">
@@ -312,7 +307,7 @@ console.info(props.product_page.similar_products)
                                         :key="idx"
                                     >
                                         <div
-                                            class="aspect-square overflow-hidden rounded-2xl bg-zinc-100 shadow-sm cursor-zoom-in"
+                                            class="aspect-square cursor-zoom-in overflow-hidden rounded-2xl bg-zinc-100 shadow-sm"
                                             @click="openImagePreview(img.full)"
                                         >
                                             <img
@@ -425,6 +420,33 @@ console.info(props.product_page.similar_products)
                                 >
                                     {{ product_page.name }}
                                 </h1>
+                                <div class="flex items-center gap-2">
+                                    <span
+                                        class="text-lg font-bold text-orange-400 lg:text-xl"
+                                    >
+                                        {{
+                                            formatPrice(
+                                                product_page.active_variant
+                                                    .sale_price,
+                                            )
+                                        }}
+                                    </span>
+                                    <span
+                                        v-if="
+                                            product_page.active_variant
+                                                .sale_price <
+                                            product_page.active_variant.price
+                                        "
+                                        class="text-md text-muted-foreground line-through"
+                                    >
+                                        {{
+                                            formatPrice(
+                                                product_page.active_variant
+                                                    .price,
+                                            )
+                                        }}</span
+                                    >
+                                </div>
                             </div>
 
                             <div class="flex flex-wrap items-center gap-4">
@@ -436,12 +458,17 @@ console.info(props.product_page.similar_products)
                                     class="text-orange-400"
                                 />
                                 <div
+                                    v-if="product_page.warranty_months != 0"
                                     class="flex items-center gap-1 text-sm text-zinc-500"
                                 >
                                     <ShieldCheck
                                         class="h-4 w-4 text-green-500"
                                     />
-                                    <span>Bảo hành chính hãng</span>
+                                    <span
+                                        >Bảo hành chính hãng
+                                        {{ product_page.warranty_months }}
+                                        tháng</span
+                                    >
                                 </div>
                             </div>
 
@@ -639,7 +666,7 @@ console.info(props.product_page.similar_products)
                                 <!-- Swatch Options (Premium Circles) -->
                                 <div
                                     v-if="availableSwatches.length"
-                                    class="space-y-3"
+                                    class="mt-3 space-y-3"
                                 >
                                     <Label
                                         class="@lg:text-md flex items-center gap-2 text-sm font-bold text-zinc-700"
@@ -725,6 +752,7 @@ console.info(props.product_page.similar_products)
                                     class="h-10 flex-1 rounded-full border-none bg-orange-400 text-base font-semibold text-white hover:bg-orange-300"
                                     :disabled="!activeVariant.in_stock"
                                 >
+                                <ShoppingCart />
                                     {{
                                         activeVariant.in_stock
                                             ? 'Thêm vào giỏ hàng'
@@ -732,10 +760,6 @@ console.info(props.product_page.similar_products)
                                     }}
                                 </Button>
                             </div>
-                            <span class="text-sm text-orange-400"
-                                >Đã bán:
-                                {{ product_page.active_variant.sales_count }}</span
-                            >
 
                             <div class="space-y-2">
                                 <h3 class="text-md font-bold">
@@ -1009,9 +1033,14 @@ console.info(props.product_page.similar_products)
             <!-- Product Recommendations Section -->
             <div class="mt-16 w-full max-w-[1400px] space-y-16">
                 <!-- Same Collection Products -->
-                <div v-if="product_page.collection_products.length" class="space-y-8">
+                <div
+                    v-if="product_page.collection_products.length"
+                    class="space-y-8"
+                >
                     <div class="flex items-center justify-between gap-4">
-                        <Heading :title="`Sản phẩm cùng bộ sưu tập ${product_page.collection?.name}`" />
+                        <Heading
+                            :title="`Sản phẩm cùng bộ sưu tập ${product_page.collection?.name}`"
+                        />
                     </div>
                     <Carousel
                         class="w-full"
@@ -1021,7 +1050,7 @@ console.info(props.product_page.similar_products)
                             <CarouselItem
                                 v-for="card in product_page.collection_products"
                                 :key="card.id"
-                                class="pl-4 basis-1/1 sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
+                                class="basis-1/1 pl-4 sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
                             >
                                 <ProductCard :productCard="card" />
                             </CarouselItem>
@@ -1032,7 +1061,10 @@ console.info(props.product_page.similar_products)
                 </div>
 
                 <!-- Similar Products -->
-                <div v-if="product_page.similar_products.length" class="space-y-8">
+                <div
+                    v-if="product_page.similar_products.length"
+                    class="space-y-8"
+                >
                     <div class="flex items-center justify-between gap-4">
                         <Heading title="Sản phẩm tương tự" />
                     </div>
@@ -1044,7 +1076,7 @@ console.info(props.product_page.similar_products)
                             <CarouselItem
                                 v-for="card in product_page.similar_products"
                                 :key="card.id"
-                                class="pl-4 basis-1/1 sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
+                                class="basis-1/1 pl-4 sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
                             >
                                 <ProductCard :productCard="card" />
                             </CarouselItem>
@@ -1055,7 +1087,9 @@ console.info(props.product_page.similar_products)
                 </div>
 
                 <div class="flex flex-col gap-6">
-                    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+                    <div
+                        class="flex flex-col justify-between gap-6 sm:flex-row sm:items-end"
+                    >
                         <div class="space-y-2">
                             <Heading title="Đánh giá khách hàng"></Heading>
                             <div class="flex items-center gap-4">
@@ -1066,13 +1100,20 @@ console.info(props.product_page.similar_products)
                                         size="w-6 h-6"
                                         class="text-orange-400"
                                     />
-                                    <span class="text-lg font-bold text-zinc-900">
-                                        {{ reviewsMeta.average_rating.toFixed(1) }}
+                                    <span
+                                        class="text-lg font-bold text-zinc-900"
+                                    >
+                                        {{
+                                            reviewsMeta.average_rating.toFixed(
+                                                1,
+                                            )
+                                        }}
                                     </span>
                                 </div>
                                 <span class="text-zinc-300">|</span>
                                 <span class="text-sm text-zinc-500">
-                                    Tổng cộng {{ reviewsMeta.reviews_count }} đánh giá
+                                    Tổng cộng
+                                    {{ reviewsMeta.reviews_count }} đánh giá
                                 </span>
                             </div>
                         </div>
@@ -1080,14 +1121,16 @@ console.info(props.product_page.similar_products)
                         <!-- Filters Hub -->
                         <div class="flex flex-wrap items-center gap-4">
                             <!-- Scope Toggle -->
-                            <div class="flex p-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700">
+                            <div
+                                class="flex rounded-xl border border-zinc-200 bg-zinc-100 p-1 dark:border-zinc-700 dark:bg-zinc-800"
+                            >
                                 <button
                                     @click="updateScope('all')"
                                     :class="[
-                                        'px-4 py-1.5 text-xs font-bold rounded-lg transition-all',
+                                        'rounded-lg px-4 py-1.5 text-xs font-bold transition-all',
                                         reviewScope === 'all'
-                                        ? 'bg-white dark:bg-zinc-700 text-orange-600 shadow-sm'
-                                        : 'text-zinc-500 hover:text-zinc-700'
+                                            ? 'bg-white text-orange-600 shadow-sm dark:bg-zinc-700'
+                                            : 'text-zinc-500 hover:text-zinc-700',
                                     ]"
                                 >
                                     Tất cả
@@ -1095,10 +1138,10 @@ console.info(props.product_page.similar_products)
                                 <button
                                     @click="updateScope('variant')"
                                     :class="[
-                                        'px-4 py-1.5 text-xs font-bold rounded-lg transition-all',
+                                        'rounded-lg px-4 py-1.5 text-xs font-bold transition-all',
                                         reviewScope === 'variant'
-                                        ? 'bg-white dark:bg-zinc-700 text-orange-600 shadow-sm'
-                                        : 'text-zinc-500 hover:text-zinc-700'
+                                            ? 'bg-white text-orange-600 shadow-sm dark:bg-zinc-700'
+                                            : 'text-zinc-500 hover:text-zinc-700',
                                     ]"
                                 >
                                     Biến thể này
@@ -1107,17 +1150,26 @@ console.info(props.product_page.similar_products)
 
                             <!-- Rating Filter -->
                             <div class="flex items-center gap-2">
-                                <span class="text-xs font-bold text-zinc-400 uppercase">Sao:</span>
+                                <span
+                                    class="text-xs font-bold text-zinc-400 uppercase"
+                                    >Sao:</span
+                                >
                                 <div class="flex gap-1">
                                     <button
                                         v-for="star in [5, 4, 3, 2, 1]"
                                         :key="star"
-                                        @click="updateRating(selectedRating === star ? null : star)"
+                                        @click="
+                                            updateRating(
+                                                selectedRating === star
+                                                    ? null
+                                                    : star,
+                                            )
+                                        "
                                         :class="[
-                                            'w-8 h-8 rounded-full text-xs font-bold transition-all border',
+                                            'h-8 w-8 rounded-full border text-xs font-bold transition-all',
                                             selectedRating === star
-                                            ? 'bg-orange-500 border-orange-500 text-white'
-                                            : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-600 hover:border-orange-300'
+                                                ? 'border-orange-500 bg-orange-500 text-white'
+                                                : 'border-zinc-200 bg-white text-zinc-600 hover:border-orange-300 dark:border-zinc-800 dark:bg-zinc-900',
                                         ]"
                                     >
                                         {{ star }}
@@ -1129,11 +1181,15 @@ console.info(props.product_page.similar_products)
                 </div>
 
                 <div v-if="loadingReviews" class="flex justify-center py-12">
-                    <div class="h-8 w-8 animate-spin rounded-full border-4 border-orange-400 border-t-transparent"></div>
+                    <div
+                        class="h-8 w-8 animate-spin rounded-full border-4 border-orange-400 border-t-transparent"
+                    ></div>
                 </div>
 
                 <div v-else-if="reviews.length" class="space-y-8">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div
+                        class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
+                    >
                         <ProductReviewItem
                             v-for="review in reviews"
                             :key="review.id"
@@ -1144,7 +1200,7 @@ console.info(props.product_page.similar_products)
                     <!-- Pagination -->
                     <div
                         v-if="reviewsMeta.last_page > 1"
-                        class="flex justify-center items-center gap-2 pt-8"
+                        class="flex items-center justify-center gap-2 pt-8"
                     >
                         <Button
                             variant="outline"
@@ -1155,7 +1211,8 @@ console.info(props.product_page.similar_products)
                             Trước
                         </Button>
                         <span class="text-sm font-medium text-zinc-600">
-                            Trang {{ currentPage }} / {{ reviewsMeta.last_page }}
+                            Trang {{ currentPage }} /
+                            {{ reviewsMeta.last_page }}
                         </span>
                         <Button
                             variant="outline"
@@ -1173,18 +1230,22 @@ console.info(props.product_page.similar_products)
                     class="flex flex-col items-center justify-center rounded-3xl border border-dashed border-zinc-200 p-12 text-center"
                 >
                     <MessageSquare class="mb-4 h-12 w-12 text-zinc-300" />
-                    <p class="text-zinc-500">Hiện chưa có đánh giá nào phù hợp với bộ lọc.</p>
+                    <p class="text-zinc-500">
+                        Hiện chưa có đánh giá nào phù hợp với bộ lọc.
+                    </p>
                 </div>
             </div>
         </div>
     </ShopLayout>
     <ImagePreviewDialog
         v-model:open="previewState.open"
-        :src="previewState.images[previewState.currentIndex] || previewState.src"
+        :src="
+            previewState.images[previewState.currentIndex] || previewState.src
+        "
         :images="previewState.images"
         :current-index="previewState.currentIndex"
-        @update:open="(val) => previewState.open = val"
-        @update:current-index="(val) => previewState.currentIndex = val"
+        @update:open="(val) => (previewState.open = val)"
+        @update:current-index="(val) => (previewState.currentIndex = val)"
     />
     <Dialog :open="!!selectedFeature" @update:open="selectedFeature = null">
         <DialogContent class="sm:max-w-md">

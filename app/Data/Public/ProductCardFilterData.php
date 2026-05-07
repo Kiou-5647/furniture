@@ -9,15 +9,17 @@ class ProductCardFilterData
     public function __construct(
         public ?ProductSortType $type = null,
         public int $limit = 24,
-        public int $page = 1,
+        public ?int $page = 1,
+        public ?string $sale = '0',
         public ?float $min_price = null,
         public ?float $max_price = null,
         public array $filters = [],
+        public ?string $search = '',
     ) {}
 
     public static function fromRequest($request): self
     {
-        $reserved = ['type', 'limit', 'page', 'per_page', 'min_price', 'max_price'];
+        $reserved = ['type', 'limit', 'page', 'per_page', 'min_price', 'max_price', 'q'];
         $rawFilters = collect($request->query())->except($reserved)->toArray();
 
         // Normalize all filters to be arrays of strings
@@ -31,9 +33,11 @@ class ProductCardFilterData
             type: ProductSortType::tryFrom($request->query('type')),
             limit: $limit,
             page: (int) $request->query('page', 1),
+            sale: $request->query('sale', '0'),
             min_price: $request->filled('min_price') ? (float) $request->query('min_price') : null,
             max_price: $request->filled('max_price') ? (float) $request->query('max_price') : null,
             filters: $filters,
+            search: $request->query('q')
         );
     }
 }

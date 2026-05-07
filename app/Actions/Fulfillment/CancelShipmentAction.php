@@ -34,7 +34,7 @@ class CancelShipmentAction
                 'status' => ShipmentStatus::Cancelled,
             ]);
 
-            $items = $shipment->items();
+            $items = $shipment->items()->get();
 
             foreach ($items as $item) {
                 $item->update([

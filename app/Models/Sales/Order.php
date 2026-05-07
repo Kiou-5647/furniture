@@ -53,7 +53,7 @@ class Order extends Model
             ->logOnly(['order_number', 'status', 'total_amount', 'customer_id', 'accepted_by'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
-            ->setDescriptionForEvent(fn (string $eventName) => "Order {$eventName}");
+            ->setDescriptionForEvent(fn(string $eventName) => "Order {$eventName}");
     }
 
     public function customer(): BelongsTo
@@ -114,7 +114,7 @@ class Order extends Model
         $date = now()->format('dmy');
 
         do {
-            $number = 'ORD-'.$date.'-'.self::randomToken();
+            $number = 'ORD-' . $date . '-' . self::randomToken();
         } while (self::where('order_number', $number)->exists());
 
         return $number;
@@ -129,20 +129,6 @@ class Order extends Model
         }
 
         return $token;
-    }
-
-    public function canBeCancelled(): bool
-    {
-        if ($this->status === OrderStatus::Cancelled || $this->status === OrderStatus::Completed) {
-            return false;
-        }
-
-        // Cannot cancel if any shipment has been shipped or delivered
-        $hasActiveShipments = $this->shipments()
-            ->whereIn('status', [ShipmentStatus::Shipped, ShipmentStatus::Delivered, ShipmentStatus::Returned])
-            ->exists();
-
-        return ! $hasActiveShipments;
     }
 
     public function isCod(): bool
@@ -180,7 +166,7 @@ class Order extends Model
 
             $hasPendingItems = $this->shipments()
                 ->where('status', '!=', ShipmentStatus::Cancelled)
-                ->whereHas('items', fn ($q) => $q->whereNotIn('status', [ShipmentStatus::Delivered, ShipmentStatus::Returned]))
+                ->whereHas('items', fn($q) => $q->whereNotIn('status', [ShipmentStatus::Delivered, ShipmentStatus::Returned]))
                 ->exists();
 
             return ! $hasPendingItems;
@@ -188,5 +174,19 @@ class Order extends Model
 
         // For in-store orders: no shipments needed
         return $this->isFullyPaid();
+    }
+
+    public function canBeCancelled(): bool
+    {
+        if ($this->status === OrderStatus::Cancelled || $this->status === OrderStatus::Completed) {
+            return false;
+        }
+
+        // Cannot cancel if any shipment has been shipped or delivered
+        $hasActiveShipments = $this->shipments()
+            ->whereIn('status', [ShipmentStatus::Shipped, ShipmentStatus::Delivered, ShipmentStatus::Returned])
+            ->doesntExist();
+
+        return $hasActiveShipments;
     }
 }

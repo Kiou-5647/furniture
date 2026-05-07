@@ -35,14 +35,4 @@ class ProcessRefundAction
             return $refund->refresh();
         });
     }
-
-    public function markProcessing(Refund $refund, Employee $processor): Refund
-    {
-        $refund->update([
-            'status' => RefundStatus::Processing,
-            'processed_by' => $processor->id,
-        ]);
-
-        return $refund->refresh();
-    }
 }

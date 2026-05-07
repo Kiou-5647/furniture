@@ -13,7 +13,7 @@ class StorefrontService
 {
     public function getTotalCount(ProductCardFilterData $filter): int
     {
-        $pool = $this->fetchStorefrontPool();
+        $pool = $this->fetchStorefrontPool($filter);
 
         $count = $pool->filter(function ($variant) use ($filter) {
             if ($filter->min_price !== null && $variant->effective_price < $filter->min_price) return false;
@@ -84,7 +84,7 @@ class StorefrontService
      */
     public function getProductCards(ProductCardFilterData $filter): LengthAwarePaginator
     {
-        $pool = $this->fetchStorefrontPool();
+        $pool = $this->fetchStorefrontPool($filter);
 
         // Identify variants that satisfy ALL active filters
         $matchingVariantIds = [];
@@ -213,12 +213,14 @@ class StorefrontService
             return [];
         }
 
+        $saleVariant = $matchingVariants->first(fn($v) => $v->getEffectivePrice() < $v->price);
+
         return [
             'type' => 'product',
             'id' => $card->id,
             'matching_variants_count' => $matchingVariants->count(),
             'matched_variant_ids' => $matchingVariants->pluck('id')->toArray(),
-            'default_variant_id' => $matchingVariants->first()?->id,
+            'default_variant_id' => $saleVariant ? $saleVariant->id : $matchingVariants->first()?->id,
             'product' => [
                 'name' => $product->name,
                 'is_new_arrival' => $product->is_new_arrival,
@@ -251,7 +253,7 @@ class StorefrontService
 
         return \Illuminate\Support\Facades\Cache::tags([\App\Support\CacheTag::CategoryFilters->value])
             ->remember($cacheKey, now()->addHours(24), function () use ($filter) {
-                $pool = $this->fetchStorefrontPool();
+                $pool = $this->fetchStorefrontPool($filter);
                 $namespaces = \App\Models\Setting\LookupNamespace::where('slug', '!=', 'nhom-danh-muc')->get();
                 $summary = [];
 
@@ -319,6 +321,12 @@ class StorefrontService
 
     private function isVariantSatisfiedInPool(string $namespace, array $slugs, $variant): bool
     {
+        if ($namespace === 'sale') {
+            if (in_array('1', $slugs)) {
+                return $variant->effective_price < $variant->price;
+            }
+            return true;
+        }
         if ($namespace === 'danh-muc') {
             return in_array($variant->category_slug, $slugs);
         }
@@ -383,31 +391,53 @@ class StorefrontService
         return array_unique($values);
     }
 
-    private function fetchStorefrontPool(): \Illuminate\Support\Collection
+    private function fetchStorefrontPool(ProductCardFilterData $filter): \Illuminate\Support\Collection
     {
-        $rawPool = \App\Models\Product\ProductVariant::query()
+        $query = \App\Models\Product\ProductVariant::query()
             ->join('products', 'product_variants.product_id', '=', 'products.id')
             ->leftJoin('categories', 'products.category_id', '=', 'categories.id')
             ->leftJoin('collections', 'products.collection_id', '=', 'collections.id')
             ->where('products.status', 'published')
             ->where('product_variants.status', 'active')
-            ->whereNull('product_variants.deleted_at')
-            ->select([
-                'product_variants.id as variant_id',
-                'product_variants.product_card_id as product_card_id',
-                'product_variants.option_values',
-                'product_variants.features',
-                'product_variants.specifications',
-                'products.id as product_id',
-                'products.category_id',
-                'categories.slug as category_slug',
-                'products.collection_id',
-                'collections.slug as collection_slug',
-                'products.features as prod_features',
-                'products.specifications as prod_specifications',
-                'products.filterable_options',
-            ])
-            ->get();
+            ->whereNull('product_variants.deleted_at');
+
+        if (!empty($filter->search)) {
+            $words = preg_split('/\s+/', trim($filter->search), -1, PREG_SPLIT_NO_EMPTY);
+
+            $query->where(function ($q) use ($words) {
+                foreach ($words as $word) {
+                    $regex = "\\y" . $word . "\\y"; // Word boundary cho PostgreSQL
+                    $q->where(function ($sq) use ($regex) {
+                        // Use whereRaw with bindings for security and correctness
+                        $sq->whereRaw("products.name ~* ?", [$regex])
+                            ->orWhereRaw("categories.display_name ~* ?", [$regex])
+                            ->orWhereRaw("collections.display_name ~* ?", [$regex])
+                            ->orWhereRaw("product_variants.name ~* ?", [$regex])
+                            ->orWhereRaw("product_variants.sku ~* ?", [$regex])
+                            ->orWhereRaw("product_variants.description ~* ?", [$regex])
+                            ->orWhereRaw("products.features::text ~* ?", [$regex])
+                            ->orWhereRaw("products.specifications::text ~* ?", [$regex])
+                            ->orWhereRaw("product_variants.features::text ~* ?", [$regex])
+                            ->orWhereRaw("product_variants.specifications::text ~* ?", [$regex]);
+                    });
+                }
+            });
+        }
+
+        $rawPool = $query->select([
+            'product_variants.id as variant_id',
+            'product_variants.product_card_id as product_card_id',
+            'product_variants.price',
+            'product_variants.option_values',
+            'product_variants.features',
+            'product_variants.specifications',
+            'products.id as product_id',
+            'categories.slug as category_slug',
+            'collections.slug as collection_slug',
+            'products.features as prod_features',
+            'products.specifications as prod_specifications',
+            'products.filterable_options',
+        ])->get();
 
         return $rawPool->map(function ($item) {
             $decode = function ($value) {
@@ -416,12 +446,16 @@ class StorefrontService
             };
 
             $variantModel = ProductVariant::find($item->variant_id);
-            $effectivePrice = $variantModel ? $variantModel->getEffectivePrice() : 0;
+            if ($variantModel) {
+                $effectivePrice = $variantModel->getEffectivePrice();
+            }
+
 
             return (object) [
                 'variant_id' => $item->variant_id,
                 'product_card_id' => $item->product_card_id,
                 'effective_price' => $effectivePrice,
+                'price' => $item->price,
                 'product_id' => $item->product_id,
                 'category_id' => $item->category_id,
                 'category_slug' => $item->category_slug,

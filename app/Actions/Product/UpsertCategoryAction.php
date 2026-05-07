@@ -28,10 +28,12 @@ class UpsertCategoryAction
 
             if ($imageFile instanceof UploadedFile) {
                 $category->addMedia($imageFile)->toMediaCollection('image');
+                $category->touch();
             }
 
             if (!$imageUrl && !$imageFile) {
                 $category->clearMediaCollection('image');
+                $category->touch();
             }
 
             DB::commit();

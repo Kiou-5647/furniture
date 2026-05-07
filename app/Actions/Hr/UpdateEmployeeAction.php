@@ -45,6 +45,7 @@ class UpdateEmployeeAction
         if ($avatarFile instanceof UploadedFile) {
             $employee->clearMediaCollection('avatar');
             $employee->addMedia($avatarFile)->toMediaCollection('avatar');
+            $employee->touch();
         }
 
         if ($roles !== null) {

@@ -18,6 +18,7 @@ export interface ProductPage {
         name: string;
         slug: string;
     };
+    warranty_months: number;
     featured_highlights: Feature[];
     plain_features: Feature[];
     specifications: ProductSpecification;

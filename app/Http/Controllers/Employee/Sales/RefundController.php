@@ -24,7 +24,7 @@ class RefundController
 
         return Inertia::render('employee/sales/refunds/Index', [
             'statusOptions' => $this->service->getStatusOptions(),
-            'refunds' => Inertia::defer(fn () => RefundResource::collection(
+            'refunds' => Inertia::defer(fn() => RefundResource::collection(
                 $this->service->getFiltered($filter)
             )),
             'filters' => $filter,
@@ -33,7 +33,13 @@ class RefundController
 
     public function show(Refund $refund): Response
     {
-        $refund = $this->service->getById($refund->id);
+        $refund->load([
+            'order.customer',
+            'booking.customer',
+            'invoice',
+            'requestedBy',
+            'processedBy'
+        ]);
 
         return Inertia::render('employee/sales/refunds/Show', [
             'refund' => new RefundResource($refund),
@@ -59,15 +65,5 @@ class RefundController
         $action->reject($refund, $employee, $notes);
 
         return back()->with('success', 'Đã từ chối yêu cầu hoàn tiền.');
-    }
-
-    public function markProcessing(Request $request, Refund $refund, ProcessRefundAction $action)
-    {
-        Gate::authorize('process', $refund);
-        $employee = $request->user()->employee;
-
-        $action->markProcessing($refund, $employee);
-
-        return back()->with('success', 'Đã đánh dấu đang xử lý.');
     }
 }

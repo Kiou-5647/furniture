@@ -23,6 +23,7 @@ class UpdateDesignerAction
         if ($avatarFile instanceof UploadedFile) {
             $designer->clearMediaCollection('avatar');
             $designer->addMedia($avatarFile)->toMediaCollection('avatar');
+            $designer->touch();
         }
 
         if (!empty($availabilities)) {

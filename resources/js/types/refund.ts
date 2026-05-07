@@ -1,11 +1,27 @@
+import type { Invoice } from "./invoice";
+
+export interface RefundCustomer {
+    name: string;
+    email: string | null;
+    phone: string | null;
+}
+
 export interface Refund {
     id: string;
-    order_number: string;
+    invoice_number: string | null;
     order: {
         id: string;
         order_number: string;
         total_amount: string;
+        customer?: RefundCustomer;
     } | null;
+    booking: {
+        id: string;
+        booking_number: string;
+        total_amount: string;
+        customer?: RefundCustomer;
+    } | null;
+    invoice: Invoice | null;
     payment: {
         id: string;
         gateway: string;

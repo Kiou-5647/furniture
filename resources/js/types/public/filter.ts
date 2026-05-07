@@ -13,7 +13,9 @@ export interface FilterNamespace {
 export interface ProductFilters {
     type: string | null;
     limit: number;
+    sale: string;
     min_price: number;
     max_price: number;
     filters: Record<string, string | string[]>;
+    search: string;
 }

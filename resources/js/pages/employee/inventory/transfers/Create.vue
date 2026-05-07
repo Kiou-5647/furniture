@@ -1,6 +1,14 @@
 <script setup lang="ts">
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { ArrowLeft, Plus, Trash2, ImageIcon } from '@lucide/vue';
+import {
+    ArrowLeft,
+    Plus,
+    Trash2,
+    ImageIcon,
+    Warehouse,
+    Package,
+    Loader2,
+} from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import ImagePreviewDialog from '@/components/custom/ImagePreviewDialog.vue';
 import Heading from '@/components/Heading.vue';
@@ -14,6 +22,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import SearchableSelect from '@/components/ui/SearchableSelect.vue';
 import {
     Select,
     SelectContent,
@@ -56,18 +65,15 @@ const form = useForm({
 
 const availableVariants = ref<VariantOption[]>([]);
 const isLoadingVariants = ref(false);
-
 const previewImageOpen = ref(false);
 const previewImageSrc = ref<string | null>(null);
 
-function openImagePreview(url: string | null | undefined) {
-    if (!url) return;
-    previewImageSrc.value = url;
-    previewImageOpen.value = true;
-}
-
 const destinationOptions = computed(() =>
     props.locationOptions.filter((l) => l.id !== form.from_location_id),
+);
+
+const totalItemsCount = computed(() =>
+    form.items.reduce((sum, item) => sum + (item.quantity || 0), 0),
 );
 
 watch(
@@ -75,13 +81,14 @@ watch(
     async (locationId) => {
         form.items = [];
         availableVariants.value = [];
-
         if (!locationId) return;
 
         isLoadingVariants.value = true;
         try {
             const response = await fetch(variantsRoute(locationId).url);
             availableVariants.value = await response.json();
+        } catch (e) {
+            console.error('Failed to load variants', e);
         } finally {
             isLoadingVariants.value = false;
         }
@@ -91,7 +98,6 @@ watch(
 const usedVariantIds = computed(
     () => new Set(form.items.map((i) => i.variant_id)),
 );
-
 const remainingVariants = computed(() =>
     availableVariants.value.filter((v) => !usedVariantIds.value.has(v.id)),
 );
@@ -108,106 +114,186 @@ function getVariant(variantId: string) {
     return availableVariants.value.find((v) => v.id === variantId);
 }
 
-function getError(key: string): string | undefined {
-    return (form.errors as Record<string, string>)[key];
+function openImagePreview(url: string | null | undefined) {
+    if (!url) return;
+    previewImageSrc.value = url;
+    previewImageOpen.value = true;
 }
 
 function submit() {
     form.post(store().url);
+}
+
+function getError(key: string): string | undefined {
+    return (form.errors as Record<string, string>)[key];
 }
 </script>
 
 <template>
     <Head title="Tạo phiếu chuyển kho" />
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="space-y-4 p-4">
+        <div class="space-y-6 p-4 lg:p-6">
+            <!-- Top Header -->
             <div class="flex items-center justify-between">
-                <Heading
-                    title="Tạo phiếu chuyển kho"
-                    description="Tạo phiếu chuyển hàng giữa các vị trí kho"
-                />
-                <Button variant="outline" @click="router.get(index().url)">
+                <div class="space-y-1">
+                    <Heading
+                        title="Tạo phiếu chuyển kho"
+                        description="Quản lý luân chuyển hàng hóa giữa các vị trí kho"
+                    />
+                </div>
+                <Button
+                    variant="outline"
+                    @click="router.get(index().url)"
+                    class="rounded-full"
+                >
                     <ArrowLeft class="mr-2 h-4 w-4" /> Quay lại
                 </Button>
             </div>
 
             <form
-                class="grid gap-6 lg:grid-cols-3 lg:items-start"
+                class="grid gap-6 lg:grid-cols-12 lg:items-start"
                 @submit.prevent="submit"
             >
-                <!-- Left Column: General Information (Fixed Width) -->
-                <div class="space-y-4 lg:col-span-1">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Thông tin chung</CardTitle>
+                <!-- Left Column: Configuration Sidebar -->
+                <div class="space-y-6 lg:col-span-4">
+                    <Card class="shadow-sm">
+                        <CardHeader class="pb-4">
+                            <CardTitle
+                                class="flex items-center gap-2 text-base"
+                            >
+                                <Warehouse class="h-4 w-4 text-primary" />
+                                Cấu hình vận chuyển
+                            </CardTitle>
                             <CardDescription>
-                                Thiết lập vị trí vận chuyển và ghi chú
+                                Thiết lập nguồn và đích của phiếu chuyển
                             </CardDescription>
                         </CardHeader>
-                        <CardContent class="space-y-4">
+                        <CardContent class="space-y-6">
+                            <!-- Source Location -->
                             <div class="space-y-2">
-                                <Label for="from_location">Từ vị trí</Label>
-                                <Select v-model="form.from_location_id">
-                                    <SelectTrigger id="from_location">
-                                        <SelectValue
-                                            placeholder="Chọn vị trí nguồn"
-                                        />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem
-                                            v-for="loc in locationOptions"
-                                            :key="loc.id"
-                                            :value="loc.id"
-                                        >
-                                            {{ loc.label }}
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
+                                <Label
+                                    class="text-xs font-bold text-muted-foreground uppercase"
+                                    >Từ vị trí nguồn</Label
+                                >
+                                <SearchableSelect
+                                    v-model="form.from_location_id"
+                                    :options="locationOptions"
+                                    value-key="id"
+                                    label-key="name"
+                                    placeholder="Chọn kho gửi..."
+                                    :searchable-keys="[
+                                        'name',
+                                        'code',
+                                        'full_address',
+                                    ]"
+                                    :custom-label="
+                                        (opt: any) =>
+                                            `${opt.name} (${opt.code})`
+                                    "
+                                >
+                                    <template #item="{ option }">
+                                        <div class="flex flex-col py-1">
+                                            <div
+                                                class="flex items-center gap-2"
+                                            >
+                                                <span
+                                                    class="text-sm font-medium"
+                                                    >{{ option.name }}</span
+                                                >
+                                                <span
+                                                    class="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px]"
+                                                    >{{ option.code }}</span
+                                                >
+                                            </div>
+                                            <span
+                                                class="truncate text-[11px] text-muted-foreground"
+                                            >
+                                                {{
+                                                    option.full_address ||
+                                                    'Không có địa chỉ'
+                                                }}
+                                            </span>
+                                        </div>
+                                    </template>
+                                </SearchableSelect>
                                 <p
                                     v-if="form.errors.from_location_id"
-                                    class="text-sm text-destructive"
+                                    class="text-xs text-destructive"
                                 >
                                     {{ form.errors.from_location_id }}
                                 </p>
                             </div>
 
+                            <!-- Destination Location -->
                             <div class="space-y-2">
-                                <Label for="to_location">Đến vị trí</Label>
-                                <Select v-model="form.to_location_id">
-                                    <SelectTrigger id="to_location">
-                                        <SelectValue
-                                            placeholder="Chọn vị trí đích"
-                                        />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem
-                                            v-for="loc in destinationOptions"
-                                            :key="loc.id"
-                                            :value="loc.id"
-                                        >
-                                            {{ loc.label }}
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
+                                <Label
+                                    class="text-xs font-bold text-muted-foreground uppercase"
+                                    >Đến vị trí đích</Label
+                                >
+                                <SearchableSelect
+                                    v-model="form.to_location_id"
+                                    :options="destinationOptions"
+                                    value-key="id"
+                                    label-key="name"
+                                    placeholder="Chọn kho nhận..."
+                                    :searchable-keys="[
+                                        'name',
+                                        'code',
+                                        'full_address',
+                                    ]"
+                                    :custom-label="
+                                        (opt: any) =>
+                                            `${opt.name} (${opt.code})`
+                                    "
+                                >
+                                    <template #item="{ option }">
+                                        <div class="flex flex-col py-1">
+                                            <div
+                                                class="flex items-center gap-2"
+                                            >
+                                                <span
+                                                    class="text-sm font-medium"
+                                                    >{{ option.name }}</span
+                                                >
+                                                <span
+                                                    class="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px]"
+                                                    >{{ option.code }}</span
+                                                >
+                                            </div>
+                                            <span
+                                                class="truncate text-[11px] text-muted-foreground"
+                                            >
+                                                {{
+                                                    option.full_address ||
+                                                    'Không có địa chỉ'
+                                                }}
+                                            </span>
+                                        </div>
+                                    </template>
+                                </SearchableSelect>
                                 <p
                                     v-if="form.errors.to_location_id"
-                                    class="text-sm text-destructive"
+                                    class="text-xs text-destructive"
                                 >
                                     {{ form.errors.to_location_id }}
                                 </p>
                             </div>
 
+                            <!-- Notes -->
                             <div class="space-y-2">
-                                <Label for="notes">Ghi chú</Label>
+                                <Label
+                                    class="text-xs font-bold text-muted-foreground uppercase"
+                                    >Ghi chú chuyển kho</Label
+                                >
                                 <Textarea
-                                    id="notes"
                                     v-model="form.notes"
-                                    placeholder="Nhập ghi chú chi tiết..."
-                                    rows="4"
+                                    placeholder="Lý do chuyển hàng, lưu ý vận chuyển..."
+                                    rows="3"
+                                    class="resize-none"
                                 />
                                 <p
                                     v-if="form.errors.notes"
-                                    class="text-sm text-destructive"
+                                    class="text-xs text-destructive"
                                 >
                                     {{ form.errors.notes }}
                                 </p>
@@ -216,16 +302,24 @@ function submit() {
                     </Card>
                 </div>
 
-                <!-- Right Column: Products Section (Scrollable) -->
-                <div class="space-y-4 lg:col-span-2">
-                    <Card class="flex max-h-[calc(100vh-200px)] flex-col">
+                <!-- Right Column: Product Management Area -->
+                <div class="space-y-4 lg:col-span-8">
+                    <Card
+                        class="flex max-h-[calc(100vh-220px)] flex-col shadow-sm"
+                    >
                         <CardHeader
-                            class="flex shrink-0 flex-row items-center justify-between space-y-0 pb-4"
+                            class="flex flex-row items-center justify-between space-y-0 pb-4"
                         >
                             <div>
-                                <CardTitle>Danh sách sản phẩm</CardTitle>
+                                <CardTitle
+                                    class="flex items-center gap-2 text-base"
+                                >
+                                    <Package class="h-4 w-4 text-primary" />
+                                    Danh sách sản phẩm
+                                </CardTitle>
                                 <CardDescription>
-                                    Thêm các sản phẩm cần chuyển từ kho nguồn
+                                    Thêm sản phẩm có tồn kho tại
+                                    {{ availableVariants.length }} loại variant
                                 </CardDescription>
                             </div>
                             <Button
@@ -237,67 +331,74 @@ function submit() {
                                     remainingVariants.length === 0
                                 "
                                 @click="addItem"
+                                class="rounded-full"
                             >
                                 <Plus class="mr-2 h-4 w-4" /> Thêm sản phẩm
                             </Button>
                         </CardHeader>
-                        <CardContent class="space-y-4 overflow-y-auto pr-2">
-                            <p
-                                v-if="form.errors.items"
-                                class="text-sm text-destructive"
-                            >
-                                {{ form.errors.items }}
-                            </p>
 
+                        <CardContent
+                            class="flex-1 space-y-4 overflow-y-auto pr-2"
+                        >
+                            <!-- Empty State: No source selected -->
                             <div
                                 v-if="!form.from_location_id"
-                                class="flex flex-col items-center justify-center py-12 text-center"
+                                class="flex flex-col items-center justify-center space-y-4 py-20 text-center"
                             >
-                                <div class="mb-4 rounded-full bg-muted p-4">
-                                    <ImageIcon
+                                <div class="rounded-full bg-muted p-4">
+                                    <Warehouse
                                         class="h-8 w-8 text-muted-foreground"
                                     />
                                 </div>
-                                <p class="text-sm text-muted-foreground">
-                                    Vui lòng chọn vị trí nguồn trước để hiển thị
-                                    sản phẩm
-                                </p>
+                                <div class="space-y-1">
+                                    <p class="text-sm font-medium">
+                                        Hãy chọn vị trí nguồn
+                                    </p>
+                                    <p class="text-xs text-muted-foreground">
+                                        Để xem danh sách sản phẩm khả dụng để
+                                        chuyển
+                                    </p>
+                                </div>
                             </div>
 
+                            <!-- Loading State -->
                             <div
                                 v-else-if="isLoadingVariants"
-                                class="flex flex-col items-center justify-center py-12 text-center"
+                                class="flex flex-col items-center justify-center space-y-4 py-20 text-center"
                             >
-                                <div
-                                    class="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"
-                                ></div>
+                                <Loader2
+                                    class="h-8 w-8 animate-spin text-primary"
+                                />
                                 <p class="text-sm text-muted-foreground">
-                                    Đang tải danh sách sản phẩm...
+                                    Đang tải dữ liệu tồn kho...
                                 </p>
                             </div>
 
+                            <!-- Empty State: No variants in stock -->
                             <div
                                 v-else-if="availableVariants.length === 0"
-                                class="flex flex-col items-center justify-center py-12 text-center"
+                                class="flex flex-col items-center justify-center space-y-4 py-20 text-center"
                             >
-                                <div class="mb-4 rounded-full bg-muted p-4">
-                                    <ImageIcon
+                                <div class="rounded-full bg-muted p-4">
+                                    <Package
                                         class="h-8 w-8 text-muted-foreground"
                                     />
                                 </div>
                                 <p class="text-sm text-muted-foreground">
-                                    Không có sản phẩm tồn kho tại vị trí này
+                                    Không có sản phẩm nào tồn kho tại vị trí này
                                 </p>
                             </div>
 
+                            <!-- Product Items List -->
                             <div v-else class="space-y-3">
                                 <div
                                     v-for="(item, idx) in form.items"
                                     :key="idx"
                                     class="group flex items-center gap-4 rounded-xl border bg-card p-3 transition-all hover:border-primary/50 hover:shadow-sm"
                                 >
+                                    <!-- Product Thumbnail (Primary) -->
                                     <div
-                                        class="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg border bg-muted"
+                                        class="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border bg-muted"
                                     >
                                         <img
                                             v-if="
@@ -308,11 +409,11 @@ function submit() {
                                                 getVariant(item.variant_id)
                                                     ?.image_url!
                                             "
-                                            class="h-full w-full object-cover"
+                                            class="h-full w-full cursor-zoom-in object-cover"
                                             @click="
                                                 openImagePreview(
                                                     getVariant(item.variant_id)
-                                                        ?.full_image_url ??
+                                                        ?.full_image_url ||
                                                         getVariant(
                                                             item.variant_id,
                                                         )?.image_url,
@@ -324,87 +425,106 @@ function submit() {
                                             class="flex h-full w-full items-center justify-center"
                                         >
                                             <ImageIcon
-                                                class="h-5 w-5 text-muted-foreground"
+                                                class="h-6 w-6 text-muted-foreground"
                                             />
                                         </div>
                                     </div>
 
+                                    <!-- Searchable Product Selection -->
                                     <div class="flex-1 space-y-1">
-                                        <Select v-model="item.variant_id">
-                                            <SelectTrigger
-                                                class="h-10 w-full border-none bg-transparent px-0 font-medium focus:ring-0"
-                                            >
-                                                <SelectValue
-                                                    placeholder="Chọn sản phẩm"
+                                        <SearchableSelect
+                                            v-model="item.variant_id"
+                                            :options="availableVariants"
+                                            value-key="id"
+                                            label-key="name"
+                                            placeholder="Chọn sản phẩm..."
+                                            :searchable-keys="[
+                                                'name',
+                                                'sku',
+                                                'product_name',
+                                            ]"
+                                            :custom-label="
+                                                (v) =>
+                                                    `${v.product_name || ''} ${v.name} (${v.sku})`
+                                            "
+                                            class="h-10"
+                                        >
+                                            <template #item="{ option }">
+                                                <div
+                                                    class="flex items-center gap-3 py-1"
                                                 >
-                                                    <span
-                                                        v-if="item.variant_id"
-                                                        class="truncate"
-                                                    >
-                                                        {{
-                                                            getVariant(
-                                                                item.variant_id,
-                                                            )?.sku
-                                                        }}
-                                                        -
-                                                        {{
-                                                            getVariant(
-                                                                item.variant_id,
-                                                            )?.name
-                                                        }}
-                                                    </span>
-                                                </SelectValue>
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem
-                                                    v-for="v in [
-                                                        ...remainingVariants,
-                                                        ...(item.variant_id
-                                                            ? availableVariants.filter(
-                                                                  (av) =>
-                                                                      av.id ===
-                                                                      item.variant_id,
-                                                              )
-                                                            : []),
-                                                    ]"
-                                                    :key="v.id"
-                                                    :value="v.id"
-                                                    class="py-3"
-                                                >
+                                                    <!-- Tiny Thumb in Dropdown -->
                                                     <div
-                                                        class="flex flex-col gap-1 pr-6"
+                                                        class="h-8 w-8 shrink-0 overflow-hidden rounded border bg-muted"
                                                     >
-                                                        <span
-                                                            class="text-sm font-medium"
-                                                            >{{ v.sku }} -
-                                                            {{ v.name }}</span
-                                                        >
+                                                        <img
+                                                            v-if="
+                                                                option.image_url
+                                                            "
+                                                            :src="
+                                                                option.image_url
+                                                            "
+                                                            class="h-full w-full object-cover"
+                                                        />
                                                         <div
-                                                            class="flex items-center gap-2"
+                                                            v-else
+                                                            class="flex h-full w-full items-center justify-center"
+                                                        >
+                                                            <ImageIcon
+                                                                class="h-3 w-3 text-muted-foreground"
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    <div
+                                                        class="flex flex-col overflow-hidden"
+                                                    >
+                                                        <div
+                                                            class="flex items-center gap-1.5"
                                                         >
                                                             <span
-                                                                class="text-xs font-medium text-emerald-600"
+                                                                class="truncate text-sm font-medium"
                                                             >
-                                                                Tồn:
                                                                 {{
-                                                                    v.available_quantity
+                                                                    option.product_name
+                                                                }}
+                                                                {{
+                                                                    option.name
                                                                 }}
                                                             </span>
                                                             <span
-                                                                v-if="v.price"
-                                                                class="text-xs text-muted-foreground"
+                                                                class="rounded bg-muted px-1 font-mono text-[10px] text-muted-foreground"
                                                             >
+                                                                {{ option.sku }}
+                                                            </span>
+                                                        </div>
+                                                        <div
+                                                            class="flex items-center gap-3"
+                                                        >
+                                                            <span
+                                                                class="text-[11px] font-medium text-emerald-600"
+                                                            >
+                                                                Tồn:
+                                                                {{
+                                                                    option.available_quantity
+                                                                }}
+                                                            </span>
+                                                            <span
+                                                                class="text-[11px] text-muted-foreground"
+                                                            >
+                                                                Giá vốn:
                                                                 {{
                                                                     formatPrice(
-                                                                        v.price,
+                                                                        option.price ||
+                                                                            0,
                                                                     )
                                                                 }}
                                                             </span>
                                                         </div>
                                                     </div>
-                                                </SelectItem>
-                                            </SelectContent>
-                                        </Select>
+                                                </div>
+                                            </template>
+                                        </SearchableSelect>
                                         <p
                                             v-if="
                                                 getError(
@@ -421,10 +541,11 @@ function submit() {
                                         </p>
                                     </div>
 
+                                    <!-- Quantity Input -->
                                     <div class="flex items-center gap-2">
                                         <Label
                                             class="hidden text-xs text-muted-foreground sm:block"
-                                            >Số lượng</Label
+                                            >SL</Label
                                         >
                                         <Input
                                             v-model.number="item.quantity"
@@ -463,46 +584,49 @@ function submit() {
                                         <Trash2 class="h-4 w-4" />
                                     </Button>
                                 </div>
-
-                                <div
-                                    v-if="
-                                        form.items.length === 0 &&
-                                        availableVariants.length > 0
-                                    "
-                                    class="flex flex-col items-center justify-center py-12 text-center"
-                                >
-                                    <p class="text-sm text-muted-foreground">
-                                        Danh sách trống. Hãy thêm sản phẩm để
-                                        bắt đầu chuyển kho.
-                                    </p>
-                                </div>
                             </div>
                         </CardContent>
                     </Card>
                 </div>
             </form>
 
-            <div class="flex justify-end gap-3">
-                <Button
-                    type="button"
-                    variant="outline"
-                    @click="router.get(index().url)"
+            <!-- Bottom Action Bar -->
+            <div
+                class="flex items-center justify-between rounded-xl border bg-muted/30 p-4"
+            >
+                <div
+                    class="flex items-center gap-2 text-sm text-muted-foreground"
                 >
-                    Hủy
-                </Button>
-                <Button
-                    type="submit"
-                    :disabled="form.processing || form.items.length === 0"
-                    class="px-8"
-                >
-                    Tạo phiếu chuyển kho
-                </Button>
+                    <Package class="h-4 w-4" />
+                    <span
+                        >Tổng cộng:
+                        <span class="font-bold text-foreground">{{
+                            totalItemsCount
+                        }}</span>
+                        sản phẩm được chọn</span
+                    >
+                </div>
+                <div class="flex gap-3">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        @click="router.get(index().url)"
+                        >Hủy bỏ</Button
+                    >
+                    <Button
+                        type="submit"
+                        :disabled="form.processing || form.items.length === 0"
+                        class="bg-primary px-8 hover:bg-primary/90"
+                        @click="submit"
+                    >
+                        Tạo phiếu chuyển kho
+                    </Button>
+                </div>
             </div>
         </div>
-
-        <ImagePreviewDialog
-            v-model:open="previewImageOpen"
-            :src="previewImageSrc"
-        />
     </AppLayout>
+    <ImagePreviewDialog
+        v-model:open="previewImageOpen"
+        :src="previewImageSrc"
+    />
 </template>

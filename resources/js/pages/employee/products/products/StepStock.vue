@@ -155,9 +155,13 @@ function removeStockEntry(variantIndex: number, locationId: string) {
     ctx.removeStockEntry(variantIndex, locationId);
 }
 
-function getLocationLabel(locationId: string): string {
+function getLocationInformation(locationId: string) {
     const loc = props.locationOptions.find((l) => l.id === locationId);
-    return loc ? `${loc.code} - ${loc.label}` : locationId;
+    return {
+        label: loc?.label,
+        code: loc?.code,
+        address: loc?.address,
+    };
 }
 
 function formatCurrency(value: number): string {
@@ -465,61 +469,65 @@ defineExpose({ checkPriceAndSubmit });
                     v-for="(variant, vi) in ctx.form.variants"
                     :key="vi"
                     :value="String(vi)"
-                    class="rounded-lg border px-4"
+                    class="overflow-hidden rounded-xl border bg-background transition-all hover:border-primary/30"
                 >
-                    <AccordionTrigger class="py-2.5 hover:no-underline">
-                        <div class="flex w-full items-center gap-2">
-                            <div
-                                class="flex flex-1 flex-wrap items-center gap-2"
-                            >
-                                <Badge
-                                    v-for="(
-                                        label, li
-                                    ) in ctx.getVariantOptionLabels(variant)"
-                                    :key="li"
-                                    variant="secondary"
-                                    class="h-6 px-2 text-xs"
-                                >
-                                    {{ label }}
-                                </Badge>
-                                <Badge
-                                    v-if="
-                                        !ctx.getVariantOptionLabels(variant)
-                                            .length
-                                    "
-                                    variant="outline"
-                                    class="h-6 px-2 text-xs"
-                                >
-                                    {{
-                                        variant.sku ||
-                                        `Variant ${Number(vi) + 1}`
-                                    }}
-                                </Badge>
+                    <AccordionTrigger class="px-4 py-3 hover:no-underline">
+                        <div
+                            class="flex w-full items-center justify-between gap-2"
+                        >
+                            <div class="flex flex-1 items-center gap-2">
+                                <div class="flex flex-wrap gap-1">
+                                    <Badge
+                                        v-for="(
+                                            label, li
+                                        ) in ctx.getVariantOptionLabels(
+                                            variant,
+                                        )"
+                                        :key="li"
+                                        variant="secondary"
+                                        class="h-5 px-2 text-[10px] font-medium"
+                                    >
+                                        {{ label }}
+                                    </Badge>
+                                    <Badge
+                                        v-if="
+                                            !ctx.getVariantOptionLabels(variant)
+                                                .length
+                                        "
+                                        variant="outline"
+                                        class="h-5 px-2 font-mono text-[10px]"
+                                    >
+                                        {{
+                                            variant.sku ||
+                                            `Var ${Number(vi) + 1}`
+                                        }}
+                                    </Badge>
+                                </div>
                             </div>
-                            <div class="flex shrink-0 items-center gap-3">
+
+                            <div class="flex items-center gap-3">
                                 <Badge
                                     :variant="
                                         getVariantTotalStock(Number(vi)) > 0
                                             ? 'default'
                                             : 'destructive'
                                     "
-                                    class="h-6 px-2 text-xs"
+                                    class="h-6 px-2 text-xs font-bold"
                                 >
-                                    {{ getVariantTotalStock(Number(vi)) }} trong
-                                    kho
+                                    {{ getVariantTotalStock(Number(vi)) }} units
                                 </Badge>
                                 <Button
                                     type="button"
                                     variant="ghost"
                                     size="sm"
-                                    class="h-6 w-6 p-0"
+                                    class="h-7 w-7 p-0 text-muted-foreground hover:text-primary"
                                     @click.stop="openAddDialog(Number(vi))"
                                     :disabled="
                                         getUsedLocationIds(Number(vi)).size >=
                                         locationOptions.length
                                     "
                                 >
-                                    <Plus class="h-3.5 w-3.5" />
+                                    <Plus class="h-4 w-4" />
                                 </Button>
                             </div>
                         </div>
@@ -538,65 +546,104 @@ defineExpose({ checkPriceAndSubmit });
                             <div
                                 v-for="stock in variant.stock"
                                 :key="stock.location_id"
-                                class="rounded-md border p-3"
+                                class="group relative rounded-xl border bg-card p-3 transition-all hover:border-primary/30"
                             >
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center gap-2">
                                         <MapPin
                                             class="h-4 w-4 text-muted-foreground"
                                         />
-                                        <span class="text-sm font-medium">
-                                            {{
-                                                getLocationLabel(
-                                                    stock.location_id,
-                                                )
-                                            }}
-                                        </span>
+                                        <div class="flex flex-col">
+                                            <div>
+                                                <span
+                                                    class="text-sm font-semibold"
+                                                >
+                                                    {{
+                                                        getLocationInformation(
+                                                            stock.location_id,
+                                                        ).label
+                                                    }}
+                                                </span>
+                                                -
+                                                <span class="font-mono text-sm">
+                                                    {{
+                                                        getLocationInformation(
+                                                            stock.location_id,
+                                                        ).code
+                                                    }}
+                                                </span>
+                                            </div>
+
+                                            <span
+                                                class="text-[10px] leading-tight text-muted-foreground"
+                                            >
+                                                {{
+                                                    getLocationInformation(
+                                                        stock.location_id,
+                                                    ).address
+                                                }}
+                                            </span>
+                                        </div>
                                     </div>
-                                    <div class="flex items-center gap-2">
-                                        <span
-                                            class="text-sm text-muted-foreground"
-                                        >
-                                            {{ stock.quantity }} units
+
+                                    <div class="flex items-center gap-3">
+                                        <div class="text-right">
+                                            <span class="text-sm font-bold">{{
+                                                stock.quantity
+                                            }}</span>
+                                            <span
+                                                class="ml-1 text-[10px] text-muted-foreground"
+                                                >units</span
+                                            >
                                             <template
                                                 v-if="stock.cost_per_unit"
                                             >
-                                                @
-                                                {{
-                                                    formatCurrency(
-                                                        stock.cost_per_unit,
-                                                    )
-                                                }}
+                                                <span
+                                                    class="mx-1 text-muted-foreground"
+                                                    >|</span
+                                                >
+                                                <span
+                                                    class="text-xs text-muted-foreground"
+                                                    >{{
+                                                        formatCurrency(
+                                                            stock.cost_per_unit,
+                                                        )
+                                                    }}</span
+                                                >
                                             </template>
-                                        </span>
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="sm"
-                                            class="h-7 w-7 p-0"
-                                            @click="
-                                                openAdjustment(
-                                                    Number(vi),
-                                                    stock.location_id,
-                                                )
-                                            "
-                                        >
-                                            <Settings2 class="h-3.5 w-3.5" />
-                                        </Button>
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="sm"
-                                            class="h-7 w-7 p-0 text-destructive"
-                                            @click="
-                                                removeStockEntry(
-                                                    Number(vi),
-                                                    stock.location_id,
-                                                )
-                                            "
-                                        >
-                                            <Trash2 class="h-3.5 w-3.5" />
-                                        </Button>
+                                        </div>
+                                        <div class="flex items-center gap-1">
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                class="h-7 w-7 p-0 text-muted-foreground hover:text-primary"
+                                                @click="
+                                                    openAdjustment(
+                                                        Number(vi),
+                                                        stock.location_id,
+                                                    )
+                                                "
+                                            >
+                                                <Settings2
+                                                    class="h-3.5 w-3.5"
+                                                />
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                class="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                                                @click="
+                                                    removeStockEntry(
+                                                        Number(vi),
+                                                        stock.location_id,
+                                                    )
+                                                "
+                                            >
+                                                <Trash2 class="h-3.5 w-3.5" />
+                                            </Button>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -607,82 +654,103 @@ defineExpose({ checkPriceAndSubmit });
                                         adjustingLocationId ===
                                             stock.location_id
                                     "
-                                    class="mt-3 rounded-md border bg-muted/30 p-3"
+                                    class="mt-3 space-y-4 rounded-xl border bg-muted/50 p-4 shadow-inner"
                                 >
+                                    <!-- 1. Header & Action Type -->
                                     <div
-                                        class="mb-3 flex items-center justify-between"
+                                        class="mb-2 flex items-center justify-between"
                                     >
-                                        <span class="text-sm font-medium"
-                                            >Điều chỉnh</span
-                                        >
+                                        <div class="flex items-center gap-2">
+                                            <Settings2
+                                                class="h-4 w-4 text-primary"
+                                            />
+                                            <span
+                                                class="text-sm font-bold tracking-tight"
+                                                >Điều chỉnh tồn kho</span
+                                            >
+                                        </div>
                                         <Button
                                             type="button"
                                             variant="ghost"
                                             size="sm"
-                                            class="h-6 w-6 p-0"
+                                            class="h-6 w-6 rounded-full p-0"
                                             @click="closeAdjustment"
                                         >
                                             <X class="h-3.5 w-3.5" />
                                         </Button>
                                     </div>
 
+                                    <!-- Action Type Selector (Professional Chips) -->
                                     <RadioGroup
                                         v-model="adjustmentType"
-                                        class="mb-3"
+                                        class="mb-4 grid grid-cols-3 gap-2"
                                     >
-                                        <div class="flex items-center gap-4">
-                                            <div
-                                                class="flex items-center gap-2"
+                                        <div class="relative">
+                                            <RadioGroupItem
+                                                value="add"
+                                                id="adj-add"
+                                                class="sr-only"
+                                            />
+                                            <Label
+                                                for="adj-add"
+                                                class="flex cursor-pointer items-center justify-center rounded-lg border bg-background px-3 py-2 text-xs font-medium transition-all peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10 peer-data-[state=checked]:text-primary hover:bg-muted"
+                                                :class="
+                                                    adjustmentType === 'add'
+                                                        ? 'border-primary bg-primary/10 text-primary ring-1 ring-primary/20'
+                                                        : ''
+                                                "
                                             >
-                                                <RadioGroupItem
-                                                    value="add"
-                                                    id="adj-add"
-                                                />
-                                                <Label
-                                                    for="adj-add"
-                                                    class="text-xs"
-                                                    >Thêm hàng</Label
-                                                >
-                                            </div>
-                                            <div
-                                                class="flex items-center gap-2"
+                                                Thêm hàng
+                                            </Label>
+                                        </div>
+                                        <div class="relative">
+                                            <RadioGroupItem
+                                                value="remove"
+                                                id="adj-remove"
+                                                class="sr-only"
+                                            />
+                                            <Label
+                                                for="adj-remove"
+                                                class="flex cursor-pointer items-center justify-center rounded-lg border bg-background px-3 py-2 text-xs font-medium transition-all hover:bg-muted"
+                                                :class="
+                                                    adjustmentType === 'remove'
+                                                        ? 'border-primary bg-primary/10 text-primary ring-1 ring-primary/20'
+                                                        : ''
+                                                "
                                             >
-                                                <RadioGroupItem
-                                                    value="remove"
-                                                    id="adj-remove"
-                                                />
-                                                <Label
-                                                    for="adj-remove"
-                                                    class="text-xs"
-                                                    >Giảm hàng</Label
-                                                >
-                                            </div>
-                                            <div
-                                                class="flex items-center gap-2"
+                                                Giảm hàng
+                                            </Label>
+                                        </div>
+                                        <div class="relative">
+                                            <RadioGroupItem
+                                                value="cost"
+                                                id="adj-cost"
+                                                class="sr-only"
+                                            />
+                                            <Label
+                                                for="adj-cost"
+                                                class="flex cursor-pointer items-center justify-center rounded-lg border bg-background px-3 py-2 text-xs font-medium transition-all hover:bg-muted"
+                                                :class="
+                                                    adjustmentType === 'cost'
+                                                        ? 'border-primary bg-primary/10 text-primary ring-1 ring-primary/20'
+                                                        : ''
+                                                "
                                             >
-                                                <RadioGroupItem
-                                                    value="cost"
-                                                    id="adj-cost"
-                                                />
-                                                <Label
-                                                    for="adj-cost"
-                                                    class="text-xs"
-                                                    >Đổi giá vốn</Label
-                                                >
-                                            </div>
+                                                Đổi giá vốn
+                                            </Label>
                                         </div>
                                     </RadioGroup>
 
-                                    <div class="space-y-2">
+                                    <!-- 2. Value Inputs -->
+                                    <div
+                                        class="grid grid-cols-1 gap-3 sm:grid-cols-2"
+                                    >
                                         <div
-                                            v-if="
-                                                adjustmentType === 'add' ||
-                                                adjustmentType === 'remove'
-                                            "
-                                            class="grid gap-1.5"
+                                            v-if="adjustmentType !== 'cost'"
+                                            class="space-y-1.5"
                                         >
                                             <Label
-                                                class="text-xs text-muted-foreground"
+                                                class="text-[10px] font-bold text-muted-foreground uppercase"
                                             >
                                                 {{
                                                     adjustmentType === 'add'
@@ -696,19 +764,18 @@ defineExpose({ checkPriceAndSubmit });
                                                     adjustmentQuantity
                                                 "
                                                 min="1"
-                                                class="text-sm"
+                                                class="h-9 text-sm"
                                             />
                                         </div>
 
                                         <div
                                             v-if="adjustmentType !== 'remove'"
-                                            class="grid gap-1.5"
+                                            class="space-y-1.5"
                                         >
                                             <Label
-                                                class="text-xs text-muted-foreground"
+                                                class="text-[10px] font-bold text-muted-foreground uppercase"
+                                                >Giá vốn mới</Label
                                             >
-                                                Giá vốn
-                                            </Label>
                                             <Input
                                                 type="number"
                                                 :model-value="
@@ -724,21 +791,24 @@ defineExpose({ checkPriceAndSubmit });
                                                 placeholder="0"
                                                 min="0"
                                                 step="1000"
-                                                class="text-sm"
+                                                class="h-9 text-sm"
                                             />
                                         </div>
+                                    </div>
 
+                                    <!-- 3. Documentation -->
+                                    <div class="space-y-3 pt-2">
                                         <div
                                             v-if="adjustmentType !== 'cost'"
-                                            class="grid gap-1.5"
+                                            class="space-y-1.5"
                                         >
                                             <Label
-                                                class="text-xs text-muted-foreground"
-                                                >Lý do</Label
+                                                class="text-[10px] font-bold text-muted-foreground uppercase"
+                                                >Lý do điều chỉnh</Label
                                             >
                                             <Select v-model="adjustmentReason">
                                                 <SelectTrigger
-                                                    class="h-8 text-xs"
+                                                    class="h-9 text-xs"
                                                 >
                                                     <SelectValue
                                                         placeholder="Chọn lý do"
@@ -805,47 +875,97 @@ defineExpose({ checkPriceAndSubmit });
                                             </Select>
                                         </div>
 
-                                        <div class="grid gap-1.5">
+                                        <div class="space-y-1.5">
                                             <Label
-                                                class="text-xs text-muted-foreground"
-                                                >Ghi chú</Label
+                                                class="text-[10px] font-bold text-muted-foreground uppercase"
+                                                >Ghi chú chi tiết</Label
                                             >
                                             <Input
                                                 v-model="adjustmentNotes"
-                                                class="h-8 text-xs"
-                                                placeholder="Ghi chú thêm..."
+                                                class="h-9 text-xs"
+                                                placeholder="Ví dụ: Lô hàng bị móp méo..."
                                             />
                                         </div>
+                                    </div>
 
+                                    <!-- 4. Summary & Footer -->
+                                    <div class="mt-4 space-y-3">
                                         <div
-                                            class="flex items-center justify-between rounded-md bg-background p-2 text-xs"
+                                            class="flex items-center justify-between rounded-lg border bg-background p-3 text-xs"
                                         >
-                                            <span class="text-muted-foreground">
-                                                Dự kiến:
-                                                {{ getExpectedQuantity() }}
-                                                units
-                                                <template
-                                                    v-if="getExpectedCost()"
+                                            <div class="flex flex-col">
+                                                <span
+                                                    class="text-muted-foreground"
+                                                    >Dự kiến tồn kho:</span
                                                 >
-                                                    @
-                                                    {{
+                                                <span class="text-sm font-bold"
+                                                    >{{
+                                                        getExpectedQuantity()
+                                                    }}
+                                                    units</span
+                                                >
+                                            </div>
+                                            <div
+                                                v-if="getExpectedCost()"
+                                                class="flex flex-col text-right"
+                                            >
+                                                <span
+                                                    class="text-muted-foreground"
+                                                    >Giá vốn mới:</span
+                                                >
+                                                <span
+                                                    class="text-sm font-bold text-primary"
+                                                    >{{
                                                         formatCurrency(
                                                             getExpectedCost()!,
                                                         )
-                                                    }}
-                                                </template>
-                                            </span>
-                                            <span
+                                                    }}</span
+                                                >
+                                            </div>
+                                            <div
                                                 v-if="getExpectedPrice() > 0"
-                                                class="font-medium text-primary"
+                                                class="flex flex-col space-y-0.5 text-right"
                                             >
-                                                Giá bán dự kiến:
-                                                {{
-                                                    formatCurrency(
-                                                        getExpectedPrice(),
-                                                    )
-                                                }}
-                                            </span>
+                                                <div
+                                                    class="flex items-center justify-end gap-1"
+                                                >
+                                                    <span
+                                                        class="text-muted-foreground"
+                                                        >Giá hiện tại:</span
+                                                    >
+                                                    <span
+                                                        class="text-xs font-medium text-muted-foreground line-through"
+                                                    >
+                                                        {{
+                                                            formatCurrency(
+                                                                Number(
+                                                                    ctx.form
+                                                                        .variants[
+                                                                        adjustingStockIndex!
+                                                                    ].price,
+                                                                ) || 0,
+                                                            )
+                                                        }}
+                                                    </span>
+                                                </div>
+                                                <div
+                                                    class="flex items-center justify-end gap-1"
+                                                >
+                                                    <span
+                                                        class="text-muted-foreground"
+                                                        >Giá bán dự kiến:</span
+                                                    >
+                                                    <span
+                                                        class="text-sm font-bold text-green-600"
+                                                    >
+                                                        {{
+                                                            formatCurrency(
+                                                                getExpectedPrice(),
+                                                            )
+                                                        }}
+                                                    </span>
+                                                </div>
+                                            </div>
                                         </div>
 
                                         <div class="flex justify-end gap-2">
@@ -853,6 +973,7 @@ defineExpose({ checkPriceAndSubmit });
                                                 type="button"
                                                 variant="outline"
                                                 size="sm"
+                                                class="h-8 text-xs"
                                                 @click="closeAdjustment"
                                             >
                                                 Hủy
@@ -860,6 +981,7 @@ defineExpose({ checkPriceAndSubmit });
                                             <Button
                                                 type="button"
                                                 size="sm"
+                                                class="h-8 text-xs font-bold"
                                                 @click="saveAdjustment"
                                             >
                                                 Lưu điều chỉnh
@@ -1021,63 +1143,113 @@ defineExpose({ checkPriceAndSubmit });
             :open="showPriceConfirmDialog"
             @update:open="showPriceConfirmDialog = $event"
         >
-            <DialogContent class="sm:max-w-[500px]">
+            <DialogContent class="sm:max-w-[600px]">
                 <DialogHeader>
-                    <DialogTitle class="flex items-center gap-2">
-                        <AlertTriangle class="h-5 w-5 text-amber-500" />
-                        Cảnh báo thay đổi giá
-                    </DialogTitle>
-                    <DialogDescription>
-                        Giá bán sẽ giảm do giá vốn trung bình thay đổi. Xác nhận
-                        để tiếp tục.
+                    <div class="flex items-center gap-3 text-destructive">
+                        <div class="rounded-full bg-destructive/10 p-2">
+                            <AlertTriangle class="h-5 w-5" />
+                        </div>
+                        <DialogTitle class="text-xl"
+                            >Cảnh báo giảm giá bán</DialogTitle
+                        >
+                    </div>
+                    <DialogDescription class="pt-2 text-sm">
+                        Việc điều chỉnh giá vốn sẽ khiến giá bán của một số biến
+                        thể thấp hơn mức hiện tại để duy trì biên lợi nhuận.
                     </DialogDescription>
                 </DialogHeader>
 
-                <div class="space-y-3 py-4 max-h-[600px] overflow-y-auto">
-                    <div
-                        v-for="item in priceConfirmData.variants"
-                        :key="item.index"
-                        class="rounded-md border bg-amber-50 p-3 dark:bg-amber-950/20"
-                    >
-                        <p class="font-medium">
-                            {{ getVariantLabel(item.index) }}
-                        </p>
-                        <div class="mt-2 grid grid-cols-2 gap-2 text-sm">
-                            <div>
-                                <span class="text-muted-foreground"
-                                    >Giá hiện tại:</span
+                <div class="my-6 space-y-4">
+                    <!-- Impact Table -->
+                    <div class="overflow-hidden rounded-xl border bg-muted/20">
+                        <table class="w-full text-left text-xs">
+                            <thead class="border-b bg-muted">
+                                <tr>
+                                    <th
+                                        class="px-4 py-2 font-bold text-muted-foreground uppercase"
+                                    >
+                                        Biến thể
+                                    </th>
+                                    <th
+                                        class="px-4 py-2 text-right font-bold text-muted-foreground uppercase"
+                                    >
+                                        Giá hiện tại
+                                    </th>
+                                    <th
+                                        class="px-4 py-2 text-right font-bold text-muted-foreground text-primary uppercase"
+                                    >
+                                        Giá mới
+                                    </th>
+                                    <th
+                                        class="px-4 py-2 text-right font-bold text-destructive text-muted-foreground uppercase"
+                                    >
+                                        Chênh lệch
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y">
+                                <tr
+                                    v-for="v in priceConfirmData.variants"
+                                    :key="v.index"
+                                    class="transition-colors hover:bg-muted/50"
                                 >
-                                <span class="ml-2 font-medium">{{
-                                    formatCurrency(item.currentPrice)
-                                }}</span>
-                            </div>
-                            <div>
-                                <span class="text-muted-foreground"
-                                    >Giá mới:</span
-                                >
-                                <span
-                                    class="ml-2 font-medium text-amber-600 dark:text-amber-400"
-                                    >{{ formatCurrency(item.newPrice) }}</span
-                                >
-                            </div>
-                            <div>
-                                <span class="text-muted-foreground"
-                                    >Giá vốn mới:</span
-                                >
-                                <span class="ml-2">{{
-                                    formatCurrency(item.newCost)
-                                }}</span>
-                            </div>
-                        </div>
+                                    <td class="px-4 py-2 font-medium">
+                                        {{
+                                            ctx
+                                                .getVariantOptionLabels(
+                                                    ctx.form.variants[v.index],
+                                                )
+                                                .join(' / ') ||
+                                            ctx.form.variants[v.index].sku
+                                        }}
+                                    </td>
+                                    <td
+                                        class="px-4 py-2 text-right text-muted-foreground"
+                                    >
+                                        {{ formatCurrency(v.currentPrice) }}
+                                    </td>
+                                    <td
+                                        class="px-4 py-2 text-right font-bold text-primary"
+                                    >
+                                        {{ formatCurrency(v.newPrice) }}
+                                    </td>
+                                    <td
+                                        class="px-4 py-2 text-right font-bold text-destructive"
+                                    >
+                                        {{
+                                            formatCurrency(
+                                                v.newPrice - v.currentPrice,
+                                            )
+                                        }}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
+                    <p
+                        class="text-center text-[11px] text-muted-foreground italic"
+                    >
+                        * Giá mới được tính dựa trên Giá vốn mới + Biên lợi
+                        nhuận thiết lập.
+                    </p>
                 </div>
 
-                <DialogFooter class="gap-2 sm:gap-0">
-                    <Button variant="outline" @click="cancelPriceUpdate">
-                        Giữ giá cũ
+                <DialogFooter class="flex gap-2 space-x-2 sm:gap-0">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        class="flex-1 sm:flex-none"
+                        @click="cancelPriceUpdate"
+                    >
+                        Hủy bỏ & Giữ giá cũ
                     </Button>
-                    <Button variant="destructive" @click="confirmPriceUpdate">
-                        Xác nhận giảm giá
+                    <Button
+                        type="button"
+                        variant="destructive"
+                        class="flex-1 font-bold sm:flex-none"
+                        @click="confirmPriceUpdate"
+                    >
+                        Xác nhận cập nhật giá
                     </Button>
                 </DialogFooter>
             </DialogContent>

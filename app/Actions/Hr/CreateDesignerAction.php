@@ -40,6 +40,7 @@ class CreateDesignerAction
 
             if ($avatarFile instanceof UploadedFile) {
                 $designer->addMedia($avatarFile)->toMediaCollection('avatar');
+                $designer->touch();
             }
 
             $designerService->setWeeklySlots($designer, $availabilities);

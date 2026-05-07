@@ -54,7 +54,7 @@ class ProductPageResource extends JsonResource
                 'name' => $this->collection?->display_name,
                 'slug' => $this->collection?->slug,
             ],
-
+            'warranty_months' => $this->warranty_months,
             'featured_highlights' => $features['linked'],
             'plain_features' => $features['plain'],
 
@@ -109,14 +109,14 @@ class ProductPageResource extends JsonResource
                             'thumb' => $activeVariant->getFirstMediaUrl('swatch_image', 'thumb'),
                             'swatch' => $activeVariant->getFirstMediaUrl('swatch_image', 'swatch'),
                         ],
-                        'gallery' => $activeVariant->getMedia('gallery')->map(fn ($media) => [
+                        'gallery' => $activeVariant->getMedia('gallery')->map(fn($media) => [
                             'full' => $media->getUrl('webp') ?? $media->getUrl(),
                             'thumb' => $media->getUrl('thumb'),
                         ])->toArray(),
                     ],
                 ];
             })(),
-            'variants' => $this->variants->map(fn ($v) => [
+            'variants' => $this->variants->map(fn($v) => [
                 'id' => $v->id,
                 'sku' => $v->sku,
                 'slug' => $v->slug,
@@ -227,7 +227,7 @@ class ProductPageResource extends JsonResource
 
             foreach ($group['options'] as $option) {
                 $firstVariant = $this->variants
-                    ->where('option_values.'.$group['namespace'], $option['value'])
+                    ->where('option_values.' . $group['namespace'], $option['value'])
                     ->first();
 
                 if ($firstVariant) {

@@ -9,10 +9,10 @@ const page = usePage();
     <div
         class="flex aspect-square size-8 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground"
     >
-        <AppLogoIcon class="size-5 fill-current text-white dark:text-black" />
+        <AppLogoIcon class="size-5 bg-none text-white dark:text-black" />
     </div>
-    <div class="ml-1 items-center grid flex-1 text-left text-md">
-        <span class="truncate font-semibold"
+    <div class="ml-1 items-center grid flex-1 text-left text-lg">
+        <span class="truncate font-extrbold"
             >{{ page.props.name }}
         </span>
     </div>

@@ -52,7 +52,6 @@ router.on('success', (event) => {
     const flash = page.props.flash as any;
 
     if (flash) {
-        if (flash.success) toast.success(flash.success);
         if (flash.error) toast.error(flash.error);
         if (flash.info) toast.info(flash.info);
         if (flash.warning) toast.warning(flash.warning);

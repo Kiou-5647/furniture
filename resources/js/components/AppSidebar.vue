@@ -13,6 +13,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { home } from '@/routes';
 import { dashboard as employeeDashboard } from '@/routes/employee';
 import type { NavItem } from '@/types';
 import DynamicNavMain from './DynamicNavMain.vue';
@@ -22,7 +23,7 @@ const dashboard = computed(() => {
     if (page.props.auth?.user.type == 'employee') {
         return employeeDashboard().url;
     }
-    return employeeDashboard().url;
+    return home().url;
 })
 const menu = computed(() => (page.props.menu as NavItem[]) || []);
 

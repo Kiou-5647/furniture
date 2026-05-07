@@ -22,10 +22,11 @@ class CreateRefundRequestAction
 
             $refund = Refund::create([
                 'order_id' => $invoice->invoiceable_id,
+                'invoice_id' => $invoice->id,
                 'payment_id' => $payment?->id,
                 'amount' => $refundAmount,
                 'status' => RefundStatus::Pending,
-                'reason' => $reason ?? 'Hủy đơn hàng '.$invoice->invoiceable?->order_number,
+                'reason' => $reason ?? 'Hủy đơn hàng ' . $invoice->invoiceable?->order_number,
                 'requested_by' => $requestedBy->id,
             ]);
 

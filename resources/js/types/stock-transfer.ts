@@ -88,6 +88,9 @@ export interface StockTransferFilterData {
 export interface LocationOption {
     id: string;
     label: string;
+    name: string;
+    code: string;
+    full_address: string;
     type: string;
 }
 

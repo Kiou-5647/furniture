@@ -249,7 +249,7 @@ const handleInput = () => {
 
                                 <Link
                                     v-if="totalResults > 5"
-                                    href="/san-pham"
+                                    :href="'san-pham?q=' + searchQuery"
                                     class="mt-1 block border-t border-zinc-100 p-2 text-center text-xs font-medium text-primary hover:underline"
                                 >
                                     Xem toàn bộ {{ totalResults }} sản phẩm
@@ -449,6 +449,26 @@ const handleInput = () => {
                                     </div>
                                 </div>
                             </NavigationMenuContent>
+                        </NavigationMenuItem>
+
+                        <!-- SALE Tab (Added) -->
+                        <NavigationMenuItem>
+                            <Link
+                                :href="'/san-pham?sale=1'"
+                                class="group inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-bold text-orange-400 transition-colors hover:bg-orange-50 hover:text-orange-700"
+                            >
+                                Khuyến mãi
+                            </Link>
+                        </NavigationMenuItem>
+
+                        <!-- Bookings Tab (Added - Auth only) -->
+                        <NavigationMenuItem>
+                            <Link
+                                :href="'/dat-lich'"
+                                class="group inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 hover:text-zinc-900"
+                            >
+                                Đơn đặt lịch
+                            </Link>
                         </NavigationMenuItem>
                     </NavigationMenuList>
                 </NavigationMenu>

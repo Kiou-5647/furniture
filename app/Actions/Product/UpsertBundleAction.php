@@ -41,10 +41,12 @@ class UpsertBundleAction
             // 4. Handle Media (Spatie MediaLibrary)
             if ($primaryImage instanceof UploadedFile) {
                 $bundle->addMedia($primaryImage)->toMediaCollection('primary_image');
+                $bundle->touch();
             }
 
             if ($hoverImage instanceof UploadedFile) {
                 $bundle->addMedia($hoverImage)->toMediaCollection('hover_image');
+                $bundle->touch();
             }
 
             DB::commit();

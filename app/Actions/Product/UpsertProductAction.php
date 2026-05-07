@@ -28,6 +28,8 @@ class UpsertProductAction
         $variants = Arr::pull($data, 'variants', []);
         $forceUpdatePrice = Arr::pull($data, '_force_update_price', false);
         $assemblyInfo = Arr::pull($data, 'assembly_info', []);
+        $manualFile = Arr::pull($assemblyInfo, 'manual_file', null);
+        $data['assembly_info'] = $assemblyInfo;
         $user = Auth::guard('web')->user();
         $performedBy = $user?->employee;
 
@@ -48,10 +50,10 @@ class UpsertProductAction
                 $product = Product::create($data);
             }
 
-            $manualFile = Arr::pull($assemblyInfo, 'manual_file', null);
             if ($manualFile instanceof UploadedFile) {
                 $product->clearMediaCollection('manual_file');
                 $product->addMedia($manualFile)->toMediaCollection('manual_file');
+                $product->touch();
             }
 
             $this->syncVariants($product, $variants, $forceUpdatePrice, $performedBy);
@@ -117,16 +119,19 @@ class UpsertProductAction
             if ($primaryImageFile instanceof UploadedFile) {
                 $variant->clearMediaCollection('primary_image');
                 $variant->addMedia($primaryImageFile)->toMediaCollection('primary_image');
+                $variant->touch();
             }
 
             if ($hoverImageFile instanceof UploadedFile) {
                 $variant->clearMediaCollection('hover_image');
                 $variant->addMedia($hoverImageFile)->toMediaCollection('hover_image');
+                $variant->touch();
             }
 
             if (! empty($removedGalleryIds)) {
                 foreach ($removedGalleryIds as $mediaId) {
                     $variant->getMedia('gallery')->firstWhere('id', $mediaId)?->delete();
+                    $variant->touch();
                 }
             }
 
@@ -134,6 +139,7 @@ class UpsertProductAction
                 foreach ($galleryFiles as $file) {
                     if ($file instanceof UploadedFile) {
                         $variant->addMedia($file)->toMediaCollection('gallery');
+                        $variant->touch();
                     }
                 }
             }
@@ -141,11 +147,13 @@ class UpsertProductAction
             if ($dimensionImageFile instanceof UploadedFile) {
                 $variant->clearMediaCollection('dimension_image');
                 $variant->addMedia($dimensionImageFile)->toMediaCollection('dimension_image');
+                $variant->touch();
             }
 
             if ($swatchImageFile instanceof UploadedFile) {
                 $variant->clearMediaCollection('swatch_image');
                 $variant->addMedia($swatchImageFile)->toMediaCollection('swatch_image');
+                $variant->touch();
             }
         }
 

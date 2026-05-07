@@ -13,13 +13,29 @@ class RefundResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'order_number' => $this->order?->order_number,
-            'order' => $this->whenLoaded('order', fn () => [
+            'invoice_number' => $this->invoice?->invoice_number,
+            'order' => $this->whenLoaded('order', fn() => [
                 'id' => $this->order->id,
                 'order_number' => $this->order->order_number,
                 'total_amount' => $this->order->total_amount,
+                'customer' => [
+                    'name' => $this->order->guest_name ?? $this->order->customer?->full_name,
+                    'email' => $this->order->guest_email ?? $this->order->customer?->email,
+                    'phone' => $this->order->guest_phone ?? $this->order->customer?->phone,
+                ],
             ]),
-            'payment' => $this->whenLoaded('payment', fn () => [
+            'booking' => $this->whenLoaded('booking', fn() => [
+                'id' => $this->booking->id,
+                'booking_number' => $this->booking->booking_number,
+                'total_amount' => $this->booking->total_price,
+                'customer' => [
+                    'name' => $this->booking->customer_name ?? $this->booking->customer?->full_name,
+                    'email' => $this->booking->customer_email ?? $this->booking->customer?->email,
+                    'phone' => $this->booking->customer_phone ?? $this->booking->customer?->phone,
+                ],
+            ]),
+            'invoice' => $this->whenLoaded('invoice', fn() => new InvoiceResource($this->invoice)),
+            'payment' => $this->whenLoaded('payment', fn() => [
                 'id' => $this->payment->id,
                 'gateway' => $this->payment->gateway,
                 'amount' => $this->payment->amount,
@@ -29,11 +45,11 @@ class RefundResource extends JsonResource
             'status' => $this->status?->value,
             'status_label' => $this->status?->label(),
             'status_color' => $this->status?->color(),
-            'requested_by' => $this->whenLoaded('requestedBy', fn () => [
+            'requested_by' => $this->whenLoaded('requestedBy', fn() => [
                 'full_name' => $this->requestedBy->full_name,
                 'phone' => $this->requestedBy->phone,
             ]),
-            'processed_by' => $this->whenLoaded('processedBy', fn () => [
+            'processed_by' => $this->whenLoaded('processedBy', fn() => [
                 'full_name' => $this->processedBy->full_name,
             ]),
             'notes' => $this->notes,

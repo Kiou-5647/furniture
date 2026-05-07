@@ -3,6 +3,7 @@
 namespace App\Actions\Booking;
 
 use App\Enums\BookingStatus;
+use App\Enums\InvoiceStatus;
 use App\Models\Booking\Booking;
 use App\Models\Hr\Employee;
 
@@ -22,7 +23,14 @@ class CancelBookingAction
             'status' => BookingStatus::Cancelled,
         ]);
 
-        // Create refund if deposit was paid and employee is cancelling
+        $booking->depositInvoice()
+            ->whereNotIn('status', [InvoiceStatus::Draft, InvoiceStatus::Open])
+            ->update(['status' => InvoiceStatus::Cancelled]);
+
+        $booking->finalInvoice()
+            ->whereNotIn('status', [InvoiceStatus::Draft, InvoiceStatus::Open])
+            ->update(['status' => InvoiceStatus::Cancelled]);
+
         if ($booking->hasDepositPaid() && $performedBy !== null) {
             $this->createRefund->execute($booking, $performedBy);
         }

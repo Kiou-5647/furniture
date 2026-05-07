@@ -25,10 +25,12 @@ class UpsertLookupAction
 
             if ($imageFile instanceof UploadedFile) {
                 $lookup->addMedia($imageFile)->toMediaCollection('image');
+                $lookup->touch();
             }
 
             if (!$imageUrl && !$imageFile) {
                 $lookup->clearMediaCollection('image');
+                $lookup->touch();
             }
 
             DB::commit();

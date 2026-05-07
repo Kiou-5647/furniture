@@ -7,29 +7,28 @@ import {
     Package,
     Truck,
     User,
-    X,
     XCircle,
     CheckCircle2,
     DollarSign,
     RotateCcw,
     Plus,
-    Loader2,
     CreditCard,
 } from '@lucide/vue';
 import { computed, ref } from 'vue';
-import { toast } from 'vue-sonner';
 import { initiate } from '@/actions/App/Http/Controllers/Payment/VnPayPaymentController';
 import Heading from '@/components/Heading.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { createLazyComponent } from '@/composables/createLazyComponent';
 import AppLayout from '@/layouts/AppLayout.vue';
 import {
@@ -42,8 +41,6 @@ import {
     index,
     updateStatus,
     markPaid,
-    createShipments,
-    storeShipments,
 } from '@/routes/employee/sales/orders';
 import type { BreadcrumbItem, Order, ShipmentItem } from '@/types';
 
@@ -51,28 +48,10 @@ const VnPayPaymentDialog = createLazyComponent(
     () => import('@/components/custom/paywall/VnPayPaymentDialog.vue'),
 );
 
-interface OrderItemWithStock {
-    bundle_name: string | null;
-    order_item_id: string;
-    variant_id: string;
-    sku: string;
-    name: string;
-    quantity: number;
-    is_bundle_component: boolean;
-    stock_options: Array<{
-        location_id: string;
-        location_name: string;
-        location_code: string;
-        available_qty: number;
-    }>;
-}
-
-interface ShipmentRow {
-    order_item_id: string;
-    variant_id: string;
-    location_id: string;
-    quantity: number;
-}
+const ShipmentCreationDialog = createLazyComponent(
+    () =>
+        import('@/pages/employee/sales/orders/components/ShipmentCreationDialog.vue'),
+);
 
 const props = defineProps<{
     order: Order;
@@ -126,7 +105,7 @@ const returnItem = ref<ShipmentItem | null>(null);
 const returnShipmentId = ref('');
 const returnReason = ref('');
 
-// VNPay payment
+const showShipmentsDialog = ref(false);
 const showVnPayDialog = ref(false);
 const vnPayUrl = ref('');
 
@@ -138,210 +117,6 @@ function handleVnPayPayment() {
     if (!openInvoice?.id) return;
     vnPayUrl.value = initiate(openInvoice.id).url;
     showVnPayDialog.value = true;
-}
-
-// Shipment creation dialog
-const showShipmentsDialog = ref(false);
-const shipmentRows = ref<ShipmentRow[]>([]);
-const orderItemsWithStock = ref<OrderItemWithStock[]>([]);
-const loadingShipments = ref(false);
-const dialogError = ref('');
-
-function getRowsForItem(variantId: string) {
-    return shipmentRows.value.filter((r) => r.variant_id === variantId);
-}
-
-function getAllocatedQuantity(variantId: string) {
-    return shipmentRows.value
-        .filter((r) => r.quantity > 0 && r.variant_id === variantId)
-        .reduce((sum, r) => sum + r.quantity, 0);
-}
-
-function getMaxQuantityForLocation(
-    variantId: string,
-    locationId: string,
-): number {
-    const item = orderItemsWithStock.value.find(
-        (i) => i.variant_id === variantId,
-    );
-    const stockOpt = item?.stock_options.find(
-        (s) => s.location_id === locationId,
-    );
-    return stockOpt?.available_qty ?? 0;
-}
-
-function getMaxQuantityForItem(variantId: string, locationId: string): number {
-    return getMaxQuantityForLocation(variantId, locationId);
-}
-
-function isLocationUsed(
-    variantId: string,
-    locationId: string,
-    currentIdx: number,
-): boolean {
-    const rows = getRowsForItem(variantId);
-    return rows.some(
-        (r, idx) => idx !== currentIdx && r.location_id === locationId,
-    );
-}
-
-async function openCreateShipments() {
-    loadingShipments.value = true;
-    dialogError.value = '';
-    try {
-        const res = await fetch(
-            createShipments({ order: props.order.id }).url,
-            {
-                method: 'GET',
-                headers: {
-                    Accept: 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-            },
-        );
-
-        if (!res.ok) {
-            // If it's a 403, it's a Gate authorization failure
-            if (res.status === 403) {
-                toast.error(
-                    'Bạn không có quyền tạo đơn vận chuyển cho đơn hàng này.',
-                );
-                return;
-            }
-            const errorData = await res
-                .json()
-                .catch(() => ({ message: 'Lỗi không xác định' }));
-            toast.error(
-                errorData.message ||
-                    'Có lỗi xảy ra khi tải dữ liệu vận chuyển.',
-            );
-            return;
-        }
-
-        const data = await res.json();
-
-        if (data.error) {
-            toast.error(data.error);
-            return;
-        }
-
-        if (!data.items || data.items.length === 0) {
-            toast.error(
-                'Không tìm thấy sản phẩm nào có thể vận chuyển cho đơn hàng này.',
-            );
-            return;
-        }
-
-        orderItemsWithStock.value = data.items;
-
-        shipmentRows.value = data.items.map((item: OrderItemWithStock) => ({
-            order_item_id: item.order_item_id,
-            variant_id: item.variant_id,
-            location_id: item.stock_options?.[0]?.location_id ?? '',
-            quantity: 0,
-        }));
-
-        showShipmentsDialog.value = true;
-    } catch (e) {
-        console.error(e);
-        toast.error('Có lỗi kết nối xảy ra. Vui lòng thử lại.');
-    } finally {
-        loadingShipments.value = false;
-    }
-}
-
-function getUsedLocationsForItem(variantId: string): Set<string> {
-    const rows = getRowsForItem(variantId);
-    return new Set(rows.map((r) => r.location_id).filter(Boolean));
-}
-
-function addLocationRow(variantId: string) {
-    const item = orderItemsWithStock.value.find(
-        (i) => i.order_item_id === variantId,
-    );
-    const used = getUsedLocationsForItem(variantId);
-    const firstAvailable = item?.stock_options.find(
-        (o) => !used.has(o.location_id),
-    );
-    if (firstAvailable) {
-        shipmentRows.value.push({
-            order_item_id: item!.order_item_id,
-            variant_id: variantId,
-            location_id: firstAvailable.location_id,
-            quantity: 0,
-        });
-    }
-}
-
-function removeRow(index: number) {
-    shipmentRows.value.splice(index, 1);
-}
-
-function confirmCreateShipments() {
-    dialogError.value = '';
-
-    // Only consider rows with quantity > 0 for validation
-    const activeRows = shipmentRows.value.filter((r) => r.quantity > 0);
-
-    // Validate each order item total equals required quantity
-    for (const item of orderItemsWithStock.value) {
-        const allocated = activeRows
-            .filter((r) => r.variant_id === item.variant_id)
-            .reduce((sum, r) => sum + r.quantity, 0);
-        if (allocated !== item.quantity) {
-            const name = item.name || 'Sản phẩm';
-            dialogError.value = `Tổng SL "${name}" phải bằng ${item.quantity} (hiện tại: ${allocated})`;
-            return;
-        }
-    }
-
-    // Validate each row quantity doesn't exceed location stock
-    for (let i = 0; i < activeRows.length; i++) {
-        const row = activeRows[i];
-        if (!row.location_id) {
-            dialogError.value = 'Vui lòng chọn kho cho tất cả các dòng';
-            return;
-        }
-        const maxQty = getMaxQuantityForLocation(
-            row.variant_id,
-            row.location_id,
-        );
-        if (row.quantity > maxQty) {
-            const item = orderItemsWithStock.value.find(
-                (item) => item.variant_id === row.variant_id,
-            );
-            const stockOpt = item?.stock_options.find(
-                (s) => s.location_id === row.location_id,
-            );
-            dialogError.value = `"${item?.name}" tại ${stockOpt?.location_name ?? '?'} chỉ còn ${maxQty} (bạn nhập ${row.quantity})`;
-            return;
-        }
-    }
-
-    if (activeRows.length === 0) {
-        dialogError.value = 'Vui lòng chọn ít nhất một kho';
-        return;
-    }
-
-    router.post(
-        storeShipments({ order: props.order.id }).url,
-        {
-            items: activeRows.map((r) => ({
-                order_item_id: r.order_item_id,
-                location_id: r.location_id,
-                quantity: r.quantity,
-                variant_id: r.variant_id,
-            })),
-        },
-        {
-            preserveScroll: true,
-            onSuccess: () => {
-                showShipmentsDialog.value = false;
-                toast.success('Đã tạo vận chuyển thành công.');
-            },
-        },
-    );
-    showShipmentsDialog.value = false;
 }
 
 function canReturnItem(item: ShipmentItem): boolean {
@@ -411,7 +186,6 @@ function handleResendShipment(shipmentId: string) {
 function handleReturnItem(item: ShipmentItem, shipmentId: string) {
     returnItem.value = item;
     returnShipmentId.value = shipmentId;
-    returnReason.value = 'Hàng lỗi / Khách từ chối';
     showReturnDialog.value = true;
 }
 
@@ -436,781 +210,887 @@ function confirmReturn() {
 <template>
     <Head :title="order?.order_number ?? 'Đơn hàng'" />
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div v-if="order" class="space-y-4 p-4">
-            <!-- Header -->
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <Button variant="ghost" size="icon" @click="goBack">
+        <div v-if="order" class="space-y-6 p-4 lg:p-6">
+            <!-- Top Action Bar -->
+            <div
+                class="flex flex-col justify-between gap-4 rounded-xl border bg-card p-4 shadow-sm md:flex-row md:items-center"
+            >
+                <div class="flex items-center gap-4">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        @click="goBack"
+                        class="rounded-full"
+                    >
                         <ArrowLeft class="h-4 w-4" />
                     </Button>
                     <div>
-                        <Heading
-                            :title="order.order_number"
-                            :description="'Tạo ngày ' + order.created_at"
-                        />
-                    </div>
-                </div>
-                <div class="flex items-center gap-2">
-                    <Badge
-                        :class="[
-                            'text-xs',
-                            order.status_color
-                                ? `text-[${order.status_color}]`
-                                : '',
-                        ]"
-                        variant="outline"
-                    >
-                        <component
-                            :is="
-                                order.status === 'completed'
-                                    ? CheckCircle2
-                                    : order.status === 'cancelled'
-                                      ? XCircle
-                                      : Package
-                            "
-                            class="mr-1.5 h-3.5 w-3.5"
-                        />
-                        {{ order.status_label }}
-                    </Badge>
-                    <Badge
-                        v-if="order.paid_at"
-                        variant="secondary"
-                        class="text-green-600"
-                    >
-                        Đã thanh toán
-                    </Badge>
-                    <Badge
-                        v-if="order.payment_method"
-                        :variant="
-                            order.payment_method === 'cod'
-                                ? 'secondary'
-                                : 'outline'
-                        "
-                    >
-                        <component
-                            :is="
-                                order.payment_method === 'cod'
-                                    ? Truck
-                                    : DollarSign
-                            "
-                            class="mr-1.5 h-3 w-3"
-                        />
-                        {{ order.payment_method_label }}
-                    </Badge>
-                    <Button
-                        v-if="
-                            canMarkPaid &&
-                            (order.payment_method === 'cash' || 'cod')
-                        "
-                        variant="outline"
-                        class="text-green-600"
-                        @click="handleMarkPaid"
-                    >
-                        <CheckCircle2 class="mr-2 h-4 w-4" /> Thanh toán tiền
-                        mặt
-                    </Button>
-                    <Button
-                        v-if="
-                            canMarkPaid &&
-                            order.payment_method === 'bank_transfer'
-                        "
-                        variant="outline"
-                        class="text-purple-600"
-                        @click="handleVnPayPayment"
-                    >
-                        <CreditCard class="mr-2 h-4 w-4" /> Chuyển khoản
-                    </Button>
-                    <Button
-                        v-if="canAccept"
-                        variant="outline"
-                        class="text-blue-600"
-                        @click="handleAccept"
-                    >
-                        <CheckCircle2 class="mr-2 h-4 w-4" /> Duyệt đơn
-                    </Button>
-                    <Button
-                        v-if="order.can_cancel"
-                        variant="outline"
-                        class="text-destructive"
-                        @click="handleCancel"
-                    >
-                        <XCircle class="mr-2 h-4 w-4" /> Hủy đơn
-                    </Button>
-                    <Button
-                        v-if="order.can_complete"
-                        variant="outline"
-                        class="text-green-600"
-                        @click="handleComplete"
-                    >
-                        <CheckCircle2 class="mr-2 h-4 w-4" /> Hoàn thành
-                    </Button>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
-                <!-- Customer Info -->
-                <div class="rounded-lg border p-4">
-                    <h3
-                        class="mb-3 flex items-center gap-2 text-sm font-medium"
-                    >
-                        <User class="h-4 w-4" /> Khách hàng
-                    </h3>
-                    <div class="space-y-1 text-sm">
-                        <p v-if="order.customer" class="font-medium">
-                            {{ order.customer.name }}
-                        </p>
-                        <p v-if="order.customer" class="text-muted-foreground">
-                            {{ order.customer.email }}
-                        </p>
-                        <template v-else>
-                            <p class="font-medium">
-                                {{ order.guest_name || 'Khách vãng lai' }}
-                            </p>
-                            <p
-                                v-if="order.guest_phone"
-                                class="text-muted-foreground"
-                            >
-                                {{ order.guest_phone }}
-                            </p>
-                            <p
-                                v-if="order.guest_email"
-                                class="text-muted-foreground"
-                            >
-                                {{ order.guest_email }}
-                            </p>
-                        </template>
-                    </div>
-                </div>
-
-                <!-- Shipping Address -->
-                <div class="rounded-lg border p-4">
-                    <h3
-                        class="mb-3 flex items-center gap-2 text-sm font-medium"
-                    >
-                        <MapPin class="h-4 w-4" /> Địa chỉ giao hàng
-                    </h3>
-                    <p class="text-sm text-muted-foreground">
-                        {{ order.shipping_address_text || '—' }}
-                    </p>
-                </div>
-
-                <!-- Total -->
-                <div class="rounded-lg border p-4">
-                    <h3 class="mb-3 text-sm font-medium">Tổng tiền</h3>
-                    <p class="text-2xl font-bold tabular-nums">
-                        {{
-                            Number(order.total_amount).toLocaleString('vi-VN')
-                        }}đ
-                    </p>
-                    <p class="mt-1 text-xs text-muted-foreground">
-                        {{ order.total_items }} sản phẩm
-                    </p>
-                    <p
-                        v-if="parseFloat(order.shipping_cost) > 0"
-                        class="mt-1 text-xs text-muted-foreground"
-                    >
-                        Phí vận chuyển:
-                        {{
-                            Number(order.shipping_cost).toLocaleString('vi-VN')
-                        }}đ
-                    </p>
-                    <p
-                        v-if="order.paid_at"
-                        class="mt-2 text-xs font-medium text-green-600"
-                    >
-                        Đã thanh toán: {{ order.paid_at }}
-                    </p>
-                    <p
-                        v-if="order.accepted_by"
-                        class="mt-2 text-xs text-muted-foreground"
-                    >
-                        Người nhận: {{ order.accepted_by }}
-                    </p>
-                    <p
-                        v-if="order.notes"
-                        class="mt-2 text-xs text-muted-foreground"
-                    >
-                        Ghi chú: {{ order.notes }}
-                    </p>
-                </div>
-            </div>
-
-            <!-- Items Table -->
-            <div class="rounded-lg border">
-                <div class="border-b px-4 py-3">
-                    <h3 class="flex items-center gap-2 text-sm font-medium">
-                        <Package class="h-4 w-4" /> Sản phẩm ({{
-                            order.items?.length ?? 0
-                        }})
-                    </h3>
-                </div>
-                <table class="w-full">
-                    <thead>
-                        <tr
-                            class="border-b bg-muted/50 text-xs text-muted-foreground"
-                        >
-                            <th class="px-4 py-2 text-left">Sản phẩm</th>
-                            <th class="px-4 py-2 text-center">SL</th>
-                            <th class="px-4 py-2 text-right">Đơn giá</th>
-                            <th class="px-4 py-2 text-right">Thành tiền</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr
-                            v-for="item in order.items"
-                            :key="item.id"
-                            class="border-b text-sm"
-                        >
-                            <td class="px-4 py-3">
-                                {{ item.purchasable_name }}
-                            </td>
-                            <td class="px-4 py-3 text-center tabular-nums">
-                                {{ item.quantity }}
-                            </td>
-                            <td class="px-4 py-3 text-right tabular-nums">
-                                {{
-                                    Number(item.unit_price).toLocaleString(
-                                        'vi-VN',
-                                    )
-                                }}đ
-                            </td>
-                            <td
-                                class="px-4 py-3 text-right font-medium tabular-nums"
-                            >
-                                {{
-                                    Number(item.subtotal).toLocaleString(
-                                        'vi-VN',
-                                    )
-                                }}đ
-                            </td>
-                        </tr>
-                        <tr v-if="!order.items?.length">
-                            <td
-                                colspan="4"
-                                class="px-4 py-8 text-center text-sm text-muted-foreground"
-                            >
-                                Không có sản phẩm nào
-                            </td>
-                        </tr>
-                    </tbody>
-                    <tfoot v-if="order.items?.length">
-                        <tr class="bg-muted/30">
-                            <td
-                                colspan="3"
-                                class="px-4 py-3 text-right font-medium"
-                            >
-                                Tổng cộng
-                            </td>
-                            <td
-                                class="px-4 py-3 text-right font-bold tabular-nums"
-                            >
-                                {{
-                                    Number(order.total_amount).toLocaleString(
-                                        'vi-VN',
-                                    )
-                                }}đ
-                            </td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-
-            <!-- Invoices -->
-            <div v-if="order.invoices?.length" class="rounded-lg border">
-                <div class="border-b px-4 py-3">
-                    <h3 class="flex items-center gap-2 text-sm font-medium">
-                        <FileText class="h-4 w-4" /> Hóa đơn ({{
-                            order.invoices.length
-                        }})
-                    </h3>
-                </div>
-                <table class="w-full">
-                    <thead>
-                        <tr
-                            class="border-b bg-muted/50 text-xs text-muted-foreground"
-                        >
-                            <th class="px-4 py-2 text-left">Mã hóa đơn</th>
-                            <th class="px-4 py-2 text-center">Loại</th>
-                            <th class="px-4 py-2 text-center">Trạng thái</th>
-                            <th class="px-4 py-2 text-right">Phải thu</th>
-                            <th class="px-4 py-2 text-right">Đã thu</th>
-                            <th class="px-4 py-2 text-right">Còn nợ</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr
-                            v-for="inv in order.invoices"
-                            :key="inv.id"
-                            class="border-b text-sm"
-                        >
-                            <td class="px-4 py-3 font-mono text-xs">
-                                {{ inv.invoice_number }}
-                            </td>
-                            <td class="px-4 py-3 text-center">
-                                {{ inv.type_label }}
-                            </td>
-                            <td class="px-4 py-3 text-center">
-                                <span
-                                    :class="[
-                                        'text-xs',
-                                        inv.status_color
-                                            ? `text-${inv.status_color}-600`
-                                            : '',
-                                    ]"
-                                >
-                                    {{ inv.status_label }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3 text-right tabular-nums">
-                                {{
-                                    Number(inv.amount_due).toLocaleString(
-                                        'vi-VN',
-                                    )
-                                }}đ
-                            </td>
-                            <td
-                                class="px-4 py-3 text-right text-green-600 tabular-nums"
-                            >
-                                {{
-                                    Number(inv.amount_paid).toLocaleString(
-                                        'vi-VN',
-                                    )
-                                }}đ
-                            </td>
-                            <td
-                                class="px-4 py-3 text-right font-medium tabular-nums"
-                            >
-                                {{
-                                    Number(
-                                        inv.remaining_balance,
-                                    ).toLocaleString('vi-VN')
-                                }}đ
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Shipments -->
-            <div class="space-y-3">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2 text-sm font-medium">
-                        <Truck class="h-4 w-4" /> Đơn vận chuyển ({{
-                            order.shipments?.length ?? 0
-                        }})
-                    </div>
-                    <Button
-                        v-if="canCreateShipments"
-                        variant="outline"
-                        size="sm"
-                        class="text-blue-600"
-                        :disabled="loadingShipments"
-                        @click="openCreateShipments"
-                    >
-                        <Loader2
-                            v-if="loadingShipments"
-                            class="mr-2 h-4 w-4 animate-spin"
-                        />
-                        <Plus v-else class="mr-2 h-4 w-4" />
-                        Tạo đơn vận chuyển
-                    </Button>
-                </div>
-
-                <div
-                    v-for="shipment in order.shipments"
-                    :key="shipment.id"
-                    class="rounded-lg border"
-                >
-                    <div
-                        class="flex items-center justify-between border-b px-4 py-3"
-                    >
-                        <div class="flex items-center gap-3">
-                            <span class="font-mono text-sm">{{
-                                shipment.shipment_number
-                            }}</span>
+                        <div class="flex items-center gap-2">
+                            <Heading :title="order.order_number" />
                             <Badge
                                 :class="[
                                     'text-xs',
-                                    shipment.status_color
-                                        ? `text-${shipment.status_color}-600`
+                                    order.status_color
+                                        ? `text-[${order.status_color}]`
                                         : '',
                                 ]"
                                 variant="outline"
                             >
-                                {{ shipment.status_label }}
+                                <component
+                                    :is="
+                                        order.status === 'completed'
+                                            ? CheckCircle2
+                                            : order.status === 'cancelled'
+                                              ? XCircle
+                                              : Package
+                                    "
+                                    class="mr-1.5 h-3.5 w-3.5"
+                                />
+                                {{ order.status_label }}
                             </Badge>
-                            <span
-                                v-if="shipment.origin_location"
-                                class="text-xs text-muted-foreground"
-                            >
-                                Từ: {{ shipment.origin_location.name }}
-                            </span>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <Button
-                                v-if="
-                                    shipment.status === 'cancelled' &&
-                                    order.status !== 'cancelled'
+                        <p class="text-xs text-muted-foreground">
+                            Tạo ngày {{ order.created_at }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2">
+                    <!-- Payment Status Badges -->
+                    <div class="mr-2 flex items-center gap-2">
+                        <Badge
+                            v-if="order.paid_at"
+                            variant="secondary"
+                            class="border-green-200 bg-green-100 text-green-700 hover:bg-green-100"
+                        >
+                            Đã thanh toán
+                        </Badge>
+                        <Badge
+                            v-if="order.payment_method"
+                            :variant="
+                                order.payment_method === 'cod'
+                                    ? 'secondary'
+                                    : 'outline'
+                            "
+                        >
+                            <component
+                                :is="
+                                    order.payment_method === 'cod'
+                                        ? Truck
+                                        : DollarSign
                                 "
-                                variant="outline"
-                                size="sm"
-                                class="h-7 text-xs text-blue-600"
-                                @click="handleResendShipment(shipment.id)"
-                            >
-                                <Truck class="mr-1 h-3 w-3" /> Gửi lại
-                            </Button>
+                                class="mr-1.5 h-3 w-3"
+                            />
+                            {{ order.payment_method_label }}
+                        </Badge>
+                    </div>
+
+                    <!-- Primary Actions -->
+                    <div class="flex items-center gap-2 border-l pl-2">
+                        <Button
+                            v-if="canAccept"
+                            variant="outline"
+                            class="border-blue-200 bg-blue-50/50 text-blue-600"
+                            @click="handleAccept"
+                        >
+                            <CheckCircle2 class="mr-2 h-4 w-4" /> Duyệt đơn
+                        </Button>
+                        <Button
+                            v-if="
+                                canMarkPaid &&
+                                (order.payment_method === 'cash' || 'cod')
+                            "
+                            variant="outline"
+                            class="border-green-200 bg-green-50/50 text-green-600"
+                            @click="handleMarkPaid"
+                        >
+                            <CheckCircle2 class="mr-2 h-4 w-4" /> Thu tiền mặt
+                        </Button>
+                        <Button
+                            v-if="
+                                canMarkPaid &&
+                                order.payment_method === 'bank_transfer'
+                            "
+                            variant="outline"
+                            class="border-purple-200 bg-purple-50/50 text-purple-600"
+                            @click="handleVnPayPayment"
+                        >
+                            <CreditCard class="mr-2 h-4 w-4" /> Chuyển khoản
+                        </Button>
+                        <Button
+                            v-if="order.can_complete"
+                            variant="default"
+                            class="bg-green-600 hover:bg-green-700"
+                            @click="handleComplete"
+                        >
+                            <CheckCircle2 class="mr-2 h-4 w-4" /> Hoàn thành
+                        </Button>
+                        <Button
+                            v-if="order.can_cancel"
+                            variant="ghost"
+                            class="text-destructive hover:bg-destructive/10"
+                            @click="handleCancel"
+                        >
+                            <XCircle class="mr-2 h-4 w-4" /> Hủy
+                        </Button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Grid -->
+            <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
+                <!-- Left Column: Order Info Sidebar -->
+                <div class="space-y-6 lg:col-span-4">
+                    <!-- Customer Card -->
+                    <div
+                        class="overflow-hidden rounded-xl border bg-card shadow-sm"
+                    >
+                        <div
+                            class="flex items-center gap-2 border-b bg-muted/30 px-4 py-3"
+                        >
+                            <User class="h-4 w-4 text-muted-foreground" />
+                            <h3 class="text-sm font-semibold">
+                                Thông tin khách hàng
+                            </h3>
+                        </div>
+                        <div class="space-y-3 p-4">
+                            <template v-if="order.customer">
+                                <div class="space-y-1">
+                                    <p
+                                        class="text-base font-bold text-muted-foreground italic"
+                                    >
+                                        Khách vãng lai
+                                    </p>
+                                    <p v-if="order.guest_name" class="text-sm">
+                                        {{ order.guest_name }}
+                                    </p>
+                                    <p
+                                        v-if="order.guest_phone"
+                                        class="text-sm text-muted-foreground"
+                                    >
+                                        {{ order.guest_phone }}
+                                    </p>
+                                    <p
+                                        v-if="order.guest_email"
+                                        class="text-sm text-muted-foreground"
+                                    >
+                                        {{ order.guest_email }}
+                                    </p>
+                                </div>
+                            </template>
+                            <div v-else class="space-y-1">
+                                <p class="text-base font-bold">
+                                    {{ order.customer!.name }}
+                                </p>
+                                <p class="text-sm text-muted-foreground">
+                                    {{ order.customer!.email }}
+                                </p>
+                                <p
+                                    v-if="order.customer!.phone"
+                                    class="text-sm text-muted-foreground"
+                                >
+                                    {{ order.customer!.phone }}
+                                </p>
+                            </div>
                         </div>
                     </div>
-                    <table class="w-full table-fixed">
-                        <thead>
-                            <tr
-                                class="border-b bg-muted/50 text-xs text-muted-foreground"
+
+                    <!-- Shipping Card -->
+                    <div
+                        class="overflow-hidden rounded-xl border bg-card shadow-sm"
+                    >
+                        <div
+                            class="flex items-center gap-2 border-b bg-muted/30 px-4 py-3"
+                        >
+                            <MapPin class="h-4 w-4 text-muted-foreground" />
+                            <h3 class="text-sm font-semibold">
+                                Địa chỉ giao hàng
+                            </h3>
+                        </div>
+                        <div class="p-4">
+                            <p
+                                class="text-sm leading-relaxed text-muted-foreground"
                             >
-                                <th class="w-[25%] px-4 py-2 text-left">
-                                    Sản phẩm
-                                </th>
-                                <th class="w-[7%] px-4 py-2 text-center">SL</th>
-                                <th class="w-[15%] px-4 py-2 text-center">
-                                    Trạng thái
-                                </th>
-                                <th class="w-[15%] px-4 py-2 text-center">
-                                    Thao tác
-                                </th>
-                                <th class="w-[23%] px-4 py-2 text-center">
-                                    Người gửi
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr
-                                v-for="item in shipment.items"
-                                :key="item.id"
-                                class="border-b text-sm"
+                                {{
+                                    order.shipping_address_text ||
+                                    'Chưa có thông tin địa chỉ'
+                                }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Order Summary Card -->
+                    <div
+                        class="overflow-hidden rounded-xl border bg-card shadow-sm"
+                    >
+                        <div
+                            class="flex items-center gap-2 border-b bg-muted/30 px-4 py-3"
+                        >
+                            <DollarSign class="h-4 w-4 text-muted-foreground" />
+                            <h3 class="text-sm font-semibold">
+                                Chi tiết thanh toán
+                            </h3>
+                        </div>
+                        <div class="space-y-3 p-4">
+                            <div
+                                class="flex items-center justify-between text-sm"
                             >
-                                <td class="w-[25%] truncate px-4 py-3">
-                                    {{
-                                        item.variant?.name
-                                            ? item.variant?.name
-                                            : item.order_item?.purchasable_name
-                                    }}
-                                </td>
-                                <td
-                                    class="w-[7%] px-4 py-3 text-center tabular-nums"
+                                <span class="text-muted-foreground"
+                                    >Số lượng sản phẩm</span
                                 >
-                                    {{ item.quantity_shipped }}
-                                </td>
-                                <td class="w-[15%] px-4 py-3 text-center">
+                                <span class="font-medium"
+                                    >{{ order.total_items }} SP</span
+                                >
+                            </div>
+                            <div
+                                v-if="parseFloat(order.shipping_cost) > 0"
+                                class="flex items-center justify-between text-sm"
+                            >
+                                <span class="text-muted-foreground"
+                                    >Phí vận chuyển</span
+                                >
+                                <span class="font-medium tabular-nums"
+                                    >{{
+                                        Number(
+                                            order.shipping_cost,
+                                        ).toLocaleString('vi-VN')
+                                    }}đ</span
+                                >
+                            </div>
+                            <div
+                                class="flex items-end justify-between border-t pt-3"
+                            >
+                                <span class="text-sm font-medium"
+                                    >Tổng cộng</span
+                                >
+                                <span
+                                    class="text-2xl font-black text-primary tabular-nums"
+                                >
+                                    {{
+                                        Number(
+                                            order.total_amount,
+                                        ).toLocaleString('vi-VN')
+                                    }}đ
+                                </span>
+                            </div>
+                            <div
+                                v-if="order.paid_at"
+                                class="mt-2 rounded border border-green-100 bg-green-50 p-2 text-center"
+                            >
+                                <p
+                                    class="text-[11px] font-medium tracking-wider text-green-600 uppercase"
+                                >
+                                    Đã thanh toán lúc
+                                </p>
+                                <p class="text-xs font-bold text-green-700">
+                                    {{ order.paid_at }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notes & Meta -->
+                    <div class="space-y-4 rounded-xl border bg-muted/20 p-4">
+                        <div v-if="order.notes" class="space-y-1">
+                            <p
+                                class="text-[11px] font-bold tracking-tight text-muted-foreground uppercase"
+                            >
+                                Ghi chú đơn hàng
+                            </p>
+                            <p class="text-xs text-foreground/80 italic">
+                                {{ order.notes }}
+                            </p>
+                        </div>
+                        <div
+                            v-if="order.accepted_by"
+                            class="flex items-center gap-2 border-t border-muted pt-2"
+                        >
+                            <div
+                                class="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary"
+                            >
+                                {{ order.accepted_by.charAt(0).toUpperCase() }}
+                            </div>
+                            <p class="text-xs text-muted-foreground">
+                                Nhận đơn:
+                                <span class="font-medium text-foreground">{{
+                                    order.accepted_by
+                                }}</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Right Column: Order Data -->
+                <div class="space-y-6 lg:col-span-8">
+                    <!-- Products Section -->
+                    <div
+                        class="overflow-hidden rounded-xl border bg-card shadow-sm"
+                    >
+                        <div
+                            class="flex items-center gap-2 border-b bg-muted/30 px-4 py-3"
+                        >
+                            <Package class="h-4 w-4 text-muted-foreground" />
+                            <h3 class="text-sm font-semibold">
+                                Sản phẩm ({{ order.items?.length ?? 0 }})
+                            </h3>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead>
+                                    <tr
+                                        class="bg-muted/50 text-xs tracking-wider text-muted-foreground uppercase"
+                                    >
+                                        <th
+                                            class="px-4 py-3 text-left font-medium"
+                                        >
+                                            Sản phẩm
+                                        </th>
+                                        <th
+                                            class="px-4 py-3 text-center font-medium"
+                                        >
+                                            SL
+                                        </th>
+                                        <th
+                                            class="px-4 py-3 text-right font-medium"
+                                        >
+                                            Đơn giá
+                                        </th>
+                                        <th
+                                            class="px-4 py-3 text-right font-medium"
+                                        >
+                                            Thành tiền
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y">
+                                    <tr
+                                        v-for="item in order.items"
+                                        :key="item.id"
+                                        class="text-sm transition-colors hover:bg-muted/20"
+                                    >
+                                        <td
+                                            class="px-4 py-4 font-medium text-foreground"
+                                        >
+                                            {{ item.purchasable_name }}
+                                        </td>
+                                        <td
+                                            class="px-4 py-4 text-center tabular-nums"
+                                        >
+                                            {{ item.quantity }}
+                                        </td>
+                                        <td
+                                            class="px-4 py-4 text-right text-muted-foreground tabular-nums"
+                                        >
+                                            {{
+                                                Number(
+                                                    item.unit_price,
+                                                ).toLocaleString('vi-VN')
+                                            }}đ
+                                        </td>
+                                        <td
+                                            class="px-4 py-4 text-right font-semibold tabular-nums"
+                                        >
+                                            {{
+                                                Number(
+                                                    item.subtotal,
+                                                ).toLocaleString('vi-VN')
+                                            }}đ
+                                        </td>
+                                    </tr>
+                                    <tr v-if="!order.items?.length">
+                                        <td
+                                            colspan="4"
+                                            class="px-4 py-12 text-center text-sm text-muted-foreground italic"
+                                        >
+                                            Không có sản phẩm nào trong đơn hàng
+                                            này
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                <tfoot
+                                    v-if="order.items?.length"
+                                    class="bg-muted/30"
+                                >
+                                    <tr>
+                                        <td
+                                            colspan="3"
+                                            class="px-4 py-3 text-right text-sm font-medium text-muted-foreground"
+                                        >
+                                            Tổng cộng
+                                        </td>
+                                        <td
+                                            class="px-4 py-3 text-right text-lg font-bold text-primary tabular-nums"
+                                        >
+                                            {{
+                                                Number(
+                                                    order.total_amount,
+                                                ).toLocaleString('vi-VN')
+                                            }}đ
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Invoices Section -->
+                    <div
+                        v-if="order.invoices?.length"
+                        class="overflow-hidden rounded-xl border bg-card shadow-sm"
+                    >
+                        <div
+                            class="flex items-center gap-2 border-b bg-muted/30 px-4 py-3"
+                        >
+                            <FileText class="h-4 w-4 text-muted-foreground" />
+                            <h3 class="text-sm font-semibold">
+                                Hóa đơn ({{ order.invoices.length }})
+                            </h3>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead>
+                                    <tr
+                                        class="bg-muted/50 text-xs tracking-wider text-muted-foreground uppercase"
+                                    >
+                                        <th
+                                            class="px-4 py-3 text-left font-medium"
+                                        >
+                                            Mã hóa đơn
+                                        </th>
+                                        <th
+                                            class="px-4 py-3 text-center font-medium"
+                                        >
+                                            Loại
+                                        </th>
+                                        <th
+                                            class="px-4 py-3 text-center font-medium"
+                                        >
+                                            Trạng thái
+                                        </th>
+                                        <th
+                                            class="px-4 py-3 text-right font-medium"
+                                        >
+                                            Phải thu
+                                        </th>
+                                        <th
+                                            class="px-4 py-3 text-right font-medium"
+                                        >
+                                            Đã thu
+                                        </th>
+                                        <th
+                                            class="px-4 py-3 text-right font-medium"
+                                        >
+                                            Còn nợ
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y text-sm">
+                                    <tr
+                                        v-for="inv in order.invoices"
+                                        :key="inv.id"
+                                        class="transition-colors hover:bg-muted/20"
+                                    >
+                                        <td
+                                            class="px-4 py-3 font-mono text-[11px] font-bold"
+                                        >
+                                            {{ inv.invoice_number }}
+                                        </td>
+                                        <td class="px-4 py-3 text-center">
+                                            {{ inv.type_label }}
+                                        </td>
+                                        <td class="px-4 py-3 text-center">
+                                            <Badge
+                                                :class="[
+                                                    'px-1.5 py-0 text-[10px]',
+                                                    inv.status_color
+                                                        ? `text-${inv.status_color}-600 border-${inv.status_color}-200 bg-${inv.status_color}-50`
+                                                        : '',
+                                                ]"
+                                                variant="outline"
+                                            >
+                                                {{ inv.status_label }}
+                                            </Badge>
+                                        </td>
+                                        <td
+                                            class="px-4 py-3 text-right tabular-nums"
+                                        >
+                                            {{
+                                                Number(
+                                                    inv.amount_due,
+                                                ).toLocaleString('vi-VN')
+                                            }}đ
+                                        </td>
+                                        <td
+                                            class="px-4 py-3 text-right font-medium text-green-600 tabular-nums"
+                                        >
+                                            {{
+                                                Number(
+                                                    inv.amount_paid,
+                                                ).toLocaleString('vi-VN')
+                                            }}đ
+                                        </td>
+                                        <td
+                                            class="px-4 py-3 text-right font-bold tabular-nums"
+                                        >
+                                            {{
+                                                Number(
+                                                    inv.remaining_balance,
+                                                ).toLocaleString('vi-VN')
+                                            }}đ
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Shipments Section -->
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <Truck class="h-4 w-4 text-muted-foreground" />
+                                <h3 class="text-sm font-semibold">
+                                    Vận chuyển ({{
+                                        order.shipments?.length ?? 0
+                                    }})
+                                </h3>
+                            </div>
+                            <Button
+                                v-if="canCreateShipments"
+                                variant="outline"
+                                size="sm"
+                                class="border-blue-200 text-blue-600 hover:bg-blue-50"
+                                @click="showShipmentsDialog = true"
+                            >
+                                <Plus class="mr-2 h-4 w-4" />
+                                Tạo đơn vận chuyển
+                            </Button>
+                        </div>
+
+                        <div
+                            v-if="!order.shipments?.length"
+                            class="rounded-xl border border-dashed py-12 text-center text-sm text-muted-foreground italic"
+                        >
+                            Chưa có đơn vận chuyển cho đơn hàng này
+                        </div>
+
+                        <div
+                            v-for="shipment in order.shipments"
+                            :key="shipment.id"
+                            class="overflow-hidden rounded-xl border bg-card shadow-sm"
+                        >
+                            <div
+                                class="flex items-center justify-between border-b bg-muted/20 px-4 py-3"
+                            >
+                                <div class="flex items-center gap-3">
+                                    <span
+                                        class="font-mono text-sm font-bold text-primary"
+                                        >{{ shipment.shipment_number }}</span
+                                    >
                                     <Badge
                                         :class="[
-                                            'text-xs',
-                                            item.status_color
-                                                ? `text-${item.status_color}-600`
+                                            'text-[10px]',
+                                            shipment.status_color
+                                                ? `text-${shipment.status_color}-600 border-${shipment.status_color}-200 bg-${shipment.status_color}-50`
                                                 : '',
                                         ]"
                                         variant="outline"
                                     >
-                                        {{ item.status_label }}
+                                        {{ shipment.status_label }}
                                     </Badge>
-                                </td>
-                                <td class="w-[15%] px-4 py-3 text-center">
+                                    <span
+                                        v-if="shipment.origin_location"
+                                        class="text-xs text-muted-foreground"
+                                    >
+                                        Từ:
+                                        <span class="font-medium">{{
+                                            shipment.origin_location.name
+                                        }}</span>
+                                    </span>
+                                </div>
+                                <div class="flex items-center gap-2">
                                     <Button
-                                        v-if="canReturnItem(item)"
+                                        v-if="
+                                            shipment.status === 'cancelled' &&
+                                            order.status !== 'cancelled'
+                                        "
                                         variant="outline"
                                         size="sm"
-                                        class="h-7 text-xs text-orange-600"
+                                        class="h-7 text-xs text-blue-600"
                                         @click="
-                                            handleReturnItem(item, shipment.id)
+                                            handleResendShipment(shipment.id)
                                         "
                                     >
-                                        <RotateCcw class="mr-1 h-3 w-3" /> Trả
+                                        <Truck class="mr-1 h-3 w-3" /> Gửi lại
                                     </Button>
-                                    <span
-                                        v-else
-                                        class="text-xs text-muted-foreground"
-                                        >—</span
-                                    >
-                                </td>
-                                <td class="w-[23%] px-4 py-3 text-center">
-                                    <template v-if="shipment.handled_by">
-                                        <div class="text-xs font-medium">
-                                            {{ shipment.handled_by.full_name }}
-                                        </div>
-                                        <div
-                                            class="text-[10px] text-muted-foreground"
+                                </div>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead>
+                                        <tr
+                                            class="bg-muted/10 text-xs tracking-wider text-muted-foreground uppercase"
                                         >
-                                            {{
-                                                shipment.handled_by.phone ?? '—'
-                                            }}
-                                        </div>
-                                    </template>
-                                    <span
-                                        v-else
-                                        class="text-xs text-muted-foreground"
-                                        >—</span
-                                    >
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Refunds -->
-            <div v-if="order.refunds?.length" class="space-y-3">
-                <div class="flex items-center gap-2 text-sm font-medium">
-                    <DollarSign class="h-4 w-4" /> Yêu cầu hoàn tiền ({{
-                        order.refunds.length
-                    }})
-                </div>
-                <div
-                    v-for="refund in order.refunds"
-                    :key="refund.id"
-                    class="rounded-lg border"
-                >
-                    <div
-                        class="flex items-center justify-between border-b px-4 py-3"
-                    >
-                        <div class="flex items-center gap-3">
-                            <span class="font-mono text-xs"
-                                >{{ refund.id.substring(0, 8) }}...</span
-                            >
-                            <Badge
-                                :class="[
-                                    'text-xs',
-                                    refund.status_color
-                                        ? `text-${refund.status_color}-600`
-                                        : '',
-                                ]"
-                                variant="outline"
-                            >
-                                {{ refund.status_label }}
-                            </Badge>
-                        </div>
-                        <span class="text-sm font-medium tabular-nums"
-                            >{{
-                                Number(refund.amount).toLocaleString('vi-VN')
-                            }}đ</span
-                        >
-                    </div>
-                    <div class="flex gap-4 px-4 py-2 text-xs">
-                        <span v-if="refund.reason" class="text-muted-foreground"
-                            >Lý do: {{ refund.reason }}</span
-                        >
-                        <span
-                            v-if="refund.requested_by"
-                            class="text-muted-foreground"
-                            >Tạo bởi: {{ refund.requested_by.full_name }}</span
-                        >
-                        <span
-                            v-if="refund.processed_by"
-                            class="text-muted-foreground"
-                            >Duyệt bởi:
-                            {{ refund.processed_by.full_name }}</span
-                        >
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Return Item Dialog -->
-        <div
-            v-if="showReturnDialog"
-            class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-            @click.self="showReturnDialog = false"
-        >
-            <div
-                class="w-full max-w-md rounded-lg border bg-background p-6 shadow-lg"
-            >
-                <h3 class="mb-4 text-lg font-semibold">Trả hàng</h3>
-                <p v-if="returnItem" class="mb-3 text-sm text-muted-foreground">
-                    {{
-                        returnItem.order_item?.purchasable_name ?? 'Sản phẩm'
-                    }}
-                    — SL: {{ returnItem.quantity_shipped }}
-                </p>
-                <Input
-                    v-model="returnReason"
-                    placeholder="Lý do trả hàng..."
-                    class="mb-4"
-                />
-                <div class="flex justify-end gap-2">
-                    <Button variant="outline" @click="showReturnDialog = false"
-                        >Hủy</Button
-                    >
-                    <Button variant="destructive" @click="confirmReturn"
-                        >Xác nhận trả hàng</Button
-                    >
-                </div>
-            </div>
-        </div>
-
-        <div
-            v-if="showShipmentsDialog"
-            class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-            @click.self="showShipmentsDialog = false"
-        >
-            <div
-                class="max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-lg border bg-background p-6 shadow-lg"
-            >
-                <h3 class="mb-4 text-lg font-semibold">Tạo đơn vận chuyển</h3>
-                <div class="space-y-4">
-                    <div
-                        v-for="item in orderItemsWithStock"
-                        :key="item.variant_id"
-                        class="rounded-lg border p-3"
-                    >
-                        <div class="mb-2 flex items-center justify-between">
-                            <div>
-                                <span class="text-sm font-medium">{{
-                                    item.name
-                                }}</span>
-                                <span
-                                    class="ml-2 text-xs text-muted-foreground"
-                                >
-                                    (SL: {{ item.quantity }})
-                                </span>
-                            </div>
-                            <div class="text-xs">
-                                <span
-                                    :class="
-                                        getAllocatedQuantity(
-                                            item.variant_id,
-                                        ) === item.quantity
-                                            ? 'text-green-600'
-                                            : 'text-orange-600'
-                                    "
-                                >
-                                    Đã chia:
-                                    {{
-                                        getAllocatedQuantity(item.variant_id)
-                                    }}/{{ item.quantity }}
-                                </span>
+                                            <th
+                                                class="px-4 py-2 text-left font-medium"
+                                            >
+                                                Sản phẩm
+                                            </th>
+                                            <th
+                                                class="px-4 py-2 text-center font-medium"
+                                            >
+                                                SL
+                                            </th>
+                                            <th
+                                                class="px-4 py-2 text-center font-medium"
+                                            >
+                                                Trạng thái
+                                            </th>
+                                            <th
+                                                class="px-4 py-2 text-center font-medium"
+                                            >
+                                                Thao tác
+                                            </th>
+                                            <th
+                                                class="px-4 py-2 text-center font-medium"
+                                            >
+                                                Người gửi
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y">
+                                        <tr
+                                            v-for="item in shipment.items"
+                                            :key="item.id"
+                                            class="transition-colors hover:bg-muted/20"
+                                        >
+                                            <td class="px-4 py-3 font-medium">
+                                                {{
+                                                    item.variant?.name ||
+                                                    item.order_item
+                                                        ?.purchasable_name
+                                                }}
+                                            </td>
+                                            <td
+                                                class="px-4 py-3 text-center tabular-nums"
+                                            >
+                                                {{ item.quantity_shipped }}
+                                            </td>
+                                            <td class="px-4 py-3 text-center">
+                                                <Badge
+                                                    :class="[
+                                                        'text-[10px]',
+                                                        item.status_color
+                                                            ? `text-${item.status_color}-600 border-${item.status_color}-200 bg-${item.status_color}-50`
+                                                            : '',
+                                                    ]"
+                                                    variant="outline"
+                                                >
+                                                    {{ item.status_label }}
+                                                </Badge>
+                                            </td>
+                                            <td class="px-4 py-3 text-center">
+                                                <Button
+                                                    v-if="canReturnItem(item)"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    class="h-7 border-orange-200 text-xs text-orange-600 hover:bg-orange-50"
+                                                    @click="
+                                                        handleReturnItem(
+                                                            item,
+                                                            shipment.id,
+                                                        )
+                                                    "
+                                                >
+                                                    <RotateCcw
+                                                        class="mr-1 h-3 w-3"
+                                                    />
+                                                    Trả
+                                                </Button>
+                                                <span
+                                                    v-else
+                                                    class="text-xs text-muted-foreground"
+                                                    >—</span
+                                                >
+                                            </td>
+                                            <td class="px-4 py-3 text-center">
+                                                <div
+                                                    v-if="shipment.handled_by"
+                                                    class="flex flex-col items-center"
+                                                >
+                                                    <span
+                                                        class="text-xs font-semibold"
+                                                        >{{
+                                                            shipment.handled_by
+                                                                .full_name
+                                                        }}</span
+                                                    >
+                                                    <span
+                                                        class="text-[10px] text-muted-foreground"
+                                                        >{{
+                                                            shipment.handled_by
+                                                                .phone ?? '—'
+                                                        }}</span
+                                                    >
+                                                </div>
+                                                <span
+                                                    v-else
+                                                    class="text-xs text-muted-foreground"
+                                                    >—</span
+                                                >
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="space-y-2">
+                    <!-- Refunds Section -->
+                    <div v-if="order.refunds?.length" class="space-y-3">
+                        <div class="flex items-center gap-2">
+                            <DollarSign class="h-4 w-4 text-muted-foreground" />
+                            <h3 class="text-sm font-semibold">
+                                Yêu cầu hoàn tiền ({{ order.refunds.length }})
+                            </h3>
+                        </div>
+                        <div
+                            v-for="refund in order.refunds"
+                            :key="refund.id"
+                            class="overflow-hidden rounded-xl border bg-card shadow-sm"
+                        >
                             <div
-                                v-for="(row, idx) in getRowsForItem(
-                                    item.variant_id,
-                                )"
-                                :key="idx"
-                                class="flex items-center gap-2"
+                                class="flex items-center justify-between border-b bg-muted/20 px-4 py-3"
                             >
-                                <Select
-                                    :model-value="row.location_id"
-                                    @update:model-value="
-                                        (val) => {
-                                            row.location_id = val as string;
-                                            row.quantity = Math.min(
-                                                row.quantity,
-                                                getMaxQuantityForItem(
-                                                    item.variant_id,
-                                                    row.location_id,
-                                                ),
-                                            );
-                                        }
-                                    "
+                                <div class="flex items-center gap-3">
+                                    <span
+                                        class="font-mono text-xs font-bold text-muted-foreground"
+                                        >{{
+                                            refund.id.substring(0, 8)
+                                        }}...</span
+                                    >
+                                    <Badge
+                                        :class="[
+                                            'text-[10px]',
+                                            refund.status_color
+                                                ? `text-${refund.status_color}-600 border-${refund.status_color}-200 bg-${refund.status_color}-50`
+                                                : '',
+                                        ]"
+                                        variant="outline"
+                                    >
+                                        {{ refund.status_label }}
+                                    </Badge>
+                                </div>
+                                <span
+                                    class="text-sm font-bold text-destructive tabular-nums"
                                 >
-                                    <SelectTrigger class="flex-1 text-sm">
-                                        <SelectValue
-                                            placeholder="Chọn kho..."
-                                        />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem
-                                            v-for="opt in item.stock_options.filter(
-                                                (o) =>
-                                                    !isLocationUsed(
-                                                        item.variant_id,
-                                                        o.location_id,
-                                                        idx,
-                                                    ),
-                                            )"
-                                            :key="opt.location_id"
-                                            :value="opt.location_id"
-                                        >
-                                            {{ opt.location_name }} ({{
-                                                opt.available_qty
-                                            }})
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <Input
-                                    :model-value="row.quantity"
-                                    type="number"
-                                    min="0"
-                                    :max="
-                                        getMaxQuantityForItem(
-                                            item.variant_id,
-                                            row.location_id,
+                                    -{{
+                                        Number(refund.amount).toLocaleString(
+                                            'vi-VN',
                                         )
-                                    "
-                                    class="w-20 text-sm"
-                                    @update:model-value="
-                                        (val: any) => {
-                                            const v = parseInt(val) || 0;
-                                            row.quantity = Math.min(
-                                                v,
-                                                getMaxQuantityForItem(
-                                                    item.variant_id,
-                                                    row.location_id,
-                                                ),
-                                            );
-                                        }
-                                    "
-                                />
-                                <Button
-                                    v-if="
-                                        getRowsForItem(item.variant_id).length >
-                                        1
-                                    "
-                                    variant="ghost"
-                                    size="icon"
-                                    class="h-8 w-8 shrink-0"
-                                    @click="
-                                        removeRow(shipmentRows.indexOf(row))
-                                    "
+                                    }}đ
+                                </span>
+                            </div>
+                            <div
+                                class="flex flex-wrap gap-x-6 gap-y-2 px-4 py-3 text-xs text-muted-foreground"
+                            >
+                                <span
+                                    v-if="refund.reason"
+                                    class="flex items-center gap-1"
                                 >
-                                    <X class="h-4 w-4" />
-                                </Button>
+                                    <span class="font-medium text-foreground"
+                                        >Lý do:</span
+                                    >
+                                    {{ refund.reason }}
+                                </span>
+                                <span
+                                    v-if="refund.requested_by"
+                                    class="flex items-center gap-1"
+                                >
+                                    <span class="font-medium text-foreground"
+                                        >Yêu cầu:</span
+                                    >
+                                    {{ refund.requested_by.full_name }}
+                                </span>
+                                <span
+                                    v-if="refund.processed_by"
+                                    class="flex items-center gap-1"
+                                >
+                                    <span class="font-medium text-foreground"
+                                        >Duyệt:</span
+                                    >
+                                    {{ refund.processed_by.full_name }}
+                                </span>
                             </div>
                         </div>
-
-                        <Button
-                            v-if="
-                                getRowsForItem(item.variant_id).length <
-                                item.stock_options.length
-                            "
-                            variant="outline"
-                            size="sm"
-                            class="mt-2 h-7 text-xs"
-                            @click="addLocationRow(item.variant_id)"
-                        >
-                            <Plus class="mr-1 h-3 w-3" /> Thêm kho
-                        </Button>
                     </div>
-                </div>
-
-                <p v-if="dialogError" class="mt-3 text-sm text-destructive">
-                    {{ dialogError }}
-                </p>
-
-                <div class="mt-4 flex justify-end gap-2">
-                    <Button
-                        variant="outline"
-                        @click="showShipmentsDialog = false"
-                        >Hủy</Button
-                    >
-                    <Button @click="confirmCreateShipments">Xác nhận</Button>
                 </div>
             </div>
         </div>
     </AppLayout>
-
+    <ShipmentCreationDialog
+        v-model="showShipmentsDialog"
+        :order-id="order.id"
+        @success="router.reload()"
+    />
     <VnPayPaymentDialog
-        :open="showVnPayDialog"
-        :payment-url="vnPayUrl"
-        :amount="props.order?.total_amount ?? '0'"
+        v-if="showVnPayDialog"
+        :url="vnPayUrl"
         @close="showVnPayDialog = false"
     />
+    <!-- Return Item Dialog -->
+    <Dialog v-model:open="showReturnDialog">
+        <DialogContent class="sm:max-w-md">
+            <DialogHeader>
+                <DialogTitle class="text-xl">Yêu cầu trả hàng</DialogTitle>
+                <DialogDescription>
+                    Vui lòng cung cấp lý do chi tiết để chúng tôi xử lý yêu cầu
+                    hoàn trả.
+                </DialogDescription>
+            </DialogHeader>
+
+            <div class="space-y-4 py-4">
+                <!-- Product Info Card -->
+                <div
+                    class="flex items-center gap-3 rounded-lg border bg-muted/50 p-3"
+                >
+                    <div class="rounded-md bg-orange-100 p-2">
+                        <Package class="h-4 w-4 text-orange-600" />
+                    </div>
+                    <div class="text-sm">
+                        <p class="font-bold">
+                            {{
+                                returnItem?.order_item?.purchasable_name ||
+                                'Sản phẩm'
+                            }}
+                        </p>
+                        <p class="text-xs text-muted-foreground">
+                            Số lượng trả: {{ returnItem?.quantity_shipped }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Reason Input -->
+                <div class="space-y-2">
+                    <Label
+                        class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                        >Lý do trả hàng</Label
+                    >
+                    <Input
+                        v-model="returnReason"
+                        placeholder="Nhập lý do chi tiết..."
+                        class="h-10"
+                    />
+                </div>
+            </div>
+
+            <DialogFooter class="gap-2 sm:gap-0">
+                <Button variant="ghost" @click="showReturnDialog = false"
+                    >Hủy bỏ</Button
+                >
+                <Button variant="destructive" @click="confirmReturn">
+                    Xác nhận trả hàng
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
 </template>

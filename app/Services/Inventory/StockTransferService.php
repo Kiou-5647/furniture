@@ -63,16 +63,17 @@ class StockTransferService
 
     public function getLocationOptions(): array
     {
-        return Cache::tags([CacheTag::Locations->value])
-            ->remember(CacheTag::Locations->key('transfer_options'), CacheKeys::TTL, fn() => Location::query()
-                ->where('is_active', true)
-                ->orderBy('name')
-                ->get(['id', 'code', 'name', 'type'])
-                ->map(fn(Location $location) => [
-                    'id' => $location->id,
-                    'label' => "{$location->code} - {$location->name}",
-                    'type' => $location->type->value,
-                ])
-                ->toArray());
+        return Location::query()
+            ->where('is_active', true)
+            ->get()
+            ->map(fn(Location $location) => [
+                'id' => $location->id,
+                'name' => $location->name,
+                'code' => $location->code,
+                'full_address' => $location->getFullAddress(),
+                'label' => $location->name,
+                'type' => $location->type,
+            ])
+            ->toArray();
     }
 }

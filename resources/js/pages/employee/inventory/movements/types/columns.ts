@@ -45,7 +45,7 @@ export function getColumns(): ColumnDef<StockMovement>[] {
         {
             accessorKey: 'variant',
             header: 'Sản phẩm',
-            size: 500,
+            size: 400,
             enableSorting: false,
             enableHiding: false,
             cell: ({ row }) =>
@@ -54,7 +54,7 @@ export function getColumns(): ColumnDef<StockMovement>[] {
                         h(
                             'span',
                             { class: 'font-medium text-sm' },
-                            row.original.variant?.name ?? '—',
+                            (row.original.variant.product_name + ' ' + row.original.variant?.name),
                         ),
                         h(
                             Badge,
@@ -139,7 +139,7 @@ export function getColumns(): ColumnDef<StockMovement>[] {
         {
             accessorKey: 'performed_by',
             header: 'Người thực hiện',
-            size: 140,
+            size: 150,
             enableSorting: false,
             enableHiding: true,
             meta: { align: 'center' },
@@ -153,14 +153,14 @@ export function getColumns(): ColumnDef<StockMovement>[] {
         {
             accessorKey: 'notes',
             header: 'Ghi chú',
-            size: 180,
+            size: 200,
             enableSorting: false,
             enableHiding: true,
             cell: ({ row }) =>
                 h(
                     'span',
                     {
-                        class: 'text-xs text-muted-foreground truncate max-w-[160px] block',
+                        class: 'text-xs text-muted-foreground truncate block',
                     },
                     row.original.notes ?? '—',
                 ),

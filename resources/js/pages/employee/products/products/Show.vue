@@ -22,6 +22,7 @@ import ProductCard from '@/components/custom/product/ProductCard.vue';
 import ProductReviewItem from '@/components/custom/product/ProductReviewItem.vue';
 import StarRating from '@/components/custom/StarRating.vue';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
@@ -39,14 +40,14 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { index } from '@/routes/employee/products';
 import {
     AssemblyDifficultyLabels,
-    StatusLabels,
-    type BreadcrumbItem,
+    StatusLabels
+
 } from '@/types';
+import type {BreadcrumbItem} from '@/types';
 import type { Product } from '@/types/product';
 
 const props = defineProps<{

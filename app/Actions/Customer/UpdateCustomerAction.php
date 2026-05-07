@@ -57,10 +57,13 @@ class UpdateCustomerAction
         if ($avatarFile instanceof UploadedFile) {
             $customer->clearMediaCollection('avatar');
             $customer->addMedia($avatarFile)->toMediaCollection('avatar');
+
+            $customer->touch();
         }
 
         if (!$avatarUrl && !$avatarFile) {
             $customer->clearMediaCollection('avatar');
+            $customer->touch();
         }
 
         return $customer->fresh(['user']);

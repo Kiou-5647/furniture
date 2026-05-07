@@ -1,7 +1,6 @@
 import { CheckCircle2, Clock, XCircle, MoreHorizontal } from '@lucide/vue';
 import type { ColumnDef } from '@tanstack/vue-table';
 import { h } from 'vue';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import type { Refund } from '@/types/refund';
@@ -13,13 +12,13 @@ export function getColumns(
 ): ColumnDef<Refund>[] {
     return [
         {
-            accessorKey: 'order_number',
-            header: 'Mã đơn hàng',
+            accessorKey: 'invoice_number',
+            header: 'Mã hóa đơn',
             size: 140,
             enableSorting: false,
             enableHiding: false,
             meta: { align: 'center' },
-            cell: ({ row }) => h('span', { class: 'font-mono text-xs' }, row.original.order_number),
+            cell: ({ row }) => h('span', { class: 'font-mono text-xs' }, row.original.invoice_number ?? 'Không xác định' ),
         },
         {
             accessorKey: 'amount',

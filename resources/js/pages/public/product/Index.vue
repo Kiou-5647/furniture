@@ -36,13 +36,14 @@ type Props = {
 const props = defineProps<Props>();
 
 const handleUpdateFilter = (newFilters: ProductFilters) => {
-    const { type, limit, min_price, max_price, ...rest } = newFilters;
+    const { type, limit, min_price, max_price, search, ...rest } = newFilters;
 
     const query: Record<string, any> = {
         type: type,
         limit: limit,
         min_price: min_price,
         max_price: max_price,
+        q: search
     };
 
     Object.assign(query, rest.filters);
@@ -56,16 +57,17 @@ const handleUpdateFilter = (newFilters: ProductFilters) => {
 const changePage = (page: number) => {
     router.get(
         index().url,
-        { ...props.filters, page },
+        cleanQuery({ ...props.filters, page }),
         { preserveScroll: true, replace: true },
     );
 };
 
 const updateLimit = (limit: string | number) => {
-    setCookie('per_page', limit, 30);
+    setCookie('per_page', limit);
+
     router.get(
         index().url,
-        { ...props.filters, limit, page: 1 },
+        cleanQuery({  ...props.filters, limit, page: 1 }),
         { preserveScroll: true, replace: true },
     );
 };

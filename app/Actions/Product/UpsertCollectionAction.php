@@ -25,10 +25,12 @@ class UpsertCollectionAction
 
             if ($imageFile instanceof UploadedFile) {
                 $collection->addMedia($imageFile)->toMediaCollection('image');
+                $collection->touch();
             }
 
             if (!$imageUrl && !$imageFile) {
                 $collection->clearMediaCollection('image');
+                $collection->touch();
             }
 
             DB::commit();

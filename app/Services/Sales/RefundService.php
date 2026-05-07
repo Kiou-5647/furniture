@@ -12,10 +12,10 @@ class RefundService
     public function getFiltered(RefundFilterData $filter): LengthAwarePaginator
     {
         return Refund::query()
-            ->with(['order', 'payment', 'requestedBy', 'processedBy'])
-            ->when($filter->status, fn ($q) => $q->where('status', $filter->status))
-            ->when($filter->order_id, fn ($q) => $q->where('order_id', $filter->order_id))
-            ->when($filter->search, fn ($q) => $q->whereHas('order', fn ($oq) => $oq->where('order_number', 'ilike', "%{$filter->search}%")))
+            ->with(['order', 'booking', 'payment', 'invoice', 'requestedBy', 'processedBy'])
+            ->when($filter->status, fn($q) => $q->where('status', $filter->status))
+            ->when($filter->order_id, fn($q) => $q->where('order_id', $filter->order_id))
+            ->when($filter->search, fn($q) => $q->whereHas('order', fn($oq) => $oq->where('order_number', 'ilike', "%{$filter->search}%")))
             ->orderBy($filter->order_by, $filter->order_direction)
             ->paginate($filter->per_page);
     }
@@ -24,9 +24,10 @@ class RefundService
     {
         return Refund::with([
             'order',
-            'payment',
+            'booking',
+            'invoice',
             'requestedBy',
-            'processedBy',
+            'processedBy'
         ])->findOrFail($id);
     }
 
