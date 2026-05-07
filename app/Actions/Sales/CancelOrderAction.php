@@ -37,19 +37,18 @@ class CancelOrderAction
             }
 
             // Create refund requests for paid invoices
-            if ($performedBy) {
-                $orderNumber = $order->order_number;
-                $order->invoices->each(function (Invoice $invoice) use ($performedBy, $orderNumber) {
-                    if ($invoice->amount_paid > 0) {
-                        app(CreateRefundRequestAction::class)->execute(
-                            $invoice,
-                            $performedBy,
-                            'Hủy đơn hàng '.$orderNumber
-                        );
-                    }
-                    $invoice->update(['status' => InvoiceStatus::Cancelled]);
-                });
-            }
+            $orderNumber = $order->order_number;
+
+            $order->invoices->each(function (Invoice $invoice) use ($performedBy, $orderNumber) {
+                $invoice->update(['status' => InvoiceStatus::Cancelled]);
+                if ($performedBy && $invoice->amount_paid > 0) {
+                    app(CreateRefundRequestAction::class)->execute(
+                        $invoice,
+                        $performedBy,
+                        'Hủy đơn hàng ' . $orderNumber
+                    );
+                }
+            });
 
             // Mark order as cancelled
             $order->update([

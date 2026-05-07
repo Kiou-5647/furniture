@@ -85,7 +85,7 @@ class BookingService
             if ($designer = $user->designer) {
                 $q->orWhere('designer_id', $designer->id);
             }
-            $q->orWhere('customer_id', $user->id);
+            $q->orWhere('customer_id', $user->customer->id);
         });
     }
 

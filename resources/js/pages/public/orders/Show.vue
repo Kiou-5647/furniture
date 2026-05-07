@@ -254,7 +254,14 @@ function confirmCancel() {
                                     "
                                     class="pt-4"
                                 >
+                                    <!-- Only show button if NO invoice is cancelled -->
                                     <a
+                                        v-if="
+                                            !order.invoices.some(
+                                                (inv: any) =>
+                                                    inv.status === 'cancelled',
+                                            )
+                                        "
                                         :href="
                                             initiate({
                                                 invoice: order.invoices[0].id,
@@ -269,6 +276,12 @@ function confirmCancel() {
                                             Thanh toán qua VNPay
                                         </Button>
                                     </a>
+                                    <div
+                                        v-else
+                                        class="rounded-lg bg-destructive/10 p-3 text-center text-xs font-medium text-destructive"
+                                    >
+                                        Hóa đơn đã bị hủy, không thể thanh toán.
+                                    </div>
                                 </div>
                                 <div
                                     v-if="order.paid_at"
@@ -289,37 +302,62 @@ function confirmCancel() {
                                 <div
                                     v-for="inv in order.invoices"
                                     :key="inv.id"
+                                    class="flex justify-between rounded-lg p-2 text-sm"
+                                    :class="
+                                        inv.status === 'cancelled'
+                                            ? 'bg-muted/50 opacity-60'
+                                            : inv.amount_paid < inv.amount_due
+                                              ? 'bg-muted/50'
+                                              : 'bg-muted/50'
+                                    "
                                 >
-                                    <div
-                                        v-if="inv.amount_paid < inv.amount_due"
-                                        class="flex justify-between rounded-lg bg-muted/50 p-2 text-sm"
-                                    >
-                                        <span class="font-medium">{{
-                                            inv.invoice_number
-                                        }}</span>
-                                        <span class="text-red-500"
-                                            >Cần thanh toán:
+                                    <span class="font-medium">{{
+                                        inv.invoice_number
+                                    }}</span>
+                                    <div class="flex items-center gap-2">
+                                        <Badge
+                                            :variant="
+                                                inv.status === 'cancelled'
+                                                    ? 'secondary'
+                                                    : 'default'
+                                            "
+                                            class="text-[10px]"
+                                        >
+                                            {{
+                                                inv.status === 'cancelled'
+                                                    ? 'Đã hủy'
+                                                    : inv.amount_paid <
+                                                        inv.amount_due
+                                                      ? 'Chờ thanh toán'
+                                                      : 'Đã thanh toán'
+                                            }}
+                                        </Badge>
+                                        <span
+                                            v-if="
+                                                inv.amount_paid <
+                                                    inv.amount_due &&
+                                                inv.status !== 'Cancelled'
+                                            "
+                                            class="text-red-500"
+                                        >
+                                            Cần thanh toán:
                                             {{
                                                 formatPrice(
                                                     inv.amount_due -
                                                         inv.amount_paid,
                                                 )
-                                            }}</span
+                                            }}
+                                        </span>
+                                        <span
+                                            v-else-if="
+                                                inv.amount_paid >=
+                                                inv.amount_due
+                                            "
+                                            class="text-green-500"
                                         >
-                                    </div>
-                                    <div
-                                        v-else
-                                        class="flex justify-between rounded-lg bg-muted/50 p-2 text-sm"
-                                    >
-                                        <span class="font-medium">{{
-                                            inv.invoice_number
-                                        }}</span>
-                                        <span class="text-green-500"
-                                            >Đã thanh toán:
-                                            {{
-                                                formatPrice(inv.amount_paid)
-                                            }}</span
-                                        >
+                                            Đã thanh toán:
+                                            {{ formatPrice(inv.amount_paid) }}
+                                        </span>
                                     </div>
                                 </div>
                             </CardContent>

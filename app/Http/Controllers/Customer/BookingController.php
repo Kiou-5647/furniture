@@ -86,7 +86,7 @@ class BookingController
         $user = Auth::user();
 
         $filter = new BookingFilterData(
-            customer_id: $user->id,
+            customer_id: $user->customer->id,
             status: $request->query('status') ? BookingStatus::tryFrom($request->query('status')) : BookingStatus::PendingDeposit,
             search: $request->query('search'),
             order_by: $request->query('order_by', 'created_at'),
@@ -108,7 +108,7 @@ class BookingController
         $booking = Booking::with(['designer', 'depositInvoice', 'finalInvoice'])->where('booking_number', $booking_number)
             ->firstOrFail();
 
-        if ($booking->customer_id !== Auth::id()) {
+        if ($booking->customer_id !== Auth::user()->customer->id) {
             abort(403);
         }
 
@@ -121,7 +121,7 @@ class BookingController
     {
         $booking = Booking::where('booking_number', $booking_number)->firstOrFail();
 
-        if ($booking->customer_id !== Auth::id()) {
+        if ($booking->customer_id !== Auth::user()->customer->id) {
             abort(403);
         }
 

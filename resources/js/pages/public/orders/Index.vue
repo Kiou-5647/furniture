@@ -100,8 +100,17 @@ const columns: ColumnDef<any, any>[] = [
             const paidAt = row.getValue('paid_at');
             const method = row.original.payment_method;
             const invoiceId = row.original.invoices?.[0]?.id;
+            const isCancelled = row.original.invoices?.some(
+                (inv: any) => inv.status === 'cancelled',
+            );
 
-            // Case 1: Order is already paid
+            if (isCancelled) {
+                return h(
+                    Badge,
+                    { variant: 'secondary', class: 'text-muted-foreground' },
+                    () => 'Đã hủy',
+                );
+            }
             if (paidAt) {
                 return h(
                     Badge,
@@ -113,7 +122,6 @@ const columns: ColumnDef<any, any>[] = [
                 );
             }
 
-            // Case 2: Order is unpaid and can be paid via VNPay
             if (method === 'bank_transfer' && invoiceId) {
                 return h(
                     'div',

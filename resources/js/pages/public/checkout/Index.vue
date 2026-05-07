@@ -45,7 +45,7 @@ const { state, fetchCart } = useCartStore();
 
 // Form state
 const form = useForm({
-    customer_id: props.customer?.user_id || null,
+    customer_id: props.customer?.id || null,
     guest_name: props.customer?.full_name || '',
     guest_phone: props.customer?.phone || '',
     guest_email: props.customer?.user?.email || '',

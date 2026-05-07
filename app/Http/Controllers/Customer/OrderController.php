@@ -25,7 +25,7 @@ class OrderController
     public function index(Request $request): Response
     {
         $filter = new OrderFilterData(
-            customer_id: $request->user()->id,
+            customer_id: $request->user()->customer->id,
             status: $request->query('status') ? OrderStatus::tryFrom($request->query('status')) : OrderStatus::Pending,
             source: $request->query('source') ?: null,
             search: $request->query('search'),
@@ -59,7 +59,7 @@ class OrderController
             ->where('order_number', $order_number)
             ->firstOrFail();
 
-        if ($order->customer_id !== Auth::user()->id) {
+        if ($order->customer_id !== Auth::user()->customer->id) {
             abort(403);
         }
 
@@ -91,7 +91,7 @@ class OrderController
     {
         $order = Order::where('order_number', $order_number)->firstOrFail();
 
-        if ($order->customer_id !== Auth::user()->id) {
+        if ($order->customer_id !== Auth::user()->customer->id) {
             abort(403);
         }
 
