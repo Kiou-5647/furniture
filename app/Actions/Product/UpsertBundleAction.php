@@ -28,14 +28,28 @@ class UpsertBundleAction
             }
 
             // 3. Sync Bundle Contents
-            // We clear and recreate to ensure the set perfectly matches the request
-            $bundle->contents()->delete();
+            $currentContents = $bundle->contents()->get(['id', 'product_card_id']);
+            $requestedContents = collect($contents);
 
-            foreach ($contents as $item) {
-                $bundle->contents()->create([
-                    'product_card_id' => $item['product_card_id'],
-                    'quantity' => $item['quantity'],
-                ]);
+            // Remove contents not in the request
+            $requestedProductCardIds = $requestedContents->pluck('product_card_id')->toArray();
+            $bundle->contents()->whereNotIn('product_card_id', $requestedProductCardIds)->delete();
+
+            foreach ($requestedContents as $item) {
+                $existing = $currentContents->firstWhere('product_card_id', $item['product_card_id']);
+
+                if ($existing) {
+                    // Update existing content to preserve ID
+                    $existing->update([
+                        'quantity' => $item['quantity'],
+                    ]);
+                } else {
+                    // Create new content
+                    $bundle->contents()->create([
+                        'product_card_id' => $item['product_card_id'],
+                        'quantity' => $item['quantity'],
+                    ]);
+                }
             }
 
             // 4. Handle Media (Spatie MediaLibrary)

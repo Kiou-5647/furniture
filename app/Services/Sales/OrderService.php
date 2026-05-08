@@ -314,14 +314,19 @@ class OrderService
                 }
 
                 foreach ($bundle->contents as $content) {
-                    $configValue = $config[$content->id];
+                    $configValue = $config[$content->id] ?? null;
+
+                    if (!$configValue) {
+                        // This content is in the bundle but not in the order config.
+                        // This happens if the bundle was expanded after the order was placed.
+                        continue;
+                    }
+
                     $variantId = $configValue['variant_id'] ?? null;
 
                     if ($variantId) {
                         $variant = \App\Models\Product\ProductVariant::find($variantId);
 
-                        // If the variant was deleted but is still in the bundle config,
-                        // we must skip it to avoid a 500 error.
                         if (!$variant) continue;
 
                         $shippableItems[] = [
@@ -330,11 +335,20 @@ class OrderService
                             'variant_id' => $variant->id,
                             'sku' => $variant->sku,
                             'name' => $variant->product->name . ' ' . $variant->name,
-                            'quantity' => (int)($content->quantity * $item->quantity),
+                            'quantity' => (int)(($configValue['quantity'] ?? $content->quantity) * $item->quantity),
                             'is_bundle_component' => true,
                             'stock_options' => $this->getVariantStockOptions($variant->id),
                         ];
                     }
+                }
+
+                // Validate that all items requested in the order config are still present in the bundle
+                $configKeys = array_keys($config);
+                $bundleContentIds = $bundle->contents->pluck('id')->toArray();
+                $missingKeys = array_diff($configKeys, $bundleContentIds);
+
+                if (!empty($missingKeys)) {
+                    throw new \RuntimeException("Đơn hàng không còn hợp lệ: Một hoặc nhiều thành phần trong gói sản phẩm \"{$bundle->name}\" đã bị thay đổi hoặc xóa bỏ.");
                 }
             } else {
                 $variant = \App\Models\Product\ProductVariant::find($item->purchasable_id);

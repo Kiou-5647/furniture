@@ -31,9 +31,10 @@ class CancelOrderAction
 
             // Cancel pending shipments for shipping orders
             if ($order->shipping_method_id) {
-                $order->shipments()
-                    ->whereIn('status', [ShipmentStatus::Pending])
-                    ->update(['status' => ShipmentStatus::Cancelled]);
+                $shipments = $order->shipments()
+                    ->whereIn('status', [ShipmentStatus::Pending]);
+
+                $shipments->update(['status' => ShipmentStatus::Cancelled]);
             }
 
             // Create refund requests for paid invoices
