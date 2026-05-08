@@ -63,7 +63,6 @@ function handleShip() {
         {},
         {
             preserveScroll: true,
-            onSuccess: () => toast.success('Đã xác nhận xuất kho thành công.'),
         },
     );
 }
