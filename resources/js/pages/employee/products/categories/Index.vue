@@ -33,7 +33,7 @@ import type {
     Category,
     CategoryFilterData,
     CategoryPagination,
-} from '@/types/category';
+} from '@/types';
 import { getColumns } from './types/columns';
 
 const CategoryFormModal = createLazyComponent(

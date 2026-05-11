@@ -14,7 +14,7 @@ import type {
     Customer,
     CustomerFilterData,
     CustomerPagination,
-} from '@/types/customer';
+} from '@/types';
 import { getColumns } from './types/columns';
 
 const props = defineProps<{

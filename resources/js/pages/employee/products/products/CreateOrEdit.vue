@@ -35,7 +35,7 @@ import type {
 import AppLayout from '@/layouts/AppLayout.vue';
 import { index } from '@/routes/employee/products';
 import type { SpecNamespace, SpecLookupOption } from '@/types';
-import type { Product } from '@/types/product';
+import type { Product } from '@/types';
 import StepContent from './StepContent.vue';
 import StepOptions from './StepOptions.vue';
 import StepStock from './StepStock.vue';

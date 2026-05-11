@@ -17,7 +17,7 @@ import type {
     Order,
     OrderFilterData,
     OrderPagination,
-} from '@/types/order';
+} from '@/types';
 import { getColumns } from './types/columns';
 
 const CreateOrderModal = createLazyComponent(

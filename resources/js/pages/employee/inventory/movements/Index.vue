@@ -12,7 +12,7 @@ import type { BreadcrumbItem } from '@/types';
 import type {
     StockMovementFilterData,
     StockMovementPagination,
-} from '@/types/stock-movement';
+} from '@/types';
 import { getColumns } from './types/columns';
 
 const props = defineProps<{

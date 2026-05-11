@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Employee\Sales;
 
-use App\Actions\Fulfillment\CreateShipmentsAction;
 use App\Actions\Sales\CancelOrderAction;
 use App\Actions\Sales\CompleteOrderAction;
 use App\Actions\Sales\CreateOrderAction;
@@ -13,7 +12,6 @@ use App\Data\Sales\OrderFilterData;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Exports\Sales\OrderExport;
-use App\Http\Requests\Fulfillment\StoreShipmentsRequest;
 use App\Http\Requests\Sales\CreateOrderRequest;
 use App\Http\Requests\Sales\StockOptionsRequest;
 use App\Http\Requests\Sales\UpdateOrderStatusRequest;
@@ -26,7 +24,6 @@ use App\Services\Sales\OrderService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
-use Inertia\Response;
 use Maatwebsite\Excel\Facades\Excel;
 
 class OrderController

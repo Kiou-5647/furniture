@@ -23,7 +23,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { slugify } from '@/lib';
 import { store, update } from '@/routes/employee/collections';
-import type { Collection } from '@/types/collection';
+import type { Collection } from '@/types';
 import { toast } from 'vue-sonner';
 
 const props = defineProps<{

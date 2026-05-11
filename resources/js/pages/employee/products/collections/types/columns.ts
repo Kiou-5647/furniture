@@ -17,7 +17,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import type { Collection } from '@/types/collection';
+import type { Collection } from '@/types';
 
 export function getColumns(
     onEdit: (collection: Collection) => void,

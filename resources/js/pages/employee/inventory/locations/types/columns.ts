@@ -21,7 +21,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { show } from '@/routes/employee/inventory/locations';
-import type { Location } from '@/types/location';
+import type { Location } from '@/types';
 
 export function getColumns(
     onEdit: (location: Location) => void,

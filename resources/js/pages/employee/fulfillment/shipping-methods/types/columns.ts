@@ -11,7 +11,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import type { ShippingMethod } from '@/types/shipping-method';
+import type { ShippingMethod } from '@/types';
 
 export function getColumns(
     onEdit: (method: ShippingMethod) => void,

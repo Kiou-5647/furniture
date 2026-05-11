@@ -1,7 +1,7 @@
 import type { ColumnDef } from '@tanstack/vue-table';
 import { h } from 'vue';
 import { Badge } from '@/components/ui/badge';
-import type { Invoice } from '@/types/invoice';
+import type { Invoice } from '@/types';
 
 export function getColumns(
     onShow: (invoice: Invoice) => void,

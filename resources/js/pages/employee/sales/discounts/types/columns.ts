@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { formatDateOnly, formatDateTime } from '@/lib/date-utils';
 import { formatPrice } from '@/lib';
-import type { Discount } from '@/types/discount';
+import type { Discount } from '@/types';
 
 export function getColumns(
     onEdit: (discount: Discount) => void,

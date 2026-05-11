@@ -10,7 +10,7 @@ import {
     DropdownMenuLabel,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import type { StockTransfer } from '@/types/stock-transfer';
+import type { StockTransfer } from '@/types';
 
 const statusColorMap: Record<string, string> = {
     gray: 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700',

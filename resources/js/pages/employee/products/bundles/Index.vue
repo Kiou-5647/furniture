@@ -14,7 +14,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { cleanQuery, setCookie } from '@/lib';
 import { index, create, edit, destroy } from '@/routes/employee/bundles';
 import type { BreadcrumbItem } from '@/types';
-import type { Bundle, BundleFilterData, BundlePagination } from '@/types/bundle';
+import type { Bundle, BundleFilterData, BundlePagination } from '@/types';
 import { getColumns } from './types/columns';
 
 const props = defineProps<{

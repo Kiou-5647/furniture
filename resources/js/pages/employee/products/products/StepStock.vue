@@ -38,7 +38,7 @@ import {
 } from '@/components/ui/select';
 import Separator from '@/components/ui/separator/Separator.vue';
 import type { ProductFormContext } from '@/composables/useProductForm';
-import type { VariantStock } from '@/types/product';
+import type { VariantStock } from '@/types';
 
 const ctx = inject<ProductFormContext>('productForm')!;
 

@@ -21,7 +21,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { show } from '@/routes/employee/products';
-import type { Product } from '@/types/product';
+import type { Product } from '@/types';
 
 function formatPrice(value: string | number): string {
     const num = typeof value === 'string' ? parseFloat(value) : value;

@@ -22,7 +22,7 @@ import type {
     Collection,
     CollectionFilterData,
     CollectionPagination,
-} from '@/types/collection';
+} from '@/types';
 import { getColumns } from './types/columns';
 
 // Lazy-load modal

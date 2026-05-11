@@ -6,7 +6,7 @@ import { formatPrice } from '@/lib';
 import type {
     StockTransferItem,
     StockTransferStatus,
-} from '@/types/stock-transfer';
+} from '@/types';
 
 export function getItemColumns(
     status: StockTransferStatus,

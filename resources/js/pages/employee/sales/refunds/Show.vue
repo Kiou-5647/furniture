@@ -18,7 +18,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { formatPrice } from '@/lib';
 import { index, approve, reject } from '@/routes/employee/sales/refunds';
 import type { BreadcrumbItem } from '@/types';
-import type { Refund } from '@/types/refund';
+import type { Refund } from '@/types';
 
 const props = defineProps<{
     refund: Refund;

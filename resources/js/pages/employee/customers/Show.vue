@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { index, deactivate } from '@/routes/employee/customers';
 import type { BreadcrumbItem } from '@/types';
-import type { Customer } from '@/types/customer';
+import type { Customer } from '@/types';
 import { getCustomerOrderColumns } from './types/customer-orders-columns';
 import type { CustomerOrder } from './types/customer-orders-columns';
 

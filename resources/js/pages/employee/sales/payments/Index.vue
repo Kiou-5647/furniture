@@ -12,7 +12,7 @@ import type { BreadcrumbItem } from '@/types';
 import type {
     PaymentFilterData,
     PaymentPagination,
-} from '@/types/payment';
+} from '@/types';
 import { getColumns } from './types/columns';
 
 const props = defineProps<{

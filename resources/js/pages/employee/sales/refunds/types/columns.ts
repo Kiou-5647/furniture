@@ -3,7 +3,7 @@ import type { ColumnDef } from '@tanstack/vue-table';
 import { h } from 'vue';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import type { Refund } from '@/types/refund';
+import type { Refund } from '@/types';
 
 export function getColumns(
     onShow: (refund: Refund) => void,

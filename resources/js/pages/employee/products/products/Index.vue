@@ -29,7 +29,7 @@ import type {
     Product,
     ProductFilterData,
     ProductPagination,
-} from '@/types/product';
+} from '@/types';
 import { getColumns } from './types/columns';
 
 const props = defineProps<{

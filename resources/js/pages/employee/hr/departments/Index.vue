@@ -17,7 +17,7 @@ import type {
     Department,
     DepartmentFilterData,
     DepartmentPagination,
-} from '@/types/department';
+} from '@/types';
 import { getColumns } from './types/columns';
 
 const DepartmentFormModal = createLazyComponent(

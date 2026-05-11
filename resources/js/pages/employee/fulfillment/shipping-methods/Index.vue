@@ -27,7 +27,7 @@ import type {
     ShippingMethod,
     ShippingMethodFilterData,
     ShippingMethodPagination,
-} from '@/types/shipping-method';
+} from '@/types';
 import { getColumns } from './types/columns';
 
 const ShippingMethodDialog = createLazyComponent(

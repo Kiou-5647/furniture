@@ -4,7 +4,7 @@ import { h } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import type { Shipment } from '@/types/order';
+import type { Shipment } from '@/types';
 
 export function getColumns(
     onShow: (shipment: Shipment) => void,

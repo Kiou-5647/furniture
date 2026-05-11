@@ -5,8 +5,8 @@ import type { Ref } from 'vue';
 import { toISODate } from '@/lib/date-utils';
 import { store, update } from '@/routes/employee/products';
 import type { ProductStatus, SpecLookupOption, SpecItem } from '@/types';
-import type { ProductSpecifications } from '@/types/lookup';
-import type { Product, ProductVariant, OptionGroup } from '@/types/product';
+import type { ProductSpecifications } from '@/types';
+import type { Product, ProductVariant, OptionGroup } from '@/types';
 
 export interface VariantStock {
     location_id: string;

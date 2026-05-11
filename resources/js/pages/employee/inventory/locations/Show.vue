@@ -50,7 +50,7 @@ import SearchableSelect from '@/components/ui/SearchableSelect.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { formatPrice, cleanQuery, setCookie } from '@/lib';
 import { index, show } from '@/routes/employee/inventory/locations';
-import type { Location } from '@/types/location';
+import type { Location } from '@/types';
 
 const props = defineProps<{
     location: Location;

@@ -1,7 +1,7 @@
 import { router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { index, store, update } from '@/routes/employee/bundles';
-import type { Bundle } from '@/types/bundle';
+import type { Bundle } from '@/types';
 
 export function useBundleForm(initialBundle: Bundle | null) {
     const form = ref({

@@ -15,7 +15,7 @@ import type {
     StockTransfer,
     StockTransferFilterData,
     StockTransferPagination,
-} from '@/types/stock-transfer';
+} from '@/types';
 import { getColumns } from './types/columns';
 
 const props = defineProps<{

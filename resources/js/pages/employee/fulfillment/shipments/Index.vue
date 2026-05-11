@@ -16,12 +16,12 @@ import {
     cancel,
     destroy,
 } from '@/routes/employee/fulfillment/shipments';
-import type { BreadcrumbItem } from '@/types';
 import type {
+    BreadcrumbItem,
     Shipment,
     ShipmentFilterData,
     ShipmentPagination,
-} from '@/types/order';
+} from '@/types';
 import { getColumns } from './types/columns';
 
 const props = defineProps<{
@@ -165,57 +165,31 @@ function performDelete() {
 </script>
 
 <template>
+
     <Head title="Vận chuyển" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-4 p-4">
             <div class="flex items-center justify-between">
-                <Heading
-                    title="Vận chuyển"
-                    description="Quản lý đơn vận chuyển hàng hóa"
-                />
+                <Heading title="Vận chuyển" description="Quản lý đơn vận chuyển hàng hóa" />
             </div>
 
-            <DataTableGroup
-                v-model:search="search"
-                :is-actually-loading="isActuallyLoading"
-                :columns="activeColumns"
-                :data="shipments?.data ?? []"
-                :has-active-filters="hasActiveFilters"
-                :total="shipments?.meta.total ?? 0"
-                :page-size="shipments?.meta.per_page ?? 15"
-                :current-page="shipments?.meta.current_page ?? 1"
-                :last-page="shipments?.meta.last_page ?? 1"
-                :order-by="filters.order_by"
-                :order-direction="filters.order_direction"
-                @reset="resetFilters"
-                @sort="handleSort"
-                @row-click="handleShow"
-                @update:page="handlePageChange"
-                @update:page-size="handlePageSizeChange"
-            >
+            <DataTableGroup v-model:search="search" :is-actually-loading="isActuallyLoading" :columns="activeColumns"
+                :data="shipments?.data ?? []" :has-active-filters="hasActiveFilters" :total="shipments?.meta.total ?? 0"
+                :page-size="shipments?.meta.per_page ?? 15" :current-page="shipments?.meta.current_page ?? 1"
+                :last-page="shipments?.meta.last_page ?? 1" :order-by="filters.order_by"
+                :order-direction="filters.order_direction" @reset="resetFilters" @sort="handleSort"
+                @row-click="handleShow" @update:page="handlePageChange" @update:page-size="handlePageSizeChange">
                 <template #filters>
-                    <DataTableSingleFilter
-                        v-model="selectedStatus"
-                        title="Trạng thái"
-                        :options="statusFilterOptions"
-                        icon_location="end"
-                        :searchable="false"
-                        @update:model-value="updateSearch"
-                    />
+                    <DataTableSingleFilter v-model="selectedStatus" title="Trạng thái" :options="statusFilterOptions"
+                        icon_location="end" :searchable="false" @update:model-value="updateSearch" />
                 </template>
             </DataTableGroup>
 
-            <DeleteConfirmation
-                v-model:open="showDeleteDialog"
-                title="Xác nhận xóa đơn vận chuyển"
-                :item-name="selectedShipment?.shipment_number"
-                :description="
-                    selectedShipment
-                        ? `Bạn có chắc chắn muốn xóa đơn vận chuyển &quot;${selectedShipment.shipment_number}&quot;?`
-                        : ''
-                "
-                @confirm="performDelete"
-            />
+            <DeleteConfirmation v-model:open="showDeleteDialog" title="Xác nhận xóa đơn vận chuyển"
+                :item-name="selectedShipment?.shipment_number" :description="selectedShipment
+                    ? `Bạn có chắc chắn muốn xóa đơn vận chuyển &quot;${selectedShipment.shipment_number}&quot;?`
+                    : ''
+                    " @confirm="performDelete" />
         </div>
     </AppLayout>
 </template>

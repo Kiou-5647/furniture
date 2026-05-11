@@ -17,7 +17,7 @@ import type {
     Designer,
     DesignerFilterData,
     DesignerPagination,
-} from '@/types/designer';
+} from '@/types';
 import { getColumns } from './types/columns';
 
 const DesignerFormModal = createLazyComponent(

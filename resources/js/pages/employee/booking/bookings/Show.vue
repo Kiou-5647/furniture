@@ -28,7 +28,7 @@ import {
     openInvoice as openInvoiceRoute,
 } from '@/routes/employee/booking';
 import type { BreadcrumbItem } from '@/types';
-import type { Booking } from '@/types/booking';
+import type { Booking } from '@/types';
 
 const VnPayPaymentDialog = createLazyComponent(
     () => import('@/components/custom/paywall/VnPayPaymentDialog.vue'),

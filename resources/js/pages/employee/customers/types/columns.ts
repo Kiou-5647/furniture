@@ -10,7 +10,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import type { Customer } from '@/types/customer';
+import type { Customer } from '@/types';
 
 export function getColumns(
     onView: (customer: Customer) => void,

@@ -4,7 +4,6 @@ import { Plus } from '@lucide/vue';
 import { debounce } from 'lodash';
 import { computed, ref, watch } from 'vue';
 import DataTableGroup from '@/components/custom/data-table/DataTableGroup.vue';
-import DataTableSingleFilter from '@/components/custom/data-table/DataTableSingleFilter.vue';
 import DeleteConfirmation from '@/components/custom/DeleteConfirmation.vue';
 import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
@@ -17,7 +16,7 @@ import type {
     Vendor,
     VendorFilterData,
     VendorPagination,
-} from '@/types/vendor';
+} from '@/types';
 import { getColumns } from './types/columns';
 
 const VendorFormModal = createLazyComponent(

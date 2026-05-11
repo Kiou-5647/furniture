@@ -21,7 +21,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { store, update } from '@/routes/employee/fulfillment/shipping-methods';
-import type { ShippingMethod } from '@/types/shipping-method';
+import type { ShippingMethod } from '@/types';
 
 const props = defineProps<{
     open: boolean;

@@ -39,7 +39,7 @@ import {
     variants as variantsRoute,
 } from '@/routes/employee/inventory/transfers';
 import type { BreadcrumbItem } from '@/types';
-import type { LocationOption, VariantOption } from '@/types/stock-transfer';
+import type { LocationOption, VariantOption } from '@/types';
 
 const props = defineProps<{
     locationOptions: LocationOption[];

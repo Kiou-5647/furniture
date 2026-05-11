@@ -18,7 +18,7 @@ import type {
     Discount,
     DiscountFilterData,
     DiscountPagination,
-} from '@/types/discount';
+} from '@/types';
 
 const DiscountFormModal = createLazyComponent(
     () => import('./components/DiscountFormModal.vue'),

@@ -33,8 +33,7 @@ import {
     resend,
     returnItem as returnItemRoute,
 } from '@/routes/employee/fulfillment/shipments';
-import type { BreadcrumbItem } from '@/types';
-import type { Shipment, ShipmentItem } from '@/types/order';
+import type { BreadcrumbItem, Shipment, ShipmentItem } from '@/types';
 
 const props = defineProps<{
     shipment: Shipment;
@@ -135,46 +134,34 @@ function confirmReturn() {
 }
 </script>
 <template>
+
     <Head :title="shipment?.shipment_number ?? 'Vận chuyển'" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div v-if="shipment" class="space-y-6 p-4 lg:p-6">
             <!-- Top Action Bar -->
             <div
-                class="flex flex-col justify-between gap-4 rounded-xl border bg-card p-4 shadow-sm md:flex-row md:items-center"
-            >
+                class="flex flex-col justify-between gap-4 rounded-xl border bg-card p-4 shadow-sm md:flex-row md:items-center">
                 <div class="flex items-center gap-4">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        @click="goBack"
-                        class="rounded-full"
-                    >
+                    <Button variant="ghost" size="icon" @click="goBack" class="rounded-full">
                         <ArrowLeft class="h-4 w-4" />
                     </Button>
                     <div>
                         <div class="flex items-center gap-2">
                             <Heading :title="shipment.shipment_number" />
-                            <Badge
-                                :class="[
-                                    'text-xs',
-                                    shipment.status_color
-                                        ? `text-[${shipment.status_color}]`
-                                        : '',
-                                ]"
-                                variant="outline"
-                            >
-                                <component
-                                    :is="
-                                        shipment.status === 'delivered'
-                                            ? CheckCircle2
-                                            : shipment.status === 'cancelled'
-                                              ? Ban
-                                              : shipment.status === 'shipped'
+                            <Badge :class="[
+                                'text-xs',
+                                shipment.status_color
+                                    ? `text-[${shipment.status_color}]`
+                                    : '',
+                            ]" variant="outline">
+                                <component :is="shipment.status === 'delivered'
+                                        ? CheckCircle2
+                                        : shipment.status === 'cancelled'
+                                            ? Ban
+                                            : shipment.status === 'shipped'
                                                 ? Truck
                                                 : Package
-                                    "
-                                    class="mr-1.5 h-3.5 w-3.5"
-                                />
+                                    " class="mr-1.5 h-3.5 w-3.5" />
                                 {{ shipment.status_label }}
                             </Badge>
                         </div>
@@ -186,36 +173,20 @@ function confirmReturn() {
 
                 <div class="flex flex-wrap items-center gap-2">
                     <div class="flex items-center gap-2 border-l pl-2">
-                        <Button
-                            v-if="canShip"
-                            variant="outline"
-                            class="border-blue-200 bg-blue-50/50 text-blue-600"
-                            @click="handleShip"
-                        >
+                        <Button v-if="canShip" variant="outline" class="border-blue-200 bg-blue-50/50 text-blue-600"
+                            @click="handleShip">
                             <Truck class="mr-2 h-4 w-4" /> Xuất kho
                         </Button>
-                        <Button
-                            v-if="canDeliver"
-                            variant="outline"
-                            class="border-green-200 bg-green-50/50 text-green-600"
-                            @click="handleDeliver"
-                        >
+                        <Button v-if="canDeliver" variant="outline"
+                            class="border-green-200 bg-green-50/50 text-green-600" @click="handleDeliver">
                             <CheckCircle2 class="mr-2 h-4 w-4" /> Đã giao
                         </Button>
-                        <Button
-                            v-if="canResend"
-                            variant="outline"
-                            class="border-blue-200 bg-blue-50/50 text-blue-600"
-                            @click="handleResend"
-                        >
+                        <Button v-if="canResend" variant="outline" class="border-blue-200 bg-blue-50/50 text-blue-600"
+                            @click="handleResend">
                             <Truck class="mr-2 h-4 w-4" /> Gửi lại
                         </Button>
-                        <Button
-                            v-if="canCancel"
-                            variant="ghost"
-                            class="text-destructive hover:bg-destructive/10"
-                            @click="handleCancel"
-                        >
+                        <Button v-if="canCancel" variant="ghost" class="text-destructive hover:bg-destructive/10"
+                            @click="handleCancel">
                             <Ban class="mr-2 h-4 w-4" /> Hủy đơn
                         </Button>
                     </div>
@@ -227,13 +198,8 @@ function confirmReturn() {
                 <!-- Left Column: Info Sidebar -->
                 <div class="space-y-6 lg:col-span-4">
                     <!-- Order Link Card -->
-                    <div
-                        class="overflow-hidden rounded-xl border bg-card shadow-sm"
-                        v-if="shipment.order"
-                    >
-                        <div
-                            class="flex items-center gap-2 border-b bg-muted/30 px-4 py-3"
-                        >
+                    <div class="overflow-hidden rounded-xl border bg-card shadow-sm" v-if="shipment.order">
+                        <div class="flex items-center gap-2 border-b bg-muted/30 px-4 py-3">
                             <Package class="h-4 w-4 text-muted-foreground" />
                             <h3 class="text-sm font-semibold">
                                 Thông tin đơn hàng
@@ -241,49 +207,31 @@ function confirmReturn() {
                         </div>
                         <div class="space-y-3 p-4">
                             <div class="flex items-center justify-between">
-                                <span class="text-sm text-muted-foreground"
-                                    >Mã đơn</span
-                                >
+                                <span class="text-sm text-muted-foreground">Mã đơn</span>
                                 <span class="font-mono text-sm font-bold">{{
                                     shipment.order.order_number
-                                }}</span>
+                                    }}</span>
                             </div>
                             <div class="flex items-center justify-between">
-                                <span class="text-sm text-muted-foreground"
-                                    >Tổng giá trị</span
-                                >
-                                <span class="text-sm font-bold tabular-nums"
-                                    >{{
-                                        Number(
-                                            shipment.order.total_amount,
-                                        ).toLocaleString('vi-VN')
-                                    }}đ</span
-                                >
+                                <span class="text-sm text-muted-foreground">Tổng giá trị</span>
+                                <span class="text-sm font-bold tabular-nums">{{
+                                    Number(
+                                        shipment.order.total_amount,
+                                    ).toLocaleString('vi-VN')
+                                }}đ</span>
                             </div>
-                            <div
-                                v-if="
-                                    parseFloat(shipment.order.shipping_cost) > 0
-                                "
-                                class="flex items-center justify-between"
-                            >
-                                <span class="text-sm text-muted-foreground"
-                                    >Phí giao hàng</span
-                                >
-                                <span class="text-sm tabular-nums"
-                                    >{{
-                                        Number(
-                                            shipment.order.shipping_cost,
-                                        ).toLocaleString('vi-VN')
-                                    }}đ</span
-                                >
+                            <div v-if="
+                                parseFloat(shipment.order.shipping_cost) > 0
+                            " class="flex items-center justify-between">
+                                <span class="text-sm text-muted-foreground">Phí giao hàng</span>
+                                <span class="text-sm tabular-nums">{{
+                                    Number(
+                                        shipment.order.shipping_cost,
+                                    ).toLocaleString('vi-VN')
+                                }}đ</span>
                             </div>
-                            <div
-                                v-if="shipment.order.notes"
-                                class="border-t pt-3"
-                            >
-                                <p
-                                    class="mb-1 text-[11px] font-bold text-muted-foreground uppercase"
-                                >
+                            <div v-if="shipment.order.notes" class="border-t pt-3">
+                                <p class="mb-1 text-[11px] font-bold text-muted-foreground uppercase">
                                     Ghi chú đơn hàng
                                 </p>
                                 <p class="text-xs text-foreground/80 italic">
@@ -294,22 +242,15 @@ function confirmReturn() {
                     </div>
 
                     <!-- Recipient Card -->
-                    <div
-                        class="overflow-hidden rounded-xl border bg-card shadow-sm"
-                    >
-                        <div
-                            class="flex items-center gap-2 border-b bg-muted/30 px-4 py-3"
-                        >
+                    <div class="overflow-hidden rounded-xl border bg-card shadow-sm">
+                        <div class="flex items-center gap-2 border-b bg-muted/30 px-4 py-3">
                             <User class="h-4 w-4 text-muted-foreground" />
                             <h3 class="text-sm font-semibold">
                                 Thông tin người nhận
                             </h3>
                         </div>
                         <div class="space-y-3 p-4">
-                            <div
-                                v-if="shipment.order?.customer"
-                                class="space-y-1"
-                            >
+                            <div v-if="shipment.order?.customer" class="space-y-1">
                                 <p class="text-base font-bold">
                                     {{ shipment.order.customer.name }}
                                 </p>
@@ -319,21 +260,13 @@ function confirmReturn() {
                             </div>
                             <template v-else>
                                 <div class="space-y-1">
-                                    <p
-                                        class="text-base font-bold text-muted-foreground italic"
-                                    >
+                                    <p class="text-base font-bold text-muted-foreground italic">
                                         Khách vãng lai
                                     </p>
-                                    <p
-                                        v-if="shipment.order?.guest_name"
-                                        class="text-sm"
-                                    >
+                                    <p v-if="shipment.order?.guest_name" class="text-sm">
                                         {{ shipment.order.guest_name }}
                                     </p>
-                                    <p
-                                        v-if="shipment.order?.guest_phone"
-                                        class="text-sm text-muted-foreground"
-                                    >
+                                    <p v-if="shipment.order?.guest_phone" class="text-sm text-muted-foreground">
                                         {{ shipment.order.guest_phone }}
                                     </p>
                                 </div>
@@ -342,21 +275,15 @@ function confirmReturn() {
                     </div>
 
                     <!-- Address Card -->
-                    <div
-                        class="overflow-hidden rounded-xl border bg-card shadow-sm"
-                    >
-                        <div
-                            class="flex items-center gap-2 border-b bg-muted/30 px-4 py-3"
-                        >
+                    <div class="overflow-hidden rounded-xl border bg-card shadow-sm">
+                        <div class="flex items-center gap-2 border-b bg-muted/30 px-4 py-3">
                             <MapPin class="h-4 w-4 text-muted-foreground" />
                             <h3 class="text-sm font-semibold">
                                 Địa chỉ giao hàng
                             </h3>
                         </div>
                         <div class="p-4">
-                            <p
-                                class="text-sm leading-relaxed text-muted-foreground"
-                            >
+                            <p class="text-sm leading-relaxed text-muted-foreground">
                                 {{
                                     shipment.order?.shipping_address_text ||
                                     'Chưa có thông tin địa chỉ'
@@ -366,12 +293,8 @@ function confirmReturn() {
                     </div>
 
                     <!-- Origin Card -->
-                    <div
-                        class="overflow-hidden rounded-xl border bg-card shadow-sm"
-                    >
-                        <div
-                            class="flex items-center gap-2 border-b bg-muted/30 px-4 py-3"
-                        >
+                    <div class="overflow-hidden rounded-xl border bg-card shadow-sm">
+                        <div class="flex items-center gap-2 border-b bg-muted/30 px-4 py-3">
                             <MapPin class="h-4 w-4 text-muted-foreground" />
                             <h3 class="text-sm font-semibold">
                                 Nguồn gửi & Nhân viên
@@ -379,22 +302,15 @@ function confirmReturn() {
                         </div>
                         <div class="space-y-4 p-4">
                             <div class="space-y-1">
-                                <p
-                                    class="text-[11px] font-bold text-muted-foreground uppercase"
-                                >
+                                <p class="text-[11px] font-bold text-muted-foreground uppercase">
                                     Kho xuất hàng
                                 </p>
                                 <p class="text-sm font-medium">
                                     {{ shipment.origin_location?.name || '—' }}
                                 </p>
                             </div>
-                            <div
-                                v-if="shipment.handled_by"
-                                class="space-y-1 border-t pt-3"
-                            >
-                                <p
-                                    class="text-[11px] font-bold text-muted-foreground uppercase"
-                                >
+                            <div v-if="shipment.handled_by" class="space-y-1 border-t pt-3">
+                                <p class="text-[11px] font-bold text-muted-foreground uppercase">
                                     Nhân viên xử lý
                                 </p>
                                 <p class="text-sm font-bold">
@@ -410,12 +326,8 @@ function confirmReturn() {
 
                 <!-- Right Column: Items Data -->
                 <div class="space-y-6 lg:col-span-8">
-                    <div
-                        class="overflow-hidden rounded-xl border bg-card shadow-sm"
-                    >
-                        <div
-                            class="flex items-center gap-2 border-b bg-muted/30 px-4 py-3"
-                        >
+                    <div class="overflow-hidden rounded-xl border bg-card shadow-sm">
+                        <div class="flex items-center gap-2 border-b bg-muted/30 px-4 py-3">
                             <Package class="h-4 w-4 text-muted-foreground" />
                             <h3 class="text-sm font-semibold">
                                 Sản phẩm vận chuyển ({{
@@ -426,126 +338,77 @@ function confirmReturn() {
                         <div class="overflow-x-auto">
                             <table class="w-full">
                                 <thead>
-                                    <tr
-                                        class="bg-muted/50 text-xs tracking-wider text-muted-foreground uppercase"
-                                    >
-                                        <th
-                                            class="px-4 py-3 text-left font-medium"
-                                        >
+                                    <tr class="bg-muted/50 text-xs tracking-wider text-muted-foreground uppercase">
+                                        <th class="px-4 py-3 text-left font-medium">
                                             Sản phẩm
                                         </th>
-                                        <th
-                                            class="px-4 py-3 text-center font-medium"
-                                        >
+                                        <th class="px-4 py-3 text-center font-medium">
                                             SL
                                         </th>
-                                        <th
-                                            class="px-4 py-3 text-center font-medium"
-                                        >
+                                        <th class="px-4 py-3 text-center font-medium">
                                             Trạng thái
                                         </th>
-                                        <th
-                                            class="px-4 py-3 text-center font-medium"
-                                        >
+                                        <th class="px-4 py-3 text-center font-medium">
                                             Thao tác
                                         </th>
-                                        <th
-                                            class="px-4 py-3 text-center font-medium"
-                                        >
+                                        <th class="px-4 py-3 text-center font-medium">
                                             Xử lý
                                         </th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y">
-                                    <tr
-                                        v-for="item in shipment.items"
-                                        :key="item.id"
-                                        class="text-sm transition-colors hover:bg-muted/20"
-                                    >
+                                    <tr v-for="item in shipment.items" :key="item.id"
+                                        class="text-sm transition-colors hover:bg-muted/20">
                                         <td class="px-4 py-4">
-                                            <div
-                                                class="font-medium text-foreground"
-                                            >
+                                            <div class="font-medium text-foreground">
                                                 {{
                                                     item.variant?.name ||
                                                     item.order_item
                                                         ?.purchasable_name
                                                 }}
                                             </div>
-                                            <span
-                                                class="font-mono text-[10px] text-muted-foreground"
-                                                >{{ item.variant?.sku }}</span
-                                            >
+                                            <span class="font-mono text-[10px] text-muted-foreground">{{
+                                                item.variant?.sku }}</span>
                                         </td>
-                                        <td
-                                            class="px-4 py-4 text-center tabular-nums"
-                                        >
+                                        <td class="px-4 py-4 text-center tabular-nums">
                                             {{ item.quantity_shipped }}
                                         </td>
                                         <td class="px-4 py-4 text-center">
-                                            <Badge
-                                                :class="[
-                                                    'px-1.5 py-0 text-[10px]',
-                                                    item.status_color
-                                                        ? `text-${item.status_color}-600 border-${item.status_color}-200 bg-${item.status_color}-50`
-                                                        : '',
-                                                ]"
-                                                variant="outline"
-                                            >
+                                            <Badge :class="[
+                                                'px-1.5 py-0 text-[10px]',
+                                                item.status_color
+                                                    ? `text-${item.status_color}-600 border-${item.status_color}-200 bg-${item.status_color}-50`
+                                                    : '',
+                                            ]" variant="outline">
                                                 {{ item.status_label }}
                                             </Badge>
                                         </td>
                                         <td class="px-4 py-4 text-center">
-                                            <Button
-                                                v-if="canReturnItem(item)"
-                                                variant="outline"
-                                                size="sm"
+                                            <Button v-if="canReturnItem(item)" variant="outline" size="sm"
                                                 class="h-7 border-orange-200 text-xs text-orange-600 hover:bg-orange-50"
-                                                @click="handleReturnItem(item)"
-                                            >
-                                                <RotateCcw
-                                                    class="mr-1 h-3 w-3"
-                                                />
+                                                @click="handleReturnItem(item)">
+                                                <RotateCcw class="mr-1 h-3 w-3" />
                                                 Trả hàng
                                             </Button>
-                                            <span
-                                                v-else
-                                                class="text-xs text-muted-foreground"
-                                                >—</span
-                                            >
+                                            <span v-else class="text-xs text-muted-foreground">—</span>
                                         </td>
                                         <td class="px-4 py-4 text-center">
-                                            <div
-                                                v-if="shipment.handled_by"
-                                                class="flex flex-col items-center"
-                                            >
-                                                <span
-                                                    class="text-xs font-semibold"
-                                                    >{{
-                                                        shipment.handled_by
-                                                            .full_name
-                                                    }}</span
-                                                >
-                                                <span
-                                                    class="text-[10px] text-muted-foreground"
-                                                    >{{
-                                                        shipment.handled_by
-                                                            .phone ?? '—'
-                                                    }}</span
-                                                >
+                                            <div v-if="shipment.handled_by" class="flex flex-col items-center">
+                                                <span class="text-xs font-semibold">{{
+                                                    shipment.handled_by
+                                                        .full_name
+                                                }}</span>
+                                                <span class="text-[10px] text-muted-foreground">{{
+                                                    shipment.handled_by
+                                                        .phone ?? '—'
+                                                }}</span>
                                             </div>
-                                            <span
-                                                v-else
-                                                class="text-xs text-muted-foreground"
-                                                >—</span
-                                            >
+                                            <span v-else class="text-xs text-muted-foreground">—</span>
                                         </td>
                                     </tr>
                                     <tr v-if="!shipment.items?.length">
-                                        <td
-                                            colspan="5"
-                                            class="px-4 py-12 text-center text-sm text-muted-foreground italic"
-                                        >
+                                        <td colspan="5"
+                                            class="px-4 py-12 text-center text-sm text-muted-foreground italic">
                                             Không có sản phẩm nào trong đơn vận
                                             chuyển này
                                         </td>
@@ -561,18 +424,14 @@ function confirmReturn() {
             <Dialog v-model:open="showReturnDialog">
                 <DialogContent class="sm:max-w-md">
                     <DialogHeader>
-                        <DialogTitle class="text-xl"
-                            >Yêu cầu trả hàng</DialogTitle
-                        >
+                        <DialogTitle class="text-xl">Yêu cầu trả hàng</DialogTitle>
                         <DialogDescription>
                             Vui lòng cung cấp lý do chi tiết cho việc hoàn trả
                             sản phẩm.
                         </DialogDescription>
                     </DialogHeader>
                     <div class="space-y-4 py-4">
-                        <div
-                            class="flex items-center gap-3 rounded-lg border bg-muted/50 p-3"
-                        >
+                        <div class="flex items-center gap-3 rounded-lg border bg-muted/50 p-3">
                             <div class="rounded-md bg-orange-100 p-2">
                                 <Package class="h-4 w-4 text-orange-600" />
                             </div>
@@ -590,23 +449,14 @@ function confirmReturn() {
                             </div>
                         </div>
                         <div class="space-y-2">
-                            <Label
-                                class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
-                                >Lý do trả hàng</Label
-                            >
-                            <Input
-                                v-model="returnReason"
-                                placeholder="Nhập lý do chi tiết..."
-                                class="h-10"
-                            />
+                            <Label class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Lý do
+                                trả
+                                hàng</Label>
+                            <Input v-model="returnReason" placeholder="Nhập lý do chi tiết..." class="h-10" />
                         </div>
                     </div>
                     <DialogFooter class="gap-2 sm:gap-0">
-                        <Button
-                            variant="ghost"
-                            @click="showReturnDialog = false"
-                            >Hủy bỏ</Button
-                        >
+                        <Button variant="ghost" @click="showReturnDialog = false">Hủy bỏ</Button>
                         <Button variant="destructive" @click="confirmReturn">
                             Xác nhận trả hàng
                         </Button>

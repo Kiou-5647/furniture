@@ -1,7 +1,7 @@
 import type { ColumnDef } from '@tanstack/vue-table';
 import { h } from 'vue';
 import { Badge } from '@/components/ui/badge';
-import type { StockMovement } from '@/types/stock-movement';
+import type { StockMovement } from '@/types';
 
 const typeColorMap: Record<string, string> = {
     green: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900 dark:text-green-300 dark:border-green-800',

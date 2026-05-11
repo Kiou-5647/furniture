@@ -4,7 +4,7 @@ import { h } from 'vue';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { formatDateTime, formatPrice } from '@/lib';
-import type { Booking } from '@/types/booking';
+import type { Booking } from '@/types';
 
 export function getColumns(
     onEdit: (booking: Booking) => void,

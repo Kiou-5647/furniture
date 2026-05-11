@@ -1,7 +1,7 @@
 import type { ColumnDef } from '@tanstack/vue-table';
 import { h } from 'vue';
 import { Badge } from '@/components/ui/badge';
-import type { Payment } from '@/types/payment';
+import type { Payment } from '@/types';
 import { Gateway } from '@/types';
 
 export function getColumns(): ColumnDef<Payment>[] {

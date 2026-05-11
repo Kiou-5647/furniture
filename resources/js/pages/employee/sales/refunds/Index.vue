@@ -14,7 +14,7 @@ import type {
     Refund,
     RefundFilterData,
     RefundPagination,
-} from '@/types/refund';
+} from '@/types';
 import { getColumns } from './types/columns';
 
 const props = defineProps<{

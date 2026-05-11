@@ -10,7 +10,7 @@ import { show as bookingShow } from '@/routes/employee/booking';
 import { index } from '@/routes/employee/sales/invoices';
 import { show as orderShow } from '@/routes/employee/sales/orders';
 import type { BreadcrumbItem } from '@/types';
-import type { Invoice } from '@/types/invoice';
+import type { Invoice } from '@/types';
 
 const props = defineProps<{
     invoice: Invoice;

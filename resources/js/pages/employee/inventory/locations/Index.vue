@@ -18,7 +18,7 @@ import type {
     Location,
     LocationFilterData,
     LocationPagination,
-} from '@/types/location';
+} from '@/types';
 import { getColumns } from './types/columns';
 
 const LocationFormModal = createLazyComponent(

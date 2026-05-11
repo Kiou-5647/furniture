@@ -22,7 +22,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { store, update } from '@/routes/employee/sales/discounts';
-import type { Discount } from '@/types/discount';
+import type { Discount } from '@/types';
 
 const props = defineProps<{
     open: boolean;

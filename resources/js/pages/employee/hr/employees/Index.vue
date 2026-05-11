@@ -17,7 +17,7 @@ import type {
     Employee,
     EmployeeFilterData,
     EmployeePagination,
-} from '@/types/employee';
+} from '@/types';
 import { getColumns } from './types/columns';
 
 const EmployeeFormModal = createLazyComponent(

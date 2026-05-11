@@ -39,7 +39,7 @@ import {
     ship,
 } from '@/routes/employee/inventory/transfers';
 import type { BreadcrumbItem } from '@/types';
-import type { StockTransfer } from '@/types/stock-transfer';
+import type { StockTransfer } from '@/types';
 import { getItemColumns } from './types/item-columns';
 
 const props = defineProps<{

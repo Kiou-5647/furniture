@@ -4,7 +4,7 @@ import { h } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import type { Department } from '@/types/department';
+import type { Department } from '@/types';
 
 export function getColumns(
     onEdit: (department: Department) => void,

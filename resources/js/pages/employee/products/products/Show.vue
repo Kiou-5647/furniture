@@ -48,7 +48,7 @@ import {
 
 } from '@/types';
 import type {BreadcrumbItem} from '@/types';
-import type { Product } from '@/types/product';
+import type { Product } from '@/types';
 
 const props = defineProps<{
     product: Product;

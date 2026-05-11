@@ -13,7 +13,7 @@ import type {
     Invoice,
     InvoiceFilterData,
     InvoicePagination,
-} from '@/types/invoice';
+} from '@/types';
 import CreateInvoiceDialog from './components/CreateInvoiceDialog.vue';
 import { getColumns } from './types/columns';
 

@@ -23,7 +23,7 @@ import type {
     Booking,
     BookingFilterData,
     BookingPagination,
-} from '@/types/booking';
+} from '@/types';
 import { getColumns } from './types/columns';
 
 const CreateBookingDialog = createLazyComponent(

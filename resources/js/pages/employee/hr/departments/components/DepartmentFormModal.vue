@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { store, update } from '@/routes/employee/hr/departments';
-import type { Department } from '@/types/department';
+import type { Department } from '@/types';
 
 const props = defineProps<{
     open: boolean;

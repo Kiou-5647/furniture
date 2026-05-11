@@ -25,7 +25,7 @@ import { useBundleForm } from '@/composables/useBundleForm';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { formatPrice, slugify } from '@/lib';
 import { index } from '@/routes/employee/bundles';
-import type { Bundle } from '@/types/bundle';
+import type { Bundle } from '@/types';
 
 const ProductCardSearchModal = createLazyComponent(
     () =>

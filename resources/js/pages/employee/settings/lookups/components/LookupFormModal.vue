@@ -32,7 +32,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { slugify } from '@/lib';
 import { store, update } from '@/routes/employee/settings/lookups';
-import type { Lookup } from '@/types/lookup';
+import type { Lookup } from '@/types';
 
 const props = defineProps<{
     open: boolean;

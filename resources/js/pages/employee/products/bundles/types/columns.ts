@@ -3,7 +3,7 @@ import type { ColumnDef } from '@tanstack/vue-table';
 import { h } from 'vue';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import type { Bundle } from '@/types/bundle';
+import type { Bundle } from '@/types';
 
 export const getColumns = (
     handleEdit: (bundle: Bundle) => void,
