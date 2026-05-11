@@ -23,7 +23,7 @@ import {
 import CustomerLayout from '@/layouts/settings/CustomerLayout.vue';
 import ShopLayout from '@/layouts/ShopLayout.vue';
 import { formatDateTime } from '@/lib/date-utils';
-import { formatPrice } from '@/lib/utils';
+import { formatPrice } from '@/lib';
 import { show as showBundle } from '@/routes/bundles';
 import { orders as ordersProfile } from '@/routes/customer/profile';
 import { cancel } from '@/routes/customer/profile/orders';

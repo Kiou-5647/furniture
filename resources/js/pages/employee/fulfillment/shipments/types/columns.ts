@@ -1,4 +1,4 @@
-import { Package, MoreHorizontal, Truck, CheckCircle2, Repeat } from '@lucide/vue';
+import { Package, MoreHorizontal, Truck, CheckCircle2, XCircle, CircleDashed, Trash2, Pencil } from '@lucide/vue';
 import type { ColumnDef } from '@tanstack/vue-table';
 import { h } from 'vue';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +11,8 @@ export function getColumns(
     onShip: (shipment: Shipment) => void,
     onDeliver: (shipment: Shipment) => void,
     onResend: (shipment: Shipment) => void,
+    onCancel: (shipment: Shipment) => void,
+    onDelete: (shipment: Shipment) => void,
 ): ColumnDef<Shipment>[] {
     return [
         {
@@ -102,10 +104,8 @@ export function getColumns(
             enableHiding: false,
             meta: { align: 'center' },
             cell: ({ row }) => {
-                const s = row.original;
-                const canShip = s.status === 'pending';
-                const canDeliver = s.status === 'shipped';
-                const canResend = s.status === 'cancelled' && s.order?.status !== 'cancelled';
+                const shipment = row.original;
+
                 return h(DropdownMenu, {}, {
                     default: () => [
                         h(DropdownMenuTrigger, { asChild: true }, () =>
@@ -113,24 +113,40 @@ export function getColumns(
                         ),
                         h(DropdownMenuContent, { align: 'end', class: 'w-45' }, () => [
                             h(DropdownMenuLabel, () => 'Thao tác'),
-                            h(DropdownMenuItem, { onClick: () => onShow(s) }, () => 'Chi tiết'),
+                            h(DropdownMenuItem, { onClick: () => onShow(shipment) }, () => [
+                                h(Pencil, { class: 'mr-2 h-4 w-4' }),
+                                'Chi tiết',
+                            ]),
                             h(DropdownMenuSeparator),
-                            canShip
-                                ? h(DropdownMenuItem, { class: 'text-blue-600', onClick: () => onShip(s) }, () => [
-                                    h(Truck, { class: 'mr-2 h-4 w-4' }),
+                            shipment.can_ship
+                                ? h(DropdownMenuItem, { class: 'text-blue-600', onClick: () => onShip(shipment) }, () => [
+                                    h(CheckCircle2, { class: 'mr-2 h-4 w-4' }),
                                     'Xuất kho',
                                 ])
                                 : null,
-                            canDeliver
-                                ? h(DropdownMenuItem, { class: 'text-green-600', onClick: () => onDeliver(s) }, () => [
+                            shipment.can_deliver
+                                ? h(DropdownMenuItem, { class: 'text-green-600', onClick: () => onDeliver(shipment) }, () => [
                                     h(CheckCircle2, { class: 'mr-2 h-4 w-4' }),
-                                    'Đã giao',
+                                    'Giao hàng',
                                 ])
                                 : null,
-                            canResend
-                                ? h(DropdownMenuItem, { class: 'text-blue-600', onClick: () => onResend(s) }, () => [
-                                    h(Repeat, { class: 'mr-2 h-4 w-4' }),
+                            shipment.can_cancel
+                                ? h(DropdownMenuItem, { class: 'text-destructive', onClick: () => onCancel(shipment) }, () => [
+                                    h(XCircle, { class: 'mr-2 h-4 w-4' }),
+                                    'Hủy đơn',
+                                ])
+                                : null,
+                            shipment.can_resend
+                                ? h(DropdownMenuItem, { onClick: () => onResend(shipment) }, () => [
+                                    h(CircleDashed, { class: 'mr-2 h-4 w-4' }),
                                     'Gửi lại',
+                                ])
+                                : null,
+                            h(DropdownMenuSeparator),
+                            shipment.can_delete ?
+                                h(DropdownMenuItem, { class: 'text-destructive', onClick: () => onDelete(shipment) }, () => [
+                                    h(Trash2, { class: 'mr-2 h-4 w-4' }),
+                                    'Xóa',
                                 ])
                                 : null,
                         ]),

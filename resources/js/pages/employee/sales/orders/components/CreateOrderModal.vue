@@ -44,8 +44,8 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { formatPrice } from '@/lib/utils';
-import { store } from '@/routes/employee/sales/orders';
+import { formatPrice } from '@/lib';
+import { store } from '@/routes/employee/orders';
 
 export interface VariantOption {
     id: string;
@@ -271,7 +271,7 @@ const grandTotal = computed(() => {
 });
 
 const freeshipThreshold = computed(
-    () => page.props.settings?.freeship_threshold || 0,
+    () => (page.props as any).settings?.freeship_threshold || 0,
 );
 
 const effectiveShippingCost = computed(() => {

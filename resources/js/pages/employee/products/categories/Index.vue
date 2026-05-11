@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { createLazyComponent } from '@/composables/createLazyComponent';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { cleanQuery, setCookie } from '@/lib/utils';
+import { cleanQuery, setCookie } from '@/lib';
 import { index, destroy } from '@/routes/employee/categories';
 import type { BreadcrumbItem } from '@/types';
 import type {

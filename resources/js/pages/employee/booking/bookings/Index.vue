@@ -5,12 +5,19 @@ import { debounce } from 'lodash';
 import { computed, ref, watch } from 'vue';
 import DataTableGroup from '@/components/custom/data-table/DataTableGroup.vue';
 import DataTableSingleFilter from '@/components/custom/data-table/DataTableSingleFilter.vue';
+import DeleteConfirmation from '@/components/custom/DeleteConfirmation.vue';
 import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import { createLazyComponent } from '@/composables/createLazyComponent';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { cleanQuery } from '@/lib/utils';
-import { index, show, confirm, cancel } from '@/routes/employee/booking';
+import { CheckUserPermission, cleanQuery } from '@/lib';
+import {
+    index,
+    show,
+    confirm,
+    cancel,
+    destroy,
+} from '@/routes/employee/booking';
 import type { BreadcrumbItem } from '@/types';
 import type {
     Booking,
@@ -55,6 +62,8 @@ const breadcrumbs: BreadcrumbItem[] = [
 const isActuallyLoading = ref(true);
 const search = ref(props.filters.search ?? '');
 const selectedStatus = ref(props.filters.status ?? undefined);
+const showDeleteDialog = ref(false);
+const selectedBooking = ref<Booking | null>(null);
 
 const hasActiveFilters = computed(
     () => !!props.filters.search || !!props.filters.status,
@@ -64,7 +73,9 @@ const statusFilterOptions = computed(() =>
     props.statusOptions.map((s) => ({ label: s.label, value: s.value })),
 );
 
-const activeColumns = computed(() => getColumns(handleConfirm, handleCancel));
+const activeColumns = computed(() =>
+    getColumns(handleRowClick, handleConfirm, handleCancel, confirmDelete),
+);
 
 watch(search, (val) => {
     if (val !== (props.filters.search ?? '')) {
@@ -159,6 +170,21 @@ async function handleCancel(booking: Booking) {
         { preserveScroll: true },
     );
 }
+
+function confirmDelete(booking: Booking) {
+    selectedBooking.value = booking;
+    showDeleteDialog.value = true;
+}
+
+function performDelete() {
+    if (!selectedBooking.value) return;
+    router.delete(destroy(selectedBooking.value).url, {
+        onSuccess: () => {
+            showDeleteDialog.value = false;
+            selectedBooking.value = null;
+        },
+    });
+}
 </script>
 
 <template>
@@ -170,7 +196,10 @@ async function handleCancel(booking: Booking) {
                     title="Quản lý đặt lịch"
                     description="Danh sách đặt lịch thiết kế"
                 />
-                <Button @click="handleCreate">
+                <Button
+                    v-if="CheckUserPermission('Tạo lịch thiết kế')"
+                    @click="handleCreate"
+                >
                     <Plus class="mr-2 h-4 w-4" /> Thêm mới
                 </Button>
             </div>
@@ -212,6 +241,18 @@ async function handleCancel(booking: Booking) {
                 :designer-options="designerOptions"
                 @close="showCreateDialog = false"
                 @created="handleCreated"
+            />
+
+            <DeleteConfirmation
+                v-model:open="showDeleteDialog"
+                title="Xác nhận xóa đặt lịch"
+                :item-name="selectedBooking?.booking_number"
+                :description="
+                    selectedBooking
+                        ? `Bạn có chắc chắn muốn xóa lịch thiết kế &quot;${selectedBooking.booking_number}&quot;?`
+                        : ''
+                "
+                @confirm="performDelete"
             />
         </div>
     </AppLayout>

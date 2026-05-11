@@ -80,8 +80,8 @@ class OrderStockDeductionService
             $itemCosts = [];
 
             foreach ($shipment->items as $shipmentItem) {
-                $sourceLocation = $shipment->originLocation
-                    ?? $shipmentItem->orderItem?->sourceLocation;
+                $sourceLocation = $shipment->originLocation;
+
                 if (! $sourceLocation) {
                     continue;
                 }
@@ -121,7 +121,7 @@ class OrderStockDeductionService
                         $variant = \App\Models\Product\ProductVariant::find($orderItem->purchasable_id);
                         $orderItem->update(['cost_per_unit' => $variant?->getAverageCostPerUnit()]);
                     } else {
-                        // It's a bundle. 
+                        // It's a bundle.
                         // Use the recorded costs in configuration if available, otherwise use the computed cost from this shipment.
                         $recordedCost = 0;
                         if (!empty($orderItem->configuration)) {
@@ -186,8 +186,8 @@ class OrderStockDeductionService
         string $notes,
         ?Employee $performedBy
     ): void {
-        $sourceLocation = $shipment->originLocation
-            ?? $shipmentItem->orderItem?->sourceLocation;
+        $sourceLocation = $shipment->originLocation;
+
         if (! $sourceLocation) {
             return;
         }

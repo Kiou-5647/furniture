@@ -49,7 +49,7 @@ import { Textarea } from '@/components/ui/textarea';
 import type { ProductFormContext } from '@/composables/useProductForm';
 import type { LookupOptionItem } from '@/composables/useProductForm';
 import { formatDateOnly } from '@/lib/date-utils';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 import type { SpecItem } from '@/types';
 import type { SpecNamespace } from '@/types';
 

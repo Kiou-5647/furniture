@@ -32,7 +32,7 @@ import {
     cancel,
     resend,
     returnItem as returnItemRoute,
-} from '@/routes/employee/fulfillment/shipments';
+} from '@/routes/employee/shipments';
 import type { BreadcrumbItem } from '@/types';
 import type { Shipment, ShipmentItem } from '@/types/order';
 
@@ -106,7 +106,7 @@ const returnItem = ref<ShipmentItem | null>(null);
 const returnReason = ref('');
 
 function canReturnItem(item: ShipmentItem): boolean {
-    return ['shipped', 'delivered'].includes(item.status);
+    return item.can_return;
 }
 
 function handleReturnItem(item: ShipmentItem) {

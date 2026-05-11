@@ -44,7 +44,7 @@ import {
     formatNumber,
     handleNumericInput,
     formatPrice,
-} from '@/lib/utils';
+} from '@/lib';
 import type { SpecNamespace } from '@/types';
 
 const props = defineProps<{

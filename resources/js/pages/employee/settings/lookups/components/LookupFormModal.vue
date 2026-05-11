@@ -30,7 +30,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { slugify } from '@/lib/utils';
+import { slugify } from '@/lib';
 import { store, update } from '@/routes/employee/settings/lookups';
 import type { Lookup } from '@/types/lookup';
 

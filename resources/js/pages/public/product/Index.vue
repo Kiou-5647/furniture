@@ -16,7 +16,7 @@ import {
     SheetTrigger,
 } from '@/components/ui/sheet';
 import ShopLayout from '@/layouts/ShopLayout.vue';
-import { cleanQuery, setCookie } from '@/lib/utils';
+import { cleanQuery, setCookie } from '@/lib';
 import { index } from '@/routes/products';
 import type { FilterNamespace, ProductFilters } from '@/types/public/filter';
 

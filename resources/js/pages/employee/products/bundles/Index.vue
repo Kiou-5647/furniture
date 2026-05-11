@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { cleanQuery, setCookie } from '@/lib/utils';
+import { cleanQuery, setCookie } from '@/lib';
 import { index, create, edit, destroy } from '@/routes/employee/bundles';
 import type { BreadcrumbItem } from '@/types';
 import type { Bundle, BundleFilterData, BundlePagination } from '@/types/bundle';

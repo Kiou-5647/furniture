@@ -62,7 +62,7 @@ class CreateOrderAction
                 'ward_code'             => $data->ward_code,
                 'province_name'         => $data->province_name,
                 'ward_name'             => $data->ward_name,
-                'street'          => $data->street ?? null,
+                'street'                => $data->street ?? null,
                 'total_amount'          => $grandTotal,
                 'total_items'           => $totalItems,
                 'status'                => $initialStatus,
@@ -140,130 +140,103 @@ class CreateOrderAction
         }
     }
 
+    protected function validateStock($purchasable, array $item, bool $isShipping, ?string $storeLocationId, ?string $provinceCode): void
+    {
+        if ($purchasable instanceof Bundle) {
+            $this->validateBundleAvailability($purchasable, $item, $isShipping, $storeLocationId, $provinceCode);
+            return;
+        }
+
+        if ($isShipping) {
+            $hasStock = $this->stockLocator->findStockForItem($item['purchasable_type'], $item['purchasable_id'])->isNotEmpty();
+            if (!$hasStock) {
+                throw new \RuntimeException("Sản phẩm '{$purchasable->name}' hiện hết hàng trên toàn hệ thống.");
+            }
+        } elseif ($storeLocationId) {
+            $stockOptions = $this->stockLocator->findStockForItem($item['purchasable_type'], $item['purchasable_id'], null, null, $storeLocationId);
+            $storeStock = $stockOptions->firstWhere('location_id', $storeLocationId);
+            if (! $storeStock || $storeStock['available_qty'] <= 0) {
+                throw new \RuntimeException('Sản phẩm "' . $purchasable->name . '" hết hàng tại cửa hàng.');
+            }
+        }
+    }
+
+    protected function resolvePricing($purchasable, array $item): array
+    {
+        if ($purchasable instanceof ProductVariant) {
+            return [
+                'original_unit_price' => (float) $purchasable->price,
+                'configuration'       => $item['configuration'] ?? [],
+            ];
+        }
+
+        // Bundle Logic
+        $config = $item['configuration'] ?? [];
+        $bundleUnitPrice = (float) $item['unit_price'];
+        $originalTotalValue = 0.0;
+        $enrichedConfig = [];
+
+        // First pass: Calculate total value of components
+        foreach ($config as $contentId => $value) {
+            $variantId = $value['variant_id'] ?? null;
+            if ($variantId && ($variant = ProductVariant::find($variantId))) {
+                $originalTotalValue += (float) $variant->getEffectivePrice() * ($value['quantity'] ?? 1);
+            }
+        }
+
+        // Second pass: Distribute bundle price proportionally
+        foreach ($purchasable->contents as $content) {
+            $variantId = $config[$content->id]['variant_id'] ?? null;
+            if ($variantId && ($variant = ProductVariant::find($variantId))) {
+                $originalPrice = (float) $variant->getEffectivePrice();
+                $discountedPrice = $originalTotalValue > 0
+                    ? ($originalPrice / $originalTotalValue) * $bundleUnitPrice
+                    : 0;
+
+                $enrichedConfig[$content->id] = [
+                    'variant_id' => $variantId,
+                    'price'      => round($discountedPrice, -3),
+                    'cost'       => $variant->getAverageCostPerUnit(),
+                    'quantity'   => $config[$content->id]['quantity'] ?? $content->quantity,
+                ];
+            }
+        }
+
+        return [
+            'original_unit_price' => $originalTotalValue,
+            'configuration'       => $enrichedConfig,
+        ];
+    }
+
     /**
      * Validate items and resolve source locations.
-     * For in-store orders: source = store_location_id, only store-stock items allowed.
-     * For shipping orders: source = closest location with stock, all items allowed.
+     * For in-store: stock is validated at store_location_id.
+     * For shipping: stock is validated system-wide; location is resolved during shipment creation.
      */
     protected function validateAndResolveItems(CreateOrderData $data): array
     {
         $validated = [];
         $isShipping = (bool) $data->shipping_method_id;
-        $customerProvinceCode = $data->province_code;
 
         foreach ($data->items as $item) {
-            $purchasable = $this->resolvePurchasable(
-                $item['purchasable_type'],
-                $item['purchasable_id']
-            );
-
+            $purchasable = $this->resolvePurchasable($item['purchasable_type'], $item['purchasable_id']);
             if (! $purchasable) {
                 throw new \RuntimeException('Sản phẩm không khả dụng.');
             }
 
-            $originalUnitPrice = 0;
-            if ($purchasable instanceof ProductVariant) {
-                $originalUnitPrice = (float) $purchasable->price;
-            } elseif ($purchasable instanceof Bundle) {
-                $config = $item['configuration'] ?? [];
-                foreach ($purchasable->contents as $content) {
-                    $variantId = $config[$content->id] ?? null;
-                    if ($variantId) {
-                        $variant = ProductVariant::find($variantId);
-                        $originalUnitPrice += (float) ($variant->price ?? 0) * $content->quantity;
-                    }
-                }
-            }
+            // 1. Validate Stock
+            $this->validateStock($purchasable, $item, $isShipping, $data->store_location_id, $data->province_code);
 
-            // For bundles: validate all bundle content variants have stock somewhere
-            if ($purchasable instanceof Bundle) {
-                $this->validateBundleAvailability($purchasable, $item, $isShipping, $data->store_location_id, $customerProvinceCode);
-                $sourceLocationId = null; // Will be resolved when shipments are created
-            } elseif ($purchasable instanceof ProductVariant) {
-                if ($isShipping) {
-                    // If location is explicitly provided, use it directly
-                    if (! empty($item['source_location_id'])) {
-                        $sourceLocationId = $item['source_location_id'];
-                    } else {
-                        // Auto-resolve best location
-                        $sourceLocationId = $this->stockLocator->resolveBestLocation(
-                            $item['purchasable_type'],
-                            $item['purchasable_id'],
-                            $customerProvinceCode,
-                            $data->store_location_id
-                        );
-
-                        // If no clear nearest, leave null — employee will set it later
-                        if (! $sourceLocationId) {
-                            $sourceLocationId = null;
-                        }
-                    }
-                } elseif ($data->store_location_id) {
-                    $stockOptions = $this->stockLocator->findStockForItem(
-                        $item['purchasable_type'],
-                        $item['purchasable_id'],
-                        null,
-                        null,
-                        $data->store_location_id
-                    );
-
-                    $storeStock = $stockOptions->firstWhere('location_id', $data->store_location_id);
-                    if (! $storeStock || $storeStock['available_qty'] <= 0) {
-                        throw new \RuntimeException('Sản phẩm "' . $purchasable->name . '" hết hàng tại cửa hàng.');
-                    }
-
-                    $sourceLocationId = $data->store_location_id;
-                } else {
-                    // Online order without shipping — no stock validation yet
-                    $sourceLocationId = null;
-                }
-            }
-
-            $finalConfiguration = $item['configuration'] ?? [];
-            if ($purchasable instanceof Bundle) {
-                $enrichedConfig = [];
-                $bundleUnitPrice = (float) $item['unit_price'];
-
-                $totalIndividualValue = 0.0;
-                foreach ($purchasable->contents as $content) {
-                    $variantId = $finalConfiguration[$content->id] ?? null;
-                    if ($variantId) {
-                        /** @var \App\Models\Product\ProductVariant */
-                        $variant = ProductVariant::find($variantId);
-                        $totalIndividualValue += ($variant ? (float) $variant->getEffectivePrice() : 0) * $content->quantity;
-                    }
-                }
-
-                foreach ($purchasable->contents as $content) {
-                    $variantId = $finalConfiguration[$content->id] ?? null;
-                    if ($variantId) {
-                        /** @var \App\Models\Product\ProductVariant */
-                        $variant = ProductVariant::find($variantId);
-                        $originalPrice = $variant ? (float) $variant->getEffectivePrice() : 0;
-
-                        $discountedUnitPrice = $totalIndividualValue > 0
-                            ? ($originalPrice / $totalIndividualValue) * $bundleUnitPrice
-                            : 0;
-
-                        $enrichedConfig[$content->id] = [
-                            'variant_id' => $variantId,
-                            'price' => round($discountedUnitPrice, -3),
-                            'cost' => $variant ? $variant->getAverageCostPerUnit() : 0,
-                            'quantity' => $content->quantity,
-                        ];
-                    }
-                }
-                $finalConfiguration = $enrichedConfig;
-            }
+            // 2. Resolve Pricing & Configuration
+            $pricing = $this->resolvePricing($purchasable, $item);
 
             $validated[] = [
-                'purchasable_type' => $item['purchasable_type'],
-                'purchasable_id' => $item['purchasable_id'],
-                'quantity' => $item['quantity'],
-                'unit_price' => $item['unit_price'],
-                'original_unit_price' => $originalUnitPrice,
-                'configuration' => $finalConfiguration,
-                'source_location_id' => $sourceLocationId ?? null,
+                'purchasable_type'   => $item['purchasable_type'],
+                'purchasable_id'     => $item['purchasable_id'],
+                'quantity'           => $item['quantity'],
+                'unit_price'         => $item['unit_price'],
+                'original_unit_price' => $pricing['original_unit_price'],
+                'configuration'      => $pricing['configuration'],
             ];
         }
 
@@ -284,16 +257,16 @@ class CreateOrderAction
         }
 
         foreach ($bundle->contents as $content) {
-            $variantId = $config[$content->id] ?? null;
+            $variantId = $config[$content->id]['variant_id'] ?? null;
 
             if (!$variantId) {
-                throw new \RuntimeException('Gói sản phẩm "' . $bundle->name . '" chưa chọn phiên bản cho sản phẩm ' . $content->productCard->product->name);
+                throw new \RuntimeException("Gói sản phẩm '{$bundle->name}' chưa chọn phiên bản cho sản phẩm '{$content->productCard->product->name}'.");
             }
 
             $requiredQty = $content->quantity * $item['quantity'];
 
             if ($isShipping) {
-                // Check if the SPECIFIC selected variant has enough stock anywhere in the system
+                // System-wide check: Ensure the specific variant has enough stock anywhere
                 $hasStock = $this->stockLocator->findStockForItem(
                     'App\\Models\\Product\\ProductVariant',
                     $variantId
@@ -303,7 +276,7 @@ class CreateOrderAction
                     throw new \RuntimeException("Phiên bản đã chọn của sản phẩm '{$content->productCard->product->name}' trong gói '{$bundle->name}' đã hết hàng.");
                 }
             } elseif ($storeLocationId) {
-                // In-store: check if the SPECIFIC selected variant has enough stock at the store location
+                // In-store check: Ensure the specific store has enough stock
                 $stockOptions = $this->stockLocator->findStockForItem(
                     'App\\Models\\Product\\ProductVariant',
                     $variantId,
@@ -313,8 +286,7 @@ class CreateOrderAction
                 );
 
                 $storeStock = $stockOptions->firstWhere('location_id', $storeLocationId);
-
-                if (!$storeStock || $storeStock['available_qty'] < $requiredQty) {
+                if (! $storeStock || $storeStock['available_qty'] < $requiredQty) {
                     throw new \RuntimeException("Phiên bản đã chọn của sản phẩm '{$content->productCard->product->name}' trong gói '{$bundle->name}' hết hàng tại cửa hàng.");
                 }
             }

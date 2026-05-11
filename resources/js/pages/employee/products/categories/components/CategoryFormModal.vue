@@ -40,7 +40,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { slugify } from '@/lib/utils';
+import { slugify } from '@/lib';
 import { store, update } from '@/routes/employee/categories';
 import type { ProductType } from '@/types';
 import type { Category } from '@/types/category';

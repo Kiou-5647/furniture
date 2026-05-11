@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/carousel';
 import type { UnwrapRefCarouselApi as CarouselApi } from '@/components/ui/carousel/interface';
 import ShopLayout from '@/layouts/ShopLayout.vue';
-import { formatPrice } from '@/lib/utils';
+import { formatPrice } from '@/lib';
 import { show as productShow } from '@/routes/products';
 import { useCartStore } from '@/stores/cart';
 import type { Bundle } from '@/types/public/bundle';

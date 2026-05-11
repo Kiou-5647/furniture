@@ -8,7 +8,7 @@ import DataTableSingleFilter from '@/components/custom/data-table/DataTableSingl
 import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { cleanQuery, setCookie } from '@/lib/utils';
+import { cleanQuery, setCookie } from '@/lib';
 import { index, create, show } from '@/routes/employee/inventory/transfers';
 import type { BreadcrumbItem } from '@/types';
 import type {

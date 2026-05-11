@@ -20,9 +20,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { createLazyComponent } from '@/composables/createLazyComponent';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { cleanQuery, setCookie } from '@/lib/utils';
+import { cleanQuery, setCookie } from '@/lib';
 import { index, destroy } from '@/routes/employee/fulfillment/shipping-methods';
-import { index as trashIndex } from '@/routes/employee/fulfillment/shipping-methods/trash';
 import type { BreadcrumbItem } from '@/types';
 import type {
     ShippingMethod,
@@ -167,11 +166,6 @@ function handleDialogClose() {
                 <div class="flex items-center gap-2">
                     <Button @click="handleCreate">
                         <Plus class="mr-2 h-4 w-4" /> Thêm phương thức
-                    </Button>
-                    <Button variant="outline" as-child>
-                        <Link :href="trashIndex().url">
-                            <Trash2 class="mr-2 h-4 w-4" /> Thùng rác
-                        </Link>
                     </Button>
                 </div>
             </div>

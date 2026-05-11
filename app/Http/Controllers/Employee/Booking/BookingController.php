@@ -8,6 +8,7 @@ use App\Actions\Booking\CreateBookingAction;
 use App\Actions\Booking\MarkBookingAsPaidAction;
 use App\Data\Booking\BookingFilterData;
 use App\Data\Booking\CreateBookingData;
+use App\Enums\BookingStatus;
 use App\Enums\InvoiceStatus;
 use App\Http\Requests\Booking\CreateBookingRequest;
 use App\Http\Resources\Employee\Booking\BookingResource;
@@ -16,10 +17,8 @@ use App\Services\Booking\BookingService;
 use App\Services\Hr\DesignerService;
 use App\Settings\BookingSettings;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
-use Inertia\Response;
 
 class BookingController
 {
@@ -29,40 +28,32 @@ class BookingController
         private BookingSettings $settings
     ) {}
 
-    public function index(Request $request): Response
+    public function index(Request $request)
     {
+        if (!Gate::allows('viewAny', Booking::class)) {
+            return back()->with('error', 'Bạn không có quyền truy cập danh sách đơn hàng!');
+        }
+
         $filter = BookingFilterData::fromRequest($request);
 
         return Inertia::render('employee/booking/bookings/Index', [
-            'deposit_percentage' => $this->settings->deposit_percentage,
-            'statusOptions' => $this->service->getStatusOptions(),
-            'customerOptions' => $this->service->getCustomerOptions(),
-            'designerOptions' => $this->designerService->getActiveOptions()->toArray(),
             'bookings' => Inertia::defer(fn() => BookingResource::collection(
                 $this->service->getFiltered($filter, $request->user())
             )),
+            'deposit_percentage' => $this->settings->deposit_percentage,
+            'statusOptions' => BookingStatus::options(),
+            'designerOptions' => $this->designerService->getActiveOptions()->toArray(),
+            'customerOptions' => $this->service->getCustomerOptions(),
             'filters' => $filter,
         ]);
     }
 
-    public function store(CreateBookingRequest $request, CreateBookingAction $action)
+    public function show(Request $request, Booking $booking)
     {
-        Gate::authorize('create', Booking::class);
-
-        $data = CreateBookingData::fromRequest($request);
-        try {
-            $booking = $action->execute($data);
-        } catch (\Exception $e) {
-            return back()->withErrors(['error', $e->getMessage()]);
+        if (!Gate::allows('view', $booking)) {
+            return back()->with('error', 'Bạn không có quyền xem chi tiết đặt lịch này!');
         }
 
-
-        return redirect()->route('employee.booking.show', $booking)
-            ->with('success', 'Đã tạo đặt lịch.');
-    }
-
-    public function show(Booking $booking, Request $request): Response
-    {
         $booking = $this->service->getById($booking->id, $request->user());
 
         return Inertia::render('employee/booking/bookings/Show', [
@@ -70,55 +61,61 @@ class BookingController
         ]);
     }
 
+    public function store(CreateBookingRequest $request, CreateBookingAction $action)
+    {
+        if (!Gate::allows('create', Booking::class)) {
+            return back()->with('error', 'Bạn không có quyền tạo đặt lịch!');
+        }
+
+        $data = CreateBookingData::fromRequest($request);
+        try {
+            $booking = $action->execute($data);
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+
+        return redirect()->route('employee.booking.show', $booking)
+            ->with('success', 'Đã tạo đặt lịch.');
+    }
+
     public function confirm(Booking $booking, Request $request, ConfirmBookingAction $action)
     {
-        Gate::authorize('confirm', $booking);
+        if (!Gate::allows('confirm', $booking)) {
+            return back()->with('error', 'Bạn không có quyền xác nhận đặt lịch này!');
+        }
 
-        $action->execute($booking);
+        try {
+            $booking = $action->execute($booking);
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Đã xác nhận đặt lịch.');
     }
 
     public function cancel(Booking $booking, Request $request, CancelBookingAction $action)
     {
-        Gate::authorize('cancel', $booking);
+        if (!Gate::allows('cancel', $booking)) {
+            return back()->with('error', 'Bạn không có quyền hủy đặt lịch này!');
+        }
+
         $employee = $request->user()->employee;
 
-        $action->execute($booking, $employee);
+        try {
+            $booking = $action->execute($booking, $employee);
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Đã hủy đặt lịch.');
     }
 
-    public function destroy(Booking $booking)
-    {
-        Gate::authorize('manage', $booking);
-
-        $booking->delete();
-
-        return back()->with('success', 'Đã xóa đặt lịch.');
-    }
-
-    public function restore(Booking $booking)
-    {
-        Gate::authorize('manage', $booking);
-
-        $booking->restore();
-
-        return back()->with('success', 'Đã khôi phục đặt lịch.');
-    }
-
-    public function forceDestroy(Booking $booking)
-    {
-        Gate::authorize('manage', $booking);
-
-        $booking->forceDelete();
-
-        return back()->with('success', 'Đã xóa vĩnh viễn đặt lịch.');
-    }
-
     public function openInvoice(Booking $booking)
     {
-        Gate::authorize('openInvoice', $booking);
+        if (!Gate::allows('openInvoice', $booking)) {
+            return back()->with('error', 'Bạn không có thực hiện hành động này!');
+        }
 
         $finalInvoice = $booking->finalInvoice;
 
@@ -138,24 +135,38 @@ class BookingController
 
     public function markAsPaid(Request $request, Booking $booking, MarkBookingAsPaidAction $action)
     {
+        if (!Gate::allows('markAsPaid', $booking)) {
+            return back()->with('error', 'Bạn không có thực hiện hành động này!');
+        }
+
         $request->validate([
             'invoice_type' => ['required', 'string', 'in:deposit,final'],
-            'gateway' => ['required', 'string'], // 'cash', 'vnpay', etc.
+            'gateway' => ['required', 'string'],
         ]);
 
         try {
-            // We pass the current authenticated employee as the performer
-            $employee = Auth::user()->employee;
+            $employee = $request->user()->employee;
 
             $action->execute(
                 $booking,
                 $request->invoice_type,
                 $employee
             );
-
-            return back()->with('success', 'Đã ghi nhận thanh toán thành công!');
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => $e->getMessage()]);
+            return back()->with('error', $e->getMessage());
         }
+
+        return back()->with('success', 'Đã ghi nhận thanh toán thành công!');
+    }
+
+    public function destroy(Booking $booking)
+    {
+        if (!Gate::allows('delete', $booking)) {
+            return back()->with('error', 'Bạn không có thực hiện hành động này!');
+        }
+
+        $booking->delete();
+
+        return back()->with('success', 'Đã xóa đặt lịch.');
     }
 }

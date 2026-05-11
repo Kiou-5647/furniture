@@ -36,8 +36,7 @@ class FulfillmentRouterService
                 }
 
                 // Handle standard ProductVariant items
-                $locationId = $item->source_location_id
-                    ?? $this->resolveBestLocation($item->purchasable_id)
+                $locationId = $this->resolveBestLocation($item->purchasable_id)
                     ?? $order->store_location_id;
 
                 if ($locationId) {

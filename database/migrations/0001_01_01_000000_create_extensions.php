@@ -14,7 +14,6 @@ return new class extends Migration
         DB::statement('CREATE EXTENSION IF NOT EXISTS "uuid-ossp" CASCADE');
         DB::statement('CREATE EXTENSION IF NOT EXISTS pg_trgm CASCADE');
         DB::statement('CREATE EXTENSION IF NOT EXISTS btree_gist CASCADE');
-        DB::statement('CREATE EXTENSION IF NOT EXISTS vector CASCADE');
     }
 
     /**
@@ -22,7 +21,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement('DROP EXTENSION IF EXISTS vector CASCADE');
         DB::statement('DROP EXTENSION IF EXISTS btree_gist CASCADE');
         DB::statement('DROP EXTENSION IF EXISTS pg_trgm CASCADE');
         DB::statement('DROP EXTENSION IF EXISTS "uuid-ossp" CASCADE');

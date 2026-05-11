@@ -8,7 +8,7 @@ export function useFlashToast() {
     // Watch the flash prop for changes
     watch(
         () => page.props.flash,
-        (flash) => {
+        (flash: any) => {
             if (!flash) return;
 
             if (flash.success) toast.success(flash.success);

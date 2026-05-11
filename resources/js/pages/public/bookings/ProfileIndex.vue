@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import CustomerLayout from '@/layouts/settings/CustomerLayout.vue';
 import ShopLayout from '@/layouts/ShopLayout.vue';
 import { formatDateTime } from '@/lib/date-utils';
-import { cleanQuery, formatPrice } from '@/lib/utils';
+import { cleanQuery, formatPrice } from '@/lib';
 import { bookings as bookingsRoute } from '@/routes/customer/profile';
 import { show } from '@/routes/customer/profile/bookings';
 import { initiate } from '@/routes/payment/vnpay';

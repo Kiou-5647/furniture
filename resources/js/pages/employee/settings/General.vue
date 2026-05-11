@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Sonner from '@/components/ui/sonner/Sonner.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { formatNumber, handleNumericInput } from '@/lib/utils';
+import { formatNumber, handleNumericInput } from '@/lib';
 import { update } from '@/routes/employee/settings/general';
 import type { BreadcrumbItem } from '@/types/navigation';
 

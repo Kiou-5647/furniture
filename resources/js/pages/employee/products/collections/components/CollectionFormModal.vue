@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { slugify } from '@/lib/utils';
+import { slugify } from '@/lib';
 import { store, update } from '@/routes/employee/collections';
 import type { Collection } from '@/types/collection';
 import { toast } from 'vue-sonner';

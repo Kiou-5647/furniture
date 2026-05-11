@@ -47,6 +47,9 @@ export interface Booking {
     can_confirm: boolean;
     can_cancel: boolean;
     can_pay_deposit: boolean;
+    can_open_invoice: boolean;
+    can_mark_final_paid: boolean;
+    can_delete: boolean;
     created_at: string;
     updated_at: string;
 }

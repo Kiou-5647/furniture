@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Gate;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
@@ -92,21 +93,6 @@ class Booking extends Model
         return $this->depositInvoice?->status === InvoiceStatus::Paid;
     }
 
-    public function canBeConfirmed(): bool
-    {
-        return $this->status === BookingStatus::PendingConfirmation;
-    }
-
-    public function canBeCancelled(): bool
-    {
-        return in_array($this->status, [BookingStatus::PendingDeposit, BookingStatus::PendingConfirmation, BookingStatus::Confirmed], true);
-    }
-
-    public function canPayDeposit(): bool
-    {
-        return $this->status === BookingStatus::PendingDeposit;
-    }
-
     public function isConfirmed(): bool
     {
         return $this->status === BookingStatus::Confirmed;
@@ -137,5 +123,90 @@ class Booking extends Model
         }
 
         return $token;
+    }
+
+    public function canBeConfirmed(): bool
+    {
+        // 1. Check trạng thái
+        if ($this->status !== BookingStatus::PendingConfirmation) {
+            return false;
+        }
+
+        // 2. Check thời gian: Không thể xác nhận lịch đã quá hạn (trong quá khứ)
+        if ($this->start_at && $this->start_at->isPast()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function canBeCancelled(): bool
+    {
+        // 1. Check trạng thái
+        if (in_array($this->status, [BookingStatus::Completed, BookingStatus::Cancelled], true)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function canPayDeposit(): bool
+    {
+        // 1. Check trạng thái
+        if ($this->status !== BookingStatus::PendingDeposit) {
+            return false;
+        }
+
+        // 2. Check thời gian: Không thể đặt cọc cho lịch đã quá hạn
+        if ($this->start_at && $this->start_at->isPast()) {
+            return false;
+        }
+
+        // 3. Check trạng thái hóa đơn
+        if ($this->depositInvoice->status !== InvoiceStatus::Open) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function canOpenInvoice(): bool
+    {
+        // 1. Check trạng thái
+        if ($this->status !== BookingStatus::Confirmed) {
+            return false;
+        }
+
+        // 2. Check thời gian: Chỉ cho phép thanh toán cuối khi đã kết thúc lịch hẹn
+        if ($this->end_at && $this->end_at->isFuture()) {
+            return false;
+        }
+
+        // 3. Check trạng thái hóa đơn
+        if ($this->finalInvoice->status !== InvoiceStatus::Draft) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function canMarkFinalPaid(): bool
+    {
+        // 1. Check trạng thái
+        if ($this->status !== BookingStatus::Confirmed) {
+            return false;
+        }
+
+        // 2. Check thời gian: Chỉ cho phép thanh toán cuối khi đã kết thúc lịch hẹn
+        if ($this->end_at && $this->end_at->isFuture()) {
+            return false;
+        }
+
+        // 3. Check trạng thái hóa đơn
+        if ($this->finalInvoice->status !== InvoiceStatus::Open) {
+            return false;
+        }
+
+        return true;
     }
 }

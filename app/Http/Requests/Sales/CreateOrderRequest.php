@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Sales;
 
-use App\Enums\UserType;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -10,15 +9,7 @@ class CreateOrderRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        if (! $this->user()) {
-            return false;
-        }
-
-        if ($this->user()->type === UserType::Customer) {
-            return true;
-        }
-
-        return $this->user()->can('Quản lý đơn hàng');
+        return true;
     }
 
     public function rules(): array
@@ -35,7 +26,6 @@ class CreateOrderRequest extends FormRequest
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.unit_price' => ['required', 'numeric', 'min:0'],
             'items.*.configuration' => ['nullable', 'array'],
-            'items.*.source_location_id' => ['nullable', 'uuid', 'exists:locations,id'],
 
             'guest_name' => ['nullable', 'string', 'max:255'],
             'guest_phone' => ['nullable', 'string', 'max:20'],

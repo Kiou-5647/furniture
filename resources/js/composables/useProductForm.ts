@@ -54,7 +54,7 @@ const difficultyOptions: { label: string; value: string }[] = [
 const page = usePage();
 
 const defaultWarrantyMonths = computed(() =>
-    Number(page.props.settings?.default_warranty) || 0
+    Number((page.props as any).settings?.default_warranty) || 0
 ) ;
 
 export interface ProductFormContext {

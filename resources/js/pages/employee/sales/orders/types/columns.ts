@@ -8,6 +8,7 @@ import type { Order } from '@/types/order';
 
 export function getColumns(
     onEdit: (order: Order) => void,
+    onAccept: (order: Order) => void,
     onCancel: (order: Order) => void,
     onComplete: (order: Order) => void,
     onDelete: (order: Order) => void,
@@ -35,7 +36,7 @@ export function getColumns(
             cell: ({ row }) => {
                 const customer = row.original.customer;
                 return h('div', { class: 'flex flex-col gap-0.5' }, [
-                    h('span', { class: 'font-medium' }, row.original.guest_name ?? customer?.name ?? 'Khách vãng lai' ),
+                    h('span', { class: 'font-medium' }, row.original.guest_name ?? customer?.name ?? 'Khách vãng lai'),
                     customer?.email
                         ? h('span', { class: 'text-xs text-muted-foreground truncate max-w-[180px]' }, customer.email)
                         : null,
@@ -128,8 +129,7 @@ export function getColumns(
             meta: { align: 'center' },
             cell: ({ row }) => {
                 const order = row.original;
-                const canCancel = !['completed', 'cancelled'].includes(order.status);
-                const canComplete = order.status === 'processing';
+
                 return h(DropdownMenu, {}, {
                     default: () => [
                         h(DropdownMenuTrigger, { asChild: true }, () =>
@@ -142,23 +142,32 @@ export function getColumns(
                                 'Chi tiết',
                             ]),
                             h(DropdownMenuSeparator),
-                            canCancel
+                            order.can_accept
+                                ? h(DropdownMenuItem, { class: 'text-blue-600', onClick: () => onAccept(order) }, () => [
+                                    h(CheckCircle2, { class: 'mr-2 h-4 w-4' }),
+                                    'Duyệt',
+                                ])
+                                : null,
+                            h(DropdownMenuSeparator),
+                            order.can_cancel
                                 ? h(DropdownMenuItem, { class: 'text-destructive', onClick: () => onCancel(order) }, () => [
                                     h(XCircle, { class: 'mr-2 h-4 w-4' }),
                                     'Hủy đơn',
                                 ])
                                 : null,
-                            canComplete
+                            order.can_complete
                                 ? h(DropdownMenuItem, { class: 'text-green-600', onClick: () => onComplete(order) }, () => [
                                     h(CheckCircle2, { class: 'mr-2 h-4 w-4' }),
                                     'Hoàn thành',
                                 ])
                                 : null,
                             h(DropdownMenuSeparator),
-                            h(DropdownMenuItem, { class: 'text-destructive', onClick: () => onDelete(order) }, () => [
-                                h(Trash2, { class: 'mr-2 h-4 w-4' }),
-                                'Xóa',
-                            ]),
+                            order.can_delete ?
+                                h(DropdownMenuItem, { class: 'text-destructive', onClick: () => onDelete(order) }, () => [
+                                    h(Trash2, { class: 'mr-2 h-4 w-4' }),
+                                    'Xóa',
+                                ])
+                                : null,
                         ]),
                     ],
                 });

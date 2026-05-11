@@ -1,0 +1,5 @@
+parameters:
+    level: 0 # 0 is loose, 9 is extremely strict
+    paths:
+        - app
+        - routes

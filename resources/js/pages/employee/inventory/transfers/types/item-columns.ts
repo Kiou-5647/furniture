@@ -2,7 +2,7 @@ import { ImageIcon } from '@lucide/vue';
 import type { ColumnDef } from '@tanstack/vue-table';
 import { h } from 'vue';
 import { Input } from '@/components/ui/input';
-import { formatPrice } from '@/lib/utils';
+import { formatPrice } from '@/lib';
 import type {
     StockTransferItem,
     StockTransferStatus,

@@ -2,6 +2,7 @@
 
 namespace App\Services\Sales;
 
+use App\Constants\Permission;
 use App\Data\Sales\OrderFilterData;
 use App\Enums\OrderStatus;
 use App\Models\Auth\User;
@@ -11,44 +12,85 @@ use App\Models\Product\Product;
 use App\Models\Product\ProductVariant;
 use App\Models\Sales\Order;
 use App\Services\Location\StockLocatorService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
 class OrderService
 {
-    public function getFiltered(OrderFilterData $filter): LengthAwarePaginator
+    public function applyRoleFilter(Builder $query, User $user): Builder
+    {
+        // Quản lý chung: Thấy tất cả
+        if ($user->hasAnyRole(['Quản trị viên', 'Quản lý'])) {
+            return $query;
+        }
+
+        // Khách hàng: Chỉ thấy đơn của mình
+        if ($user->isCustomer()) {
+            return $query->where('customer_id', $user->customer?->id);
+        }
+
+        return $query->where(function ($q) use ($user) {
+            $q->whereRaw('1 = 0');
+
+            if ($user->isEmployee() && $user->employee?->is_active && $user->hasPermissionTo(Permission::ORDER['SELECT'])) {
+                $employee = $user->employee;
+
+                // Quản lý cửa hàng
+                if ($user->hasRole('Quản lý cửa hàng')) {
+                    $q->orWhere(function ($sub) use ($employee) {
+                        // Thấy mọi đơn trong chi nhánh
+                        $sub->where('store_location_id', $employee?->store_location_id)
+                            // OR đơn Online
+                            ->orWhereNull('store_location_id');
+                    });
+                } else {
+                    // Nhân viên
+                    // Đơn mình xử lý
+                    $q->orWhere('accepted_by', $employee?->id);
+
+                    // OR
+                    $q->orWhere(function ($sub) use ($employee) {
+                        // Đơn chưa ai nhận
+                        $sub->whereNull('accepted_by');
+                        // AND
+                        $sub->where(function ($q2) use ($employee) {
+                            // Đơn đúng cửa hàng
+                            $q2->where('store_location_id', $employee?->store_location_id)
+                                // OR đơn online
+                                ->orWhereNull('store_location_id');
+                        });
+                    });
+                }
+            }
+        });
+    }
+
+    public function getFiltered(OrderFilterData $filter, User $user): LengthAwarePaginator
     {
         $allowedSortColumns = ['order_number', 'total_amount', 'created_at', 'updated_at'];
         $orderBy = in_array($filter->order_by, $allowedSortColumns, true) ? $filter->order_by : 'created_at';
         $orderDirection = $filter->order_direction === 'asc' ? 'asc' : 'desc';
 
-        return Order::query()
-            ->with(['customer', 'acceptedBy', 'invoices', 'items.sourceLocation', 'storeLocation'])
+        $query = Order::query()
+            ->with(['customer', 'acceptedBy', 'invoices', 'storeLocation'])
             ->when($filter->customer_id, fn($q) => $q->byCustomerId($filter->customer_id))
             ->when($filter->status, fn($q) => $q->byStatus($filter->status))
             ->when($filter->source, fn($q) => $q->bySource($filter->source))
             ->when($filter->store_location_id, fn($q) => $q->byStoreLocation($filter->store_location_id))
-            ->when($filter->search, fn($q) => $q->search($filter->search))
-            ->orderBy($orderBy, $orderDirection)
+            ->when($filter->search, fn($q) => $q->search($filter->search));
+
+        $query = $this->applyRoleFilter($query, $user);
+
+        return $query->orderBy($orderBy, $orderDirection)
             ->paginate($filter->per_page);
     }
 
-    public function getTrashedFiltered(OrderFilterData $filter): LengthAwarePaginator
+    public function getById(string $id, User $user): Order
     {
-        return Order::onlyTrashed()
-            ->with(['customer', 'acceptedBy'])
-            ->when($filter->customer_id, fn($q) => $q->byCustomerId($filter->customer_id))
-            ->when($filter->search, fn($q) => $q->search($filter->search))
-            ->orderBy($filter->order_by ?? 'deleted_at', $filter->order_direction ?? 'desc')
-            ->paginate($filter->per_page);
-    }
-
-    public function getById(string $id): Order
-    {
-        return Order::with([
+        $query = Order::with([
             'customer',
-            'items.sourceLocation',
             'items.purchasable',
             'acceptedBy',
             'storeLocation',
@@ -60,7 +102,9 @@ class OrderService
             'shipments.handledBy',
             'refunds',
             'invoices',
-        ])->findOrFail($id);
+        ]);
+
+        return $this->applyRoleFilter($query, $user)->findOrFail($id);
     }
 
     /**

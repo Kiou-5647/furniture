@@ -30,7 +30,7 @@ import {
 import Sonner from '@/components/ui/sonner/Sonner.vue';
 import { Textarea } from '@/components/ui/textarea';
 import ShopLayout from '@/layouts/ShopLayout.vue';
-import { formatPrice } from '@/lib/utils';
+import { formatPrice } from '@/lib';
 import { index } from '@/routes/cart';
 import { store } from '@/routes/customer/checkout';
 import { useCartStore } from '@/stores/cart';
@@ -103,12 +103,6 @@ const wardDisplayLabel = computed(() => {
     return 'Chọn Quận/Huyện';
 });
 
-const shippingMethodName = computed(() => {
-    if(!form.shipping_method_id) return 'Chọn phương thức vận chuyển...'
-    const method = props.shipping_methods.find((value) => form.shipping_method_id === value);
-    return method.name;
-})
-
 // 1. Watch Province: Update name and load wards
 watch(
     () => form.province_code,
@@ -163,7 +157,7 @@ const finalTotal = computed(() => {
 
 // --- Submission ---
 function submitOrder() {
-    const validationErrors = {};
+    const validationErrors = {} as any;
 
     if (!form.guest_name)
         validationErrors.guest_name = 'Vui lòng nhập họ và tên';

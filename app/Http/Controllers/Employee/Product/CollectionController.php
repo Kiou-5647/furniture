@@ -23,20 +23,8 @@ class CollectionController
         $filter = CollectionFilterData::fromRequest($request);
 
         return Inertia::render('employee/products/collections/Index', [
-            'collections' => Inertia::defer(fn () => CollectionResource::collection(
+            'collections' => Inertia::defer(fn() => CollectionResource::collection(
                 $this->service->getFiltered($filter)
-            )),
-            'filters' => $filter,
-        ]);
-    }
-
-    public function trash(Request $request): Response
-    {
-        $filter = CollectionFilterData::fromRequest($request);
-
-        return Inertia::render('employee/products/collections/Trash', [
-            'collections' => Inertia::defer(fn () => CollectionResource::collection(
-                $this->service->getTrashedFiltered($filter)
             )),
             'filters' => $filter,
         ]);
@@ -66,23 +54,5 @@ class CollectionController
         $collection->delete();
 
         return back()->with('success', 'Đã xóa bộ sưu tập.');
-    }
-
-    public function restore(Collection $collection)
-    {
-        Gate::authorize('manage', $collection);
-
-        $collection->restore();
-
-        return back()->with('success', 'Đã khôi phục bộ sưu tập.');
-    }
-
-    public function forceDestroy(Collection $collection)
-    {
-        Gate::authorize('manage', $collection);
-
-        $collection->forceDelete();
-
-        return back()->with('success', 'Đã xóa vĩnh viễn bộ sưu tập.');
     }
 }

@@ -5,6 +5,7 @@ import { Trash2, Loader2 } from 'lucide-vue-next';
 import { VisuallyHidden } from 'reka-ui';
 import { onMounted } from 'vue';
 import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import {
     Sheet,
     SheetContent,
@@ -13,11 +14,10 @@ import {
     SheetFooter,
     SheetDescription,
 } from '@/components/ui/sheet';
-import { formatPrice } from '@/lib/utils';
+import { formatPrice } from '@/lib';
 import { index } from '@/routes/cart';
-import { useCartStore } from '@/stores/cart';
-import { Separator } from '@/components/ui/separator';
 import { show } from '@/routes/products';
+import { useCartStore } from '@/stores/cart';
 
 const {
     state,

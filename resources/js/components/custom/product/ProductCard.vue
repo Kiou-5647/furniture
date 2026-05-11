@@ -10,7 +10,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { formatPrice } from '@/lib/utils';
+import { formatPrice } from '@/lib';
 import type { ProductCard, ProductCardVariant } from '@/types/public/product';
 import VariantSelectorDialog from './VariantSelectorDialog.vue';
 

@@ -32,19 +32,6 @@ class LookupController
         ]);
     }
 
-    public function trash(Request $request, ?string $namespace = null): Response
-    {
-        $filter = LookupFilterData::fromRequest($request, $namespace);
-
-        return Inertia::render('employee/settings/lookups/Trash', [
-            'namespaces' => $this->service->getNamespaces(),
-            'lookups' => Inertia::defer(fn() => LookupResource::collection(
-                $this->service->getTrashedFiltered($filter)
-            )),
-            'filters' => $filter,
-        ]);
-    }
-
     public function store(StoreLookupRequest $request, UpsertLookupAction $action)
     {
         Gate::authorize('create', Lookup::class);
@@ -70,23 +57,5 @@ class LookupController
         $lookup->delete();
 
         return back()->with('success', 'Đã xóa tra cứu.');
-    }
-
-    public function restore(Lookup $lookup)
-    {
-        Gate::authorize('manage', $lookup);
-
-        $lookup->restore();
-
-        return back()->with('success', 'Đã khôi phục tra cứu.');
-    }
-
-    public function forceDestroy(Lookup $lookup)
-    {
-        Gate::authorize('manage', $lookup);
-
-        $lookup->forceDelete();
-
-        return back()->with('success', 'Đã xóa vĩnh viễn tra cứu.');
     }
 }

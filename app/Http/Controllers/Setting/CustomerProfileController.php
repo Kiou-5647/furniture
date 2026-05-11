@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Setting;
 
 use App\Actions\Customer\UpdateCustomerAction;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;

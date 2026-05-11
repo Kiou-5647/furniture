@@ -18,7 +18,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { formatDateOnly, formatDateTime } from '@/lib/date-utils';
-import { formatPrice } from '@/lib/utils';
+import { formatPrice } from '@/lib';
 import type { Discount } from '@/types/discount';
 
 export function getColumns(

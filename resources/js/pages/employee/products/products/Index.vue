@@ -8,7 +8,6 @@ import {
     NotepadTextDashed,
     ClipboardClock,
     Sparkles,
-    Star,
 } from '@lucide/vue';
 import { debounce } from 'lodash';
 import { computed, ref, watch } from 'vue';
@@ -18,7 +17,7 @@ import DeleteConfirmation from '@/components/custom/DeleteConfirmation.vue';
 import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { cleanQuery, setCookie } from '@/lib/utils';
+import { cleanQuery, setCookie } from '@/lib';
 import { index, destroy, show, create, edit } from '@/routes/employee/products';
 import type {
     BreadcrumbItem,
@@ -128,11 +127,6 @@ const newArrivalOptions = [
     { label: 'Không', value: false },
 ];
 
-const featuredOptions = [
-    { label: 'Nổi bật', value: true, icon: Star },
-    { label: 'Không', value: false },
-];
-
 const updateSearch = debounce(() => {
     const rawQuery = {
         ...props.filters,
@@ -221,7 +215,7 @@ function confirmDelete(product: Product) {
 
 function performDelete() {
     if (!selectedProduct.value) return;
-    router.delete(destroy(selectedProduct.value).url, {
+    router.delete(destroy(selectedProduct.value.id).url, {
         onSuccess: () => {
             showDeleteDialog.value = false;
             selectedProduct.value = null;

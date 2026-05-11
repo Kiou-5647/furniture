@@ -10,8 +10,8 @@ import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import { createLazyComponent } from '@/composables/createLazyComponent';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { cleanQuery, setCookie } from '@/lib/utils';
-import { index, destroy, cancel, complete, show, catalog as catalogRoute } from '@/routes/employee/sales/orders';
+import { CheckUserPermission, cleanQuery, setCookie } from '@/lib';
+import { index, destroy, cancel, complete, show, catalog as catalogRoute, updateStatus } from '@/routes/employee/orders';
 import type { BreadcrumbItem } from '@/types';
 import type {
     Order,
@@ -68,7 +68,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Đơn hàng', href: index().url },
 ];
 
-const activeColumns = computed(() => getColumns(handleShow, handleCancel, handleComplete, confirmDelete));
+const activeColumns = computed(() => getColumns(handleShow, handleAccept, handleCancel, handleComplete, confirmDelete));
 
 const showFormModal = ref(false);
 const showDeleteDialog = ref(false);
@@ -185,6 +185,16 @@ function handleShow(order: Order) {
     router.visit(show(order).url);
 }
 
+function handleAccept(order: Order) {
+    selectedOrder.value = order;
+    router.post(updateStatus(selectedOrder.value).url, {status: 'processing'}, {
+        preserveScroll: true,
+        onSuccess: () => {
+            selectedOrder.value = null;
+        },
+    })
+}
+
 function handleCancel(order: Order) {
     selectedOrder.value = order;
     router.post(cancel(selectedOrder.value).url, {}, {
@@ -259,7 +269,7 @@ async function handleExport() {
                         <FileSpreadsheet class="mr-2 h-4 w-4" />
                         {{ loadingExport ? 'Đang xuất...' : 'Xuất Excel' }}
                     </Button>
-                    <Button @click="handleCreate">
+                    <Button v-if="CheckUserPermission('Tạo đơn hàng')" @click="handleCreate">
                         <Plus class="mr-2 h-4 w-4" /> Tạo đơn hàng
                     </Button>
                 </div>

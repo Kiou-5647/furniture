@@ -4,6 +4,7 @@ namespace App\Http\Resources\Employee\Booking;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Gate;
 
 class BookingResource extends JsonResource
 {
@@ -52,9 +53,14 @@ class BookingResource extends JsonResource
                 'amount_due' => $this->finalInvoice->amount_due,
                 'status' => $this->finalInvoice->status->value,
             ] : null),
-            'can_confirm' => $this->canBeConfirmed(),
-            'can_cancel' => $this->canBeCancelled(),
-            'can_pay_deposit' => $this->canPayDeposit(),
+
+            'can_confirm' => $this->canBeConfirmed() && Gate::allows('confirm', $this),
+            'can_cancel' => $this->canBeCancelled() && Gate::allows('cancel', $this),
+            'can_pay_deposit' => $this->canPayDeposit() && Gate::allows('markAsPaid', $this),
+            'can_open_invoice' => $this->canOpenInvoice() && Gate::allows('openInvoice', $this),
+            'can_mark_final_paid' => $this->canMarkFinalPaid() && Gate::allows('markAsPaid', $this),
+            'can_delete' => Gate::allows('delete', $this),
+
             'created_at' => $this->created_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
             'updated_at' => $this->updated_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
         ];

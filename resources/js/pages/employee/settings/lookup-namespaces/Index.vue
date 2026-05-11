@@ -10,7 +10,7 @@ import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import { createLazyComponent } from '@/composables/createLazyComponent';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { cleanQuery, setCookie } from '@/lib/utils';
+import { cleanQuery, setCookie } from '@/lib';
 import { index } from '@/routes/employee/settings/lookupNamespaces';
 import { index as lookupsIndex } from '@/routes/employee/settings/lookups';
 import type {

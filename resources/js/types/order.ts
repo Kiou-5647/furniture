@@ -47,8 +47,12 @@ export interface Refund {
 
 export interface Order {
     id: string;
-    can_cancel: boolean;
+    can_accept: boolean;
+    can_mark_paid: boolean;
     can_complete: boolean;
+    can_cancel: boolean;
+    can_create_shipment: boolean;
+    can_delete: boolean;
     is_fully_paid: boolean;
     is_cod: boolean;
     order_number: string;
@@ -130,6 +134,7 @@ export interface Shipment {
     can_deliver: boolean;
     can_cancel: boolean;
     can_resend: boolean;
+    can_delete: boolean;
     handled_by: {
         full_name: string;
         phone: string | null;
@@ -156,6 +161,7 @@ export interface ShipmentItem {
     status: string;
     status_label: string;
     status_color: string;
+    can_return: boolean;
 }
 
 export interface OrderItem {
@@ -167,11 +173,6 @@ export interface OrderItem {
     unit_price: string;
     subtotal: number;
     configuration: Record<string, unknown> | null;
-    source_location: {
-        id: string;
-        name: string;
-        code: string;
-    } | null;
 }
 
 export interface OrderPagination {

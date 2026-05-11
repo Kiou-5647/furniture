@@ -10,7 +10,7 @@ import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import { createLazyComponent } from '@/composables/createLazyComponent';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { cleanQuery, setCookie } from '@/lib/utils';
+import { cleanQuery, setCookie } from '@/lib';
 import { index, terminate, restore, destroy } from '@/routes/employee/hr/employees';
 import type { BreadcrumbItem } from '@/types';
 import type {

@@ -122,18 +122,6 @@ class ProductController
         ]);
     }
 
-    public function trash(Request $request): Response
-    {
-        $filter = ProductFilterData::fromRequest($request);
-
-        return Inertia::render('employee/products/products/Trash', [
-            'products' => Inertia::defer(fn() => ProductResource::collection(
-                $this->service->getTrashedFiltered($filter)
-            )),
-            'filters' => $filter,
-        ]);
-    }
-
     public function show(Product $product): Response
     {
         $product->load([
@@ -174,23 +162,5 @@ class ProductController
         $product->restore();
 
         return back()->with('success', 'Đã khôi phục sản phẩm.');
-    }
-
-    public function destroy(Product $product)
-    {
-        Gate::authorize('manage', $product);
-
-        $product->delete();
-
-        return back()->with('success', 'Đã xóa sản phẩm.');
-    }
-
-    public function forceDestroy(Product $product)
-    {
-        Gate::authorize('manage', $product);
-
-        $product->forceDelete();
-
-        return back()->with('success', 'Đã xóa vĩnh viễn sản phẩm.');
     }
 }

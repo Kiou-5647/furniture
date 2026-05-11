@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { formatPrice } from '@/lib/utils';
+import { formatPrice } from '@/lib';
 import { index, approve, reject } from '@/routes/employee/sales/refunds';
 import type { BreadcrumbItem } from '@/types';
 import type { Refund } from '@/types/refund';

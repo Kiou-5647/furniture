@@ -7,7 +7,7 @@ import DataTableSingleFilter from '@/components/custom/data-table/DataTableSingl
 import DeleteConfirmation from '@/components/custom/DeleteConfirmation.vue';
 import Heading from '@/components/Heading.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { cleanQuery, setCookie } from '@/lib/utils';
+import { cleanQuery, setCookie } from '@/lib';
 import { index, show, deactivate } from '@/routes/employee/customers';
 import type { BreadcrumbItem } from '@/types';
 import type {

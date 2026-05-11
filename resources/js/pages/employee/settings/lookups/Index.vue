@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { createLazyComponent } from '@/composables/createLazyComponent';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { cleanQuery, setCookie } from '@/lib/utils';
+import { cleanQuery, setCookie } from '@/lib';
 import { index as namespacesIndex } from '@/routes/employee/settings/lookupNamespaces';
 import { index } from '@/routes/employee/settings/lookups';
 import { destroy } from '@/routes/employee/settings/lookups';

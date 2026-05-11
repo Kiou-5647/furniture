@@ -81,15 +81,6 @@ class DesignerController
         return back()->with('success', 'Đã xóa nhà thiết kế.');
     }
 
-    public function restore(Designer $designer)
-    {
-        Gate::authorize('manage', $designer);
-
-        $designer->restore();
-
-        return back()->with('success', 'Đã khôi phục nhà thiết kế.');
-    }
-
     public function availabilities(Designer $designer)
     {
         $weeklySlots = $this->service->getWeeklySlots($designer);

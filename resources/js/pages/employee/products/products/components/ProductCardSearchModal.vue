@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { formatPrice } from '@/lib';
 import { search as searchCards } from '@/routes/employee/products/product-cards';
 
 const props = defineProps<{
@@ -81,6 +82,11 @@ function handleSelect(card: any) {
 
     emit('selected', normalizedCard);
 }
+
+const getActiveVariant = (card: any) => {
+    const variantId = activeVariantMap.value[card.id];
+    return card.variants?.find((v: any) => v.id === variantId);
+};
 </script>
 
 <template>
@@ -95,103 +101,118 @@ function handleSelect(card: any) {
 
             <div class="space-y-4 py-4">
                 <div class="relative">
-                    <Search class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input v-model="search" placeholder="Nhập tên hoặc SKU..." class="pl-9" />
-                    <div v-if="isLoading" class="absolute top-1/2 right-3 -translate-y-1/2">
-                        <Loader2 class="h-4 w-4 animate-spin text-muted-foreground" />
+                    <Search
+                        class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                    />
+                    <Input
+                        v-model="search"
+                        placeholder="Nhập tên hoặc SKU..."
+                        class="pl-9"
+                    />
+                    <div
+                        v-if="isLoading"
+                        class="absolute top-1/2 right-3 -translate-y-1/2"
+                    >
+                        <Loader2
+                            class="h-4 w-4 animate-spin text-muted-foreground"
+                        />
                     </div>
                 </div>
 
                 <ScrollArea class="h-[450px] rounded-md border">
-                    <div v-if="results.length === 0 && search.length >= 2"
-                        class="flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
+                    <div
+                        v-if="results.length === 0 && search.length >= 2"
+                        class="flex flex-col items-center justify-center p-8 text-center text-muted-foreground"
+                    >
                         <Package class="mb-2 h-8 w-8 opacity-20" />
                         <p>Không tìm thấy sản phẩm nào phù hợp.</p>
                     </div>
 
-                    <div v-else-if="results.length === 0"
-                        class="flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
+                    <div
+                        v-else-if="results.length === 0"
+                        class="flex flex-col items-center justify-center p-8 text-center text-muted-foreground"
+                    >
                         <p>Nhập ít nhất 2 ký tự để tìm kiếm.</p>
                     </div>
 
                     <div class="grid gap-4 p-2">
-                        <div v-for="card in results" :key="card.id"
-                            class="flex gap-4 rounded-lg border bg-card p-3 transition-all hover:border-primary/50">
+                        <div
+                            v-for="card in results"
+                            :key="card.id"
+                            class="flex gap-4 rounded-lg border bg-card p-3 transition-all hover:border-primary/50"
+                        >
                             <!-- Image Preview (Dynamic based on active variant) -->
-                            <div class="relative h-20 w-20 shrink-0 overflow-hidden rounded-md bg-muted">
-                                <img :src="card.variants.find(
-                                    (v: { id: string }) =>
-                                        v.id ===
-                                        activeVariantMap[card.id],
-                                )?.primary_image || '/placeholder.png'
-                                    " class="h-full w-full object-cover transition-all duration-200" />
+                            <div
+                                class="relative h-20 w-20 shrink-0 overflow-hidden rounded-md bg-muted"
+                            >
+                                <img
+                                    :src="getActiveVariant(card)?.primary_image"
+                                    class="h-full w-full object-cover transition-all duration-200"
+                                />
                             </div>
 
                             <!-- Details & Swatches -->
                             <div class="flex-1 space-y-2">
                                 <div class="flex items-center justify-between">
                                     <div class="flex flex-col">
-                                        <span class="text-sm leading-tight font-bold">
+                                        <span
+                                            class="text-sm leading-tight font-bold"
+                                        >
                                             {{ card.product_name }}
-                                            {{
-                                                card.variants.find(
-                                                    (v: { id: string }) =>
-                                                        v.id ===
-                                                        activeVariantMap[
-                                                        card.id
-                                                        ],
-                                                )?.name
-                                            }}
+                                            {{ getActiveVariant(card)?.name }}
                                         </span>
-                                        <span class="text-xs text-muted-foreground">
+                                        <span
+                                            class="text-xs text-muted-foreground"
+                                        >
                                             SKU:
-                                            {{
-                                                card.variants.find(
-                                                    (v: { id: string }) =>
-                                                        v.id ===
-                                                        activeVariantMap[
-                                                        card.id
-                                                        ],
-                                                )?.sku
-                                            }}
+                                            {{ getActiveVariant(card)?.sku }}
                                             -
-                                            <span class="font-medium text-foreground">
+                                            <span
+                                                class="font-medium text-foreground"
+                                            >
                                                 {{
-                                                    card.variants.find(
-                                                        (v: { id: string }) =>
-                                                            v.id ===
-                                                            activeVariantMap[
-                                                            card.id
-                                                            ],
-                                                    )?.sale_price ??
-                                                    card.variants.find(
-                                                        (v: { id: string, }) =>
-                                                            v.id ===
-                                                            activeVariantMap[
-                                                            card.id
-                                                            ],
-                                                    )?.price
-                                                }}đ
+                                                    formatPrice(
+                                                        getActiveVariant(card)
+                                                            ?.sale_price ??
+                                                            getActiveVariant(
+                                                                card,
+                                                            )?.price,
+                                                    )
+                                                }}
                                             </span>
                                         </span>
                                     </div>
-                                    <Button variant="ghost" size="sm" class="h-8 px-2 text-xs"
-                                        @click="handleSelect(card)">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        class="h-8 px-2 text-xs"
+                                        @click="handleSelect(card)"
+                                    >
                                         Chọn
                                     </Button>
                                 </div>
 
                                 <!-- Swatches Grid -->
                                 <div class="flex flex-wrap gap-1.5">
-                                    <button v-for="variant in card.variants" :key="variant.id" @mouseenter="
-                                        activeVariantMap[card.id] =
-                                        variant.id
-                                        " class="h-6 w-6 overflow-hidden rounded-full border-2 transition-all" :class="activeVariantMap[card.id] ===
+                                    <button
+                                        v-for="variant in card.variants"
+                                        :key="variant.id"
+                                        @mouseenter="
+                                            activeVariantMap[card.id] =
                                                 variant.id
+                                        "
+                                        class="h-6 w-6 overflow-hidden rounded-full border-2 transition-all"
+                                        :class="
+                                            activeVariantMap[card.id] ===
+                                            variant.id
                                                 ? 'border-primary ring-1 ring-primary/30'
                                                 : 'border-transparent hover:border-zinc-300'
-                                            ">
-                                        <img :src="variant.swatch_image" class="h-full w-full object-cover" />
+                                        "
+                                    >
+                                        <img
+                                            :src="variant.swatch_image"
+                                            class="h-full w-full object-cover"
+                                        />
                                     </button>
                                 </div>
                             </div>

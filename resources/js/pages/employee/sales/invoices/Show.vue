@@ -7,8 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { show as bookingShow } from '@/routes/employee/booking';
+import { show as orderShow } from '@/routes/employee/orders';
 import { index } from '@/routes/employee/sales/invoices';
-import { show as orderShow } from '@/routes/employee/sales/orders';
 import type { BreadcrumbItem } from '@/types';
 import type { Invoice } from '@/types/invoice';
 

@@ -32,7 +32,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { formatPrice } from '@/lib/utils';
+import { formatPrice } from '@/lib';
 import {
     index,
     store,

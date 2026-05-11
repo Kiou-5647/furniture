@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
 import { Head } from '@inertiajs/vue3';
-import axios from 'axios';
 import {
     VisXYContainer,
     VisArea,
@@ -10,6 +8,7 @@ import {
     VisCrosshair,
     VisTooltip,
 } from '@unovis/vue';
+import axios from 'axios';
 
 import {
     TrendingUp,
@@ -19,6 +18,7 @@ import {
     ArrowUpRight,
     AlertTriangle,
 } from 'lucide-vue-next';
+import { ref, onMounted } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import {
     Card,
@@ -36,7 +36,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { formatPrice } from '@/lib/utils';
+import { formatPrice } from '@/lib';
 import type { BreadcrumbItem } from '@/types';
 
 const props = defineProps<{
@@ -154,6 +154,11 @@ const getStatusBadge = (status: string) => {
     };
     return map[status] || { label: status, variant: 'outline' };
 };
+
+const getXIndex = (d: any) => d.index;
+const getYCount = (d: any) => d.count;
+const getYRevenue = (d: any) => d.revenue;
+const getYProfit = (d: any) => d.profit;
 </script>
 
 <template>
@@ -415,15 +420,15 @@ const getStatusBadge = (status: string) => {
                                 />
                                 <VisAxis type="y" />
                                 <VisGroupedBar
-                                    :x="(d: { index: any }) => d.index"
-                                    :y="(d: { count: any }) => d.count"
+                                    :x="getXIndex"
+                                    :y="getYCount"
                                     color="#6366f1"
                                 />
                                 <VisTooltip />
                                 <VisCrosshair
                                     :template="
                                         (d: any) =>
-                                            `${d.label}\\nSố đơn: ${d.count}`
+                                            `${d.label} - Số đơn: ${d.count}`
                                     "
                                 />
                             </VisXYContainer>
@@ -487,17 +492,16 @@ const getStatusBadge = (status: string) => {
                                 "
                             />
                             <VisArea
-                                :x="(d: { index: any }) => d.index"
-                                :y="(d: { revenue: any }) => d.revenue"
+                                :x="getXIndex"
+                                :y="getYRevenue"
                                 color="#3b82f6"
                                 :opacity="0.2"
                                 :strokeWidth="2"
                                 :interpolateMissingData="true"
                             />
                             <VisArea
-                                :x="(d: { index: any }) => d.index"
-                                :y="(d: { profit: any }) => d.profit"
-                                color="#10b981"
+                                :x="getXIndex"
+                                :y="getYProfit"
                                 :opacity="0.4"
                                 :strokeWidth="2"
                                 :interpolateMissingData="true"
@@ -507,7 +511,7 @@ const getStatusBadge = (status: string) => {
                             <VisCrosshair
                                 :template="
                                     (d: any) =>
-                                        `${d.label}\\n Doanh thu: ${formatPrice(d.revenue)}\\nLợi nhuận: ${formatPrice(d.profit)}`
+                                        `${d.label} - Doanh thu: ${formatPrice(d.revenue)} - Lợi nhuận: ${formatPrice(d.profit)}`
                                 "
                             />
                         </VisXYContainer>
@@ -606,7 +610,9 @@ const getStatusBadge = (status: string) => {
                                         v-for="item in tables.low_stock"
                                         :key="item.variant"
                                     >
-                                        <TableCell class="flex flex-col font-medium">
+                                        <TableCell
+                                            class="flex flex-col font-medium"
+                                        >
                                             <span>
                                                 {{
                                                     item.product +

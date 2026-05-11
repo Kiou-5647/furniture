@@ -11,7 +11,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import ShopLayout from '@/layouts/ShopLayout.vue';
-import { formatPrice } from '@/lib/utils';
+import { formatPrice } from '@/lib';
 import { index } from '@/routes/customer/checkout';
 import { show } from '@/routes/products';
 import { useCartStore } from '@/stores/cart';

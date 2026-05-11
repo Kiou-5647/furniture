@@ -28,7 +28,7 @@ createInertiaApp({
         const app = createApp({
             render: () => h('div', [
                 h(App, props), // The main Inertia application
-                h(Sonner, { position: 'top-center'})      // The global toast anchor (mounted once at the root)
+                h(Sonner, { position: 'top-center'})
             ])
         });
 
@@ -47,11 +47,11 @@ createInertiaApp({
 });
 
 router.on('success', (event) => {
-    // The page object is passed in the event argument
     const page = event.detail.page;
     const flash = page.props.flash as any;
 
     if (flash) {
+        if (flash.success) toast.success(flash.success);
         if (flash.error) toast.error(flash.error);
         if (flash.info) toast.info(flash.info);
         if (flash.warning) toast.warning(flash.warning);

@@ -6,11 +6,13 @@ use App\Builders\Sales\OrderBuilder;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\ShipmentStatus;
-use App\Models\Auth\User;
 use App\Models\Fulfillment\Shipment;
 use App\Models\Fulfillment\ShippingMethod;
 use App\Models\Hr\Employee;
 use App\Models\Inventory\Location;
+use App\Models\Sales\Invoice;
+use App\Models\Sales\OrderItem;
+use App\Models\Sales\Refund;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -18,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Gate;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
@@ -151,16 +154,45 @@ class Order extends Model
         return $invoice->amount_paid >= $invoice->amount_due;
     }
 
+    public function canBeAccepted(): bool
+    {
+        return $this->status === OrderStatus::Pending;
+    }
+
+    public function canBeMarkedPaid(): bool
+    {
+        if ($this->paid_at !== null || $this->status !== OrderStatus::Processing) {
+            return false;
+        }
+
+        if (in_array($this->payment_method, [PaymentMethod::Cod, PaymentMethod::Cash], true)) {
+
+            if ($this->payment_method === PaymentMethod::Cod) {
+                if ($this->shipments()->doesntExist()) {
+                    return false;
+                }
+
+                $hasPendingItems = $this->shipments()
+                    ->whereHas('items', fn($q) => $q->whereNotIn('status', [ShipmentStatus::Delivered, ShipmentStatus::Returned]))
+                    ->exists();
+
+                if ($hasPendingItems) return false;
+            }
+        } else {
+            return false;
+        }
+
+        return true;
+    }
+
     public function canBeCompleted(): bool
     {
         if ($this->status !== OrderStatus::Processing || $this->paid_at === null) {
             return false;
         }
 
-        // For shipping orders: require shipments to exist AND all items resolved
         if ($this->shipping_method_id) {
             if ($this->shipments()->where('status', '!=', ShipmentStatus::Cancelled)->doesntExist()) {
-                // If there are NO active shipments at all, it can't be completed unless it's an in-store order
                 return false;
             }
 
@@ -169,11 +201,12 @@ class Order extends Model
                 ->whereHas('items', fn($q) => $q->whereNotIn('status', [ShipmentStatus::Delivered, ShipmentStatus::Returned]))
                 ->exists();
 
-            return ! $hasPendingItems;
+            if ($hasPendingItems) return false;
+        } else {
+            if (!$this->isFullyPaid()) return false;
         }
 
-        // For in-store orders: no shipments needed
-        return $this->isFullyPaid();
+        return true;
     }
 
     public function canBeCancelled(): bool
@@ -182,11 +215,17 @@ class Order extends Model
             return false;
         }
 
-        // Cannot cancel if any shipment has been shipped or delivered
         $hasActiveShipments = $this->shipments()
             ->whereIn('status', [ShipmentStatus::Shipped, ShipmentStatus::Delivered, ShipmentStatus::Returned])
             ->doesntExist();
 
-        return $hasActiveShipments;
+        if (!$hasActiveShipments) return false;
+
+        return true;
+    }
+
+    public function canCreateShipment(): bool
+    {
+        return $this->status === OrderStatus::Processing;
     }
 }

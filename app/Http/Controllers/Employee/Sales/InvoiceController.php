@@ -38,18 +38,6 @@ class InvoiceController
         ]);
     }
 
-    public function trash(Request $request): Response
-    {
-        $filter = InvoiceFilterData::fromRequest($request);
-
-        return Inertia::render('employee/sales/invoices/Trash', [
-            'invoices' => Inertia::defer(fn() => InvoiceResource::collection(
-                $this->service->getTrashedFiltered($filter)
-            )),
-            'filters' => $filter,
-        ]);
-    }
-
     public function show(Invoice $invoice): Response
     {
         $invoice = $this->service->getById($invoice->id);
@@ -77,23 +65,5 @@ class InvoiceController
         $invoice->delete();
 
         return back()->with('success', 'Đã xóa hóa đơn.');
-    }
-
-    public function restore(Invoice $invoice)
-    {
-        Gate::authorize('manage', $invoice);
-
-        $invoice->restore();
-
-        return back()->with('success', 'Đã khôi phục hóa đơn.');
-    }
-
-    public function forceDestroy(Invoice $invoice)
-    {
-        Gate::authorize('manage', $invoice);
-
-        $invoice->forceDelete();
-
-        return back()->with('success', 'Đã xóa vĩnh viễn hóa đơn.');
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Resources\Employee\Fulfillment;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Gate;
 
 class ShipmentItemResource extends JsonResource
 {
@@ -27,6 +28,7 @@ class ShipmentItemResource extends JsonResource
             'status' => $this->status->value,
             'status_label' => $this->status->label(),
             'status_color' => $this->status->color(),
+            'can_return' => $this->canBeReturned() && Gate::allows('returnItem', $this->shipment),
         ];
     }
 }

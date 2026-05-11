@@ -1,19 +1,27 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { Link } from '@inertiajs/vue3';
-import { Trash2 } from '@lucide/vue';
 import { debounce } from 'lodash';
 import { computed, ref, watch } from 'vue';
 import DataTableGroup from '@/components/custom/data-table/DataTableGroup.vue';
 import DataTableSingleFilter from '@/components/custom/data-table/DataTableSingleFilter.vue';
 import Heading from '@/components/Heading.vue';
-import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { cleanQuery, setCookie } from '@/lib/utils';
-import { index, ship, deliver, resend } from '@/routes/employee/fulfillment/shipments';
-import { index as trashIndex } from '@/routes/employee/fulfillment/shipments/trash';
+import { cleanQuery, setCookie } from '@/lib';
+import {
+    index,
+    ship,
+    deliver,
+    resend,
+    show,
+    cancel,
+    destroy,
+} from '@/routes/employee/shipments';
 import type { BreadcrumbItem } from '@/types';
-import type { Shipment, ShipmentFilterData, ShipmentPagination } from '@/types/order';
+import type {
+    Shipment,
+    ShipmentFilterData,
+    ShipmentPagination,
+} from '@/types/order';
 import { getColumns } from './types/columns';
 
 const props = defineProps<{
@@ -26,11 +34,25 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Vận chuyển', href: index().url },
 ];
 
-const activeColumns = computed(() => getColumns(handleShow, handleShip, handleDeliver, handleResend));
+const activeColumns = computed(() =>
+    getColumns(
+        handleShow,
+        handleShip,
+        handleDeliver,
+        handleResend,
+        handleCancel,
+        confirmDelete,
+    ),
+);
 
 const isActuallyLoading = ref(true);
 const search = ref(props.filters.search ?? '');
-const selectedStatus = ref<string | undefined>(props.filters.status ?? undefined);
+const selectedStatus = ref<string | undefined>(
+    props.filters.status ?? undefined,
+);
+
+const showDeleteDialog = ref(false);
+const selectedShipment = ref<Shipment | null>(null);
 
 const hasActiveFilters = computed(() => {
     return !!props.filters.search || !!props.filters.status;
@@ -71,7 +93,12 @@ function handleSort(column: string) {
     const direction = props.filters.order_direction === 'asc' ? 'desc' : 'asc';
     router.get(
         index().url,
-        cleanQuery({ ...props.filters, order_by: column, order_direction: direction, page: 1 }),
+        cleanQuery({
+            ...props.filters,
+            order_by: column,
+            order_direction: direction,
+            page: 1,
+        }),
         { preserveState: true },
     );
 }
@@ -97,7 +124,7 @@ function resetFilters() {
 }
 
 function handleShow(shipment: Shipment) {
-    router.visit(`/nhan-vien/van-chuyen/${shipment.id}`);
+    router.visit(show(shipment).url);
 }
 
 function handleShip(shipment: Shipment) {
@@ -110,6 +137,30 @@ function handleDeliver(shipment: Shipment) {
 
 function handleResend(shipment: Shipment) {
     router.post(resend(shipment).url, {}, { preserveScroll: true });
+}
+
+async function handleCancel(shipment: Shipment) {
+    if (!confirm('Hủy đặt lịch này?')) return;
+    router.post(
+        cancel({ shipment: shipment.id }).url,
+        {},
+        { preserveScroll: true },
+    );
+}
+
+function confirmDelete(shipment: Shipment) {
+    selectedShipment.value = shipment;
+    showDeleteDialog.value = true;
+}
+
+function performDelete() {
+    if (!selectedShipment.value) return;
+    router.delete(destroy(selectedShipment.value).url, {
+        onSuccess: () => {
+            showDeleteDialog.value = false;
+            selectedShipment.value = null;
+        },
+    });
 }
 </script>
 
@@ -153,6 +204,18 @@ function handleResend(shipment: Shipment) {
                     />
                 </template>
             </DataTableGroup>
+
+            <DeleteConfirmation
+                v-model:open="showDeleteDialog"
+                title="Xác nhận xóa đơn vận chuyển"
+                :item-name="selectedShipment?.shipment_number"
+                :description="
+                    selectedShipment
+                        ? `Bạn có chắc chắn muốn xóa đơn vận chuyển &quot;${selectedShipment.shipment_number}&quot;?`
+                        : ''
+                "
+                @confirm="performDelete"
+            />
         </div>
     </AppLayout>
 </template>

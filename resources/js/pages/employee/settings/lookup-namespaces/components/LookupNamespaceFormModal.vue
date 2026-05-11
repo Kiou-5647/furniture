@@ -20,7 +20,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { slugify } from '@/lib/utils';
+import { slugify } from '@/lib';
 import type { LookupNamespaceFull } from '@/types';
 
 const props = defineProps<{

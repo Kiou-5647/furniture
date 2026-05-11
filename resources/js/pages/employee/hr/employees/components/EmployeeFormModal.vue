@@ -44,7 +44,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 import { store, update } from '@/routes/employee/hr/employees';
 
 const props = defineProps<{

@@ -5,6 +5,7 @@ namespace App\Http\Resources\Employee\Sales;
 use App\Http\Resources\Employee\Fulfillment\ShipmentResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Gate;
 
 class OrderResource extends JsonResource
 {
@@ -14,8 +15,14 @@ class OrderResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'can_cancel' => $this->canBeCancelled(),
-            'can_complete' => $this->canBeCompleted(),
+
+            'can_accept' => $this->canBeAccepted() && Gate::allows('updateStatus', $this),
+            'can_mark_paid' => $this->canBeMarkedPaid() && Gate::allows('markAsPaid', $this),
+            'can_complete' => $this->canBeCompleted() && Gate::allows('complete', $this),
+            'can_cancel' => $this->canBeCancelled() && Gate::allows('cancel', $this),
+            'can_create_shipment' => $this->canCreateShipment() && Gate::allows('createShipments', $this),
+            'can_delete' => Gate::allows('delete', $this),
+
             'is_fully_paid' => $this->isFullyPaid(),
             'is_cod' => $this->isCod(),
             'order_number' => $this->order_number,

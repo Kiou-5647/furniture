@@ -104,27 +104,56 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
         });
     });
 
+    /**
+     * Routes đặt lịch
+     */
     Route::prefix('dat-lich')->name('booking.')->group(function () {
-        // Bookings
-        Route::middleware(['can:Xem lịch thiết kế'])->group(function () {
-            Route::get('/', [BookingController::class, 'index'])->name('index');
-            Route::get('/{booking}', [BookingController::class, 'show'])->name('show');
-        });
 
-        Route::middleware(['can:Quản lý lịch thiết kế'])->group(function () {
-            Route::post('/', [BookingController::class, 'store'])->name('store');
-            Route::post('/{booking}/confirm', [BookingController::class, 'confirm'])->name('confirm');
-            Route::post('/{booking}/cancel', [BookingController::class, 'cancel'])->name('cancel');
-            Route::post('/{booking}/open-invoice', [BookingController::class, 'openInvoice'])->name('open-invoice');
-            Route::post('/bookings/{booking}/mark-paid', [BookingController::class, 'markAsPaid'])->name('bookings.mark-paid');
-            Route::delete('/{booking}', [BookingController::class, 'destroy'])->name('destroy');
+        Route::get('/', [BookingController::class, 'index'])->name('index');
+        Route::get('/{booking}', [BookingController::class, 'show'])->name('show');
 
-            Route::prefix('thung-rac')->name('trash.')->group(function () {
-                Route::get('/', [BookingController::class, 'trash'])->name('index');
-                Route::post('/{booking}/restore', [BookingController::class, 'restore'])->name('restore')->withTrashed();
-                Route::delete('/{booking}/force', [BookingController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
-            });
-        });
+        Route::post('/', [BookingController::class, 'store'])->name('store');
+        Route::post('/{booking}/confirm', [BookingController::class, 'confirm'])->name('confirm');
+        Route::post('/{booking}/cancel', [BookingController::class, 'cancel'])->name('cancel');
+
+        Route::post('/{booking}/open-invoice', [BookingController::class, 'openInvoice'])->name('open-invoice');
+        Route::post('/bookings/{booking}/mark-paid', [BookingController::class, 'markAsPaid'])->name('bookings.mark-paid');
+
+        Route::delete('/{booking}', [BookingController::class, 'destroy'])->name('destroy');
+    });
+
+    /**
+     * Routes đơn hàng
+     */
+    // Orders
+    Route::prefix('don-hang')->name('orders.')->group(function () {
+        Route::get('/', [OrderController::class, 'index'])->name('index');
+        Route::get('/export', [OrderController::class, 'export'])->name('export');
+        Route::get('/catalog', [OrderController::class, 'catalog'])->name('catalog');
+        Route::get('/stock-options', [OrderController::class, 'stockOptions'])->name('stock-options');
+        Route::get('/{order}', [OrderController::class, 'show'])->name('show');
+        Route::post('/', [OrderController::class, 'store'])->name('store');
+        Route::post('/{order}/update-status', [OrderController::class, 'updateStatus'])->name('update-status');
+        Route::post('/{order}/mark-paid', [OrderController::class, 'markAsPaid'])->name('mark-paid');
+        Route::post('/{order}/cancel', [OrderController::class, 'cancel'])->name('cancel');
+        Route::post('/{order}/complete', [OrderController::class, 'complete'])->name('complete');
+        Route::delete('/{order}', [OrderController::class, 'destroy'])->name('destroy');
+    });
+
+
+    // Shipments
+    Route::prefix('van-chuyen')->name('shipments.')->group(function () {
+        Route::get('/', [ShipmentController::class, 'index'])->name('index');
+        Route::get('/{shipment}', [ShipmentController::class, 'show'])->name('show');
+        Route::get('/{order}/create-shipments', [OrderController::class, 'createShipments'])->name('create');
+        Route::post('/{order}/store-shipments', [OrderController::class, 'storeShipments'])->name('store');
+        Route::post('/{shipment}/ship', [ShipmentController::class, 'ship'])->name('ship');
+        Route::post('/{shipment}/deliver', [ShipmentController::class, 'deliver'])->name('deliver');
+        Route::post('/{shipment}/cancel', [ShipmentController::class, 'cancel'])->name('cancel');
+        Route::post('/{shipment}/resend', [ShipmentController::class, 'resend'])->name('resend');
+        Route::post('/{shipment}/items/{shipmentItem}/return', [ShipmentController::class, 'returnItem'])->name('return-item');
+        Route::post('/{shipment}/items/{shipmentItem}/update-location', [ShipmentController::class, 'updateItemLocation'])->name('update-item-location');
+        Route::delete('/{shipment}', [ShipmentController::class, 'destroy'])->name('destroy');
     });
 
     /**
@@ -150,35 +179,7 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
             });
         });
 
-        // Orders
-        Route::prefix('don-hang')->name('orders.')->group(function () {
-            Route::middleware(['can:Xem đơn hàng'])->group(function () {
-                Route::get('/', [OrderController::class, 'index'])->name('index');
-                Route::get('/export', [OrderController::class, 'export'])->name('export');
-                Route::get('/catalog', [OrderController::class, 'catalog'])->name('catalog');
-                Route::get('/stock-options', [OrderController::class, 'stockOptions'])->name('stock-options');
-                Route::prefix('thung-rac')->name('trash.')->group(function () {
-                    Route::get('/', [OrderController::class, 'trash'])->name('index');
-                });
-                Route::get('/{order}', [OrderController::class, 'show'])->name('show');
-                Route::get('/{order}/create-shipments', [OrderController::class, 'createShipments'])->name('create-shipments');
-                Route::post('/{order}/store-shipments', [OrderController::class, 'storeShipments'])->name('store-shipments');
-            });
 
-            Route::middleware(['can:Quản lý đơn hàng'])->group(function () {
-                Route::post('/', [OrderController::class, 'store'])->name('store');
-                Route::post('/{order}/update-status', [OrderController::class, 'updateStatus'])->name('update-status');
-                Route::post('/{order}/cancel', [OrderController::class, 'cancel'])->name('cancel');
-                Route::post('/{order}/complete', [OrderController::class, 'complete'])->name('complete');
-                Route::post('/{order}/mark-paid', [OrderController::class, 'markAsPaid'])->name('mark-paid');
-                Route::delete('/{order}', [OrderController::class, 'destroy'])->name('destroy');
-
-                Route::prefix('thung-rac')->name('trash.')->group(function () {
-                    Route::post('/{order}/restore', [OrderController::class, 'restore'])->name('restore')->withTrashed();
-                    Route::delete('/{order}/force', [OrderController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
-                });
-            });
-        });
 
         // Refunds
         Route::prefix('hoan-tien')->name('refunds.')->group(function () {
@@ -205,12 +206,6 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
             Route::middleware(['can:Quản lý hóa đơn'])->group(function () {
                 Route::post('/', [InvoiceController::class, 'store'])->name('store');
                 Route::delete('/{invoice}', [InvoiceController::class, 'destroy'])->name('destroy');
-
-                Route::prefix('thung-rac')->name('trash.')->group(function () {
-                    Route::get('/', [InvoiceController::class, 'trash'])->name('index');
-                    Route::post('/{invoice}/restore', [InvoiceController::class, 'restore'])->name('restore')->withTrashed();
-                    Route::delete('/{invoice}/force', [InvoiceController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
-                });
             });
         });
 
@@ -238,35 +233,6 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
                 Route::delete('/{shippingMethod}', [ShippingMethodController::class, 'destroy'])->name('destroy');
                 Route::post('/{shippingMethod}/restore', [ShippingMethodController::class, 'restore'])->name('restore')->withTrashed();
                 Route::delete('/{shippingMethod}/force', [ShippingMethodController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
-            });
-
-            Route::prefix('thung-rac')->name('trash.')->group(function () {
-                Route::get('/', [ShippingMethodController::class, 'trash'])->name('index');
-            });
-        });
-
-        // Shipments
-        Route::middleware(['can:Xem vận chuyển'])->group(function () {
-            Route::get('/', [ShipmentController::class, 'index'])->name('shipments.index');
-            Route::prefix('thung-rac')->name('shipments.trash.')->group(function () {
-                Route::get('/', [ShipmentController::class, 'trash'])->name('index');
-            });
-            Route::get('/{shipment}', [ShipmentController::class, 'show'])->name('shipments.show');
-        });
-
-        Route::middleware(['can:Quản lý vận chuyển'])->group(function () {
-            Route::post('/create', [ShipmentController::class, 'createShipments'])->name('shipments.create');
-            Route::post('/{shipment}/ship', [ShipmentController::class, 'ship'])->name('shipments.ship');
-            Route::post('/{shipment}/deliver', [ShipmentController::class, 'deliver'])->name('shipments.deliver');
-            Route::post('/{shipment}/cancel', [ShipmentController::class, 'cancel'])->name('shipments.cancel');
-            Route::post('/{shipment}/resend', [ShipmentController::class, 'resend'])->name('shipments.resend');
-            Route::post('/{shipment}/items/{shipmentItem}/return', [ShipmentController::class, 'returnItem'])->name('shipments.return-item');
-            Route::post('/{shipment}/items/{shipmentItem}/update-location', [ShipmentController::class, 'updateItemLocation'])->name('shipments.update-item-location');
-            Route::delete('/{shipment}', [ShipmentController::class, 'destroy'])->name('shipments.destroy');
-
-            Route::prefix('thung-rac')->name('shipments.trash.')->group(function () {
-                Route::post('/{shipment}/restore', [ShipmentController::class, 'restore'])->name('restore')->withTrashed();
-                Route::delete('/{shipment}/force', [ShipmentController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
             });
         });
     });
@@ -321,13 +287,6 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
                 Route::post('/', [LookupController::class, 'store'])->name('store');
                 Route::put('/{lookup}', [LookupController::class, 'update'])->name('update');
                 Route::delete('/{lookup}', [LookupController::class, 'destroy'])->name('destroy');
-
-                // Soft Delete / Trash Sub-group
-                Route::prefix('thung-rac')->name('trash.')->group(function () {
-                    Route::get('/', [LookupController::class, 'trash'])->name('index');
-                    Route::post('/{lookup}/restore', [LookupController::class, 'restore'])->name('restore')->withTrashed();
-                    Route::delete('/{lookup}/force', [LookupController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
-                });
             });
         });
     });
@@ -347,13 +306,6 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
             Route::post('/', [ProductController::class, 'store'])->name('store');
             Route::put('/{product}', [ProductController::class, 'update'])->name('update');
             Route::delete('/{product}', [ProductController::class, 'destroy'])->name('destroy');
-
-            // Soft Delete / Trash Sub-group
-            Route::prefix('thung-rac')->name('trash.')->group(function () {
-                Route::get('/', [ProductController::class, 'trash'])->name('index');
-                Route::post('/{product}/restore', [ProductController::class, 'restore'])->name('restore')->withTrashed();
-                Route::delete('/{product}/force', [ProductController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
-            });
         });
         Route::middleware(['can:Xem sản phẩm'])->group(function () {
             Route::get('/{product}', [ProductController::class, 'show'])->name('show');
@@ -371,13 +323,6 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
             Route::post('/', [CategoryController::class, 'store'])->name('store');
             Route::put('/{category}', [CategoryController::class, 'update'])->name('update');
             Route::delete('/{category}', [CategoryController::class, 'destroy'])->name('destroy');
-
-            // Soft Delete / Trash Sub-group
-            Route::prefix('thung-rac')->name('trash.')->group(function () {
-                Route::get('/', [CategoryController::class, 'trash'])->name('index');
-                Route::post('/{category}/restore', [CategoryController::class, 'restore'])->name('restore')->withTrashed();
-                Route::delete('/{category}/force', [CategoryController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
-            });
         });
     });
 
@@ -392,13 +337,6 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
             Route::post('/', [CollectionController::class, 'store'])->name('store');
             Route::put('/{collection}', [CollectionController::class, 'update'])->name('update');
             Route::delete('/{collection}', [CollectionController::class, 'destroy'])->name('destroy');
-
-            // Soft Delete / Trash Sub-group
-            Route::prefix('thung-rac')->name('trash.')->group(function () {
-                Route::get('/', [CollectionController::class, 'trash'])->name('index');
-                Route::post('/{collection}/restore', [CollectionController::class, 'restore'])->name('restore')->withTrashed();
-                Route::delete('/{collection}/force', [CollectionController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
-            });
         });
     });
 
@@ -414,13 +352,6 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
             Route::post('/', [BundleController::class, 'store'])->name('store');
             Route::put('/{bundle}', [BundleController::class, 'update'])->name('update');
             Route::delete('/{bundle}', [BundleController::class, 'destroy'])->name('destroy');
-
-            // Soft Delete / Trash Sub-group
-            Route::prefix('thung-rac')->name('trash.')->group(function () {
-                Route::get('/', [BundleController::class, 'trash'])->name('index');
-                Route::post('/{bundle}/restore', [BundleController::class, 'restore'])->name('restore')->withTrashed();
-                Route::delete('/{bundle}/force', [BundleController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
-            });
         });
     });
 
@@ -444,13 +375,6 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
                 Route::post('/adjust', [StockAdjustmentController::class, 'store'])->name('adjust');
                 Route::post('/{location}/bulk-import', [LocationController::class, 'bulkImport'])->name('bulk-import');
                 Route::get('/{location}/export', [LocationController::class, 'export'])->name('export');
-
-                // Soft Delete / Trash Sub-group
-                Route::prefix('thung-rac')->name('trash.')->group(function () {
-                    Route::get('/', [LocationController::class, 'trash'])->name('index');
-                    Route::post('/{location}/restore', [LocationController::class, 'restore'])->name('restore')->withTrashed();
-                    Route::delete('/{location}/force', [LocationController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
-                });
             });
         });
 
@@ -486,8 +410,6 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
                 Route::get('/', [StockMovementController::class, 'index'])->name('index');
             });
         });
-
-        Route::get('/reasons', [StockReasonController::class, 'index'])->name('reasons');
 
         Route::prefix('nha-cung-cap')->name('vendor.')->group(function () {
             Route::get('/', [VendorController::class, 'index'])->name('index');

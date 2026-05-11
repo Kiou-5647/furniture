@@ -4,6 +4,7 @@ namespace App\Http\Resources\Employee\Fulfillment;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Gate;
 
 class ShipmentResource extends JsonResource
 {
@@ -14,7 +15,7 @@ class ShipmentResource extends JsonResource
         return [
             'id' => $this->id,
             'shipment_number' => $this->shipment_number,
-            'order' => $this->whenLoaded('order', fn () => [
+            'order' => $this->whenLoaded('order', fn() => [
                 'id' => $this->order->id,
                 'order_number' => $this->order->order_number,
                 'status' => $this->order->status->value,
@@ -31,25 +32,29 @@ class ShipmentResource extends JsonResource
                 'shipping_cost' => $this->order->shipping_cost,
                 'notes' => $this->order->notes,
             ]),
-            'origin_location' => $this->whenLoaded('originLocation', fn () => [
+            'origin_location' => $this->whenLoaded('originLocation', fn() => [
                 'id' => $this->originLocation->id,
                 'name' => $this->originLocation->name,
             ]),
-            'shipping_method' => $this->whenLoaded('shippingMethod', fn () => [
+            'shipping_method' => $this->whenLoaded('shippingMethod', fn() => [
                 'id' => $this->shippingMethod->id,
                 'name' => $this->shippingMethod->name,
             ]),
-            'status' => $this->status->value,
-            'status_label' => $this->status->label(),
-            'status_color' => $this->status->color(),
-            'handled_by' => $this->whenLoaded('handledBy', fn () => [
+            'handled_by' => $this->whenLoaded('handledBy', fn() => [
                 'full_name' => $this->handledBy->full_name,
                 'phone' => $this->handledBy->phone,
             ]),
-            'can_ship' => $this->canBeShipped(),
-            'can_deliver' => $this->canBeDelivered(),
-            'can_cancel' => $this->canBeCancelled(),
-            'can_resend' => $this->canBeResent(),
+
+            'status' => $this->status->value,
+            'status_label' => $this->status->label(),
+            'status_color' => $this->status->color(),
+
+            'can_ship' => $this->canBeShipped() && Gate::allows('ship', $this),
+            'can_deliver' => $this->canBeDelivered() && Gate::allows('deliver', $this),
+            'can_cancel' => $this->canBeCancelled() && Gate::allows('cancel', $this),
+            'can_resend' => $this->canBeResent() && Gate::allows('resend', $this),
+            'can_delete' => Gate::allows('delete', $this),
+
             'items' => ShipmentItemResource::collection($this->whenLoaded('items')),
             'created_at' => $this->created_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
             'updated_at' => $this->updated_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),

@@ -26,20 +26,8 @@ class ShippingMethodController
         $filter = ShippingMethodFilterData::fromRequest($request);
 
         return Inertia::render('employee/fulfillment/shipping-methods/Index', [
-            'shippingMethods' => Inertia::defer(fn () => ShippingMethodResource::collection(
+            'shippingMethods' => Inertia::defer(fn() => ShippingMethodResource::collection(
                 $this->service->getFiltered($filter)
-            )),
-            'filters' => $filter,
-        ]);
-    }
-
-    public function trash(Request $request): Response
-    {
-        $filter = ShippingMethodFilterData::fromRequest($request);
-
-        return Inertia::render('employee/fulfillment/shipping-methods/Trash', [
-            'shippingMethods' => Inertia::defer(fn () => ShippingMethodResource::collection(
-                $this->service->getTrashedFiltered($filter)
             )),
             'filters' => $filter,
         ]);
@@ -72,23 +60,5 @@ class ShippingMethodController
         $shippingMethod->delete();
 
         return back()->with('success', 'Đã xóa phương thức vận chuyển.');
-    }
-
-    public function restore(ShippingMethod $shippingMethod)
-    {
-        Gate::authorize('manage', $shippingMethod);
-
-        $shippingMethod->restore();
-
-        return back()->with('success', 'Đã khôi phục phương thức vận chuyển.');
-    }
-
-    public function forceDestroy(ShippingMethod $shippingMethod)
-    {
-        Gate::authorize('manage', $shippingMethod);
-
-        $shippingMethod->forceDelete();
-
-        return back()->with('success', 'Đã xóa vĩnh viễn phương thức vận chuyển.');
     }
 }

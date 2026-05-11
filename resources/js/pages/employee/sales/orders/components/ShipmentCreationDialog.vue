@@ -20,10 +20,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import {
-    createShipments,
-    storeShipments,
-} from '@/routes/employee/sales/orders';
+import { create, store } from '@/routes/employee/shipments';
+
 
 interface OrderItemWithStock {
     bundle_name: string | null;
@@ -73,7 +71,7 @@ async function loadShipmentData() {
     loading.value = true;
     dialogError.value = '';
     try {
-        const res = await fetch(createShipments({ order: props.orderId }).url, {
+        const res = await fetch(create({ order: props.orderId }).url, {
             method: 'GET',
             headers: {
                 Accept: 'application/json',
@@ -191,7 +189,7 @@ function confirmCreateShipments() {
     }
 
     router.post(
-        storeShipments({ order: props.orderId }).url,
+        store({ order: props.orderId }).url,
         {
             items: activeRows.map((r) => ({
                 order_item_id: r.order_item_id,

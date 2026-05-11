@@ -32,16 +32,13 @@ import { Label } from '@/components/ui/label';
 import { createLazyComponent } from '@/composables/createLazyComponent';
 import AppLayout from '@/layouts/AppLayout.vue';
 import {
-    resend,
-    returnItem as returnRoute,
-} from '@/routes/employee/fulfillment/shipments';
-import {
     cancel,
     complete,
     index,
     updateStatus,
     markPaid,
-} from '@/routes/employee/sales/orders';
+} from '@/routes/employee/orders';
+import { resend, returnItem as returnRoute } from '@/routes/employee/shipments';
 import type { BreadcrumbItem, Order, ShipmentItem } from '@/types';
 
 const VnPayPaymentDialog = createLazyComponent(
@@ -71,34 +68,11 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     { title: props.order?.order_number ?? '...', href: '#' },
 ]);
 
-const canAccept = computed(() => props.order?.status === 'pending');
-const canMarkPaid = computed(() => {
-    const order = props.order;
-    if (!order) return false;
-    if (order.paid_at) return false;
-    if (order.status !== 'processing') return false;
-
-    if (order.payment_method === 'cod') {
-        if (!order.shipments || order.shipments.length === 0) {
-            return false;
-        }
-
-        const allShipmentItems = order.shipments.flatMap((s) => s.items);
-        return allShipmentItems.every((item) =>
-            ['delivered', 'returned'].includes(item.status),
-        );
-    }
-
-    return true;
-});
-const canCreateShipments = computed(() => {
-    const order = props.order;
-    if (!order) return false;
-    if (order.shipments && order.shipments.length > 0) return false;
-    if (['completed', 'cancelled'].includes(order.status)) return false;
-    if (order.payment_method !== 'cod' && !order.paid_at) return false;
-    return true;
-});
+const canAccept = computed(() => props.order?.can_accept);
+const canMarkPaid = computed(() => props.order?.can_mark_paid);
+const canComplete = computed(() => props.order?.can_complete);
+const canCancel = computed(() => props.order?.can_cancel);
+const canCreateShipments = computed(() => props.order?.can_create_shipment);
 
 const showReturnDialog = ref(false);
 const returnItem = ref<ShipmentItem | null>(null);
@@ -120,7 +94,7 @@ function handleVnPayPayment() {
 }
 
 function canReturnItem(item: ShipmentItem): boolean {
-    return ['shipped', 'delivered'].includes(item.status);
+    return item.can_return;
 }
 
 function handleCancel() {
@@ -296,10 +270,7 @@ function confirmReturn() {
                             <CheckCircle2 class="mr-2 h-4 w-4" /> Duyệt đơn
                         </Button>
                         <Button
-                            v-if="
-                                canMarkPaid &&
-                                (order.payment_method === 'cash' || 'cod')
-                            "
+                            v-if="canMarkPaid"
                             variant="outline"
                             class="border-green-200 bg-green-50/50 text-green-600"
                             @click="handleMarkPaid"
@@ -318,7 +289,7 @@ function confirmReturn() {
                             <CreditCard class="mr-2 h-4 w-4" /> Chuyển khoản
                         </Button>
                         <Button
-                            v-if="order.can_complete"
+                            v-if="canComplete"
                             variant="default"
                             class="bg-green-600 hover:bg-green-700"
                             @click="handleComplete"
@@ -326,7 +297,7 @@ function confirmReturn() {
                             <CheckCircle2 class="mr-2 h-4 w-4" /> Hoàn thành
                         </Button>
                         <Button
-                            v-if="order.can_cancel"
+                            v-if="canCancel"
                             variant="ghost"
                             class="text-destructive hover:bg-destructive/10"
                             @click="handleCancel"

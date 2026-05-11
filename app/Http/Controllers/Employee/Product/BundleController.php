@@ -71,28 +71,6 @@ class BundleController
         return back()->with('success', 'Đã cập nhật gói sản phẩm.');
     }
 
-    public function trash(Request $request): Response
-    {
-        // Assuming you add a getTrashedFiltered to BundleService to match ProductController
-        $filter = BundleFilterData::fromRequest($request);
-
-        return Inertia::render('employee/products/bundles/Trash', [
-            'bundles' => Inertia::defer(fn() => BundleResource::collection(
-                $this->service->getTrashedFiltered($filter)
-            )),
-            'filters' => $filter,
-        ]);
-    }
-
-    public function restore(Bundle $bundle)
-    {
-        Gate::authorize('manage', $bundle);
-
-        $bundle->restore();
-
-        return back()->with('success', 'Đã khôi phục gói sản phẩm.');
-    }
-
     public function destroy(Bundle $bundle)
     {
         Gate::authorize('manage', $bundle);
@@ -100,14 +78,5 @@ class BundleController
         $bundle->delete();
 
         return back()->with('success', 'Đã xóa gói sản phẩm.');
-    }
-
-    public function forceDestroy(Bundle $bundle)
-    {
-        Gate::authorize('manage', $bundle);
-
-        $bundle->forceDelete();
-
-        return back()->with('success', 'Đã xóa vĩnh viễn gói sản phẩm.');
     }
 }

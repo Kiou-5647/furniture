@@ -11,9 +11,9 @@ import {
     DialogFooter,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { formatPrice } from '@/lib';
 import { useCartStore } from '@/stores/cart';
 import type { ProductCard, ProductCardVariant } from '@/types/public/product';
-import { formatPrice } from '@/lib/utils';
 
 const props = defineProps<{
     open: boolean;

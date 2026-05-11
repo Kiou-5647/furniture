@@ -9,6 +9,7 @@ use App\Models\Sales\OrderItem;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Gate;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
@@ -46,5 +47,20 @@ class ShipmentItem extends Model
     public function orderItem(): BelongsTo
     {
         return $this->belongsTo(OrderItem::class);
+    }
+
+    public function canBeReturned(): bool
+    {
+        // 1. Check trạng thái Shipment cha (Không được bị Hủy)
+        if ($this->shipment->status === ShipmentStatus::Cancelled) {
+            return false;
+        }
+
+        // 2. Check trạng thái Item (Phải đã gửi hoặc đã giao)
+        if (!in_array($this->status, [ShipmentStatus::Shipped, ShipmentStatus::Delivered], true)) {
+            return false;
+        }
+
+        return true;
     }
 }

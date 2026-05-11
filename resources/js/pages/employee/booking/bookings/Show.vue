@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import {
     ArrowLeft,
@@ -9,9 +8,8 @@ import {
     CheckCircle2,
     CreditCard,
     XCircle,
-    PackageCheck,
-    MapPin,
 } from '@lucide/vue';
+import { computed, ref } from 'vue';
 import { toast } from 'vue-sonner';
 import { markAsPaid } from '@/actions/App/Http/Controllers/Employee/Booking/BookingController';
 import { initiate } from '@/actions/App/Http/Controllers/Payment/VnPayPaymentController';
@@ -20,8 +18,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { createLazyComponent } from '@/composables/createLazyComponent';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { formatPrice } from '@/lib';
 import { formatDateOnly, formatDateTime } from '@/lib/date-utils';
-import { formatPrice } from '@/lib/utils';
 import {
     index,
     confirm,
@@ -422,8 +420,7 @@ const fullAddress = computed(
                                     </div>
                                     <div
                                         v-if="
-                                            booking.deposit_invoice.status ===
-                                            'open'
+                                            booking.can_pay_deposit
                                         "
                                         class="flex gap-2 pt-2"
                                     >
@@ -503,8 +500,7 @@ const fullAddress = computed(
                                     <div class="flex gap-2 pt-2">
                                         <template
                                             v-if="
-                                                booking.final_invoice.status ===
-                                                'draft'
+                                                booking.can_open_invoice
                                             "
                                         >
                                             <Button
@@ -517,8 +513,7 @@ const fullAddress = computed(
                                         </template>
                                         <template
                                             v-else-if="
-                                                booking.final_invoice.status ===
-                                                'open'
+                                                booking.can_mark_final_paid
                                             "
                                         >
                                             <Button

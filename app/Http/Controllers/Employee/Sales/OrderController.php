@@ -35,13 +35,21 @@ class OrderController
         private OrderService $service,
     ) {}
 
-    public function index(Request $request): Response
+    public function index(Request $request)
     {
+        if (!Gate::allows('viewAny', Order::class)) {
+            return back()->with('error', 'Bạn không có quyền truy cập danh sách đơn hàng!');
+        }
+
         $filter = OrderFilterData::fromRequest($request);
-        $employeeLocationId = $request->user()->employee?->store_location_id;
+        $user = $request->user();
+        $employeeLocationId = $user->employee?->store_location_id;
 
         return Inertia::render('employee/sales/orders/Index', [
-            'statusOptions' => $this->service->getStatusOptions(),
+            'orders' => Inertia::defer(fn() => OrderResource::collection(
+                $this->service->getFiltered($filter, $user)
+            )),
+            'statusOptions' => OrderStatus::options(),
             'paymentMethodOptions' => PaymentMethod::options(),
             'customerOptions' => $this->service->getCustomerOptions(),
             'sourceOptions' => [
@@ -53,28 +61,17 @@ class OrderController
             'employeeLocationName' => $employeeLocationId
                 ? (Location::find($employeeLocationId)?->name)
                 : null,
-            'orders' => Inertia::defer(fn() => OrderResource::collection(
-                $this->service->getFiltered($filter)
-            )),
             'filters' => $filter,
         ]);
     }
 
-    public function trash(Request $request): Response
+    public function show(Request $request, Order $order)
     {
-        $filter = OrderFilterData::fromRequest($request);
+        if (!Gate::allows('view', $order)) {
+            return back()->with('error', 'Bạn không có quyền xem chi tiết đơn hàng này!');
+        }
 
-        return Inertia::render('employee/sales/orders/Trash', [
-            'orders' => Inertia::defer(fn() => OrderResource::collection(
-                $this->service->getTrashedFiltered($filter)
-            )),
-            'filters' => $filter,
-        ]);
-    }
-
-    public function show(Order $order): Response
-    {
-        $order = $this->service->getById($order->id);
+        $order = $this->service->getById($order->id, $request->user());
         $variantStockOptions = $this->service->getOrderVariantStockOptions($order);
         $order->load(['shipments.items.variant']);
 
@@ -84,43 +81,115 @@ class OrderController
         ]);
     }
 
-    public function createShipments(Order $order, CreateShipmentsAction $action)
+    public function store(CreateOrderRequest $request, CreateOrderAction $action)
     {
-        Gate::authorize('createShipments', $order);
+        if (!Gate::allows('create', Order::class)) {
+            return back()->with('error', 'Bạn không có quyền tạo đơn hàng!');
+        }
+
+        $employee = $request->user()->employee;
+
+        if (! $request->input('store_location_id') && $employee) {
+            $request->merge(['store_location_id' => $employee->store_location_id]);
+        }
+
+        $data = CreateOrderData::fromRequest($request);
 
         try {
-            $action->execute($order);
-        } catch (\RuntimeException $e) {
+            $order = $action->execute($data);
+
+            return redirect()->route('employee.orders.show', $order)
+                ->with('success', 'Đã tạo đơn hàng mới.');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function updateStatus(UpdateOrderStatusRequest $request, Order $order, UpdateOrderStatusAction $action)
+    {
+        if (!Gate::allows('updateStatus', $order)) {
+            return back()->with('error', 'Bạn không có quyền cập nhật trạng thái đơn hàng này!');
+        }
+
+        $employee = $request->user()->employee;
+        $newStatus = OrderStatus::tryFrom($request->input('status'));
+
+        try {
+            $action->execute($order, $newStatus, $employee);
+        } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
         }
 
-        return response()->json([
-            'order_id' => $order->id,
-            'items' => $this->service->getOrderItemsForShipment($order),
-        ]);
+        return back()->with('success', 'Đã cập nhật trạng thái đơn hàng.');
     }
 
-    public function storeShipments(StoreShipmentsRequest $request, Order $order, CreateShipmentsAction $action)
+    public function cancel(Order $order, Request $request, CancelOrderAction $action)
     {
-        Gate::authorize('storeShipments', $order);
-
-        if ($order->shipments()->exists()) {
-            return back()->with('error', 'Đơn hàng đã có đơn vận chuyển.');
+        if (!Gate::allows('cancel', $order)) {
+            return back()->with('error', 'Bạn không có quyền hủy đơn hàng này!');
         }
 
-        $shipmentData = [];
-        foreach ($request->validated('items') as $itemData) {
-            $shipmentData[] = [
-                'order_item_id' => $itemData['order_item_id'],
-                'location_id' => $itemData['location_id'],
-                'quantity' => $itemData['quantity'],
-                'variant_id' => $itemData['variant_id']
-            ];
+        $employee = $request->user()->employee;
+
+        try {
+            $action->execute($order, $employee);
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
         }
 
-        $action->executeWithLocations($order, $shipmentData);
+        return back()->with('success', 'Đã hủy đơn hàng.');
+    }
 
-        return back()->with('success', 'Đã tạo đơn vận chuyển.');
+    public function complete(Order $order, Request $request, CompleteOrderAction $action)
+    {
+        if (!Gate::allows('complete', $order)) {
+            return back()->with('error', 'Bạn không có quyền hoàn thành đơn hàng này!');
+        }
+
+        $employee = $request->user()->employee;
+
+        try {
+            $action->execute($order, $employee);
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+
+        return back()->with('success', 'Đã hoàn thành đơn hàng.');
+    }
+
+    public function destroy(Order $order)
+    {
+        if (!Gate::allows('delete', $order)) {
+            return back()->with('error', 'Bạn không có quyền xóa đơn hàng này!');
+        }
+
+        $order->delete();
+
+        return back()->with('success', 'Đã xóa đơn hàng.');
+    }
+
+    public function export(Request $request)
+    {
+        $filter = OrderFilterData::fromRequest($request);
+
+        return Excel::download(new OrderExport($filter), 'orders_export_' . now()->format('Ymd_His') . '.xlsx');
+    }
+
+    public function markAsPaid(Request $request, Order $order, MarkOrderAsPaidAction $action)
+    {
+        if (!Gate::allows('markAsPaid', $order)) {
+            return back()->with('error', 'Bạn không có quyền xác nhận thanh toán cho đơn hàng này!');
+        }
+
+        try {
+            $employee = $request->user()->employee;
+            $action->execute($order, $employee);
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', 'Đã xác nhận thanh toán.');
     }
 
     public function catalog(Request $request)
@@ -154,100 +223,5 @@ class OrderController
         return response()->json([
             'stock_options' => $stockOptions,
         ]);
-    }
-
-    public function store(CreateOrderRequest $request, CreateOrderAction $action)
-    {
-        Gate::authorize('create', Order::class);
-        $employee = $request->user()->employee;
-
-        // Merge store location into request data before creating DTO
-        if (! $request->input('store_location_id') && $employee) {
-            $request->merge(['store_location_id' => $employee->store_location_id]);
-        }
-
-        $data = CreateOrderData::fromRequest($request);
-        $order = $action->execute($data);
-
-        return redirect()->route('employee.sales.orders.show', $order)
-            ->with('success', 'Đã tạo đơn hàng mới.');
-    }
-
-    public function updateStatus(UpdateOrderStatusRequest $request, Order $order, UpdateOrderStatusAction $action)
-    {
-        Gate::authorize('updateStatus', $order);
-        $employee = $request->user()->employee;
-        $newStatus = OrderStatus::tryFrom($request->input('status'));
-
-        $action->execute($order, $newStatus, $employee);
-
-        return back()->with('success', 'Đã cập nhật trạng thái đơn hàng.');
-    }
-
-    public function cancel(Order $order, Request $request, CancelOrderAction $action)
-    {
-        Gate::authorize('cancel', $order);
-        $employee = $request->user()->employee;
-
-        $action->execute($order, $employee);
-
-        return back()->with('success', 'Đã hủy đơn hàng.');
-    }
-
-    public function complete(Order $order, Request $request, CompleteOrderAction $action)
-    {
-        Gate::authorize('complete', $order);
-        $employee = $request->user()->employee;
-
-        $action->execute($order, $employee);
-
-        return back()->with('success', 'Đã hoàn thành đơn hàng.');
-    }
-
-    public function restore(Order $order)
-    {
-        Gate::authorize('manage', $order);
-
-        $order->restore();
-
-        return back()->with('success', 'Đã khôi phục đơn hàng.');
-    }
-
-    public function destroy(Order $order)
-    {
-        Gate::authorize('manage', $order);
-
-        $order->delete();
-
-        return back()->with('success', 'Đã xóa đơn hàng.');
-    }
-
-    public function export(Request $request)
-    {
-        $filter = OrderFilterData::fromRequest($request);
-
-        return Excel::download(new OrderExport($filter), 'orders_export_' . now()->format('Ymd_His') . '.xlsx');
-    }
-
-    public function forceDestroy(Order $order)
-    {
-        Gate::authorize('manage', $order);
-
-        $order->forceDelete();
-
-        return back()->with('success', 'Đã xóa vĩnh viễn đơn hàng.');
-    }
-
-    public function markAsPaid(Request $request, Order $order, MarkOrderAsPaidAction $action)
-    {
-        Gate::authorize('markAsPaid', $order);
-        try {
-            $employee = $request->user()->employee;
-            $action->execute($order, $employee);
-        } catch (\RuntimeException $e) {
-            return back()->with('error', $e->getMessage());
-        }
-
-        return back()->with('success', 'Đã xác nhận thanh toán.');
     }
 }

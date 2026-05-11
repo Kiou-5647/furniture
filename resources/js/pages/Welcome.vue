@@ -17,8 +17,9 @@ import {
 } from '@/components/ui/carousel';
 import ShopLayout from '@/layouts/ShopLayout.vue';
 import ProductSection from '@/layouts/storefront/ProductSection.vue';
-import { formatPrice } from '@/lib/utils';
+import { formatPrice } from '@/lib';
 import { index } from '@/routes/customer/bookings';
+import type { Pagination } from '@/types';
 
 const props = defineProps<{
     rooms: {
@@ -31,14 +32,14 @@ const props = defineProps<{
         string,
         {
             title: string;
-            cards: any[];
+            cards: Pagination<any>;
             moreUrl: string;
         }
     >;
 }>();
 
 const page = usePage();
-const settings = page.props.settings;
+const settings = page.props.settings as any;
 
 const features = [
     {

@@ -42,7 +42,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import ShopLayout from '@/layouts/ShopLayout.vue';
-import { formatPrice } from '@/lib/utils';
+import { formatPrice } from '@/lib';
 import { useCartStore } from '@/stores/cart';
 import type { BreadcrumbItem } from '@/types';
 import { AssemblyDifficultyLabels } from '@/types';

@@ -2,25 +2,13 @@
 
 namespace App\Http\Requests\Booking;
 
-use App\Enums\UserType;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Auth;
 
 class CreateBookingRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        $user = Auth::user();
-
-        if (!$user) {
-            return false;
-        }
-
-        if ($user->type === UserType::Customer) {
-            return true;
-        }
-
-        return $this->user()->can('Quản lý lịch thiết kế');
+        return true;
     }
 
     public function rules(): array

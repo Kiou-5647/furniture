@@ -1,12 +1,16 @@
+import { CheckCircle2, MoreHorizontal, Pencil, Trash2, XCircle } from '@lucide/vue';
 import type { ColumnDef } from '@tanstack/vue-table';
 import { h } from 'vue';
-import { formatDateTime, formatSessionDate } from '@/lib/date-utils';
+import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { formatDateTime, formatPrice } from '@/lib';
 import type { Booking } from '@/types/booking';
-import { formatPrice } from '@/lib/utils';
 
 export function getColumns(
+    onEdit: (booking: Booking) => void,
     onConfirm: (booking: Booking) => void,
     onCancel: (booking: Booking) => void,
+    onDelete: (booking: Booking) => void,
 ): ColumnDef<Booking>[] {
     return [
         {
@@ -107,53 +111,49 @@ export function getColumns(
             },
         },
         {
-            accessorKey: 'actions',
+            id: 'actions',
             header: 'Thao tác',
-            size: 180,
+            size: 80,
             enableSorting: false,
             enableHiding: false,
             meta: { align: 'center' },
             cell: ({ row }) => {
                 const booking = row.original;
-                const children = [];
 
-                if (booking.can_confirm) {
-                    children.push(
-                        h(
-                            'button',
-                            {
-                                class: 'text-sm text-green-600 hover:underline mx-1',
-                                onClick: (e: Event) => {
-                                    e.stopPropagation();
-                                    onConfirm(booking);
-                                },
-                            },
-                            'Xác nhận',
+                return h(DropdownMenu, {}, {
+                    default: () => [
+                        h(DropdownMenuTrigger, { asChild: true }, () =>
+                            h(Button, { variant: 'ghost', class: 'h-8 w-8 p-0' }, () => h(MoreHorizontal, { class: 'h-4 w-4' })),
                         ),
-                    );
-                }
-
-                if (booking.can_cancel) {
-                    children.push(
-                        h(
-                            'button',
-                            {
-                                class: 'text-sm text-red-600 hover:underline mx-1',
-                                onClick: (e: Event) => {
-                                    e.stopPropagation();
-                                    onCancel(booking);
-                                },
-                            },
-                            'Hủy',
-                        ),
-                    );
-                }
-
-                return h(
-                    'div',
-                    { class: 'flex justify-center' },
-                    children.length > 0 ? children : '—',
-                );
+                        h(DropdownMenuContent, { align: 'end', class: 'w-45' }, () => [
+                            h(DropdownMenuLabel, () => 'Thao tác'),
+                            h(DropdownMenuItem, { onClick: () => onEdit(booking) }, () => [
+                                h(Pencil, { class: 'mr-2 h-4 w-4' }),
+                                'Chi tiết',
+                            ]),
+                            h(DropdownMenuSeparator),
+                            booking.can_confirm
+                                ? h(DropdownMenuItem, { class: 'text-blue-600', onClick: () => onConfirm(booking) }, () => [
+                                    h(CheckCircle2, { class: 'mr-2 h-4 w-4' }),
+                                    'Xác nhận',
+                                ])
+                                : null,
+                            booking.can_cancel
+                                ? h(DropdownMenuItem, { class: 'text-destructive', onClick: () => onCancel(booking) }, () => [
+                                    h(XCircle, { class: 'mr-2 h-4 w-4' }),
+                                    'Hủy lịch',
+                                ])
+                                : null,
+                            h(DropdownMenuSeparator),
+                            booking.can_delete ?
+                                h(DropdownMenuItem, { class: 'text-destructive', onClick: () => onDelete(booking) }, () => [
+                                    h(Trash2, { class: 'mr-2 h-4 w-4' }),
+                                    'Xóa',
+                                ])
+                                : null,
+                        ]),
+                    ],
+                });
             },
         },
     ];

@@ -39,10 +39,10 @@ import {
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
-import { formatNumber, handleNumericInput } from '@/lib/utils';
+import { Textarea } from '@/components/ui/textarea';
+import { formatNumber, handleNumericInput } from '@/lib';
 import { availabilities, store, update } from '@/routes/employee/hr/designers';
 import type { WeeklySlots } from '@/types/designer';
-import { Textarea } from '@/components/ui/textarea';
 
 interface WorkHours {
     morning_start: number;
@@ -247,8 +247,7 @@ function submit() {
             onSuccess: () => {
                 emit('refresh');
                 closeModal();
-            },
-            onError: (errors) => toast.error(errors.error),
+            }
         });
     } else {
         form.post(store().url, {
@@ -256,8 +255,7 @@ function submit() {
             onSuccess: () => {
                 emit('refresh');
                 closeModal();
-            },
-            onError: (errors) => toast.error(errors.error),
+            }
         });
     }
 }
