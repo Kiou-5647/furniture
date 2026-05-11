@@ -37,12 +37,16 @@ export interface Booking {
         invoice_number: string;
         amount_due: string;
         status: string;
+        status_label: string;
+        status_color: string;
     };
     final_invoice?: {
         id: string;
         invoice_number: string;
         amount_due: string;
         status: string;
+        status_label: string;
+        status_color: string;
     };
     can_confirm: boolean;
     can_cancel: boolean;

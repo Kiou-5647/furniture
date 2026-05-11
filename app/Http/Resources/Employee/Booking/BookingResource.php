@@ -46,12 +46,16 @@ class BookingResource extends JsonResource
                 'invoice_number' => $this->depositInvoice->invoice_number,
                 'amount_due' => $this->depositInvoice->amount_due,
                 'status' => $this->depositInvoice->status->value,
+                'status_label' => $this->depositInvoice->status->label(),
+                'status_color' => $this->depositInvoice->status->color(),
             ] : null),
             'final_invoice' => $this->whenLoaded('finalInvoice', fn() => $this->finalInvoice ? [
                 'id' => $this->finalInvoice->id,
                 'invoice_number' => $this->finalInvoice->invoice_number,
                 'amount_due' => $this->finalInvoice->amount_due,
                 'status' => $this->finalInvoice->status->value,
+                'status_label' => $this->finalInvoice->status->label(),
+                'status_color' => $this->finalInvoice->status->color(),
             ] : null),
 
             'can_confirm' => $this->canBeConfirmed() && Gate::allows('confirm', $this),

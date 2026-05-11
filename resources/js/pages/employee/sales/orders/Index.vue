@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { createLazyComponent } from '@/composables/createLazyComponent';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { CheckUserPermission, cleanQuery, setCookie } from '@/lib';
-import { index, destroy, cancel, complete, show, catalog as catalogRoute, updateStatus } from '@/routes/employee/orders';
+import { index, destroy, cancel, complete, show, catalog as catalogRoute, updateStatus } from '@/routes/employee/sales/orders';
 import type { BreadcrumbItem } from '@/types';
 import type {
     Order,

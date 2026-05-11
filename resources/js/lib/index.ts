@@ -4,3 +4,4 @@ export * from './auth-utils';
 export * from './cookie-utils';
 export * from './string-utils';
 export * from './format-utils';
+export * from './booking-utils';

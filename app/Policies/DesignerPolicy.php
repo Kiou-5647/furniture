@@ -2,18 +2,35 @@
 
 namespace App\Policies;
 
+use App\Constants\Permission;
 use App\Models\Auth\User;
 use App\Models\Hr\Designer;
 
 class DesignerPolicy
 {
-    public function create(User $user): bool
+    public function viewAny(User $user): bool
     {
-        return $user->hasPermissionTo('Quản lý nhà thiết kế');
+        return $user->hasPermissionTo(Permission::DESIGNER['SELECT']);
     }
 
-    public function manage(User $user, Designer $designer): bool
+    public function create(User $user): bool
     {
-        return $user->hasPermissionTo('Quản lý nhà thiết kế');
+        return $user->hasPermissionTo(Permission::DESIGNER['MANAGE']);
+    }
+
+    public function update(User $user, Designer $designer): bool
+    {
+        // 1. Check quyền quản lý tổng thể
+        if ($user->hasPermissionTo(Permission::DESIGNER['MANAGE'])) {
+            return true;
+        }
+
+        // 2. Cho phép Designer tự cập nhật chính mình
+        return $designer->user_id === $user->id;
+    }
+
+    public function delete(User $user, Designer $designer): bool
+    {
+        return $user->hasPermissionTo(Permission::DESIGNER['MANAGE']);
     }
 }

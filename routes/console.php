@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 
 Schedule::command('analytics:sync-views')->everyFiveMinutes();
 Schedule::command('products:expire-new-arrivals')->daily();
+Schedule::command('bookings:cancel-expired')->hourly();

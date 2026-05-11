@@ -8,11 +8,7 @@ class StoreShipmentsRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        $user = $this->user();
-        if ($user->can('Quản lý đơn hàng') || $user->can('Quản lý vận chuyển'))
-            return true;
-
-        return false;
+        return true;
     }
 
     public function rules(): array

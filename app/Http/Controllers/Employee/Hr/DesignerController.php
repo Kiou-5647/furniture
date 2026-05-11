@@ -15,7 +15,6 @@ use App\Settings\WorkHourSettings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
-use Inertia\Response;
 
 class DesignerController
 {
@@ -25,8 +24,12 @@ class DesignerController
         private BookingAvailabilityService $checker
     ) {}
 
-    public function index(Request $request): Response
+    public function index(Request $request)
     {
+        if (!Gate::allows('viewAny', Designer::class)) {
+            return back()->with('error', 'Bạn không có quyền thực hiện hành động này!');
+        }
+
         $filter = DesignerFilterData::fromRequest($request);
 
         return Inertia::render('employee/hr/designers/Index', [
@@ -46,7 +49,10 @@ class DesignerController
 
     public function store(StoreDesignerRequest $request, CreateDesignerAction $action)
     {
-        Gate::authorize('create', Designer::class);
+        if (!Gate::allows('create', Designer::class)) {
+            return back()->with('error', 'Bạn không có quyền thực hiện hành động này!');
+        }
+
         try {
             $action->execute(
                 $request->validated(),
@@ -61,64 +67,38 @@ class DesignerController
 
     public function update(UpdateDesignerRequest $request, Designer $designer, UpdateDesignerAction $action)
     {
-        Gate::authorize('manage', $designer);
-
-        $action->execute(
-            $designer,
-            $request->validated(),
-            $request->file('avatar'),
-        );
+        if (!Gate::allows('update', $designer)) {
+            return back()->with('error', 'Bạn không có quyền thực hiện hành động này!');
+        }
+        try {
+            $action->execute(
+                $designer,
+                $request->validated(),
+                $request->file('avatar'),
+            );
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => $e->getMessage()]);
+        }
 
         return back()->with('success', 'Đã cập nhật nhà thiết kế.');
     }
 
     public function destroy(Designer $designer)
     {
-        Gate::authorize('manage', $designer);
+        if (!Gate::allows('delete', $designer)) {
+            return back()->with('error', 'Bạn không có quyền thực hiện hành động này!');
+        }
+
+        if ($designer->user) {
+            $designer->user->revokePermissionTo([
+                'Xem lịch thiết kế',
+                'Tạo lịch thiết kế',
+                'Sửa lịch thiết kế',
+            ]);
+        }
 
         $designer->delete();
 
         return back()->with('success', 'Đã xóa nhà thiết kế.');
-    }
-
-    public function availabilities(Designer $designer)
-    {
-        $weeklySlots = $this->service->getWeeklySlots($designer);
-
-        return response()->json([
-            'weekly' => $weeklySlots,
-        ]);
-    }
-
-    public function availableSlots(Request $request, Designer $designer)
-    {
-        $request->validate([
-            'date' => ['required', 'date'],
-        ]);
-
-
-        $slots = $this->checker->getAvailableSlotsForDate($designer, $request->input('date'));
-
-        $slotsMap = [];
-        for ($hour = 5; $hour <= 23; $hour++) {
-            $slotsMap[$hour] = in_array($hour, $slots) ? 1 : 0;
-        }
-
-        return response()->json([
-            'date' => $request->input('date'),
-            'slots' => $slotsMap,
-        ]);
-    }
-
-    public function availableDates(Designer $designer)
-    {
-        $startDate = request()->query('start_date', today()->toDateString());
-        $endDate = request()->query('end_date', today()->addDays(30)->toDateString());
-
-        $dates = $this->checker->getAvailableDates($designer, $startDate, $endDate);
-
-        return response()->json([
-            'dates' => $dates,
-        ]);
     }
 }

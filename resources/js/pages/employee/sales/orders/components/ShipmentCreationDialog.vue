@@ -20,7 +20,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { create, store } from '@/routes/employee/shipments';
+import { create, store } from '@/routes/employee/fulfillment/shipments';
 
 
 interface OrderItemWithStock {

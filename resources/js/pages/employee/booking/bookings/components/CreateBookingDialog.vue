@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { router, useForm } from '@inertiajs/vue3';
-import { Loader2, Search, X, User, Clock, CreditCard } from '@lucide/vue';
+import { Loader2, Search, X, User, Clock, CreditCard, ChevronLeft, ChevronRight } from '@lucide/vue';
 import { ref, watch, computed, onMounted } from 'vue';
 import { toast } from 'vue-sonner';
 import { Button } from '@/components/ui/button';
@@ -26,8 +26,16 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { addDays, startOfCurrentWeek, toISODate } from '@/lib';
+import {
+    loadWeeklyActualSlots,
+    prevWeek,
+    nextWeek,
+    getSlotColor,
+    handleSlotClick
+} from '@/lib';
+import { availabilities } from '@/routes/designers';
 import { store } from '@/routes/employee/booking';
-import { availabilities } from '@/routes/employee/hr/designers';
 
 interface CustomerOption {
     id: string;
@@ -77,6 +85,8 @@ const customerSearch = ref('');
 const showCustomerDropdown = ref(false);
 const designerAvailability = ref<number[][]>([]);
 const loadingAvailability = ref(false);
+const currentWeekStart = ref(startOfCurrentWeek());
+const weeklySlots = ref<Record<string, Record<number, number>>>({});
 const provinces = ref<{ value: string; label: string }[]>([]);
 const wards = ref<{ value: string; label: string }[]>([]);
 const loadingProvinces = ref(false);
@@ -243,6 +253,12 @@ async function loadDesignerAvailability() {
         );
         const data = await response.json();
         designerAvailability.value = data.weekly || [];
+        weeklySlots.value = await loadWeeklyActualSlots(
+            form.designer_id!,
+            currentWeekStart.value,
+            DAYS,
+            weeklySlots.value,
+        );
         autoSelectFirstSlot();
     } catch (e) {
         console.error('Failed to load availability:', e);
@@ -252,35 +268,36 @@ async function loadDesignerAvailability() {
     }
 }
 
-async function handleSlotClick(day: number, hour: number) {
-    if (designerAvailability.value[day]?.[hour] != 1) {
-        toast.error('Khung giờ này không khả dụng. Vui lòng chọn giờ khác.');
+function doPrevWeek() {
+    const { newStart, newDate } = prevWeek(currentWeekStart.value);
+    currentWeekStart.value = newStart;
+    form.date = newDate;
+    loadDesignerAvailability();
+}
+
+function doNextWeek() {
+    const { newStart, newDate } = nextWeek(currentWeekStart.value);
+    currentWeekStart.value = newStart;
+    form.date = newDate;
+    loadDesignerAvailability();
+}
+
+async function doHandleSlotClick(day: number, hour: number) {
+    const result = handleSlotClick(
+        day,
+        hour,
+        currentWeekStart.value,
+        designerAvailability.value,
+        weeklySlots.value,
+    );
+
+    if (!result.isValid) {
+        toast.error(result.error!);
         return;
     }
 
-    const selectedDate = form.date ? new Date(form.date) : null;
-    if (!selectedDate || selectedDate.getDay() !== day) {
-        form.date = getNextDateForDay(day);
-    }
-
-    try {
-        const response = await fetch(
-            `/nhan-vien/quan-ly-nhan-su/nha-thiet-ke/${form.designer_id}/available-slots?date=${form.date}`,
-        );
-
-        const data = await response.json();
-        console.info(data)
-        if (!data.slots || !data.slots[hour]) {
-            toast.error(
-                'Rất tiếc, khung giờ này vừa mới bị đặt. Vui lòng chọn giờ khác.',
-            );
-            return;
-        }
-    } catch (e) {
-        console.error('Availability check failed', e);
-    }
-
-    form.start_time = `${String(hour).padStart(2, '0')}:00`;
+    form.date = result.date!;
+    form.start_time = result.startTime!;
 }
 
 watch(
@@ -317,16 +334,13 @@ async function submit() {
             {
                 preserveScroll: true,
                 preserveState: true,
-                onError: (errors) => {
-                    toast.error('Rất tiếc, khung giờ này vừa mới bị đặt. Vui lòng chọn giờ khác.')
-                },
                 onFinish: () => {
                     form.processing = false;
                 },
             },
         );
     } catch (e) {
-        toast.error('Không thể tạo đặt lịch. Vui lòng thử lại.');
+        console.error(`Không thể tạo đặt lịch.\nLý do: ${e}`);
     } finally {
         form.processing = false;
     }
@@ -645,9 +659,24 @@ watch(
                     </div>
 
                     <!-- Availability Grid (Existing logic) -->
-                    <div class="mb-3 flex items-center gap-2">
-                        <Clock class="h-4 w-4" />
-                        <span class="text-sm font-medium">Lịch làm việc</span>
+                    <div class="mb-3 flex items-center justify-between">
+                        <div class="flex items-center gap-2 font-semibold">
+                            <Clock class="h-4 w-4" />
+                            <span>Lịch làm việc</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <Button variant="outline" size="sm" @click="doPrevWeek">
+                                <ChevronLeft class="h-4 w-4" /> Trước
+                            </Button>
+                            <span class="text-xs font-medium">
+                                {{ toISODate(currentWeekStart) }} - {{ toISODate(addDays(currentWeekStart, 6)) }}
+                            </span>
+                            <Button variant="outline" size="sm" @click="doNextWeek">
+                                Tiếp <ChevronRight class="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 mb-3">
                         <Loader2
                             v-if="loadingAvailability"
                             class="ml-auto h-3 w-3 animate-spin"
@@ -688,16 +717,18 @@ watch(
                                     v-for="day in DAYS"
                                     :key="`${day.key}-${hour}`"
                                     class="cursor-pointer bg-background p-0.5 transition-colors hover:bg-muted/50"
-                                    @click="handleSlotClick(day.key, hour)"
+                                    @click="doHandleSlotClick(day.key, hour)"
                                 >
                                     <div
                                         class="h-4 w-full rounded-sm transition-all"
                                         :class="[
-                                            designerAvailability[day.key]?.[
-                                                hour
-                                            ] == 1
-                                                ? 'bg-green-600'
-                                                : 'bg-gray-200',
+                                            getSlotColor(
+                                                day.key,
+                                                hour,
+                                                currentWeekStart,
+                                                designerAvailability,
+                                                weeklySlots,
+                                            ),
                                             form.date &&
                                             new Date(form.date).getDay() ===
                                                 day.key &&
@@ -733,25 +764,3 @@ watch(
         </DialogContent>
     </Dialog>
 </template>
-
-<script lang="ts">
-function getNextDateForDay(dayOfWeek: number): string {
-    const now = new Date();
-    const y = now.getFullYear();
-    const m = now.getMonth();
-    const d = now.getDate();
-    const currentDay = now.getDay();
-
-    let daysToAdd = dayOfWeek - currentDay;
-    if (daysToAdd <= 0) {
-        daysToAdd += 7;
-    }
-
-    const nextDate = new Date(y, m, d + daysToAdd);
-    const year = nextDate.getFullYear();
-    const month = String(nextDate.getMonth() + 1).padStart(2, '0');
-    const day = String(nextDate.getDate()).padStart(2, '0');
-
-    return `${year}-${month}-${day}`;
-}
-</script>

@@ -31,14 +31,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { createLazyComponent } from '@/composables/createLazyComponent';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { resend, returnItem as returnRoute } from '@/routes/employee/fulfillment/shipments';
 import {
     cancel,
     complete,
     index,
     updateStatus,
     markPaid,
-} from '@/routes/employee/orders';
-import { resend, returnItem as returnRoute } from '@/routes/employee/shipments';
+} from '@/routes/employee/sales/orders';
 import type { BreadcrumbItem, Order, ShipmentItem } from '@/types';
 
 const VnPayPaymentDialog = createLazyComponent(

@@ -20,7 +20,6 @@ use App\Http\Controllers\Employee\Sales\InvoiceController;
 use App\Http\Controllers\Employee\Sales\OrderController;
 use App\Http\Controllers\Employee\Sales\PaymentController;
 use App\Http\Controllers\Employee\Sales\RefundController;
-use App\Http\Controllers\Employee\Setting\ActivityLogController;
 use App\Http\Controllers\Employee\Setting\GeneralSettingsController;
 use App\Http\Controllers\Employee\Setting\LookupController;
 use App\Http\Controllers\Employee\Setting\LookupNamespaceController;
@@ -47,9 +46,6 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
     Route::get('/dashboard/summary', [EmployeeDashboardController::class, 'getSummary'])->name('dashboard.summary');
     Route::get('/dashboard/orders-trend', [EmployeeDashboardController::class, 'getOrdersTrend'])->name('dashboard.orders-trend');
     Route::get('/dashboard/financial-analysis', [EmployeeDashboardController::class, 'getFinancialAnalysis'])->name('dashboard.financial-analysis');
-
-    Route::get('/nhat-ky-hoat-dong', [ActivityLogController::class, 'index'])
-        ->name('activities.index');
 
     /**
      * HR routes
@@ -92,7 +88,6 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
                 Route::get('/', [DesignerController::class, 'index'])->name('index');
                 Route::get('/{designer}/availabilities', [DesignerController::class, 'availabilities'])->name('availabilities');
                 Route::get('/{designer}/available-slots', [DesignerController::class, 'availableSlots'])->name('available-slots');
-                Route::get('/{designer}/available-dates', [DesignerController::class, 'availableDates'])->name('available-dates');
             });
 
             Route::middleware(['can:Quản lý nhà thiết kế'])->group(function () {
@@ -123,40 +118,6 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
     });
 
     /**
-     * Routes đơn hàng
-     */
-    // Orders
-    Route::prefix('don-hang')->name('orders.')->group(function () {
-        Route::get('/', [OrderController::class, 'index'])->name('index');
-        Route::get('/export', [OrderController::class, 'export'])->name('export');
-        Route::get('/catalog', [OrderController::class, 'catalog'])->name('catalog');
-        Route::get('/stock-options', [OrderController::class, 'stockOptions'])->name('stock-options');
-        Route::get('/{order}', [OrderController::class, 'show'])->name('show');
-        Route::post('/', [OrderController::class, 'store'])->name('store');
-        Route::post('/{order}/update-status', [OrderController::class, 'updateStatus'])->name('update-status');
-        Route::post('/{order}/mark-paid', [OrderController::class, 'markAsPaid'])->name('mark-paid');
-        Route::post('/{order}/cancel', [OrderController::class, 'cancel'])->name('cancel');
-        Route::post('/{order}/complete', [OrderController::class, 'complete'])->name('complete');
-        Route::delete('/{order}', [OrderController::class, 'destroy'])->name('destroy');
-    });
-
-
-    // Shipments
-    Route::prefix('van-chuyen')->name('shipments.')->group(function () {
-        Route::get('/', [ShipmentController::class, 'index'])->name('index');
-        Route::get('/{shipment}', [ShipmentController::class, 'show'])->name('show');
-        Route::get('/{order}/create-shipments', [OrderController::class, 'createShipments'])->name('create');
-        Route::post('/{order}/store-shipments', [OrderController::class, 'storeShipments'])->name('store');
-        Route::post('/{shipment}/ship', [ShipmentController::class, 'ship'])->name('ship');
-        Route::post('/{shipment}/deliver', [ShipmentController::class, 'deliver'])->name('deliver');
-        Route::post('/{shipment}/cancel', [ShipmentController::class, 'cancel'])->name('cancel');
-        Route::post('/{shipment}/resend', [ShipmentController::class, 'resend'])->name('resend');
-        Route::post('/{shipment}/items/{shipmentItem}/return', [ShipmentController::class, 'returnItem'])->name('return-item');
-        Route::post('/{shipment}/items/{shipmentItem}/update-location', [ShipmentController::class, 'updateItemLocation'])->name('update-item-location');
-        Route::delete('/{shipment}', [ShipmentController::class, 'destroy'])->name('destroy');
-    });
-
-    /**
      * Sales routes
      */
     Route::prefix('ban-hang')->name('sales.')->group(function () {
@@ -179,7 +140,23 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
             });
         });
 
-
+        /**
+         * Routes đơn hàng
+         */
+        // Orders
+        Route::prefix('don-hang')->name('orders.')->group(function () {
+            Route::get('/', [OrderController::class, 'index'])->name('index');
+            Route::get('/export', [OrderController::class, 'export'])->name('export');
+            Route::get('/catalog', [OrderController::class, 'catalog'])->name('catalog');
+            Route::get('/stock-options', [OrderController::class, 'stockOptions'])->name('stock-options');
+            Route::get('/{order}', [OrderController::class, 'show'])->name('show');
+            Route::post('/', [OrderController::class, 'store'])->name('store');
+            Route::post('/{order}/update-status', [OrderController::class, 'updateStatus'])->name('update-status');
+            Route::post('/{order}/mark-paid', [OrderController::class, 'markAsPaid'])->name('mark-paid');
+            Route::post('/{order}/cancel', [OrderController::class, 'cancel'])->name('cancel');
+            Route::post('/{order}/complete', [OrderController::class, 'complete'])->name('complete');
+            Route::delete('/{order}', [OrderController::class, 'destroy'])->name('destroy');
+        });
 
         // Refunds
         Route::prefix('hoan-tien')->name('refunds.')->group(function () {
@@ -221,6 +198,22 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
      * Fulfillment routes
      */
     Route::prefix('van-chuyen')->name('fulfillment.')->group(function () {
+
+        // Shipments
+        Route::name('shipments.')->group(function () {
+            Route::get('/', [ShipmentController::class, 'index'])->name('index');
+            Route::get('/{shipment}', [ShipmentController::class, 'show'])->name('show');
+            Route::get('/{order}/create-shipments', [OrderController::class, 'createShipments'])->name('create');
+            Route::post('/{order}/store-shipments', [OrderController::class, 'storeShipments'])->name('store');
+            Route::post('/{shipment}/ship', [ShipmentController::class, 'ship'])->name('ship');
+            Route::post('/{shipment}/deliver', [ShipmentController::class, 'deliver'])->name('deliver');
+            Route::post('/{shipment}/cancel', [ShipmentController::class, 'cancel'])->name('cancel');
+            Route::post('/{shipment}/resend', [ShipmentController::class, 'resend'])->name('resend');
+            Route::post('/{shipment}/items/{shipmentItem}/return', [ShipmentController::class, 'returnItem'])->name('return-item');
+            Route::post('/{shipment}/items/{shipmentItem}/update-location', [ShipmentController::class, 'updateItemLocation'])->name('update-item-location');
+            Route::delete('/{shipment}', [ShipmentController::class, 'destroy'])->name('destroy');
+        });
+
         // Shipping Methods
         Route::prefix('phuong-thuc')->name('shipping-methods.')->group(function () {
             Route::middleware(['can:Xem phương thức vận chuyển'])->group(function () {

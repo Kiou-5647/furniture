@@ -22,12 +22,16 @@ class DepartmentController
         private DepartmentService $service,
     ) {}
 
-    public function index(Request $request): Response
+    public function index(Request $request)
     {
+        if (!Gate::allows('viewAny', Department::class)) {
+            return back()->with('error', 'Bạn không có quyền thực hiện hành động này!');
+        }
+
         $filter = DepartmentFilterData::fromRequest($request);
 
         return Inertia::render('employee/hr/departments/Index', [
-            'departments' => Inertia::defer(fn () => DepartmentResource::collection(
+            'departments' => Inertia::defer(fn() => DepartmentResource::collection(
                 $this->service->getFiltered($filter)
             )),
             'managerOptions' => $this->getManagerOptions(),
@@ -37,7 +41,9 @@ class DepartmentController
 
     public function store(StoreDepartmentRequest $request, CreateDepartmentAction $action)
     {
-        Gate::authorize('create', Department::class);
+        if (!Gate::allows('create', Department::class)) {
+            return back()->with('error', 'Bạn không có quyền thực hiện hành động này!');
+        }
 
         $action->execute($request->validated());
 
@@ -46,7 +52,9 @@ class DepartmentController
 
     public function update(UpdateDepartmentRequest $request, Department $department, UpdateDepartmentAction $action)
     {
-        Gate::authorize('manage', $department);
+        if (!Gate::allows('update', $department)) {
+            return back()->with('error', 'Bạn không có quyền thực hiện hành động này!');
+        }
 
         $action->execute($department, $request->validated());
 
@@ -55,7 +63,9 @@ class DepartmentController
 
     public function destroy(Department $department)
     {
-        Gate::authorize('manage', $department);
+        if (!Gate::allows('delete', $department)) {
+            return back()->with('error', 'Bạn không có quyền thực hiện hành động này!');
+        }
 
         $department->delete();
 
@@ -68,7 +78,7 @@ class DepartmentController
             ->with('user')
             ->whereNull('termination_date')
             ->get()
-            ->map(fn ($emp) => [
+            ->map(fn($emp) => [
                 'id' => $emp->id,
                 'label' => $emp->full_name,
             ])->toArray();

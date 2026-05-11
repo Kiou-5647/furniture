@@ -37,8 +37,13 @@ class RolesAndPermissionsSeeder extends Seeder
             'Xem nhân viên',
             'Quản lý nhân viên',
 
-            'Xem kho hàng',
-            'Quản lý kho hàng',
+            // Departments
+            'Xem phòng ban',
+            'Quản lý phòng ban',
+
+            // Designers
+            'Xem nhà thiết kế',
+            'Quản lý nhà thiết kế',
 
             // Orders
             'Xem đơn hàng',
@@ -64,14 +69,11 @@ class RolesAndPermissionsSeeder extends Seeder
             'Sửa lịch thiết kế',
             'Xóa lịch thiết kế',
 
-            'Xem nhà thiết kế',
-            'Quản lý nhà thiết kế',
+            'Xem kho hàng',
+            'Quản lý kho hàng',
 
             'Xem nhà cung cấp',
             'Quản lý nhà cung cấp',
-
-            'Xem phòng ban',
-            'Quản lý phòng ban',
 
             'Xem khuyến mãi',
             'Quản lý khuyến mãi',
@@ -96,6 +98,12 @@ class RolesAndPermissionsSeeder extends Seeder
         $rolePermissions = [
             'Quản trị viên' => null,
             'Quản lý' => [
+                'Xem phòng ban',
+                'Quản lý phòng ban',
+
+                'Xem nhà thiết kế',
+                'Quản lý nhà thiết kế',
+
                 'Xem đơn hàng',
                 'Tạo đơn hàng',
                 'Sửa đơn hàng',

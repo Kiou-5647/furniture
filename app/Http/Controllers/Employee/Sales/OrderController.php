@@ -98,7 +98,7 @@ class OrderController
         try {
             $order = $action->execute($data);
 
-            return redirect()->route('employee.orders.show', $order)
+            return redirect()->route('employee.sales.orders.show', $order)
                 ->with('success', 'Đã tạo đơn hàng mới.');
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());

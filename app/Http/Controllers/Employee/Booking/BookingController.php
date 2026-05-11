@@ -114,7 +114,7 @@ class BookingController
     public function openInvoice(Booking $booking)
     {
         if (!Gate::allows('openInvoice', $booking)) {
-            return back()->with('error', 'Bạn không có thực hiện hành động này!');
+            return back()->with('error', 'Bạn không có quyền thực hiện hành động này!');
         }
 
         $finalInvoice = $booking->finalInvoice;
@@ -136,7 +136,7 @@ class BookingController
     public function markAsPaid(Request $request, Booking $booking, MarkBookingAsPaidAction $action)
     {
         if (!Gate::allows('markAsPaid', $booking)) {
-            return back()->with('error', 'Bạn không có thực hiện hành động này!');
+            return back()->with('error', 'Bạn không có quyền thực hiện hành động này!');
         }
 
         $request->validate([
@@ -162,7 +162,7 @@ class BookingController
     public function destroy(Booking $booking)
     {
         if (!Gate::allows('delete', $booking)) {
-            return back()->with('error', 'Bạn không có thực hiện hành động này!');
+            return back()->with('error', 'Bạn không có quyền thực hiện hành động này!');
         }
 
         $booking->delete();

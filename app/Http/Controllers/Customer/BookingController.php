@@ -37,11 +37,11 @@ class BookingController
     /**
      * Render the booking page.
      */
-    public function index(Request $request): Response
+    public function index(Request $request)
     {
-        $user = Auth::user();
+        $user = $request->user();
         if (! $user || $user->type !== UserType::Customer) {
-            abort(403, 'Vui lòng đăng nhập để sử dụng tính năng này!');
+            return back()->with('error', 'Vui lòng đăng nhập với tài khoản khách hàng để thực hiện tính năng này!');
         }
 
         $customer = $user->customer;
@@ -150,40 +150,5 @@ class BookingController
 
         return redirect()->route('customer.profile.bookings')
             ->with('success', 'Đặt lịch tư vấn thành công! Chúng tôi sẽ liên hệ với bạn sớm.');
-    }
-
-    /**
-     * API: Get weekly availability grid.
-     */
-    public function availabilities(Designer $designer): JsonResponse
-    {
-        return response()->json([
-            'weekly' => $this->designerService->getWeeklySlots($designer),
-        ]);
-    }
-
-    /**
-     * API: Get actual available slots for a specific date.
-     */
-    public function availableSlots(Request $request, Designer $designer): JsonResponse
-    {
-        $request->validate([
-            'date' => ['required', 'date'],
-        ]);
-
-        $availableSlots = $this->availabilityService->getAvailableSlotsForDate(
-            $designer,
-            $request->input('date')
-        );
-
-        $slotsMap = [];
-        for ($hour = 5; $hour <= 23; $hour++) {
-            $slotsMap[$hour] = in_array($hour, $availableSlots) ? 1 : 0;
-        }
-
-        return response()->json([
-            'date' => $request->input('date'),
-            'slots' => $slotsMap,
-        ]);
     }
 }

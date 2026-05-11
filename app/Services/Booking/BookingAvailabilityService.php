@@ -6,13 +6,11 @@ use App\Models\Booking\Booking;
 use App\Models\Booking\DesignerAvailabilitySlot;
 use App\Models\Hr\Designer;
 use Carbon\Carbon;
-use Illuminate\Support\Collection;
 
 class BookingAvailabilityService
 {
     /**
-     * [CHECKER LOGIC]
-     * Check if a designer is available for a specific time window.
+     * Kiểm tra lịch trống của nhà thiết kế trong khung giờ cụ thể
      */
     public function isAvailable(Designer $designer, Carbon $start, Carbon $end): bool
     {
@@ -51,10 +49,13 @@ class BookingAvailabilityService
             ->get();
 
         foreach ($bookings as $booking) {
-            $startHour = $booking->start_at->hour;
-            $endHour = $booking->end_at->hour;
+            $start = Carbon::parse($booking->start_at);
+            $end = Carbon::parse($booking->end_at);
 
-            for ($h = $startHour; $h < $endHour; $h++) {
+            $actualStart = $start->isSameDay(Carbon::parse($date)) ? $start->hour : 0;
+            $actualEnd = $end->isSameDay(Carbon::parse($date)) ? $end->hour : 24;
+
+            for ($h = $actualStart; $h < $actualEnd; $h++) {
                 if ($h >= 0 && $h < 24) {
                     $slots[$h] = false;
                 }
@@ -65,36 +66,12 @@ class BookingAvailabilityService
     }
 
     /**
-     * [GRID LOGIC]
-     * Returns available dates and their hours within a range.
+     * Kiểm tra xem khung giờ có nằm trong giờ làm việc tổng quá của nhà thiết kế không
      */
-    public function getAvailableDates(Designer $designer, string $startDate, string $endDate): Collection
-    {
-        $start = Carbon::parse($startDate)->startOfDay();
-        $end = Carbon::parse($endDate)->endOfDay();
-
-        $dates = [];
-        $current = $start->copy();
-        while ($current->lte($end)) {
-            $dateStr = $current->toDateString();
-            $slots = $this->getAvailableSlotsForDate($designer, $dateStr);
-            $hasAvailability = in_array(true, $slots, true);
-
-            $dates[] = [
-                'date' => $dateStr,
-                'has_availability' => $hasAvailability,
-                'available_hours' => array_keys(array_filter($slots)),
-            ];
-
-            $current->addDay();
-        }
-
-        return collect($dates);
-    }
-
     private function isWithinGeneralAvailability(Designer $designer, Carbon $start, Carbon $end): bool
     {
         $current = $start->copy();
+
         while ($current < $end) {
             $dayOfWeek = $current->dayOfWeek;
             $hour = $current->hour;
@@ -112,6 +89,10 @@ class BookingAvailabilityService
         return true;
     }
 
+
+    /**
+     * Kiểm tra xem khung giờ có bị trùng với lịch hẹn nào không
+     */
     private function hasBookingConflict(Designer $designer, Carbon $start, Carbon $end): bool
     {
         return Booking::query()

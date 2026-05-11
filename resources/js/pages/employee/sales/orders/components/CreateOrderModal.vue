@@ -45,7 +45,7 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { formatPrice } from '@/lib';
-import { store } from '@/routes/employee/orders';
+import { store } from '@/routes/employee/sales/orders';
 
 export interface VariantOption {
     id: string;

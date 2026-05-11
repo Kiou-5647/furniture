@@ -15,7 +15,7 @@ import {
     show,
     cancel,
     destroy,
-} from '@/routes/employee/shipments';
+} from '@/routes/employee/fulfillment/shipments';
 import type { BreadcrumbItem } from '@/types';
 import type {
     Shipment,

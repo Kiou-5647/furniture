@@ -24,11 +24,11 @@ class CancelBookingAction
         ]);
 
         $booking->depositInvoice()
-            ->whereNotIn('status', [InvoiceStatus::Draft, InvoiceStatus::Open])
+            ->whereIn('status', [InvoiceStatus::Draft, InvoiceStatus::Open])
             ->update(['status' => InvoiceStatus::Cancelled]);
 
         $booking->finalInvoice()
-            ->whereNotIn('status', [InvoiceStatus::Draft, InvoiceStatus::Open])
+            ->whereIn('status', [InvoiceStatus::Draft, InvoiceStatus::Open])
             ->update(['status' => InvoiceStatus::Cancelled]);
 
         if ($booking->hasDepositPaid() && $performedBy !== null) {

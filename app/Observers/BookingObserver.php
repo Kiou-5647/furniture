@@ -3,6 +3,7 @@
 namespace App\Observers;
 
 use App\Enums\BookingStatus;
+use App\Enums\InvoiceStatus;
 use App\Models\Booking\Booking;
 use App\Services\Booking\BookingInvoiceService;
 use Illuminate\Support\Facades\Log;

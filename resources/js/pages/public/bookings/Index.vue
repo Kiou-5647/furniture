@@ -7,10 +7,10 @@ import {
     Info,
     ExternalLink,
     ChevronLeft,
+    ChevronRight,
 } from '@lucide/vue';
 import { ref, computed, onMounted, watch } from 'vue';
 import { toast } from 'vue-sonner';
-import { availabilities } from '@/actions/App/Http/Controllers/Customer/BookingController';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -30,7 +30,16 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import ShopLayout from '@/layouts/ShopLayout.vue';
+import { addDays, formatPrice, startOfCurrentWeek, toISODate } from '@/lib';
+import {
+    loadWeeklyActualSlots,
+    prevWeek,
+    nextWeek,
+    getSlotColor,
+    handleSlotClick
+} from '@/lib/booking-utils';
 import { store } from '@/routes/customer/bookings';
+import { availabilities } from '@/routes/designers';
 
 interface Designer {
     id: string;
@@ -78,8 +87,10 @@ const form = useForm({
 
 // --- UI STATE ---
 const isDesignerDialogOpen = ref(false);
+const currentWeekStart = ref(startOfCurrentWeek());
 const designerAvailability = ref<number[][]>([]);
 const loadingAvailability = ref(false);
+const weeklySlots = ref<Record<string, Record<number, number>>>({});
 const provinces = ref<{ value: string; label: string }[]>([]);
 const wards = ref<{ value: string; label: string }[]>([]);
 const loadingProvinces = ref(false);
@@ -144,76 +155,43 @@ async function loadWards(provinceCode: string) {
     }
 }
 
+// --- METHODS ---
 async function loadDesignerAvailability() {
     if (!form.designer_id) return;
     loadingAvailability.value = true;
     try {
-        const response = await fetch(
-            availabilities({ designer: form.designer_id }).url,
-        );
+        // 1. Load general weekly availability
+        const response = await fetch(availabilities({ designer: form.designer_id }).url);
         const data = await response.json();
         designerAvailability.value = data.weekly || [];
+
+        // 2. Load actual slots cho cả tuần hiện tại
+        weeklySlots.value = await loadWeeklyActualSlots(
+            form.designer_id!,
+            currentWeekStart.value,
+            DAYS,
+            weeklySlots.value,
+        );
     } catch {
-        toast.error('Không thể tải lịch làm việc của nhà thiết kế.');
+        toast.error('Không thể tải lịch làm việc.');
         designerAvailability.value = [];
     } finally {
         loadingAvailability.value = false;
     }
 }
 
-async function handleSlotClick(day: number, hour: number) {
-    if (designerAvailability.value[day]?.[hour] != 1) {
-        toast.error('Khung giờ này không khả dụng. Vui lòng chọn giờ khác.');
-        return;
-    }
-
-    const selectedDate = form.date ? new Date(form.date) : null;
-    if (!selectedDate || selectedDate.getDay() != day) {
-        form.date = getNextDateForDay(day);
-    }
-
-    try {
-        const response = await fetch(
-            `/dat-lich/designers/${form.designer_id}/available-slots?date=${form.date}`,
-        );
-        const data = await response.json();
-        console.info(data);
-        if (!data.slots || !data.slots[hour]) {
-            toast.error(
-                'Rất tiếc, khung giờ này vừa mới bị đặt. Vui lòng chọn giờ khác.',
-            );
-            return;
-        }
-    } catch {
-        toast.error('Có lỗi xảy ra!');
-    }
-
-    form.start_time = `${String(hour).padStart(2, '0')}:00`;
-}
-
-function getNextDateForDay(dayOfWeek: number): string {
-    const now = new Date();
-    const y = now.getFullYear();
-    const m = now.getMonth();
-    const d = now.getDate();
-    const currentDay = now.getDay();
-
-    let daysToAdd = dayOfWeek - currentDay;
-    if (daysToAdd <= 0) {
-        daysToAdd += 7;
-    }
-
-    const nextDate = new Date(y, m, d + daysToAdd);
-    const year = nextDate.getFullYear();
-    const month = String(nextDate.getMonth() + 1).padStart(2, '0');
-    const day = String(nextDate.getDate()).padStart(2, '0');
-
-    return `${year}-${month}-${day}`;
-}
-
 async function submit() {
     if (!form.designer_id || !form.date || !form.start_time) {
         toast.error('Vui lòng điền đầy đủ thông tin bắt buộc.');
+        return;
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const date = new Date(form.date);
+    const diffDays = Math.ceil((date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    if (diffDays < 3) {
+        toast.error('Lịch thiết kế phải được đặt sau 3 ngày')
         return;
     }
 
@@ -265,7 +243,7 @@ onMounted(() => {
 });
 
 function handleReturn() {
-    window.history.back()
+    window.history.back();
 }
 </script>
 
@@ -274,8 +252,7 @@ function handleReturn() {
         <div class="mx-auto max-w-[1400px] px-4 py-10">
             <div class="mb-8 flex items-center gap-3">
                 <div>
-                    <Button variant="ghost" class="h-10 w-10"
-                    @click="handleReturn">
+                    <Button variant="ghost" class="h-10 w-10" @click="handleReturn">
                         <ChevronLeft />
                     </Button>
                 </div>
@@ -304,19 +281,13 @@ function handleReturn() {
                                 <Field>
                                     <FieldLabel>Họ tên</FieldLabel>
                                     <FieldContent>
-                                        <Input
-                                            v-model="form.customer_name"
-                                            placeholder="Nhập họ tên"
-                                        />
+                                        <Input v-model="form.customer_name" placeholder="Nhập họ tên" />
                                     </FieldContent>
                                 </Field>
                                 <Field>
                                     <FieldLabel>Số điện thoại</FieldLabel>
                                     <FieldContent>
-                                        <Input
-                                            v-model="form.customer_phone"
-                                            placeholder="Nhập SĐT"
-                                        />
+                                        <Input v-model="form.customer_phone" placeholder="Nhập SĐT" />
                                     </FieldContent>
                                 </Field>
                             </div>
@@ -324,11 +295,7 @@ function handleReturn() {
                             <Field>
                                 <FieldLabel>Email</FieldLabel>
                                 <FieldContent>
-                                    <Input
-                                        v-model="form.customer_email"
-                                        type="email"
-                                        placeholder="email@example.com"
-                                    />
+                                    <Input v-model="form.customer_email" type="email" placeholder="email@example.com" />
                                 </FieldContent>
                             </Field>
 
@@ -337,24 +304,15 @@ function handleReturn() {
                                     <Field>
                                         <FieldLabel>Tỉnh/Thành phố</FieldLabel>
                                         <FieldContent>
-                                            <Select
-                                                v-model="form.province_code"
-                                            >
+                                            <Select v-model="form.province_code">
                                                 <SelectTrigger class="w-full">
-                                                    <SelectValue
-                                                        :placeholder="
-                                                            loadingProvinces
-                                                                ? 'Đang tải...'
-                                                                : 'Chọn tỉnh/thành'
-                                                        "
-                                                    />
+                                                    <SelectValue :placeholder="loadingProvinces
+                                                        ? 'Đang tải...'
+                                                        : 'Chọn tỉnh/thành'
+                                                        " />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem
-                                                        v-for="p in provinces"
-                                                        :key="p.value"
-                                                        :value="p.value"
-                                                    >
+                                                    <SelectItem v-for="p in provinces" :key="p.value" :value="p.value">
                                                         {{ p.label }}
                                                     </SelectItem>
                                                 </SelectContent>
@@ -364,26 +322,15 @@ function handleReturn() {
                                     <Field>
                                         <FieldLabel>Quận/Huyện</FieldLabel>
                                         <FieldContent>
-                                            <Select
-                                                v-model="form.ward_code"
-                                                :disabled="
-                                                    !form.province_code ||
-                                                    loadingWards
-                                                "
-                                            >
+                                            <Select v-model="form.ward_code" :disabled="!form.province_code ||
+                                                loadingWards
+                                                ">
                                                 <SelectTrigger class="w-full">
-                                                    <SelectValue
-                                                        :placeholder="
-                                                            wardDisplayLabel
-                                                        "
-                                                    />
+                                                    <SelectValue :placeholder="wardDisplayLabel
+                                                        " />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem
-                                                        v-for="w in wards"
-                                                        :key="w.value"
-                                                        :value="w.value"
-                                                    >
+                                                    <SelectItem v-for="w in wards" :key="w.value" :value="w.value">
                                                         {{ w.label }}
                                                     </SelectItem>
                                                 </SelectContent>
@@ -394,10 +341,7 @@ function handleReturn() {
                                 <Field>
                                     <FieldLabel>Địa chỉ chi tiết</FieldLabel>
                                     <FieldContent>
-                                        <Input
-                                            v-model="form.street"
-                                            placeholder="Số nhà, tên đường..."
-                                        />
+                                        <Input v-model="form.street" placeholder="Số nhà, tên đường..." />
                                     </FieldContent>
                                 </Field>
                             </div>
@@ -412,11 +356,9 @@ function handleReturn() {
                         <Field>
                             <FieldLabel>Ghi chú thêm</FieldLabel>
                             <FieldContent>
-                                <Textarea
-                                    v-model="form.notes"
+                                <Textarea v-model="form.notes"
                                     class="min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
-                                    placeholder="Mô tả chi tiết yêu cầu của bạn..."
-                                />
+                                    placeholder="Mô tả chi tiết yêu cầu của bạn..." />
                             </FieldContent>
                         </Field>
                     </div>
@@ -424,10 +366,8 @@ function handleReturn() {
 
                 <!-- RIGHT COLUMN: Designer & Schedule -->
                 <div class="lg:col-span-7">
-                    <div
-                        v-if="!form.designer_id"
-                        class="flex h-full flex-col items-center justify-center rounded-2xl border-2 border-dashed p-12 text-center"
-                    >
+                    <div v-if="!form.designer_id"
+                        class="flex h-full flex-col items-center justify-center rounded-2xl border-2 border-dashed p-12 text-center">
                         <div class="mb-4 rounded-full bg-primary/10 p-4">
                             <User class="h-8 w-8 text-primary" />
                         </div>
@@ -436,11 +376,7 @@ function handleReturn() {
                             Vui lòng chọn một chuyên gia để bắt đầu đặt lịch tư
                             vấn.
                         </p>
-                        <Button
-                            @click="isDesignerDialogOpen = true"
-                            size="lg"
-                            class="rounded-full px-8"
-                        >
+                        <Button @click="isDesignerDialogOpen = true" size="lg" class="rounded-full px-8">
                             Xem danh sách nhà thiết kế
                         </Button>
                     </div>
@@ -450,66 +386,52 @@ function handleReturn() {
                         <div class="rounded-2xl border bg-card p-6 shadow-sm">
                             <div class="flex items-start gap-4">
                                 <div
-                                    class="h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-muted ring-2 ring-primary/20"
-                                >
-                                    <img
-                                        :src="
-                                            selectedDesigner?.avatar_url ||
-                                            `https://ui-avatars.com/api/?name=${selectedDesigner?.full_name}&background=random`
-                                        "
-                                        class="h-full w-full object-cover"
-                                        @error="
+                                    class="h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-muted ring-2 ring-primary/20">
+                                    <img :src="selectedDesigner?.avatar_url ||
+                                        `https://ui-avatars.com/api/?name=${selectedDesigner?.full_name}&background=random`
+                                        " class="h-full w-full object-cover" @error="
                                             (e: any) =>
-                                                (e.target.src =
-                                                    'https://ui-avatars.com/api/?name=NTK')
-                                        "
-                                    />
+                                            (e.target.src =
+                                                'https://ui-avatars.com/api/?name=NTK')
+                                        " />
                                 </div>
                                 <div class="flex-1">
-                                    <div
-                                        class="flex items-center justify-between"
-                                    >
+                                    <div class="flex items-center justify-between">
                                         <h3 class="text-xl font-bold">
                                             {{ selectedDesigner?.full_name }}
                                         </h3>
-                                        <span
-                                            class="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary"
-                                        >
-                                            {{
-                                                selectedDesigner?.hourly_rate.toLocaleString()
-                                            }}đ/giờ
-                                        </span>
+                                        <div class="flex items-center gap-2">
+                                            <Button variant="ghost" size="sm" @click="form.designer_id = null"
+                                                class="text-xs ">
+                                                Thay đổi NTK
+                                            </Button>
+                                            <span
+                                                class="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
+                                                {{
+                                                    formatPrice(selectedDesigner?.hourly_rate!)
+                                                }}/giờ
+                                            </span>
+                                        </div>
                                     </div>
-                                    <p
-                                        class="mt-1 text-sm text-muted-foreground"
-                                    >
+                                    <p class="mt-1 text-sm text-muted-foreground">
                                         {{
                                             selectedDesigner?.bio ||
                                             'Chuyên gia tư vấn thiết kế nội thất.'
                                         }}
                                     </p>
-                                    <div
-                                        class="mt-3 flex flex-wrap gap-3 text-xs"
-                                    >
-                                        <div
-                                            class="flex items-center gap-1 text-muted-foreground"
-                                        >
+                                    <div class="mt-3 flex flex-wrap gap-3 text-xs">
+                                        <div class="flex items-center gap-1 text-muted-foreground">
                                             <Info class="h-3 w-3" />
                                             {{
                                                 selectedDesigner?.phone ||
                                                 'Liên hệ qua hệ thống'
                                             }}
                                         </div>
-                                        <a
-                                            v-if="
-                                                selectedDesigner?.portfolio_url
-                                            "
-                                            :href="
-                                                selectedDesigner?.portfolio_url
-                                            "
-                                            target="_blank"
-                                            class="flex items-center gap-1 text-primary hover:underline"
-                                        >
+                                        <a v-if="
+                                            selectedDesigner?.portfolio_url
+                                        " :href="selectedDesigner?.portfolio_url
+                                            " target="_blank"
+                                            class="flex items-center gap-1 text-primary hover:underline">
                                             <ExternalLink class="h-3 w-3" />
                                             Portfolio
                                         </a>
@@ -520,21 +442,34 @@ function handleReturn() {
 
                         <!-- Availability Grid -->
                         <div class="rounded-2xl border bg-card p-6 shadow-sm">
-                            <div class="mb-6 flex items-center justify-between">
-                                <div
-                                    class="flex items-center gap-2 font-semibold"
-                                >
+                            <div class="mb-4 flex items-center justify-between">
+                                <div class="flex items-center gap-2 font-semibold">
                                     <Calendar class="h-5 w-5 text-primary" />
                                     <span>Chọn khung giờ</span>
                                 </div>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    @click="form.designer_id = null"
-                                    class="text-xs"
-                                >
-                                    Thay đổi NTK
-                                </Button>
+                                <div class="flex items-center gap-2">
+                                    <Button variant="outline" size="sm" @click="() => {
+                                        const { newStart, newDate } = prevWeek(currentWeekStart);
+                                        currentWeekStart = newStart;
+                                        form.date = newDate;
+                                        loadDesignerAvailability();
+                                    }">
+                                        <ChevronLeft class="h-4 w-4" /> Trước
+                                    </Button>
+                                    <span class="text-sm font-medium">
+                                        {{ toISODate(currentWeekStart) }} - {{ toISODate(addDays(currentWeekStart, 6))
+                                        }}
+                                    </span>
+                                    <Button variant="outline" size="sm" @click="() => {
+                                        const { newStart, newDate } = nextWeek(currentWeekStart);
+                                        currentWeekStart = newStart;
+                                        form.date = newDate;
+                                        loadDesignerAvailability();
+                                    }">
+                                        Tiếp
+                                        <ChevronRight class="h-4 w-4" />
+                                    </Button>
+                                </div>
                             </div>
 
                             <div class="space-y-6">
@@ -542,78 +477,44 @@ function handleReturn() {
                                     <Field>
                                         <FieldLabel>Ngày</FieldLabel>
                                         <FieldContent>
-                                            <Input
-                                                v-model="form.date"
-                                                :min="
-                                                    new Date()
-                                                        .toISOString()
-                                                        .split('T')[0]
-                                                "
-                                                type="date"
-                                                required
-                                            />
+                                            <Input v-model="form.date" :min="new Date()
+                                                .toISOString()
+                                                .split('T')[0]
+                                                " type="date" required />
                                         </FieldContent>
                                     </Field>
                                     <Field>
                                         <FieldLabel>Giờ bắt đầu</FieldLabel>
                                         <FieldContent>
-                                            <Input
-                                                v-model="form.start_time"
-                                                type="time"
-                                                required
-                                            />
+                                            <Input v-model="form.start_time" type="time" required />
                                         </FieldContent>
                                     </Field>
                                 </div>
 
                                 <div class="grid grid-cols-2 gap-4">
                                     <Field>
-                                        <FieldLabel
-                                            >Thời lượng (Giờ)</FieldLabel
-                                        >
+                                        <FieldLabel>Thời lượng (Giờ)</FieldLabel>
                                         <FieldContent>
-                                            <Input
-                                                v-model="form.duration"
-                                                type="number"
-                                                min="1"
-                                                max="12"
-                                                required
-                                            />
+                                            <Input v-model="form.duration" type="number" min="1" max="12" required />
                                         </FieldContent>
                                     </Field>
                                     <div class="flex items-end pb-2">
-                                        <div
-                                            class="w-full rounded-lg border border-primary/10 bg-primary/5 p-3"
-                                        >
-                                            <div
-                                                class="mb-1 flex justify-between text-xs text-muted-foreground"
-                                            >
-                                                <span
-                                                    >Đặt cọc ({{
-                                                        deposit_percentage
-                                                    }}%)</span
-                                                >
-                                                <span
-                                                    >Tổng:
+                                        <div class="w-full rounded-lg border border-primary/10 bg-primary/5 p-3">
+                                            <div class="mb-1 flex justify-between text-xs text-muted-foreground">
+                                                <span>Đặt cọc ({{
+                                                    deposit_percentage
+                                                }}%)</span>
+                                                <span>Tổng:
                                                     {{
                                                         totalCost.toLocaleString()
-                                                    }}đ</span
-                                                >
+                                                    }}đ</span>
                                             </div>
-                                            <div
-                                                class="flex items-center justify-between"
-                                            >
-                                                <span
-                                                    class="text-xs font-medium"
-                                                    >Số tiền cần thanh
-                                                    toán:</span
-                                                >
-                                                <span
-                                                    class="text-lg font-bold text-primary"
-                                                    >{{
-                                                        depositCost.toLocaleString()
-                                                    }}đ</span
-                                                >
+                                            <div class="flex items-center justify-between">
+                                                <span class="text-xs font-medium">Số tiền cần thanh
+                                                    toán:</span>
+                                                <span class="text-lg font-bold text-primary">{{
+                                                    depositCost.toLocaleString()
+                                                }}đ</span>
                                             </div>
                                         </div>
                                     </div>
@@ -621,38 +522,24 @@ function handleReturn() {
 
                                 <!-- Visual Grid -->
                                 <div class="overflow-x-auto">
-                                    <div
-                                        v-if="loadingAvailability"
-                                        class="flex h-40 items-center justify-center"
-                                    >
-                                        <Loader2
-                                            class="h-6 w-6 animate-spin text-primary"
-                                        />
+                                    <div v-if="loadingAvailability" class="flex h-40 items-center justify-center">
+                                        <Loader2 class="h-6 w-6 animate-spin text-primary" />
                                     </div>
                                     <div v-else class="min-w-[600px] space-y-2">
                                         <div
-                                            class="grid grid-cols-[40px_repeat(7,minmax(35px,1fr))] gap-px overflow-hidden rounded-md border bg-border"
-                                        >
+                                            class="grid grid-cols-[40px_repeat(7,minmax(35px,1fr))] gap-px overflow-hidden rounded-md border bg-border">
                                             <div
-                                                class="bg-muted p-1 text-right text-[10px] font-medium text-muted-foreground"
-                                            >
+                                                class="bg-muted p-1 text-right text-[10px] font-medium text-muted-foreground">
                                                 Hour
                                             </div>
-                                            <div
-                                                v-for="day in DAYS"
-                                                :key="day.key"
-                                                class="bg-muted p-1 text-center text-[10px] font-medium"
-                                            >
+                                            <div v-for="day in DAYS" :key="day.key"
+                                                class="bg-muted p-1 text-center text-[10px] font-medium">
                                                 {{ day.label }}
                                             </div>
 
-                                            <template
-                                                v-for="hour in HOURS"
-                                                :key="hour"
-                                            >
+                                            <template v-for="hour in HOURS" :key="hour">
                                                 <div
-                                                    class="bg-muted p-1 text-right text-[10px] font-medium text-muted-foreground"
-                                                >
+                                                    class="bg-muted p-1 text-right text-[10px] font-medium text-muted-foreground">
                                                     {{
                                                         String(hour).padStart(
                                                             2,
@@ -660,36 +547,41 @@ function handleReturn() {
                                                         )
                                                     }}:00
                                                 </div>
-                                                <div
-                                                    v-for="day in DAYS"
-                                                    :key="`${day.key}-${hour}`"
+                                                <div v-for="day in DAYS" :key="`${day.key}-${hour}`"
                                                     class="cursor-pointer bg-background p-0.5 transition-colors hover:bg-muted/50"
-                                                    @click="
-                                                        handleSlotClick(
+                                                    @click="() => {
+                                                        const result = handleSlotClick(
                                                             day.key,
                                                             hour,
-                                                        )
-                                                    "
-                                                >
-                                                    <div
-                                                        class="h-4 w-full rounded-sm transition-all"
-                                                        :class="[
-                                                            designerAvailability[
-                                                                day.key
-                                                            ]?.[hour] == 1
-                                                                ? 'bg-green-600'
-                                                                : 'bg-gray-200',
-                                                            form.date &&
+                                                            currentWeekStart,
+                                                            designerAvailability,
+                                                            weeklySlots,
+                                                        );
+                                                        if (!result.isValid) {
+                                                            toast.error(result.error!);
+                                                            return;
+                                                        }
+                                                        form.date = result.date!;
+                                                        form.start_time = result.startTime!;
+                                                    }">
+                                                    <div class="h-4 w-full rounded-sm transition-all" :class="[
+                                                        getSlotColor(
+                                                            day.key,
+                                                            hour,
+                                                            currentWeekStart,
+                                                            designerAvailability,
+                                                            weeklySlots,
+                                                        ),
+                                                        form.date &&
                                                             new Date(
                                                                 form.date,
                                                             ).getDay() ===
-                                                                day.key &&
+                                                            day.key &&
                                                             form.start_time ===
-                                                                `${String(hour).padStart(2, '0')}:00`
-                                                                ? 'ring-2 ring-primary ring-offset-1'
-                                                                : '',
-                                                        ]"
-                                                    ></div>
+                                                            `${String(hour).padStart(2, '0')}:00`
+                                                            ? 'ring-2 ring-primary ring-offset-1'
+                                                            : '',
+                                                    ]"></div>
                                                 </div>
                                             </template>
                                         </div>
@@ -702,26 +594,16 @@ function handleReturn() {
             </div>
 
             <div class="mt-10 flex justify-center">
-                <Button
-                    @click="submit"
-                    :disabled="form.processing"
-                    size="lg"
-                    class="w-full max-w-md rounded-full py-6 text-lg font-bold shadow-xl"
-                >
-                    <Loader2
-                        v-if="form.processing"
-                        class="mr-2 h-5 w-5 animate-spin"
-                    />
+                <Button @click="submit" :disabled="form.processing" size="lg"
+                    class="w-full max-w-md rounded-full py-6 text-lg font-bold shadow-xl">
+                    <Loader2 v-if="form.processing" class="mr-2 h-5 w-5 animate-spin" />
                     Xác nhận đặt lịch tư vấn
                 </Button>
             </div>
         </div>
 
         <!-- Designer Selection Dialog -->
-        <Dialog
-            :open="isDesignerDialogOpen"
-            @update:open="isDesignerDialogOpen = $event"
-        >
+        <Dialog :open="isDesignerDialogOpen" @update:open="isDesignerDialogOpen = $event">
             <DialogContent class="max-w-4xl">
                 <DialogHeader>
                     <DialogTitle>Chọn Nhà Thiết Kế</DialogTitle>
@@ -730,39 +612,26 @@ function handleReturn() {
                         bạn.
                     </DialogDescription>
                 </DialogHeader>
-                <div
-                    class="grid grid-cols-1 gap-4 py-4 sm:grid-cols-2 lg:grid-cols-3"
-                >
-                    <div
-                        v-for="d in designers"
-                        :key="d.id"
-                        @click="
-                            form.designer_id = d.id;
-                            isDesignerDialogOpen = false;
-                        "
-                        class="group cursor-pointer rounded-xl border p-4 transition-all hover:border-primary hover:shadow-md"
-                        :class="
-                            form.designer_id === d.id
-                                ? 'border-primary ring-1 ring-primary'
-                                : ''
-                        "
-                    >
+                <div class="grid grid-cols-1 gap-4 py-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <div v-for="d in designers" :key="d.id" @click="
+                        form.designer_id = d.id;
+                    isDesignerDialogOpen = false;
+                    " class="group cursor-pointer rounded-xl border p-4 transition-all hover:border-primary hover:shadow-md"
+                        :class="form.designer_id === d.id
+                            ? 'border-primary ring-1 ring-primary'
+                            : ''
+                            ">
                         <div class="flex items-center gap-3">
                             <div
-                                class="h-12 w-12 overflow-hidden rounded-full bg-muted ring-2 ring-transparent transition-all group-hover:ring-primary/30"
-                            >
-                                <img
-                                    :src="
-                                        d.avatar_url ||
-                                        `https://ui-avatars.com/api/?name=${d.full_name}&background=random`
-                                    "
-                                    class="h-full w-full object-cover transition-transform group-hover:scale-110"
+                                class="h-12 w-12 overflow-hidden rounded-full bg-muted ring-2 ring-transparent transition-all group-hover:ring-primary/30">
+                                <img :src="d.avatar_url ||
+                                    `https://ui-avatars.com/api/?name=${d.full_name}&background=random`
+                                    " class="h-full w-full object-cover transition-transform group-hover:scale-110"
                                     @error="
                                         (e: any) =>
-                                            (e.target.src =
-                                                'https://ui-avatars.com/api/?name=NTK')
-                                    "
-                                />
+                                        (e.target.src =
+                                            'https://ui-avatars.com/api/?name=NTK')
+                                    " />
                             </div>
                             <div class="overflow-hidden">
                                 <p class="truncate text-sm font-bold">
@@ -773,9 +642,7 @@ function handleReturn() {
                                 </p>
                             </div>
                         </div>
-                        <p
-                            class="mt-3 line-clamp-2 text-xs text-muted-foreground"
-                        >
+                        <p class="mt-3 line-clamp-2 text-xs text-muted-foreground">
                             {{
                                 d.bio || 'Nhà thiết kế nội thất chuyên nghiệp.'
                             }}

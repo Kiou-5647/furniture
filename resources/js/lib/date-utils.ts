@@ -24,12 +24,16 @@ export function parseDate(dateStr: string): Date | null {
 }
 
 /**
- * Normalize any date string to YYYY-MM-DD.
+ * Normalize any date string or Date object to YYYY-MM-DD.
  */
-export function toISODate(dateStr: string): string {
-    const d = parseDate(dateStr);
+export function toISODate(date: string | Date): string {
+    const d = typeof date === 'string' ? parseDate(date) : date;
     if (!d) return '';
-    return d.toISOString().split('T')[0];
+
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${dd}`;
 }
 
 export function formatSessionDate(
@@ -78,4 +82,19 @@ export function formatDateOnly(dateStr: string): string {
     const yyyy = d.getFullYear();
 
     return `${dayName} · ${dd}/${mm}/${yyyy}`;
+}
+
+export function startOfCurrentWeek(date = new Date()) {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(d.setHours(0, 0, 0, 0));
+    monday.setDate(diff);
+    return monday;
+}
+
+export function addDays(date: Date, days: number) {
+    const result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
 }

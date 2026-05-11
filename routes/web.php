@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Customer\BookingController;
 use App\Http\Controllers\Customer\OrderController;
 use App\Http\Controllers\Customer\ReviewController;
@@ -57,11 +56,9 @@ Route::middleware(['auth', 'verified', 'user_type:customer'])->name('customer.')
         Route::post('/', [CheckoutController::class, 'store'])->name('checkout.store');
     });
 
-    Route::prefix('dat-lich')->group(function () {
-        Route::get('/', [BookingController::class, 'index'])->name('bookings.index');
-        Route::post('/', [BookingController::class, 'store'])->name('bookings.store');
-        Route::get('/designers/{designer}/availability', [BookingController::class, 'availabilities']);
-        Route::get('/designers/{designer}/available-slots', [BookingController::class, 'availableSlots']);
+    Route::prefix('dat-lich')->name('bookings.')->group(function () {
+        Route::get('/', [BookingController::class, 'index'])->name('index');
+        Route::post('/', [BookingController::class, 'store'])->name('store');
     });
 
     Route::prefix('danh-gia')->group(function () {
@@ -77,12 +74,6 @@ Route::middleware(['auth', 'verified', 'user_type:customer'])->name('customer.')
 Route::get('/vnpay/{invoice}', [VnPayPaymentController::class, 'initiate'])->name('payment.vnpay.initiate');
 Route::get('/payment/vnpay/return', VnPayReturnController::class)->name('payment.vnpay.return');
 Route::inertia('/payment/vnpay/status', 'payment/vnpay-status')->name('payment.vnpay.status');
-
-/**
- * Google Auth
- */
-Route::get('api/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
-Route::get('api/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
 
 require __DIR__ . '/employee.php';
 require __DIR__ . '/settings.php';

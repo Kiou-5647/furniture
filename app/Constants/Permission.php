@@ -24,4 +24,14 @@ class Permission
         'UPDATE'   => 'Sửa đơn vận chuyển',
         'DELETE' => 'Xóa đơn vận chuyển',
     ];
+
+    public const DEPARTMENT = [
+        'SELECT' => 'Xem phòng ban',
+        'MANAGE' => 'Quản lý phòng ban'
+    ];
+
+    public const DESIGNER = [
+        'SELECT' => 'Xem nhà thiết kế',
+        'MANAGE' => 'Quản lý nhà thiết kế'
+    ];
 }

@@ -133,8 +133,8 @@ class MenuService
             if ($user->can('Xem đơn hàng')) {
                 $salesItems[] = [
                     'title' => 'Đơn hàng',
-                    'href' => route('employee.orders.index'),
-                    'isActive' => Route::is('orders.*'),
+                    'href' => route('employee.sales.orders.index'),
+                    'isActive' => Route::is('sales.orders.*'),
                 ];
             }
 
@@ -193,8 +193,8 @@ class MenuService
             if ($user->can('Xem vận chuyển')) {
                 $fulfillmentItems[] = [
                     'title' => 'Vận chuyển',
-                    'href' => route('employee.shipments.index'),
-                    'isActive' => Route::is('shipments.*'),
+                    'href' => route('employee.fulfillment.shipments.index'),
+                    'isActive' => Route::is('fulfillment.shipments.*'),
                 ];
             }
 

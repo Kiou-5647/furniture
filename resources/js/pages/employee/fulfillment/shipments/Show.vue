@@ -32,7 +32,7 @@ import {
     cancel,
     resend,
     returnItem as returnItemRoute,
-} from '@/routes/employee/shipments';
+} from '@/routes/employee/fulfillment/shipments';
 import type { BreadcrumbItem } from '@/types';
 import type { Shipment, ShipmentItem } from '@/types/order';
 
