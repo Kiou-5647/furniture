@@ -14,7 +14,7 @@ class StoreDiscountRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('Quản lý khuyến mãi');
+        return true;
     }
 
     public function rules(): array

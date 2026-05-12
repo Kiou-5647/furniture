@@ -13,15 +13,16 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
-use Inertia\Response;
 
 class DiscountController
 {
     public function __construct(private DiscountService $service) {}
 
-    public function index(Request $request): Response
+    public function index(Request $request)
     {
-        Gate::authorize('Xem khuyến mãi');
+        if (!Gate::allows('viewAny', Discount::class)) {
+            return back()->with('error', 'Bạn không có quyền thực hiện hành động này!');
+        }
 
         $filter = DiscountFilterData::fromRequest($request);
 
@@ -36,29 +37,35 @@ class DiscountController
 
     public function store(StoreDiscountRequest $request, UpsertDiscountAction $action)
     {
-        Gate::authorize('createDiscount', Discount::class);
+        if (!Gate::allows('create', Discount::class)) {
+            return back()->with('error', 'Bạn không có quyền thực hiện hành động này!');
+        }
 
         $action->execute($request->validated());
 
-        return back()->with('success', 'Đã thêm giảm giá mới.');
+        return back();
     }
 
     public function update(UpdateDiscountRequest $request, Discount $discount, UpsertDiscountAction $action)
     {
-        Gate::authorize('manageDiscount', $discount);
+        if (!Gate::allows('update', $discount)) {
+            return back()->with('error', 'Bạn không có quyền thực hiện hành động này!');
+        }
 
         $action->execute($request->validated(), $discount);
 
-        return back()->with('success', 'Đã cập nhật giảm giá.');
+        return back();
     }
 
     public function destroy(Discount $discount)
     {
-        Gate::authorize('manageDiscount', $discount);
+        if (!Gate::allows('delete', $discount)) {
+            return back()->with('error', 'Bạn không có quyền thực hiện hành động này!');
+        }
 
         $discount->delete();
 
-        return back()->with('success', 'Đã xóa giảm giá.');
+        return back();
     }
 
     public function getProducts(Request $request): JsonResponse

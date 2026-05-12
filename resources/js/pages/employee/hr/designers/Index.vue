@@ -10,7 +10,7 @@ import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import { createLazyComponent } from '@/composables/createLazyComponent';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { cleanQuery, setCookie } from '@/lib';
+import { cleanQuery, setCookie, CheckUserPermission } from '@/lib';
 import { index, destroy } from '@/routes/employee/hr/designers';
 import type { BreadcrumbItem } from '@/types';
 import type {
@@ -149,7 +149,7 @@ function performDelete() {
                     title="Nhà thiết kế"
                     description="Quản lý nhà thiết kế."
                 />
-                <Button @click="handleCreate">
+                <Button v-if="CheckUserPermission('Tạo nhà thiết kế')" @click="handleCreate">
                     <Plus class="mr-2 h-4 w-4" /> Thêm nhà thiết kế
                 </Button>
             </div>
@@ -186,13 +186,12 @@ function performDelete() {
         </div>
 
         <DesignerFormModal
-            v-if="showFormModal"
+            v-show="showFormModal"
             :open="showFormModal"
             :workHours="workHours"
             :designer="selectedDesigner"
             :employee-options="employeeOptions"
             @close="showFormModal = false"
-            @refresh="router.reload({ only: ['designers'] })"
         />
 
         <DeleteConfirmation

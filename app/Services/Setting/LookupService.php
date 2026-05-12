@@ -26,16 +26,6 @@ class LookupService
             ->paginate($filter->per_page ?? 15);
     }
 
-    public function getTrashedFiltered(LookupFilterData $filter): LengthAwarePaginator
-    {
-        return Lookup::onlyTrashed()
-            ->with('namespace')
-            ->when($filter->namespace, fn($q) => $q->byNamespace($filter->namespace))
-            ->when($filter->search, fn($q) => $q->search($filter->search))
-            ->orderBy($filter->order_by ?? 'deleted_at', $filter->order_direction ?? 'desc')
-            ->paginate($filter->per_page ?? 15);
-    }
-
     public function getNamespaces(): Collection
     {
         return Cache::tags([CacheTag::LookupNamespaces->value])

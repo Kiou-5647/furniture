@@ -9,7 +9,7 @@ class CreateInvoiceRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('Quản lý hóa đơn');
+        return true;
     }
 
     public function rules(): array
@@ -17,7 +17,7 @@ class CreateInvoiceRequest extends FormRequest
         return [
             'invoiceable_type' => ['required', Rule::in([
                 'App\\Models\\Sales\\Order',
-                'App\\Models\\Design\\Booking',
+                'App\\Models\\Booking\\Booking',
             ])],
             'invoiceable_id' => ['required', 'uuid'],
             'type' => ['required', Rule::in(['deposit', 'final_balance', 'full'])],

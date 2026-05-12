@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 use Spatie\MediaLibrary\HasMedia;
@@ -49,6 +50,11 @@ class Employee extends Model implements HasMedia
         return $this->belongsTo(Department::class);
     }
 
+    public function designer(): HasOne
+    {
+        return $this->hasOne(Designer::class);
+    }
+
     public function acceptedOrders(): HasMany
     {
         return $this->hasMany(Order::class, 'accepted_by');
@@ -75,6 +81,6 @@ class Employee extends Model implements HasMedia
             ->logOnly(['full_name', 'phone', 'department_id', 'hire_date', 'termination_date'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
-            ->setDescriptionForEvent(fn (string $eventName) => "Employee {$eventName}");
+            ->setDescriptionForEvent(fn(string $eventName) => "Employee {$eventName}");
     }
 }

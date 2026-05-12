@@ -10,15 +10,15 @@ import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import { createLazyComponent } from '@/composables/createLazyComponent';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { cleanQuery, setCookie } from '@/lib';
+import { CheckUserPermission, cleanQuery, setCookie } from '@/lib';
 import { index, destroy } from '@/routes/employee/sales/discounts';
 import type { BreadcrumbItem } from '@/types';
-import { getColumns } from './types/columns';
 import type {
     Discount,
     DiscountFilterData,
     DiscountPagination,
 } from '@/types';
+import { getColumns } from './types/columns';
 
 const DiscountFormModal = createLazyComponent(
     () => import('./components/DiscountFormModal.vue'),
@@ -31,7 +31,7 @@ const props = defineProps<{
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Quản lý giảm giá', href: index().url },
+    { title: 'Quản lý khuyến mãi', href: index().url },
 ];
 
 const activeColumns = computed(() =>
@@ -211,16 +211,16 @@ function performDelete() {
 </script>
 
 <template>
-    <Head title="Quản lý giảm giá" />
+    <Head title="Quản lý khuyến mãi" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-4 p-4">
             <div class="flex items-center justify-between">
                 <Heading
-                    title="Quản lý giảm giá"
-                    description="Thiết lập chương trình giảm giá tự động cho danh mục, bộ sưu tập hoặc nhà cung cấp"
+                    title="Quản lý khuyến mãi"
+                    description="Thiết lập chương trình khuyến tự động cho sản phẩm, danh mục, bộ sưu tập hoặc nhà cung cấp"
                 />
-                <Button @click="handleCreate">
-                    <Plus class="mr-2 h-4 w-4" /> Thêm giảm giá
+                <Button v-if="CheckUserPermission('Tạo khuyến mãi')" @click="handleCreate">
+                    <Plus class="mr-2 h-4 w-4" /> Thêm khuyến mãi
                 </Button>
             </div>
 
@@ -253,7 +253,7 @@ function performDelete() {
                                     icon_location="end"
                                 />
                                 <DataTableSingleFilter
-                                    title="Loại giảm giá"
+                                    title="Loại khuyến mãi"
                                     v-model="selectedType"
                                     :options="typeOptions"
                                     icon_location="end"
@@ -297,9 +297,9 @@ function performDelete() {
 
         <DeleteConfirmation
             v-model:open="showDeleteDialog"
-            title="Xác nhận xóa giảm giá"
+            title="Xác nhận xóa khuyến mãi"
             :item-name="selectedDiscount?.name"
-            description='Bạn có chắc chắn muốn xóa giảm giá "{name}"?'
+            description='Bạn có chắc chắn muốn xóa khuyến mãi "{name}"?'
             @confirm="performDelete"
         />
     </AppLayout>

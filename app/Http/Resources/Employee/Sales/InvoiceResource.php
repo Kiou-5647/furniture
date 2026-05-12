@@ -4,6 +4,7 @@ namespace App\Http\Resources\Employee\Sales;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Gate;
 
 class InvoiceResource extends JsonResource
 {
@@ -40,6 +41,10 @@ class InvoiceResource extends JsonResource
             ])),
             'created_at' => $this->created_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
             'updated_at' => $this->updated_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
+            'can_view' => Gate::allows('view', $this),
+            'can_update' => Gate::allows('update', $this),
+            'can_delete' => $this->canBeDeleted() && Gate::allows('delete', $this),
+            'can_cancel' => $this->canBeCancelled() && Gate::allows('update', $this),
         ];
     }
 

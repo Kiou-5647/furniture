@@ -5,9 +5,10 @@ import { computed, ref, watch } from 'vue';
 import DataTableGroup from '@/components/custom/data-table/DataTableGroup.vue';
 import DataTableSingleFilter from '@/components/custom/data-table/DataTableSingleFilter.vue';
 import Heading from '@/components/Heading.vue';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { cleanQuery, setCookie } from '@/lib';
-import { index, show } from '@/routes/employee/sales/invoices';
+import { cleanQuery, setCookie, CheckUserPermission } from '@/lib';
+import { index, show, cancel, destroy } from '@/routes/employee/sales/invoices';
 import type { BreadcrumbItem } from '@/types';
 import type {
     Invoice,
@@ -18,6 +19,7 @@ import CreateInvoiceDialog from './components/CreateInvoiceDialog.vue';
 import { getColumns } from './types/columns';
 
 const props = defineProps<{
+    canCreate: boolean;
     statusOptions: { value: string; label: string; color: string }[];
     typeOptions: { value: string; label: string; color: string }[];
     currentEmployeeId: string | null;
@@ -28,6 +30,17 @@ const props = defineProps<{
         status: string;
         customer_name: string;
     }[];
+    bookingOptions: {
+        id: string;
+        booking_number: string;
+        customer_name: string;
+        designer_name: string;
+        scheduled_at: string | null;
+        total_amount: string;
+        has_deposit: boolean;
+        has_final: boolean;
+    }[];
+    depositPercentage: number;
     invoices?: InvoicePagination;
     filters: InvoiceFilterData;
 }>();
@@ -36,7 +49,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Hóa đơn', href: index().url },
 ];
 
-const activeColumns = computed(() => getColumns(handleShow));
+const activeColumns = computed(() => getColumns(handleShow, handleCancel, handleDelete));
 
 const isActuallyLoading = ref(true);
 const search = ref(props.filters.search ?? '');
@@ -119,6 +132,15 @@ function handleShow(invoice: Invoice) {
     router.visit(show(invoice).url);
 }
 
+function handleCancel(invoice: Invoice) {
+    router.post(cancel(invoice).url);
+}
+
+function handleDelete(invoice: Invoice) {
+    if (!confirm('Bạn có chắc chắn muốn xóa hóa đơn này?')) return;
+    router.delete(destroy(invoice).url);
+}
+
 const showCreateDialog = ref(false);
 
 function handleDialogClose() {
@@ -135,6 +157,12 @@ function handleDialogClose() {
                     title="Hóa đơn"
                     description="Quản lý hóa đơn bán hàng"
                 />
+                <Button
+                    v-if="canCreate"
+                    @click="showCreateDialog = true"
+                >
+                    Tạo hóa đơn
+                </Button>
             </div>
 
             <DataTableGroup
@@ -179,7 +207,8 @@ function handleDialogClose() {
         <CreateInvoiceDialog
             :open="showCreateDialog"
             :order-options="orderOptions"
-            :booking-options="[]"
+            :booking-options="bookingOptions"
+            :deposit-percentage="depositPercentage"
             :current-employee-id="currentEmployeeId"
             @close="handleDialogClose"
         />

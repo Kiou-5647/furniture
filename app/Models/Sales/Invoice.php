@@ -45,7 +45,7 @@ class Invoice extends Model
             ->logOnly(['invoice_number', 'type', 'status', 'amount_due', 'amount_paid', 'validated_by'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
-            ->setDescriptionForEvent(fn (string $eventName) => "Invoice {$eventName}");
+            ->setDescriptionForEvent(fn(string $eventName) => "Invoice {$eventName}");
     }
 
     public function invoiceable(): MorphTo
@@ -78,7 +78,7 @@ class Invoice extends Model
         $date = now()->format('dmy');
 
         do {
-            $number = 'INV-'.$date.'-'.self::randomToken();
+            $number = 'INV-' . $date . '-' . self::randomToken();
         } while (self::where('invoice_number', $number)->exists());
 
         return $number;
@@ -93,5 +93,15 @@ class Invoice extends Model
         }
 
         return $token;
+    }
+
+    public function canBeCancelled(): bool
+    {
+        return $this->invoiceable->status === 'cancelled';
+    }
+
+    public function canBeDeleted(): bool
+    {
+        return in_array($this->status, [InvoiceStatus::Draft, InvoiceStatus::Open]);
     }
 }

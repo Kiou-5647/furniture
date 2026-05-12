@@ -140,7 +140,7 @@ class MenuService
 
             if ($user->can('Xem khuyến mãi')) {
                 $salesItems[] = [
-                    'title' => 'Giảm giá',
+                    'title' => 'Khuyến mãi',
                     'href' => route('employee.sales.discounts.index'),
                     'isActive' => Route::is('sales.discounts.*'),
                 ];

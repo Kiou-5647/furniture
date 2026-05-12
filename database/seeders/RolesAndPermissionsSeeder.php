@@ -71,8 +71,11 @@ class RolesAndPermissionsSeeder extends Seeder
             ConstantsPermission::ORDER['UPDATE'],
             ConstantsPermission::ORDER['DELETE'],
 
-            'Xem hóa đơn',
-            'Quản lý hóa đơn',
+            // Invoices
+            ConstantsPermission::INVOICE['SELECT'],
+            ConstantsPermission::INVOICE['CREATE'],
+            ConstantsPermission::INVOICE['UPDATE'],
+            ConstantsPermission::INVOICE['DELETE'],
 
             'Xem thanh toán',
             'Quản lý thanh toán',
@@ -167,6 +170,12 @@ class RolesAndPermissionsSeeder extends Seeder
                 ConstantsPermission::ORDER['UPDATE'],
                 ConstantsPermission::ORDER['DELETE'],
 
+                // Invoices
+                ConstantsPermission::INVOICE['SELECT'],
+                ConstantsPermission::INVOICE['CREATE'],
+                ConstantsPermission::INVOICE['UPDATE'],
+                ConstantsPermission::INVOICE['DELETE'],
+
                 // Shipments
                 ConstantsPermission::SHIPMENT['SELECT'],
                 ConstantsPermission::SHIPMENT['CREATE'],
@@ -180,7 +189,6 @@ class RolesAndPermissionsSeeder extends Seeder
                 ConstantsPermission::BOOKING['DELETE'],
             ],
             'Quản lý cửa hàng' => [
-
                 // Categories
                 ConstantsPermission::CATEGORY['SELECT'],
                 ConstantsPermission::CATEGORY['CREATE'],
@@ -206,6 +214,11 @@ class RolesAndPermissionsSeeder extends Seeder
                 ConstantsPermission::ORDER['CREATE'],
                 ConstantsPermission::ORDER['UPDATE'],
                 ConstantsPermission::ORDER['DELETE'],
+
+                // Invoices
+                ConstantsPermission::INVOICE['SELECT'],
+                ConstantsPermission::INVOICE['CREATE'],
+                ConstantsPermission::INVOICE['UPDATE'],
 
                 // Shipments
                 ConstantsPermission::SHIPMENT['CREATE'],
@@ -242,6 +255,11 @@ class RolesAndPermissionsSeeder extends Seeder
                 ConstantsPermission::ORDER['SELECT'],
                 ConstantsPermission::ORDER['CREATE'],
                 ConstantsPermission::ORDER['UPDATE'],
+
+                // Invoices
+                ConstantsPermission::INVOICE['SELECT'],
+                ConstantsPermission::INVOICE['CREATE'],
+                ConstantsPermission::INVOICE['UPDATE'],
 
                 // Shipments
                 ConstantsPermission::SHIPMENT['SELECT'],

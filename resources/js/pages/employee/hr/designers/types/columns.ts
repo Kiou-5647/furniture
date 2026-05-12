@@ -1,8 +1,9 @@
-import { CheckCircle2, CircleDashed, MoreHorizontal, Pencil, Trash2 } from '@lucide/vue';
+import { CheckCircle2, CircleDashed, MoreHorizontal, Trash2, EyeIcon } from '@lucide/vue';
 import type { ColumnDef } from '@tanstack/vue-table';
 import { h } from 'vue';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { CheckUserPermission } from '@/lib';
 import type { Designer } from '@/types';
 
 export function getColumns(
@@ -80,15 +81,18 @@ export function getColumns(
                         ),
                         h(DropdownMenuContent, { align: 'end', class: 'w-45' }, () => [
                             h(DropdownMenuLabel, () => 'Thao tác'),
-                            h(DropdownMenuItem, { onClick: () => onEdit(item) }, () => [
-                                h(Pencil, { class: 'mr-2 h-4 w-4' }),
-                                'Sửa',
-                            ]),
-                            h(DropdownMenuSeparator),
-                            h(DropdownMenuItem, { class: 'text-destructive', onClick: () => onDelete(item) }, () => [
-                                h(Trash2, { class: 'mr-2 h-4 w-4' }),
-                                'Xóa',
-                            ]),
+                            CheckUserPermission('Xem nhà thiết kế')
+                                ? h(DropdownMenuItem, { onClick: () => onEdit(item) }, () => [
+                                    h(EyeIcon, { class: 'mr-2 h-4 w-4' }),
+                                    'Xem',
+                                ])
+                                : null,
+                            CheckUserPermission('Xóa nhà thiết kế')
+                                ? (h(DropdownMenuSeparator), h(DropdownMenuItem, { class: 'text-destructive', onClick: () => onDelete(item) }, () => [
+                                    h(Trash2, { class: 'mr-2 h-4 w-4' }),
+                                    'Xóa',
+                                ]))
+                                : null,
                         ]),
                     ],
                 });

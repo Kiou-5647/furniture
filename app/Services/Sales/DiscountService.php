@@ -22,19 +22,6 @@ class DiscountService
         return $query->paginate($filter->per_page);
     }
 
-    public function getTrashedFiltered(DiscountFilterData $filter): LengthAwarePaginator
-    {
-        $query = $this->applyFilters(Discount::onlyTrashed(), $filter);
-
-        if ($filter->order_by && $filter->order_direction) {
-            $query->orderBy($filter->order_by, $filter->order_direction);
-        } else {
-            $query->latest();
-        }
-
-        return $query->paginate($filter->per_page);
-    }
-
     public function getDiscountableTypes(): array
     {
         return Discount::getDiscountableTypes();
@@ -47,8 +34,8 @@ class DiscountService
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('sku', 'like', "%{$search}%")
-                      ->orWhere('name', 'like', "%{$search}%")
-                      ->orWhereHas('product', fn($pq) => $pq->where('name', 'like', "%{$search}%"));
+                        ->orWhere('name', 'like', "%{$search}%")
+                        ->orWhereHas('product', fn($pq) => $pq->where('name', 'like', "%{$search}%"));
                 });
             })
             ->get()
@@ -86,7 +73,7 @@ class DiscountService
         return \App\Models\Product\Category::query()
             ->when($search, function ($query) use ($search) {
                 $query->where('display_name', 'like', "%{$search}%")
-                      ->orWhere('name', 'like', "%{$search}%");
+                    ->orWhere('name', 'like', "%{$search}%");
             })
             ->get()
             ->map(fn($category) => [
@@ -101,7 +88,7 @@ class DiscountService
         return \App\Models\Product\Collection::query()
             ->when($search, function ($query) use ($search) {
                 $query->where('display_name', 'like', "%{$search}%")
-                      ->orWhere('name', 'like', "%{$search}%");
+                    ->orWhere('name', 'like', "%{$search}%");
             })
             ->get()
             ->map(fn($collection) => [

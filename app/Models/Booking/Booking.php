@@ -163,7 +163,7 @@ class Booking extends Model
         }
 
         // 3. Check trạng thái hóa đơn
-        if ($this->depositInvoice->status !== InvoiceStatus::Open) {
+        if ($this->depositInvoice?->status !== InvoiceStatus::Open) {
             return false;
         }
 
@@ -183,7 +183,7 @@ class Booking extends Model
         }
 
         // 3. Check trạng thái hóa đơn
-        if ($this->finalInvoice->status !== InvoiceStatus::Draft) {
+        if ($this->finalInvoice?->status !== InvoiceStatus::Draft) {
             return false;
         }
 
@@ -203,7 +203,7 @@ class Booking extends Model
         }
 
         // 3. Check trạng thái hóa đơn
-        if ($this->finalInvoice->status !== InvoiceStatus::Open) {
+        if ($this->finalInvoice?->status !== InvoiceStatus::Open) {
             return false;
         }
 

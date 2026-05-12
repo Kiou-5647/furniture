@@ -41,9 +41,9 @@ class DesignerController
                 'afternoon_end' => $this->settings->afternoon_end,
             ],
             'employeeOptions' => $this->service->getEmployeeOptions(),
-            'designers' => Inertia::defer(fn() => DesignerResource::collection(
+            'designers' => DesignerResource::collection(
                 $this->service->getFiltered($filter)
-            )),
+            ),
             'filters' => $filter,
         ]);
     }

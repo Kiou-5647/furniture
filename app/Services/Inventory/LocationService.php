@@ -26,17 +26,6 @@ class LocationService
             ->paginate($filter->per_page ?? 15);
     }
 
-    public function getTrashedFiltered(LocationFilterData $filter): LengthAwarePaginator
-    {
-        return Location::onlyTrashed()
-            ->with(['manager'])
-            ->withCount('inventories')
-            ->when($filter->type, fn($q) => $q->where('type', $filter->type))
-            ->when($filter->search, fn($q) => $q->where('name', 'ilike', "%{$filter->search}%"))
-            ->orderBy($filter->order_by ?? 'deleted_at', $filter->order_direction ?? 'desc')
-            ->paginate($filter->per_page ?? 15);
-    }
-
     public function create(array $data): Location
     {
         return Location::create([

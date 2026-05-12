@@ -45,6 +45,10 @@ export interface Invoice {
     allocations?: InvoiceAllocation[];
     created_at: string;
     updated_at: string;
+    can_view: boolean;
+    can_update: boolean;
+    can_delete: boolean;
+    can_cancel: boolean;
 }
 
 export interface InvoiceFilterData {

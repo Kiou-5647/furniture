@@ -158,6 +158,7 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
             Route::get('/', [InvoiceController::class, 'index'])->name('index');
             Route::get('/{invoice}', [InvoiceController::class, 'show'])->name('show');
             Route::post('/', [InvoiceController::class, 'store'])->name('store');
+            Route::post('/{invoice}/cancel', [InvoiceController::class, 'cancel'])->name('cancel');
             Route::delete('/{invoice}', [InvoiceController::class, 'destroy'])->name('destroy');
         });
 

@@ -1,6 +1,6 @@
 import {
     MoreHorizontal,
-    Pencil,
+    EyeIcon,
     Trash2,
     CheckCircle2,
     CircleDashed,
@@ -17,8 +17,8 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { formatPrice, CheckUserPermission } from '@/lib';
 import { formatDateOnly, formatDateTime } from '@/lib/date-utils';
-import { formatPrice } from '@/lib';
 import type { Discount } from '@/types';
 
 export function getColumns(
@@ -32,7 +32,19 @@ export function getColumns(
             size: 250,
             enableSorting: true, // DB Column: name
             enableHiding: false,
-            cell: ({ row }) => h('span', { class: 'font-medium truncate block' }, row.original.name),
+            cell: ({ row }) => {
+                const item = row.original;
+                const isExpired = item.end_at && new Date(item.end_at) < new Date();
+                
+                return h('div', { class: 'flex items-center gap-2' }, [
+                    h('span', { 
+                        class: `font-medium truncate block ${isExpired ? 'text-destructive' : ''}` 
+                    }, item.name),
+                    isExpired 
+                        ? h(Badge, { variant: 'destructive', class: 'text-[10px] px-1 h-4' }, () => 'Hết hạn') 
+                        : null,
+                ]);
+            },
         },
         {
             accessorKey: 'discountable_type_label',
@@ -181,32 +193,38 @@ export function getColumns(
                                 { align: 'end', class: 'w-45' },
                                 () => [
                                     h(DropdownMenuLabel, () => 'Thao tác'),
-                                    h(
-                                        DropdownMenuItem,
-                                        { onClick: () => onEdit(item) },
-                                        () => [
-                                            h(Pencil, {
+                                    CheckUserPermission('Xem khuyến mãi')
+                                        ? h(
+                                            DropdownMenuItem,
+                                            { onClick: () => onEdit(item) },
+                                            () => [
+                                                h(EyeIcon, {
                                                 class: 'mr-2 h-4 w-4',
-                                            }),
-                                            'Sửa',
-                                        ],
-                                    ),
-                                    h(DropdownMenuSeparator),
-                                    h(
-                                        DropdownMenuItem,
-                                        {
-                                            class: 'text-destructive',
-                                            onClick: () => onDelete(item),
-                                        },
-                                        () => [
-                                            h(Trash2, {
-                                                class: 'mr-2 h-4 w-4',
-                                            }),
-                                            'Xóa',
-                                        ],
-                                    ),
-                                ],
-                            ),
+                                                }),
+                                                'Xem',
+                                            ],
+                                        )
+                                        : null,
+                                    CheckUserPermission('Xóa khuyến mãi')
+                                        ? [
+                                        h(DropdownMenuSeparator),
+                                        h(
+                                            DropdownMenuItem,
+                                            {
+                                                class: 'text-destructive',
+                                                onClick: () => onDelete(item),
+                                            },
+                                            () => [
+                                                h(Trash2, {
+                                                    class: 'mr-2 h-4 w-4',
+                                                    }),
+                                                    'Xóa',
+                                                ],
+                                            ),
+                                        ]
+                                        : null,
+                                    ],
+                                ),
                         ],
                     },
                 );

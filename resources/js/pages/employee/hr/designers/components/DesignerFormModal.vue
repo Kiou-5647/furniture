@@ -10,7 +10,6 @@ import {
     Users,
 } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
-import { toast } from 'vue-sonner';
 import ImageUploader from '@/components/custom/ImageUploader.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -30,18 +29,14 @@ import {
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
+import SearchableSelect from '@/components/ui/SearchableSelect.vue';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import { CheckUserPermission } from '@/lib';
 import { formatNumber, handleNumericInput } from '@/lib';
-import { availabilities, store, update } from '@/routes/employee/hr/designers';
+import { availabilities } from '@/routes/designers';
+import { store, update } from '@/routes/employee/hr/designers';
 import type { WeeklySlots } from '@/types';
 
 interface WorkHours {
@@ -63,7 +58,7 @@ const props = defineProps<{
     }[];
 }>();
 
-const emit = defineEmits(['close', 'refresh']);
+const emit = defineEmits(['close']);
 
 const selectedEmployeeId = ref<string | undefined>(undefined);
 const avatarPreview = ref<string | null>(null);
@@ -95,6 +90,11 @@ const form = useForm({
 });
 
 const showEmployeeInfo = ref(false);
+
+const canUpdate = computed(() => {
+    if (!props.designer) return CheckUserPermission('Tạo nhà thiết kế');
+    return CheckUserPermission('Sửa nhà thiết kế');
+});
 
 const activeDaysCount = computed(() => {
     let count = 0;
@@ -245,7 +245,6 @@ function submit() {
         form.put(update({ designer: props.designer.id }).url, {
             preserveScroll: true,
             onSuccess: () => {
-                emit('refresh');
                 closeModal();
             }
         });
@@ -253,7 +252,6 @@ function submit() {
         form.post(store().url, {
             preserveScroll: true,
             onSuccess: () => {
-                emit('refresh');
                 closeModal();
             }
         });
@@ -374,22 +372,15 @@ function closeModal() {
                                 <span class="text-destructive">*</span>
                             </FieldLabel>
                             <FieldContent>
-                                <Select v-model="selectedEmployeeId">
-                                    <SelectTrigger class="w-full">
-                                        <SelectValue
-                                            placeholder="Chọn nhân viên..."
-                                        />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem
-                                            v-for="emp in employeeOptions"
-                                            :key="emp.id"
-                                            :value="emp.id"
-                                        >
-                                            {{ emp.full_name }}
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
+                                <SearchableSelect
+                                    v-model="selectedEmployeeId!"
+                                    :options="employeeOptions"
+                                    value-key="id"
+                                    label-key="full_name"
+                                    :searchable-keys="['full_name', 'email', 'phone']"
+                                    placeholder="Chọn nhân viên..."
+                                    :disabled="!canUpdate"
+                                />
                                 <FieldError
                                     :errors="[form.errors.employee_id]"
                                 />
@@ -397,12 +388,13 @@ function closeModal() {
                         </Field>
                     </div>
 
-                    <form @submit.prevent="submit" class="space-y-4">
+                    <form @submit.prevent="submit" novalidate class="space-y-4">
                         <div class="flex flex-col items-center justify-center">
                             <ImageUploader
                                 v-model="form.avatar"
                                 :preview-url="avatarPreview"
                                 aspect-ratio="square"
+                                :disabled="!canUpdate"
                                 hint=" "
                                 class="w-30 shrink-0"
                             />
@@ -457,6 +449,7 @@ function closeModal() {
                             <FieldContent>
                                 <Input
                                     v-model="form.phone"
+                                    :disabled="!canUpdate"
                                     placeholder="0123 456 789"
                                     class="w-full"
                                 />
@@ -474,6 +467,7 @@ function closeModal() {
                                     :model-value="formatNumber(form.hourly_rate)"
                                     type="text"
                                     inputmode="numeric"
+                                    :disabled="!canUpdate"
                                     placeholder="500000"
                                     @input="handleNumericInput($event, 'hourly_rate', form)"
                                     class="w-full"
@@ -489,6 +483,7 @@ function closeModal() {
                             <FieldContent>
                                 <Textarea
                                     v-model="form.bio"
+                                    :disabled="!canUpdate"
                                     placeholder="Giới thiệu ngắn về nhà thiết kế"
                                     class="w-full"
                                 />
@@ -501,6 +496,7 @@ function closeModal() {
                             <FieldContent>
                                 <Input
                                     v-model="form.portfolio_url"
+                                    :disabled="!canUpdate"
                                     placeholder="https://example.com/portfolio"
                                     class="w-full"
                                 />
@@ -523,7 +519,7 @@ function closeModal() {
                                     Hiển thị và cho phép đặt lịch
                                 </p>
                             </div>
-                            <Switch v-model="form.is_active" />
+                            <Switch v-model="form.is_active" :disabled="!canUpdate" />
                         </div>
                     </form>
                 </div>
@@ -650,7 +646,7 @@ function closeModal() {
                 <Button
                     type="button"
                     size="sm"
-                    :disabled="form.processing"
+                    :disabled="form.processing || !canUpdate"
                     @click="submit"
                 >
                     <Loader2

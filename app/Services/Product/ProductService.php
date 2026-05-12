@@ -32,17 +32,6 @@ class ProductService
             ->paginate($filter->per_page ?? 15);
     }
 
-    public function getTrashedFiltered(ProductFilterData $filter): LengthAwarePaginator
-    {
-        return Product::onlyTrashed()
-            ->with(['vendor', 'category'])
-            ->when($filter->vendor_id, fn($q) => $q->where('vendor_id', $filter->vendor_id))
-            ->when($filter->category_id, fn($q) => $q->where('category_id', $filter->category_id))
-            ->when($filter->search, fn($q) => $q->search($filter->search))
-            ->orderBy($filter->order_by ?? 'deleted_at', $filter->order_direction ?? 'desc')
-            ->paginate($filter->per_page ?? 15);
-    }
-
     /**
      * Returns the materialized cards for a product so the employee
      * can see exactly how it is grouped on the storefront.

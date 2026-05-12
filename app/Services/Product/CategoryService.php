@@ -28,19 +28,6 @@ class CategoryService
             ->paginate($filter->per_page ?? 15);
     }
 
-    public function getTrashedFiltered(CategoryFilterData $filter): LengthAwarePaginator
-    {
-        return Category::onlyTrashed()
-            ->with(['group', 'rooms'])
-            ->when($filter->group_id, fn($q) => $q->where('group_id', $filter->group_id))
-            ->when($filter->product_type, fn($q) => $q->byProductType($filter->product_type))
-            ->when($filter->search, fn($q) => $q->search($filter->search))
-            ->when($filter->room_ids, fn($q) => $q->inRooms($filter->room_ids))
-            ->when($filter->namespace_ids, fn($q) => $q->inNamespaces($filter->namespace_ids))
-            ->orderBy($filter->order_by ?? 'deleted_at', $filter->order_direction ?? 'desc')
-            ->paginate($filter->per_page ?? 15);
-    }
-
     public function getCategoryGroups(): Collection
     {
         return Cache::tags([CacheTag::CategoryGroups->value])

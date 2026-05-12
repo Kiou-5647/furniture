@@ -84,4 +84,18 @@ class Permission
         'UPDATE' => 'Sửa nhân viên',
         'DELETE' => 'Xóa nhân viên',
     ];
+
+    public const INVOICE = [
+        'SELECT' => 'Xem hóa đơn',
+        'CREATE' => 'Tạo hóa đơn',
+        'UPDATE' => 'Sửa hóa đơn',
+        'DELETE' => 'Xóa hóa đơn',
+    ];
+
+    public const LOOKUP = [
+        'SELECT' => 'Xem tra cứu',
+        'CREATE' => 'Tạo tra cứu',
+        'UPDATE' => 'Sửa tra cứu',
+        'DELETE' => 'Xóa tra cứu',
+    ];
 }

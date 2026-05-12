@@ -9,7 +9,7 @@ class StoreDesignerRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('Quản lý nhà thiết kế');
+        return true;
     }
 
     public function rules(): array

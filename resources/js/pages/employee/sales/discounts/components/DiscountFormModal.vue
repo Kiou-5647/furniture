@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3';
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -21,6 +21,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { CheckUserPermission } from '@/lib';
+import { toast } from 'vue-sonner';
 import { store, update } from '@/routes/employee/sales/discounts';
 import type { Discount } from '@/types';
 
@@ -49,8 +51,12 @@ const form = useForm({
     discountable_id: props.discount?.discountable_id ?? null,
 });
 
-// Dynamic Targets State
 const targetOptions = ref<any[]>([]);
+
+const canUpdate = computed(() => {
+    if (!props.discount) return CheckUserPermission('Tạo khuyến mãi');
+    return CheckUserPermission('Sửa khuyến mãi');
+});
 const isLoadingTargets = ref(false);
 
 async function fetchTargets(search = '') {
@@ -105,11 +111,17 @@ onMounted(() => {
 function submit() {
     if (props.discount) {
         form.put(update(props.discount.id).url, {
-            onSuccess: () => emit('close'),
+            onSuccess: () => {
+                toast.success('Đã cập nhật giảm giá.');
+                emit('close');
+            },
         });
     } else {
         form.post(store().url, {
-            onSuccess: () => emit('close'),
+            onSuccess: () => {
+                toast.success('Đã thêm giảm giá mới.');
+                emit('close');
+            },
         });
     }
 }
@@ -126,26 +138,27 @@ function handleConfirmDelete() {
         <DialogContent class="sm:max-w-[500px]">
             <DialogHeader>
                 <DialogTitle>
-                    {{ discount ? 'Chỉnh sửa giảm giá' : 'Thêm giảm giá mới' }}
+                    {{ discount ? 'Chỉnh sửa khuyến mãi' : 'Thêm khuyến mãi mới' }}
                 </DialogTitle>
                 <DialogDescription>
-                    Thiết lập thông tin chi tiết cho chương trình giảm giá.
+                    Thiết lập thông tin chi tiết cho chương trình khuyến mãi.
                 </DialogDescription>
             </DialogHeader>
 
-            <form @submit.prevent="submit" class="grid gap-6 py-4">
+            <form @submit.prevent="submit" novalidate class="grid gap-6 py-4">
                 <!-- General Information -->
                 <div class="grid gap-4 p-4 rounded-lg border bg-muted/30">
                     <div class="grid gap-2">
                         <Label for="name" class="text-sm font-semibold">Tên chương trình</Label>
-                        <Input id="name" v-model="form.name" placeholder="Ví dụ: Sale Hè 2026" class="bg-background" />
+                        <Input id="name" v-model="form.name" :disabled="!canUpdate" placeholder="Ví dụ: Sale Hè 2026" class="bg-background" />
+                        <FieldError :errors="[form.errors.name]" />
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
                         <div class="grid gap-2">
-                            <Label class="text-sm font-semibold">Loại giảm giá</Label>
-                            <Select v-model="form.type">
-                                <SelectTrigger class="bg-background">
+                            <Label class="text-sm font-semibold">Loại khuyến mãi</Label>
+                            <Select v-model="form.type" :disabled="!canUpdate">
+                                <SelectTrigger class="w-full bg-background">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -157,7 +170,8 @@ function handleConfirmDelete() {
 
                         <div class="grid gap-2">
                             <Label for="value" class="text-sm font-semibold">Giá trị</Label>
-                            <Input id="value" type="number" v-model.number="form.value" step="0.01" class="bg-background" />
+                            <Input id="value" type="number" v-model.number="form.value" :disabled="!canUpdate" :step="form.type == 'percentage' ? 0.01 : 1000" class="mt-2 bg-background" />
+                            <FieldError :errors="[form.errors.value]" />
                         </div>
                     </div>
                 </div>
@@ -166,8 +180,8 @@ function handleConfirmDelete() {
                 <div class="grid gap-4 p-4 rounded-lg border bg-muted/30">
                     <div class="grid gap-2">
                         <Label class="text-sm font-semibold">Đối tượng áp dụng</Label>
-                        <Select v-model="form.discountable_type">
-                            <SelectTrigger class="bg-background">
+                        <Select v-model="form.discountable_type" :disabled="!canUpdate">
+                            <SelectTrigger class="w-full bg-background">
                                 <SelectValue placeholder="Chọn loại đối tượng" />
                             </SelectTrigger>
                             <SelectContent>
@@ -189,6 +203,7 @@ function handleConfirmDelete() {
                             v-model="form.discountable_id"
                             :options="targetOptions"
                             :is-loading="isLoadingTargets"
+                            :disabled="!canUpdate"
                             placeholder="Tìm kiếm mục tiêu..."
                             value-key="id"
                             label-key="name"
@@ -232,16 +247,18 @@ function handleConfirmDelete() {
                     <div class="grid grid-cols-2 gap-4">
                         <div class="grid gap-2">
                             <Label class="text-sm font-semibold">Ngày bắt đầu</Label>
-                            <Input type="date" v-model="form.start_at!" class="bg-background" />
+                            <Input type="date" v-model="form.start_at!" :disabled="!canUpdate" class="bg-background" />
+                            <FieldError :errors="[form.errors.start_at]" />
                         </div>
                         <div class="grid gap-2">
                             <Label class="text-sm font-semibold">Ngày kết thúc</Label>
-                            <Input type="date" v-model="form.end_at!" class="bg-background" />
+                            <Input type="date" v-model="form.end_at!" :disabled="!canUpdate" class="bg-background" />
+                            <FieldError :errors="[form.errors.end_at]" />
                         </div>
                     </div>
 
                     <div class="flex items-center space-x-2 pt-2">
-                        <Checkbox id="is_active" v-model="form.is_active" @update:checked="form.is_active = $event" />
+                        <Checkbox id="is_active" v-model="form.is_active" :disabled="!canUpdate" @update:checked="form.is_active = $event" />
                         <Label for="is_active" class="cursor-pointer text-sm font-medium">Kích hoạt giảm giá này</Label>
                     </div>
                 </div>

@@ -1,15 +1,20 @@
+import { Eye, MoreHorizontal, Trash2, XCircle } from '@lucide/vue';
 import type { ColumnDef } from '@tanstack/vue-table';
 import { h } from 'vue';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import type { Invoice } from '@/types';
 
 export function getColumns(
     onShow: (invoice: Invoice) => void,
+    onCancel: (invoice: Invoice) => void,
+    onDelete: (invoice: Invoice) => void,
 ): ColumnDef<Invoice>[] {
     return [
         {
             accessorKey: 'invoice_number',
-            header: 'Số hóa đơn',
+            header: 'Mã hóa đơn',
             size: 180,
             enableSorting: true,
             enableHiding: false,
@@ -149,6 +154,48 @@ export function getColumns(
                     { class: 'text-xs text-muted-foreground tabular-nums' },
                     row.original.created_at,
                 ),
+        },
+        {
+            id: 'actions',
+            header: 'Thao tác',
+            size: 80,
+            enableSorting: false,
+            enableHiding: false,
+            meta: { align: 'center' },
+            cell: ({ row }) => {
+                const invoice = row.original;
+
+                return h(DropdownMenu, {}, {
+                    default: () => [
+                        h(DropdownMenuTrigger, { asChild: true }, () =>
+                            h(Button, { variant: 'ghost', class: 'h-8 w-8 p-0' }, () => h(MoreHorizontal, { class: 'h-4 w-4' })),
+                        ),
+                        h(DropdownMenuContent, { align: 'end', class: 'w-45' }, () => [
+                            h(DropdownMenuLabel, () => 'Thao tác'),
+                            invoice.can_view
+                                ? h(DropdownMenuItem, { onClick: () => onShow(invoice) }, () => [
+                                    h(Eye, { class: 'mr-2 h-4 w-4' }),
+                                    'Chi tiết',
+                                ])
+                                : null,
+                            h(DropdownMenuSeparator),
+                            invoice.can_cancel
+                                ? h(DropdownMenuItem, { class: 'text-destructive', onClick: () => onCancel(invoice) }, () => [
+                                    h(XCircle, { class: 'mr-2 h-4 w-4' }),
+                                    'Hủy hóa đơn',
+                                ])
+                                : null,
+                            h(DropdownMenuSeparator),
+                            invoice.can_delete
+                                ? h(DropdownMenuItem, { class: 'text-destructive', onClick: () => onDelete(invoice) }, () => [
+                                    h(Trash2, { class: 'mr-2 h-4 w-4' }),
+                                    'Xóa',
+                                ])
+                                : null,
+                        ]),
+                    ],
+                });
+            },
         },
     ];
 }

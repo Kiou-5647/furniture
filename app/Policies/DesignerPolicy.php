@@ -15,13 +15,13 @@ class DesignerPolicy
 
     public function create(User $user): bool
     {
-        return $user->hasPermissionTo(Permission::DESIGNER['MANAGE']);
+        return $user->hasPermissionTo(Permission::DESIGNER['CREATE']);
     }
 
     public function update(User $user, Designer $designer): bool
     {
-        // 1. Check quyền quản lý tổng thể
-        if ($user->hasPermissionTo(Permission::DESIGNER['MANAGE'])) {
+        // 1. Check quyền cập nhật
+        if ($user->hasPermissionTo(Permission::DESIGNER['UPDATE'])) {
             return true;
         }
 
@@ -31,6 +31,6 @@ class DesignerPolicy
 
     public function delete(User $user, Designer $designer): bool
     {
-        return $user->hasPermissionTo(Permission::DESIGNER['MANAGE']);
+        return $user->hasPermissionTo(Permission::DESIGNER['DELETE']);
     }
 }

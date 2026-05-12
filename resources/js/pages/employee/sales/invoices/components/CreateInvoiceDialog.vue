@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3';
-import { Loader2, Package, ShoppingBag } from '@lucide/vue';
+import { Loader2, Package, ShoppingBag, CalendarDays, User } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
+import { toast } from 'vue-sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -27,6 +28,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { formatPrice } from '@/lib';
 import { store } from '@/routes/employee/sales/invoices';
 
 const props = defineProps<{
@@ -38,30 +40,24 @@ const props = defineProps<{
         status: string;
         customer_name: string;
     }[];
-    bookingOptions?: {
+    bookingOptions: {
         id: string;
         booking_number: string;
         customer_name: string;
         designer_name: string;
-        scheduled_at: string | null;
         total_amount: string;
-        deposit_percentage: number;
         has_deposit: boolean;
         has_final: boolean;
-        deposit_amount: number | null;
-        final_amount: number | null;
     }[];
+    depositPercentage: number;
     currentEmployeeId: string | null;
 }>();
-
-const bookingOptions = computed(() => props.bookingOptions ?? []);
 
 const emit = defineEmits<{
     close: [];
 }>();
 
 type SourceType = 'order' | 'booking' | null;
-
 const selectedSourceType = ref<SourceType>(null);
 const selectedSourceId = ref('');
 
@@ -78,28 +74,26 @@ const selectedOrder = computed(() =>
 );
 
 const selectedBooking = computed(() =>
-    // TODO: uncomment when Booking model exists
-    bookingOptions.value.find((b) => b.id === selectedSourceId.value) || null,
+    props.bookingOptions.find((b) => b.id === selectedSourceId.value) || null,
 );
 
-// TODO: uncomment when Booking model exists
-// const invoiceTypeLabel = computed(() => {
-//     if (selectedSourceType.value === 'order') return 'Toàn bộ';
-//     if (!selectedBooking.value) return '';
-//     return selectedBooking.value.has_deposit ? 'Thanh toán còn lại' : 'Đặt cọc';
-// });
-const invoiceTypeLabel = computed(() => 'Toàn bộ');
+const invoiceTypeLabel = computed(() => {
+    if (selectedSourceType.value === 'order') return 'Toàn bộ';
+    if (!selectedBooking.value) return '';
+    return selectedBooking.value.has_deposit ? 'Thanh toán còn lại' : 'Đặt cọc';
+});
 
 const calculatedAmount = computed(() => {
     if (selectedSourceType.value === 'order' && selectedOrder.value) {
         return Number(selectedOrder.value.total_amount);
     }
-    // TODO: uncomment when Booking model exists
-    // if (selectedSourceType.value === 'booking' && selectedBooking.value) {
-    //     return selectedBooking.value.has_deposit
-    //         ? selectedBooking.value.final_amount ?? 0
-    //         : selectedBooking.value.deposit_amount ?? 0;
-    // }
+    if (selectedSourceType.value === 'booking' && selectedBooking.value) {
+        const total = Number(selectedBooking.value.total_amount);
+        const percentage = props.depositPercentage / 100;
+        return selectedBooking.value.has_deposit
+            ? total * (1 - percentage)
+            : total * percentage;
+    }
     return 0;
 });
 
@@ -109,37 +103,34 @@ watch([selectedSourceType, selectedSourceId], () => {
         form.invoiceable_id = selectedOrder.value.id;
         form.type = 'full';
         form.amount_due = String(selectedOrder.value.total_amount);
-    }
-    // TODO: uncomment when Booking model exists
-    // else if (selectedSourceType.value === 'booking' && selectedBooking.value) {
-    //     form.invoiceable_type = 'App\\Models\\Design\\Booking';
-    //     form.invoiceable_id = selectedBooking.value.id;
-    //     form.type = selectedBooking.value.has_deposit ? 'final_balance' : 'deposit';
-    //     const amt = selectedBooking.value.has_deposit
-    //         ? selectedBooking.value.final_amount
-    //         : selectedBooking.value.deposit_amount;
-    //     form.amount_due = amt !== null ? String(amt) : '';
-    // }
-    else {
-        form.invoiceable_type = 'App\\Models\\Sales\\Order';
+    } else if (selectedSourceType.value === 'booking' && selectedBooking.value) {
+        form.invoiceable_type = 'App\\Models\\Booking\\Booking';
+        form.invoiceable_id = selectedBooking.value.id;
+        form.type = selectedBooking.value.has_deposit ? 'final_balance' : 'deposit';
+
+        const total = Number(selectedBooking.value.total_amount);
+        const percentage = props.depositPercentage / 100;
+        const amt = selectedBooking.value.has_deposit
+            ? total * (1 - percentage)
+            : total * percentage;
+
+        form.amount_due = String(Math.round(amt));
+    } else {
         form.invoiceable_id = '';
-        form.type = 'full';
         form.amount_due = '';
     }
 });
 
-function resetSelection() {
-    selectedSourceType.value = null;
-    selectedSourceId.value = '';
-}
-
 function submit() {
     form.validated_by = props.currentEmployeeId ?? '';
+    console.info(form);
     form.post(store().url, {
         preserveScroll: true,
         onSuccess: () => {
+            toast.success('Đã tạo hóa đơn mới thành công');
             closeModal();
         },
+        onError: (errors) => console.error(errors)
     });
 }
 
@@ -159,48 +150,45 @@ function closeModal() {
             <DialogHeader>
                 <DialogTitle>Tạo hóa đơn mới</DialogTitle>
                 <DialogDescription>
-                    Chọn đơn hàng hoặc dịch vụ để tạo hóa đơn
+                    Chọn đơn hàng hoặc dịch vụ để khởi tạo hóa đơn thanh toán
                 </DialogDescription>
             </DialogHeader>
 
-            <div class="space-y-4">
-                <!-- Source type selector -->
-                <div class="flex gap-2">
-                    <Button
-                        type="button"
-                        :variant="selectedSourceType === 'order' ? 'default' : 'outline'"
-                        class="flex-1"
-                        @click="selectedSourceType = 'order'; selectedSourceId = ''"
-                    >
-                        <ShoppingBag class="mr-2 h-4 w-4" />
-                        Đơn hàng
-                    </Button>
-                    <!-- TODO: uncomment when Booking model exists
-                    <Button
-                        type="button"
-                        :variant="selectedSourceType === 'booking' ? 'default' : 'outline'"
-                        class="flex-1"
-                        @click="selectedSourceType = 'booking'; selectedSourceId = ''"
-                    >
-                        <CalendarDays class="mr-2 h-4 w-4" />
-                        Dịch vụ
-                    </Button>
-                    -->
+            <div class="space-y-6 py-4">
+                <!-- Source Selection -->
+                <div class="space-y-3">
+                    <FieldLabel>Nguồn hóa đơn</FieldLabel>
+                    <div class="flex gap-2">
+                        <Button
+                            type="button"
+                            :variant="selectedSourceType === 'order' ? 'default' : 'outline'"
+                            class="flex-1 h-12"
+                            @click="selectedSourceType = 'order'; selectedSourceId = ''"
+                        >
+                            <ShoppingBag class="mr-2 h-4 w-4" />
+                            Đơn hàng
+                        </Button>
+                        <Button
+                            type="button"
+                            :variant="selectedSourceType === 'booking' ? 'default' : 'outline'"
+                            class="flex-1 h-12"
+                            @click="selectedSourceType = 'booking'; selectedSourceId = ''"
+                        >
+                            <CalendarDays class="mr-2 h-4 w-4" />
+                            Dịch vụ
+                        </Button>
+                    </div>
                 </div>
 
-                <!-- Source dropdown -->
+                <!-- Entity Picker -->
                 <Field v-if="selectedSourceType">
                     <FieldLabel>
-                        {{ selectedSourceType === 'order' ? 'Đơn hàng' : 'Dịch vụ' }}
+                        {{ selectedSourceType === 'order' ? 'Chọn đơn hàng' : 'Chọn dịch vụ' }}
                     </FieldLabel>
                     <FieldContent>
                         <Select v-model="selectedSourceId">
-                            <SelectTrigger>
-                                <SelectValue :placeholder="
-                                    selectedSourceType === 'order'
-                                        ? 'Chọn đơn hàng...'
-                                        : 'Chọn dịch vụ...'
-                                " />
+                            <SelectTrigger class="h-12">
+                                <SelectValue :placeholder="selectedSourceType === 'order' ? 'Tìm đơn hàng...' : 'Tìm lịch hẹn...'" />
                             </SelectTrigger>
                             <SelectContent>
                                 <template v-if="selectedSourceType === 'order'">
@@ -209,159 +197,108 @@ function closeModal() {
                                         :key="order.id"
                                         :value="order.id"
                                     >
-                                        <div class="flex items-center gap-2">
-                                            <span class="font-mono text-xs">{{
-                                                order.order_number
-                                            }}</span>
-                                            <span class="text-xs text-muted-foreground">
-                                                {{ order.customer_name }}
-                                            </span>
+                                        <div class="flex items-center justify-between w-full gap-4">
+                                            <span class="font-mono text-xs">{{ order.order_number }}</span>
                                         </div>
                                     </SelectItem>
                                 </template>
                                 <template v-else>
-                                    <!-- TODO: uncomment when Booking model exists
                                     <SelectItem
                                         v-for="booking in bookingOptions"
                                         :key="booking.id"
                                         :value="booking.id"
                                     >
-                                        <div class="flex items-center gap-2">
-                                            <span class="font-mono text-xs">{{
-                                                booking.booking_number
-                                            }}</span>
-                                            <span class="text-xs text-muted-foreground">
-                                                {{ booking.customer_name }}
-                                            </span>
+                                        <div class="flex items-center justify-between w-full gap-4">
+                                            <span class="font-mono text-xs">{{ booking.booking_number }}</span>
                                         </div>
                                     </SelectItem>
-                                    -->
-                                    <div class="px-2 py-3 text-center text-sm text-muted-foreground">
-                                        Chưa hỗ trợ dịch vụ
-                                    </div>
                                 </template>
                                 <div
                                     v-if="
                                         (selectedSourceType === 'order' && orderOptions.length === 0) ||
                                         (selectedSourceType === 'booking' && bookingOptions.length === 0)
                                     "
-                                    class="px-2 py-3 text-center text-sm text-muted-foreground"
+                                    class="px-2 py-4 text-center text-sm text-muted-foreground"
                                 >
-                                    Không có mục nào
+                                    Không tìm thấy mục phù hợp
                                 </div>
                             </SelectContent>
                         </Select>
                     </FieldContent>
                 </Field>
 
-                <!-- Selected source details -->
+                <!-- Selected Entity Context Card -->
                 <div
                     v-if="selectedOrder || selectedBooking"
-                    class="rounded-lg border bg-muted/50 p-3 space-y-2"
+                    class="rounded-xl border bg-muted/30 p-4 space-y-4 transition-all animate-in fade-in slide-in-from-top-2"
                 >
-                    <!-- Order details -->
-                    <template v-if="selectedOrder">
+                    <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            <Package class="h-4 w-4 text-muted-foreground" />
-                            <span class="font-mono text-sm font-medium">{{
-                                selectedOrder.order_number
-                            }}</span>
-                            <Badge variant="outline" class="text-xs">
-                                {{ selectedOrder.customer_name }}
-                            </Badge>
+                            <component
+                                :is="selectedSourceType === 'order' ? Package : User"
+                                class="h-4 w-4 text-primary"
+                            />
+                            <span class="text-sm font-semibold">
+                                {{ selectedOrder?.order_number || selectedBooking?.booking_number }}
+                            </span>
                         </div>
-                        <Separator />
-                        <div class="flex items-center justify-between text-sm">
-                            <span class="text-muted-foreground">Tổng cộng</span>
-                            <span class="font-medium tabular-nums">{{
-                                Number(selectedOrder.total_amount).toLocaleString('vi-VN')
-                            }}đ</span>
-                        </div>
-                    </template>
+                        <Badge variant="outline" class="text-[10px] uppercase">
+                            {{ selectedOrder ? selectedOrder.customer_name : selectedBooking?.customer_name }}
+                        </Badge>
+                    </div>
 
-                    <!-- Booking details -->
-                    <!-- TODO: uncomment when Booking model exists
-                    <template v-if="selectedBooking">
-                        <div class="flex items-center gap-2">
-                            <User class="h-4 w-4 text-muted-foreground" />
-                            <span class="text-sm">{{
-                                selectedBooking.customer_name
-                            }}</span>
-                        </div>
-                        <div class="flex items-center gap-2 text-xs text-muted-foreground">
-                            <CalendarDays class="h-3 w-3" />
-                            <span>{{ selectedBooking.scheduled_at ?? 'Chưa lên lịch' }}</span>
-                            <span class="ml-auto">Thiết kế: {{ selectedBooking.designer_name }}</span>
-                        </div>
-                        <Separator />
-                        <div class="space-y-1">
-                            <div class="flex items-center justify-between text-sm">
-                                <span class="text-muted-foreground">Tổng dịch vụ</span>
-                                <span class="tabular-nums">{{
-                                    Number(selectedBooking.total_amount).toLocaleString('vi-VN')
-                                }}đ</span>
-                            </div>
-                            <div class="flex items-center justify-between text-sm">
-                                <span class="text-muted-foreground">
-                                    {{ selectedBooking.has_deposit ? 'Đã cọc' : 'Cọc' }}
-                                    ({{ selectedBooking.deposit_percentage }}%)
-                                </span>
-                                <span class="tabular-nums">{{
-                                    selectedBooking.deposit_amount !== null
-                                        ? Number(selectedBooking.deposit_amount).toLocaleString('vi-VN')
-                                        : '—'
-                                }}đ</span>
-                            </div>
-                            <div class="flex items-center justify-between text-sm font-medium">
-                                <span>
-                                    {{ selectedBooking.has_deposit ? 'Cần thu còn lại' : 'Cần thu' }}
-                                    <Badge variant="outline" class="ml-1 text-[10px]">
-                                        {{ invoiceTypeLabel }}
-                                    </Badge>
-                                </span>
-                                <span class="tabular-nums text-primary">{{
-                                    (selectedBooking.has_final
-                                        ? selectedBooking.final_amount
-                                        : selectedBooking.deposit_amount
-                                    )?.toLocaleString('vi-VN') ?? '0'
-                                }}đ</span>
-                            </div>
-                        </div>
-                    </template>
-                    -->
-                </div>
-
-                <!-- Invoice details -->
-                <div v-if="selectedSourceType && selectedSourceId" class="space-y-3">
                     <Separator />
 
-                    <Field>
-                        <FieldLabel>Loại hóa đơn</FieldLabel>
-                        <FieldContent>
-                            <Input
-                                :model-value="invoiceTypeLabel"
-                                readonly
-                                class="bg-muted font-medium"
-                            />
-                            <FieldError :errors="[form.errors.type]" />
-                        </FieldContent>
-                    </Field>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div class="space-y-1">
+                            <span class="text-xs text-muted-foreground block">Loại hình</span>
+                            <span class="font-medium">{{ selectedSourceType === 'order' ? 'Bán hàng' : 'Dịch vụ' }}</span>
+                        </div>
+                        <div class="space-y-1 text-right">
+                            <span class="text-xs text-muted-foreground block">Tổng giá trị</span>
+                            <span class="font-medium tabular-nums">{{ formatPrice(calculatedAmount) }}</span>
+                        </div>
+                    </div>
+                </div>
 
-                    <Field>
-                        <FieldLabel>Số tiền phải thu</FieldLabel>
-                        <FieldContent>
-                            <Input
-                                v-model="form.amount_due"
-                                type="number"
-                                class="tabular-nums font-medium"
-                            />
-                            <FieldError :errors="[form.errors.amount_due]" />
-                        </FieldContent>
-                    </Field>
+                <!-- Invoice Configuration -->
+                <div v-if="selectedSourceId" class="space-y-4 pt-2">
+                    <Separator />
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Field>
+                            <FieldLabel>Loại hóa đơn</FieldLabel>
+                            <FieldContent>
+                                <Input
+                                    :model-value="invoiceTypeLabel"
+                                    readonly
+                                    class="bg-muted font-medium h-10"
+                                />
+                                <FieldError :errors="[form.errors.type]" />
+                            </FieldContent>
+                        </Field>
+
+                        <Field>
+                            <FieldLabel>Số tiền phải thu</FieldLabel>
+                            <FieldContent>
+                                <div class="relative">
+                                    <Input
+                                        v-model="form.amount_due"
+                                        type="number"
+                                        step="1000"
+                                        class="tabular-nums font-bold h-10 pr-12"
+                                    />
+                                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                                        đ
+                                    </span>
+                                </div>
+                                <FieldError :errors="[form.errors.amount_due]" />
+                            </FieldContent>
+                        </Field>
+                    </div>
                 </div>
             </div>
 
-            <DialogFooter>
+            <DialogFooter class="mt-6">
                 <Button type="button" variant="outline" @click="closeModal">
                     Hủy
                 </Button>
@@ -369,6 +306,7 @@ function closeModal() {
                     type="button"
                     :disabled="form.processing || !selectedSourceId"
                     @click="submit"
+                    class="min-w-[120px]"
                 >
                     <Loader2
                         v-if="form.processing"
@@ -380,3 +318,9 @@ function closeModal() {
         </DialogContent>
     </Dialog>
 </template>
+
+<style scoped>
+.tabular-nums {
+    font-variant-numeric: tabular-nums;
+}
+</style>
