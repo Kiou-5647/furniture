@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { createLazyComponent } from '@/composables/createLazyComponent';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { cleanQuery, setCookie } from '@/lib';
+import { CheckUserPermission } from '@/lib';
 import { index, destroy } from '@/routes/employee/collections';
 import type { BreadcrumbItem } from '@/types';
 import type {
@@ -68,6 +69,10 @@ const statusOptions = [
 
 // Status Filter
 const selectedStatus = ref(props.filters.is_active ?? undefined);
+
+const canCreate = computed(() => CheckUserPermission('Tạo bộ sưu tập'));
+const canUpdate = computed(() => CheckUserPermission('Sửa bộ sưu tập'));
+const canDelete = computed(() => CheckUserPermission('Xóa bộ sưu tập'));
 
 // Filtering Logic (Debounced)
 const updateSearch = debounce(() => {
@@ -181,7 +186,7 @@ function handlePreviewImage(url: string) {
                     title="Bộ sưu tập"
                     description="Quản lý các bộ sưu tập sản phẩm theo chủ đề hoặc mùa"
                 />
-                <Button @click="handleCreate">
+                <Button v-if="canCreate" @click="handleCreate">
                     <Plus class="mr-2 h-4 w-4" /> Thêm bộ sưu tập
                 </Button>
             </div>

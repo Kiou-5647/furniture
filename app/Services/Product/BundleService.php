@@ -24,22 +24,6 @@ class BundleService
         return $paginator;
     }
 
-    public function getTrashedFiltered(BundleFilterData $filter): LengthAwarePaginator
-    {
-        $paginator = Bundle::onlyTrashed()
-            ->with('contents.productCard')
-            ->filterBy($filter)
-            ->sortBy($filter->order_by ?? 'created_at', $filter->order_direction ?? 'desc')
-            ->paginate($filter->per_page);
-
-        $paginator->getCollection()->transform(function ($bundle) {
-            $bundle->is_available = $this->isAvailable($bundle);
-            return $bundle;
-        });
-
-        return $paginator;
-    }
-
     public function isAvailable(Bundle $bundle, ?string $locationId = null): bool
     {
         if ($bundle->contents->isEmpty()) {

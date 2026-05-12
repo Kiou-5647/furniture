@@ -20,18 +20,22 @@ class CategoryController
 {
     public function __construct(private CategoryService $service) {}
 
-    public function index(Request $request, ?string $groupSlug = null): Response
+    public function index(Request $request, ?string $groupSlug = null)
     {
+        if (!Gate::allows('viewAny', Category::class)) {
+            return back()->with('error', 'Bạn không có quyền xem danh mục sản phẩm.');
+        }
+
         $group = $groupSlug ? Lookup::where('slug', $groupSlug)->first() : null;
         $filter = CategoryFilterData::fromRequest($request, $group?->id);
 
         return Inertia::render('employee/products/categories/Index', [
-            'categoryGroups' => $this->service->getCategoryGroups(),
-            'roomOptions' => $this->service->getRoomOptions(),
-            'specOptions' => $this->service->getFilterableSpecOptions(),
             'categories' => Inertia::defer(fn() => CategoryResource::collection(
                 $this->service->getFiltered($filter)
             )),
+            'categoryGroups' => $this->service->getCategoryGroups(),
+            'roomOptions' => $this->service->getRoomOptions(),
+            'specOptions' => $this->service->getFilterableSpecOptions(),
             'filters' => $filter,
             'currentGroup' => $group,
         ]);
@@ -39,23 +43,39 @@ class CategoryController
 
     public function store(StoreCategoryRequest $request, UpsertCategoryAction $action)
     {
-        Gate::authorize('create', Category::class);
+        if (!Gate::allows('create', Category::class)) {
+            return back()->with('error', 'Bạn không có quyền tạo danh mục mới.');
+        }
 
-        $action->execute($request->validated());
+        try {
+            $action->execute($request->validated());
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Đã thêm danh mục mới.');
     }
 
     public function update(UpdateCategoryRequest $request, Category $category, UpsertCategoryAction $action)
     {
-        $action->execute($request->validated(), $category);
+        if (!Gate::allows('update', $category)) {
+            return back()->with('error', 'Bạn không có quyền cập nhật danh mục này.');
+        }
+
+        try {
+            $action->execute($request->validated(), $category);
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Đã cập nhật danh mục.');
     }
 
     public function destroy(Category $category)
     {
-        Gate::authorize('manage', $category);
+        if (!Gate::allows('delete', $category)) {
+            return back()->with('error', 'Bạn không có quyền xóa danh mục này.');
+        }
         $category->delete();
 
         return back()->with('success', 'Đã xóa danh mục.');

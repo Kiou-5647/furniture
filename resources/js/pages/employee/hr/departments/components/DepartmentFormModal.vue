@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3';
 import { Loader2, Users } from '@lucide/vue';
-import { watch } from 'vue';
+import { computed, watch } from 'vue';
+import StatusToggle from '@/components/custom/StatusToggle.vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Field, FieldContent, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
+import { CheckUserPermission } from '@/lib';
 import { store, update } from '@/routes/employee/hr/departments';
 import type { Department } from '@/types';
 
@@ -18,7 +19,7 @@ const props = defineProps<{
     managerOptions: { id: string; label: string }[];
 }>();
 
-const emit = defineEmits(['close']);
+const emit = defineEmits(['close', 'delete']);
 
 const form = useForm({
     name: '',
@@ -26,6 +27,11 @@ const form = useForm({
     description: undefined as string | undefined,
     manager_id: undefined as string | undefined,
     is_active: true,
+});
+
+const canUpdate = computed(() => {
+    if (!props.department) return CheckUserPermission('Tạo phòng ban');
+    return CheckUserPermission('Sửa phòng ban');
 });
 
 function generateCode(name: string) {
@@ -92,9 +98,7 @@ function closeModal() {
 
 <template>
     <Dialog :open="open" @update:open="(val) => !val && closeModal()">
-        <DialogContent
-            class="max-h-[90vh] gap-0 overflow-y-auto p-0 sm:max-w-[500px]"
-        >
+        <DialogContent class="max-h-[90vh] gap-0 overflow-y-auto p-0 sm:max-w-[500px]">
             <DialogHeader class="px-4 pt-5 pb-3 sm:px-6 sm:pt-6 sm:pb-4">
                 <div class="min-w-0">
                     <DialogTitle class="text-left text-lg sm:text-xl">
@@ -110,7 +114,7 @@ function closeModal() {
                 </div>
             </DialogHeader>
 
-            <form @submit.prevent="submit" class="px-4 pb-4 sm:px-6">
+            <form @submit.prevent="submit" novalidate class="px-4 pb-4 sm:px-6">
                 <div class="space-y-4">
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <Field>
@@ -119,11 +123,8 @@ function closeModal() {
                                 <span class="text-destructive">*</span>
                             </FieldLabel>
                             <FieldContent>
-                                <Input
-                                    v-model="form.name"
-                                    placeholder="Ví dụ: Phòng Kỹ thuật"
-                                    class="w-full"
-                                />
+                                <Input v-model="form.name" :disabled="!canUpdate" placeholder="Ví dụ: Phòng Kỹ thuật"
+                                    class="w-full" />
                                 <FieldError :errors="[form.errors.name]" />
                             </FieldContent>
                         </Field>
@@ -134,11 +135,8 @@ function closeModal() {
                                 <span class="text-destructive">*</span>
                             </FieldLabel>
                             <FieldContent>
-                                <Input
-                                    v-model="form.code"
-                                    placeholder="PHONG-KY-THUAT"
-                                    class="w-full font-mono text-xs uppercase"
-                                />
+                                <Input v-model="form.code" :disabled="!canUpdate" placeholder="PHONG-KY-THUAT"
+                                    class="w-full font-mono text-xs uppercase" />
                                 <FieldError :errors="[form.errors.code]" />
                             </FieldContent>
                         </Field>
@@ -147,35 +145,24 @@ function closeModal() {
                     <Field>
                         <FieldLabel>Mô tả</FieldLabel>
                         <FieldContent>
-                            <Input
-                                v-model="form.description"
-                                placeholder="Mô tả chức năng phòng ban"
-                                class="w-full"
-                            />
+                            <Input v-model="form.description" :disabled="!canUpdate"
+                                placeholder="Mô tả chức năng phòng ban" class="w-full" />
                             <FieldError :errors="[form.errors.description]" />
                         </FieldContent>
                     </Field>
 
                     <Field>
                         <FieldLabel>
-                            <Users
-                                class="h-3.5 w-3.5 shrink-0 text-muted-foreground"
-                            />
+                            <Users class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                             Trưởng phòng
                         </FieldLabel>
                         <FieldContent>
-                            <Select v-model="form.manager_id">
+                            <Select v-model="form.manager_id" :disabled="!canUpdate">
                                 <SelectTrigger class="w-full">
-                                    <SelectValue
-                                        placeholder="Chọn người quản lý..."
-                                    />
+                                    <SelectValue placeholder="Chọn người quản lý..." />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem
-                                        v-for="m in managerOptions"
-                                        :key="m.id"
-                                        :value="m.id"
-                                    >
+                                    <SelectItem v-for="m in managerOptions" :key="m.id" :value="m.id">
                                         {{ m.label }}
                                     </SelectItem>
                                 </SelectContent>
@@ -185,27 +172,22 @@ function closeModal() {
                     </Field>
                 </div>
 
-                <div
-                    class="mt-6 flex items-center justify-between rounded-lg border p-4"
-                >
+                <div class="mt-6 flex items-center justify-between rounded-lg border p-4">
                     <div class="space-y-0.5">
                         <Label class="text-base">Kích hoạt</Label>
                         <p class="text-sm text-muted-foreground">
                             Hiển thị và cho phép sử dụng
                         </p>
                     </div>
-                    <Switch v-model="form.is_active" />
+                    <StatusToggle v-model="form.is_active" :disabled="!canUpdate" label="Kích hoạt" id="is_active" />
                 </div>
 
                 <DialogFooter class="mt-6 gap-2 sm:mt-8">
                     <Button type="button" variant="outline" @click="closeModal">
                         Hủy
                     </Button>
-                    <Button type="submit" :disabled="form.processing">
-                        <Loader2
-                            v-if="form.processing"
-                            class="mr-2 h-4 w-4 animate-spin"
-                        />
+                    <Button type="submit" :disabled="form.processing || !canUpdate">
+                        <Loader2 v-if="form.processing" class="mr-2 h-4 w-4 animate-spin" />
                         {{ department ? 'Lưu thay đổi' : 'Tạo mới' }}
                     </Button>
                 </DialogFooter>

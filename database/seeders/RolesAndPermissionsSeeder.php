@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Constants\Permission as ConstantsPermission;
 use App\Models\Auth\Permission;
 use App\Models\Auth\Role;
 use Illuminate\Database\Seeder;
@@ -19,37 +20,56 @@ class RolesAndPermissionsSeeder extends Seeder
     protected function seedRolesAndPermissions(): void
     {
         $permissions = [
-            'Xem sản phẩm',
-            'Quản lý sản phẩm',
+            // Products
+            ConstantsPermission::PRODUCT['SELECT'],
+            ConstantsPermission::PRODUCT['CREATE'],
+            ConstantsPermission::PRODUCT['UPDATE'],
+            ConstantsPermission::PRODUCT['DELETE'],
 
-            'Xem danh mục',
-            'Quản lý danh mục',
+            // Categories
+            ConstantsPermission::CATEGORY['SELECT'],
+            ConstantsPermission::CATEGORY['CREATE'],
+            ConstantsPermission::CATEGORY['UPDATE'],
+            ConstantsPermission::CATEGORY['DELETE'],
 
-            'Xem bộ sưu tập',
-            'Quản lý bộ sưu tập',
+            // Collections
+            ConstantsPermission::COLLECTION['SELECT'],
+            ConstantsPermission::COLLECTION['CREATE'],
+            ConstantsPermission::COLLECTION['UPDATE'],
+            ConstantsPermission::COLLECTION['DELETE'],
 
-            'Xem gói sản phẩm',
-            'Quản lý gói sản phẩm',
+            // Bundles
+            ConstantsPermission::BUNDLE['SELECT'],
+            ConstantsPermission::BUNDLE['CREATE'],
+            ConstantsPermission::BUNDLE['UPDATE'],
+            ConstantsPermission::BUNDLE['DELETE'],
 
             'Xem khách hàng',
             'Quản lý khách hàng',
 
-            'Xem nhân viên',
-            'Quản lý nhân viên',
+            // Employees
+            ConstantsPermission::EMPLOYEE['SELECT'],
+            ConstantsPermission::EMPLOYEE['CREATE'],
+            ConstantsPermission::EMPLOYEE['UPDATE'],
+            ConstantsPermission::EMPLOYEE['DELETE'],
 
             // Departments
-            'Xem phòng ban',
-            'Quản lý phòng ban',
+            ConstantsPermission::DEPARTMENT['SELECT'],
+            ConstantsPermission::DEPARTMENT['CREATE'],
+            ConstantsPermission::DEPARTMENT['UPDATE'],
+            ConstantsPermission::DEPARTMENT['DELETE'],
 
             // Designers
-            'Xem nhà thiết kế',
-            'Quản lý nhà thiết kế',
+            ConstantsPermission::DESIGNER['SELECT'],
+            ConstantsPermission::DESIGNER['CREATE'],
+            ConstantsPermission::DESIGNER['UPDATE'],
+            ConstantsPermission::DESIGNER['DELETE'],
 
             // Orders
-            'Xem đơn hàng',
-            'Tạo đơn hàng',
-            'Sửa đơn hàng',
-            'Xóa đơn hàng',
+            ConstantsPermission::ORDER['SELECT'],
+            ConstantsPermission::ORDER['CREATE'],
+            ConstantsPermission::ORDER['UPDATE'],
+            ConstantsPermission::ORDER['DELETE'],
 
             'Xem hóa đơn',
             'Quản lý hóa đơn',
@@ -58,16 +78,16 @@ class RolesAndPermissionsSeeder extends Seeder
             'Quản lý thanh toán',
 
             // Shipments
-            'Xem đơn vận chuyển',
-            'Tạo đơn vận chuyển',
-            'Sửa đơn vận chuyển',
-            'Xóa đơn vận chuyển',
+            ConstantsPermission::SHIPMENT['SELECT'],
+            ConstantsPermission::SHIPMENT['CREATE'],
+            ConstantsPermission::SHIPMENT['UPDATE'],
+            ConstantsPermission::SHIPMENT['DELETE'],
 
             // Bookings
-            'Xem lịch thiết kế',
-            'Tạo lịch thiết kế',
-            'Sửa lịch thiết kế',
-            'Xóa lịch thiết kế',
+            ConstantsPermission::BOOKING['SELECT'],
+            ConstantsPermission::BOOKING['CREATE'],
+            ConstantsPermission::BOOKING['UPDATE'],
+            ConstantsPermission::BOOKING['DELETE'],
 
             'Xem kho hàng',
             'Quản lý kho hàng',
@@ -75,8 +95,11 @@ class RolesAndPermissionsSeeder extends Seeder
             'Xem nhà cung cấp',
             'Quản lý nhà cung cấp',
 
-            'Xem khuyến mãi',
-            'Quản lý khuyến mãi',
+            // Discounts
+            ConstantsPermission::DISCOUNT['SELECT'],
+            ConstantsPermission::DISCOUNT['CREATE'],
+            ConstantsPermission::DISCOUNT['UPDATE'],
+            ConstantsPermission::DISCOUNT['DELETE'],
 
             'Xem hoàn tiền',
             'Quản lý hoàn tiền',
@@ -98,51 +121,132 @@ class RolesAndPermissionsSeeder extends Seeder
         $rolePermissions = [
             'Quản trị viên' => null,
             'Quản lý' => [
-                'Xem phòng ban',
-                'Quản lý phòng ban',
+                // Departments
+                ConstantsPermission::DEPARTMENT['SELECT'],
+                ConstantsPermission::DEPARTMENT['CREATE'],
+                ConstantsPermission::DEPARTMENT['UPDATE'],
 
-                'Xem nhà thiết kế',
-                'Quản lý nhà thiết kế',
+                // Employees
+                ConstantsPermission::EMPLOYEE['SELECT'],
+                ConstantsPermission::EMPLOYEE['CREATE'],
+                ConstantsPermission::EMPLOYEE['UPDATE'],
 
-                'Xem đơn hàng',
-                'Tạo đơn hàng',
-                'Sửa đơn hàng',
-                'Xóa đơn hàng',
+                // Designers
+                ConstantsPermission::DESIGNER['SELECT'],
+                ConstantsPermission::DESIGNER['CREATE'],
+                ConstantsPermission::DESIGNER['UPDATE'],
+                ConstantsPermission::DESIGNER['DELETE'],
 
-                'Xem đơn vận chuyển',
-                'Tạo đơn vận chuyển',
-                'Sửa đơn vận chuyển',
-                'Xóa đơn vận chuyển',
+                // Categories
+                ConstantsPermission::CATEGORY['SELECT'],
+                ConstantsPermission::CATEGORY['CREATE'],
+                ConstantsPermission::CATEGORY['UPDATE'],
+                ConstantsPermission::CATEGORY['DELETE'],
 
-                'Xem lịch thiết kế',
-                'Tạo lịch thiết kế',
-                'Sửa lịch thiết kế',
-                'Xóa lịch thiết kế',
+                // Collections
+                ConstantsPermission::COLLECTION['SELECT'],
+                ConstantsPermission::COLLECTION['CREATE'],
+                ConstantsPermission::COLLECTION['UPDATE'],
+                ConstantsPermission::COLLECTION['DELETE'],
+
+                // Products
+                ConstantsPermission::PRODUCT['SELECT'],
+                ConstantsPermission::PRODUCT['CREATE'],
+                ConstantsPermission::PRODUCT['UPDATE'],
+                ConstantsPermission::PRODUCT['DELETE'],
+
+                // Bundles
+                ConstantsPermission::BUNDLE['SELECT'],
+                ConstantsPermission::BUNDLE['CREATE'],
+                ConstantsPermission::BUNDLE['UPDATE'],
+                ConstantsPermission::BUNDLE['DELETE'],
+
+                // Orders
+                ConstantsPermission::ORDER['SELECT'],
+                ConstantsPermission::ORDER['CREATE'],
+                ConstantsPermission::ORDER['UPDATE'],
+                ConstantsPermission::ORDER['DELETE'],
+
+                // Shipments
+                ConstantsPermission::SHIPMENT['SELECT'],
+                ConstantsPermission::SHIPMENT['CREATE'],
+                ConstantsPermission::SHIPMENT['UPDATE'],
+                ConstantsPermission::SHIPMENT['DELETE'],
+
+                // Bookings
+                ConstantsPermission::BOOKING['SELECT'],
+                ConstantsPermission::BOOKING['CREATE'],
+                ConstantsPermission::BOOKING['UPDATE'],
+                ConstantsPermission::BOOKING['DELETE'],
             ],
             'Quản lý cửa hàng' => [
-                'Xem đơn hàng',
-                'Tạo đơn hàng',
-                'Sửa đơn hàng',
-                'Xóa đơn hàng',
 
-                'Tạo đơn vận chuyển',
-                'Sửa đơn vận chuyển',
+                // Categories
+                ConstantsPermission::CATEGORY['SELECT'],
+                ConstantsPermission::CATEGORY['CREATE'],
+                ConstantsPermission::CATEGORY['UPDATE'],
+
+                // Collections
+                ConstantsPermission::COLLECTION['SELECT'],
+                ConstantsPermission::COLLECTION['CREATE'],
+                ConstantsPermission::COLLECTION['UPDATE'],
+
+                // Products
+                ConstantsPermission::PRODUCT['SELECT'],
+                ConstantsPermission::PRODUCT['CREATE'],
+                ConstantsPermission::PRODUCT['UPDATE'],
+
+                // Bundles
+                ConstantsPermission::BUNDLE['SELECT'],
+                ConstantsPermission::BUNDLE['CREATE'],
+                ConstantsPermission::BUNDLE['UPDATE'],
+
+                // Orders
+                ConstantsPermission::ORDER['SELECT'],
+                ConstantsPermission::ORDER['CREATE'],
+                ConstantsPermission::ORDER['UPDATE'],
+                ConstantsPermission::ORDER['DELETE'],
+
+                // Shipments
+                ConstantsPermission::SHIPMENT['CREATE'],
+                ConstantsPermission::SHIPMENT['UPDATE'],
             ],
             'Quản lý kho hàng' => [
-                'Xem đơn vận chuyển',
-                'Tạo đơn vận chuyển',
-                'Sửa đơn vận chuyển',
-                'Xóa đơn vận chuyển',
+                // Products
+                ConstantsPermission::PRODUCT['SELECT'],
+
+                // Bundles
+                ConstantsPermission::BUNDLE['SELECT'],
+
+                // Shipments
+                ConstantsPermission::SHIPMENT['SELECT'],
+                ConstantsPermission::SHIPMENT['CREATE'],
+                ConstantsPermission::SHIPMENT['UPDATE'],
+                ConstantsPermission::SHIPMENT['DELETE'],
             ],
 
             'Nhân viên' => [
-                'Xem đơn hàng',
-                'Tạo đơn hàng',
-                'Sửa đơn hàng',
+                // Categories
+                ConstantsPermission::CATEGORY['SELECT'],
 
-                'Xem đơn vận chuyển',
-                'Tạo đơn vận chuyển',
-                'Sửa đơn vận chuyển',
+                // Collections
+                ConstantsPermission::COLLECTION['SELECT'],
+
+                // Products
+                ConstantsPermission::PRODUCT['SELECT'],
+
+                // Bundles
+                ConstantsPermission::BUNDLE['SELECT'],
+
+                // Orders
+                ConstantsPermission::ORDER['SELECT'],
+                ConstantsPermission::ORDER['CREATE'],
+                ConstantsPermission::ORDER['UPDATE'],
+
+                // Shipments
+                ConstantsPermission::SHIPMENT['SELECT'],
+                ConstantsPermission::SHIPMENT['CREATE'],
+                ConstantsPermission::SHIPMENT['UPDATE'],
             ]
         ];
 

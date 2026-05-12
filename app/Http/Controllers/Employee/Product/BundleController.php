@@ -12,7 +12,6 @@ use App\Services\Product\BundleService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
-use Inertia\Response;
 
 class BundleController
 {
@@ -20,8 +19,12 @@ class BundleController
         private BundleService $service,
     ) {}
 
-    public function index(Request $request): Response
+    public function index(Request $request)
     {
+        if (!Gate::allows('viewAny', Bundle::class)) {
+            return back()->with('error', 'Bạn không có quyền xem danh sách gói sản phẩm.');
+        }
+
         $filter = BundleFilterData::fromRequest($request);
 
         return Inertia::render('employee/products/bundles/Index', [
@@ -32,16 +35,22 @@ class BundleController
         ]);
     }
 
-    public function create(): Response
+    public function create()
     {
+        if (!Gate::allows('create', Bundle::class)) {
+            return back()->with('error', 'Bạn không có quyền tạo gói sản phẩm mới.');
+        }
+
         return Inertia::render('employee/products/bundles/CreateOrEdit', [
             'bundle' => null,
         ]);
     }
 
-    public function edit(Bundle $bundle): Response
+    public function edit(Bundle $bundle)
     {
-        Gate::authorize('view', $bundle);
+        if (!Gate::allows('update', $bundle)) {
+            return back()->with('error', 'Bạn không có quyền chỉnh sửa gói sản phẩm này.');
+        }
 
         $bundle->load([
             'contents.productCard' => fn($q) => $q->with('product'),
@@ -55,7 +64,9 @@ class BundleController
 
     public function store(StoreBundleRequest $request, UpsertBundleAction $action)
     {
-        Gate::authorize('create', Bundle::class);
+        if (!Gate::allows('create', Bundle::class)) {
+            return back()->with('error', 'Bạn không có quyền tạo gói sản phẩm mới.');
+        }
 
         $action->execute($request->validated());
 
@@ -64,7 +75,9 @@ class BundleController
 
     public function update(UpdateBundleRequest $request, Bundle $bundle, UpsertBundleAction $action)
     {
-        Gate::authorize('manage', $bundle);
+        if (!Gate::allows('update', $bundle)) {
+            return back()->with('error', 'Bạn không có quyền cập nhật gói sản phẩm này.');
+        }
 
         $action->execute($request->validated(), $bundle);
 
@@ -73,7 +86,9 @@ class BundleController
 
     public function destroy(Bundle $bundle)
     {
-        Gate::authorize('manage', $bundle);
+        if (!Gate::allows('delete', $bundle)) {
+            return back()->with('error', 'Bạn không có quyền xóa gói sản phẩm này.');
+        }
 
         $bundle->delete();
 

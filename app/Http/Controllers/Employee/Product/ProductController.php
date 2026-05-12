@@ -23,8 +23,12 @@ class ProductController
         private LookupService $lookupService,
     ) {}
 
-    public function index(Request $request): Response
+    public function index(Request $request)
     {
+        if (!Gate::allows('viewAny', Product::class)) {
+            return back()->with('error', 'Bạn không có quyền thực hiện hành động này.');
+        }
+
         $filter = ProductFilterData::fromRequest($request);
 
         return Inertia::render('employee/products/products/Index', [
@@ -87,8 +91,12 @@ class ProductController
         return response()->json($cards);
     }
 
-    public function create(): Response
+    public function create()
     {
+        if (!Gate::allows('create', Product::class)) {
+            return back()->with('error', 'Bạn không có quyền thực hiện hành động này.');
+        }
+
         return Inertia::render('employee/products/products/CreateOrEdit', [
             'product' => null,
             'vendorOptions' => $this->service->getVendorOptions(),
@@ -103,8 +111,12 @@ class ProductController
         ]);
     }
 
-    public function edit(Product $product): Response
+    public function edit(Product $product)
     {
+        if (!Gate::allows('update', $product)) {
+            return back()->with('error', 'Bạn không có quyền thực hiện hành động này.');
+        }
+
         $product->load(['variants']);
         $product->variants->load(['inventories']);
 
@@ -122,8 +134,12 @@ class ProductController
         ]);
     }
 
-    public function show(Product $product): Response
+    public function show(Product $product)
     {
+        if (!Gate::allows('view', $product)) {
+            return back()->with('error', 'Bạn không có quyền thực hiện hành động này.');
+        }
+
         $product->load([
             'productCards.variants',
             'productCards.options',
@@ -139,8 +155,9 @@ class ProductController
 
     public function store(StoreProductRequest $request, UpsertProductAction $action)
     {
-        Gate::authorize('create', Product::class);
-
+        if (!Gate::allows('create', Product::class)) {
+            return back()->with('error', 'Bạn không có quyền thực hiện hành động này.');
+        }
         $action->execute($request->validated());
 
         return back()->with('success', 'Đã thêm sản phẩm mới.');
@@ -148,7 +165,9 @@ class ProductController
 
     public function update(UpdateProductRequest $request, Product $product, UpsertProductAction $action)
     {
-        Gate::authorize('manage', $product);
+        if (!Gate::allows('update', $product)) {
+            return back()->with('error', 'Bạn không có quyền thực hiện hành động này.');
+        }
 
         $action->execute($request->validated(), $product);
 
@@ -157,7 +176,9 @@ class ProductController
 
     public function restore(Product $product)
     {
-        Gate::authorize('manage', $product);
+        if (!Gate::allows('delete', $product)) {
+            return back()->with('error', 'Bạn không có quyền thực hiện hành động này.');
+        }
 
         $product->restore();
 

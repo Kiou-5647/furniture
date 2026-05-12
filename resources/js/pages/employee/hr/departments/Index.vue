@@ -3,6 +3,7 @@ import { Head, router } from '@inertiajs/vue3';
 import { Plus } from '@lucide/vue';
 import { debounce } from 'lodash';
 import { computed, ref, watch } from 'vue';
+import { CheckUserPermission } from '@/lib';
 import DataTableGroup from '@/components/custom/data-table/DataTableGroup.vue';
 import DataTableSingleFilter from '@/components/custom/data-table/DataTableSingleFilter.vue';
 import DeleteConfirmation from '@/components/custom/DeleteConfirmation.vue';
@@ -35,16 +36,23 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Phòng ban', href: index().url },
 ];
 
-const activeColumns = computed(() => getColumns(handleEdit, confirmDelete));
+const canCreate = computed(() => CheckUserPermission('Tạo phòng ban'));
+const canUpdate = computed(() => CheckUserPermission('Sửa phòng ban'));
+const canDelete = computed(() => CheckUserPermission('Xóa phòng ban'));
+
+const activeColumns = computed(() =>
+    getColumns(handleEdit, confirmDelete, () => {}, false, {
+        canUpdate: canUpdate.value,
+        canDelete: canDelete.value,
+    }),
+);
 
 const showFormModal = ref(false);
 const showDeleteDialog = ref(false);
 const selectedDepartment = ref<Department | null>(null);
 const isActuallyLoading = ref(true);
 const search = ref(props.filters.search ?? '');
-const selectedStatus = ref<boolean | undefined>(
-    props.filters.is_active ?? undefined,
-);
+const selectedStatus = ref<boolean | undefined>(props.filters.is_active ?? undefined);
 
 const hasActiveFilters = computed(() => {
     return !!props.filters.search || props.filters.is_active !== null;
@@ -67,7 +75,9 @@ const updateSearch = debounce(() => {
     );
 }, 500);
 
+// Watchers
 watch(search, (val) => val !== (props.filters.search ?? '') && updateSearch());
+watch(selectedStatus, () => updateSearch());
 
 watch(
     () => props.departments,
@@ -103,10 +113,17 @@ function handlePageChange(page: number) {
 function handlePageSizeChange(per_page: number) {
     setCookie('per_page', per_page);
     const { per_page: _, ...restFilters } = props.filters;
-    router.get(index().url, cleanQuery({ ...restFilters, page: 1 }), {
-        preserveState: true,
-        preserveScroll: true,
-    });
+    router.get(
+        index().url,
+        cleanQuery({
+            ...restFilters,
+            page: 1,
+        }),
+        {
+            preserveState: true,
+            preserveScroll: true,
+        },
+    );
 }
 
 function resetFilters() {
@@ -148,40 +165,44 @@ function performDelete() {
                     title="Phòng ban"
                     description="Quản lý các phòng ban trong công ty"
                 />
-                <Button @click="handleCreate">
+                <Button v-if="canCreate" @click="handleCreate">
                     <Plus class="mr-2 h-4 w-4" /> Thêm phòng ban
                 </Button>
             </div>
 
-            <DataTableGroup
-                v-model:search="search"
-                :is-actually-loading="isActuallyLoading"
-                :columns="activeColumns"
-                :data="departments?.data ?? []"
-                :has-active-filters="hasActiveFilters"
-                :total="departments?.meta.total ?? 0"
-                :page-size="departments?.meta.per_page ?? 15"
-                :current-page="departments?.meta.current_page ?? 1"
-                :last-page="departments?.meta.last_page ?? 1"
-                :order-by="filters.order_by"
-                :order-direction="filters.order_direction"
-                @reset="resetFilters"
-                @sort="handleSort"
-                @row-click="handleEdit"
-                @update:page="handlePageChange"
-                @update:page-size="handlePageSizeChange"
-            >
-                <template #filters>
-                    <DataTableSingleFilter
-                        v-model="selectedStatus"
-                        title="Trạng thái"
-                        :options="statusFilterOptions"
-                        icon_location="end"
-                        :searchable="false"
-                        @update:model-value="updateSearch"
-                    />
-                </template>
-            </DataTableGroup>
+            <div class="grid grid-cols-1">
+                <div class="col-span-1 space-y-4">
+                    <DataTableGroup
+                        v-model:search="search"
+                        :is-actuallyLoading="isActuallyLoading"
+                        :columns="activeColumns"
+                        :data="departments?.data ?? []"
+                        :has-active-filters="hasActiveFilters"
+                        :total="departments?.meta.total ?? 0"
+                        :page-size="departments?.meta.per_page ?? 15"
+                        :current-page="departments?.meta.current_page ?? 1"
+                        :last-page="departments?.meta.last_page ?? 1"
+                        :order-by="filters.order_by"
+                        :order-direction="filters.order_direction"
+                        @reset="resetFilters"
+                        @sort="handleSort"
+                        @row-click="handleEdit"
+                        @update:page="handlePageChange"
+                        @update:page-size="handlePageSizeChange"
+                    >
+                        <template #filters>
+                            <DataTableSingleFilter
+                                v-model="selectedStatus"
+                                title="Trạng thái"
+                                :options="statusFilterOptions"
+                                icon_location="end"
+                                :searchable="false"
+                                @update:model-value="updateSearch"
+                            />
+                        </template>
+                    </DataTableGroup>
+                </div>
+            </div>
         </div>
 
         <DepartmentFormModal

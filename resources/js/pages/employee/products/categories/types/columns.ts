@@ -2,7 +2,7 @@ import {
     CheckCircle2,
     CircleDashed,
     MoreHorizontal,
-    Pencil,
+    EyeIcon,
     Trash2,
 } from '@lucide/vue';
 import type { ColumnDef } from '@tanstack/vue-table';
@@ -18,6 +18,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { Category } from '@/types';
+import { CheckUserPermission } from '@/lib';
 
 export function getColumns(
     onEdit: (category: Category) => void,
@@ -191,6 +192,8 @@ export function getColumns(
             meta: { align: 'center' },
             cell: ({ row }) => {
                 const item = row.original;
+                const canView = CheckUserPermission('Xem danh mục');
+                const canDelete = CheckUserPermission('Xóa danh mục');
                 return h(
                     DropdownMenu,
                     {},
@@ -209,30 +212,32 @@ export function getColumns(
                                 { align: 'end', class: 'w-45' },
                                 () => [
                                     h(DropdownMenuLabel, () => 'Thao tác'),
-                                    h(
-                                        DropdownMenuItem,
-                                        { onClick: () => onEdit(item) },
-                                        () => [
-                                            h(Pencil, {
-                                                class: 'mr-2 h-4 w-4',
-                                            }),
-                                            'Sửa',
-                                        ],
-                                    ),
-                                    h(DropdownMenuSeparator),
-                                    h(
-                                        DropdownMenuItem,
-                                        {
-                                            class: 'text-destructive',
-                                            onClick: () => onDelete(item),
-                                        },
-                                        () => [
-                                            h(Trash2, {
-                                                class: 'mr-2 h-4 w-4',
-                                            }),
-                                            'Xóa',
-                                        ],
-                                    ),
+                                    canView ? 
+                                        h(
+                                            DropdownMenuItem,
+                                            { onClick: () => onEdit(item) },
+                                            () => [
+                                                h(EyeIcon, {
+                                                    class: 'mr-2 h-4 w-4',
+                                                }),
+                                                'Chi tiết',
+                                            ],
+                                        ) : null,
+                                    (canView && canDelete) ? h(DropdownMenuSeparator) : null,
+                                    canDelete ?
+                                        h(
+                                            DropdownMenuItem,
+                                            {
+                                                class: 'text-destructive',
+                                                onClick: () => onDelete(item),
+                                            },
+                                            () => [
+                                                h(Trash2, {
+                                                    class: 'mr-2 h-4 w-4',
+                                                }),
+                                                'Xóa',
+                                            ],
+                                        ) : null,
                                 ],
                             ),
                         ],

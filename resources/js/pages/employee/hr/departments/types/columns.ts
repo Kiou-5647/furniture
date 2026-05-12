@@ -1,14 +1,31 @@
-import { CheckCircle2, CircleDashed, MoreHorizontal, Pencil, Trash2 } from '@lucide/vue';
+import {
+    CheckCircle2,
+    CircleDashed,
+    MoreHorizontal,
+    EyeIcon,
+    Trash2,
+} from '@lucide/vue';
 import type { ColumnDef } from '@tanstack/vue-table';
 import { h } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import type { Department } from '@/types';
+import { CheckUserPermission } from '@/lib';
 
 export function getColumns(
     onEdit: (department: Department) => void,
     onDelete: (department: Department) => void,
+    onPreviewImage: (url: string) => void,
+    showGroupColumn: boolean,
+    permissions: { canUpdate: boolean; canDelete: boolean },
 ): ColumnDef<Department>[] {
     return [
         {
@@ -92,25 +109,57 @@ export function getColumns(
             meta: { align: 'center' },
             cell: ({ row }) => {
                 const item = row.original;
-                return h(DropdownMenu, {}, {
-                    default: () => [
-                        h(DropdownMenuTrigger, { asChild: true }, () =>
-                            h(Button, { variant: 'ghost', class: 'h-8 w-8 p-0' }, () => h(MoreHorizontal, { class: 'h-4 w-4' })),
-                        ),
-                        h(DropdownMenuContent, { align: 'end', class: 'w-45' }, () => [
-                            h(DropdownMenuLabel, () => 'Thao tác'),
-                            h(DropdownMenuItem, { onClick: () => onEdit(item) }, () => [
-                                h(Pencil, { class: 'mr-2 h-4 w-4' }),
-                                'Sửa',
-                            ]),
-                            h(DropdownMenuSeparator),
-                            h(DropdownMenuItem, { class: 'text-destructive', onClick: () => onDelete(item) }, () => [
-                                h(Trash2, { class: 'mr-2 h-4 w-4' }),
-                                'Xóa',
-                            ]),
-                        ]),
-                    ],
-                });
+                const canView = CheckUserPermission('Xem phòng ban');
+                const canDelete = CheckUserPermission('Xóa phòng ban');
+                return h(
+                    DropdownMenu,
+                    {},
+                    {
+                        default: () => [
+                            h(DropdownMenuTrigger, { asChild: true }, () =>
+                                h(
+                                    Button,
+                                    { variant: 'ghost', class: 'h-8 w-8 p-0' },
+                                    () =>
+                                        h(MoreHorizontal, { class: 'h-4 w-4' }),
+                                ),
+                            ),
+                            h(
+                                DropdownMenuContent,
+                                { align: 'end', class: 'w-45' },
+                                () => [
+                                    h(DropdownMenuLabel, () => 'Thao tác'),
+                                    canView ? 
+                                        h(
+                                            DropdownMenuItem,
+                                            { onClick: () => onEdit(item) },
+                                            () => [
+                                                h(EyeIcon, {
+                                                    class: 'mr-2 h-4 w-4',
+                                                }),
+                                                'Chi tiết',
+                                            ],
+                                        ) : null,
+                                    (canView && canDelete) ? h(DropdownMenuSeparator) : null,
+                                    canDelete ?
+                                        h(
+                                            DropdownMenuItem,
+                                            {
+                                                class: 'text-destructive',
+                                                onClick: () => onDelete(item),
+                                            },
+                                            () => [
+                                                h(Trash2, {
+                                                    class: 'mr-2 h-4 w-4',
+                                                }),
+                                                'Xóa',
+                                            ],
+                                        ) : null,
+                                ],
+                            ),
+                        ],
+                    },
+                );
             },
         },
     ];

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Employee\Booking\BookingController;
+use App\Http\Controllers\Employee\Customer\CustomerController;
 use App\Http\Controllers\Employee\EmployeeDashboardController;
 use App\Http\Controllers\Employee\Fulfillment\ShipmentController;
 use App\Http\Controllers\Employee\Fulfillment\ShippingMethodController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\Employee\Inventory\LocationController;
 use App\Http\Controllers\Employee\Inventory\StockAdjustmentController;
 use App\Http\Controllers\Employee\Inventory\StockMovementController;
 use App\Http\Controllers\Employee\Inventory\StockTransferController;
+use App\Http\Controllers\Employee\Inventory\VariantDetailsController;
 use App\Http\Controllers\Employee\Product\BundleController;
 use App\Http\Controllers\Employee\Product\CategoryController;
 use App\Http\Controllers\Employee\Product\CollectionController;
@@ -23,14 +25,9 @@ use App\Http\Controllers\Employee\Sales\RefundController;
 use App\Http\Controllers\Employee\Setting\GeneralSettingsController;
 use App\Http\Controllers\Employee\Setting\LookupController;
 use App\Http\Controllers\Employee\Setting\LookupNamespaceController;
-use App\Http\Controllers\Employee\Customer\CustomerController;
 use App\Http\Controllers\Employee\Vendor\VendorController;
 use App\Http\Controllers\Setting\EmployeeProfileController;
 use Illuminate\Support\Facades\Route;
-
-/**
- * Trash routes haven't been implemented
- */
 
 
 Route::middleware(['auth', 'user_type:employee'])->prefix('nhan-vien')->name('employee.')->group(function () {
@@ -40,7 +37,7 @@ Route::middleware(['auth', 'user_type:employee'])->prefix('nhan-vien')->name('em
 
 Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien')->name('employee.')->group(function () {
     /**
-     * Dashboard route
+     * Dashboard
      */
     Route::get('/dashboard', [EmployeeDashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/summary', [EmployeeDashboardController::class, 'getSummary'])->name('dashboard.summary');
@@ -48,54 +45,43 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
     Route::get('/dashboard/financial-analysis', [EmployeeDashboardController::class, 'getFinancialAnalysis'])->name('dashboard.financial-analysis');
 
     /**
-     * HR routes
+     * Routes nhân sự
      */
     Route::prefix('quan-ly-nhan-su')->name('hr.')->group(function () {
+
+        /**
+         * Routes nhân viên
+         */
         Route::prefix('nhan-vien')->name('employees.')->group(function () {
-            Route::middleware(['can:Xem nhân viên'])->group(function () {
-                Route::get('/', [EmployeeController::class, 'index'])->name('index');
-                Route::get('/{employee}', [EmployeeController::class, 'show'])->name('show');
-            });
+            Route::get('/', [EmployeeController::class, 'index'])->name('index');
+            Route::get('/{employee}', [EmployeeController::class, 'show'])->name('show');
 
-            Route::middleware(['can:Quản lý nhân viên'])->group(function () {
-                Route::post('/', [EmployeeController::class, 'store'])->name('store');
-                Route::put('/{employee}', [EmployeeController::class, 'update'])->name('update');
-                Route::delete('/{employee}', [EmployeeController::class, 'destroy'])->name('destroy');
-                Route::post('/{employee}/terminate', [EmployeeController::class, 'terminate'])->name('terminate');
-                Route::post('/{employee}/restore', [EmployeeController::class, 'restore'])->name('restore');
+            Route::post('/', [EmployeeController::class, 'store'])->name('store');
+            Route::put('/{employee}', [EmployeeController::class, 'update'])->name('update');
+            Route::delete('/{employee}', [EmployeeController::class, 'destroy'])->name('destroy');
+            Route::post('/{employee}/terminate', [EmployeeController::class, 'terminate'])->name('terminate');
+            Route::post('/{employee}/restore', [EmployeeController::class, 'restore'])->name('restore');
 
-                Route::middleware(['can:Quản lý nhân viên'])->group(function () {
-                    Route::get('/{employee}/permissions', [EmployeeController::class, 'permissions'])->name('permissions');
-                    Route::post('/{employee}/sync-roles-permissions', [EmployeeController::class, 'syncRolesPermissions'])->name('sync-roles-permissions');
-                });
-            });
+            Route::get('/{employee}/permissions', [EmployeeController::class, 'permissions'])->name('permissions');
+            Route::post('/{employee}/sync-roles-permissions', [EmployeeController::class, 'syncRolesPermissions'])->name('sync-roles-permissions');
         });
 
+        /**
+         * Routes phòng ban
+         */
         Route::prefix('phong-ban')->name('departments.')->group(function () {
-            Route::middleware(['can:Xem phòng ban'])->group(function () {
-                Route::get('/', [DepartmentController::class, 'index'])->name('index');
-            });
-
-            Route::middleware(['can:Quản lý phòng ban'])->group(function () {
-                Route::post('/', [DepartmentController::class, 'store'])->name('store');
-                Route::put('/{department}', [DepartmentController::class, 'update'])->name('update');
-                Route::delete('/{department}', [DepartmentController::class, 'destroy'])->name('destroy');
-            });
+            Route::get('/', [DepartmentController::class, 'index'])->name('index');
+            Route::post('/', [DepartmentController::class, 'store'])->name('store');
+            Route::put('/{department}', [DepartmentController::class, 'update'])->name('update');
+            Route::delete('/{department}', [DepartmentController::class, 'destroy'])->name('destroy');
         });
 
         Route::prefix('nha-thiet-ke')->name('designers.')->group(function () {
-            Route::middleware(['can:Xem nhà thiết kế'])->group(function () {
-                Route::get('/', [DesignerController::class, 'index'])->name('index');
-                Route::get('/{designer}/availabilities', [DesignerController::class, 'availabilities'])->name('availabilities');
-                Route::get('/{designer}/available-slots', [DesignerController::class, 'availableSlots'])->name('available-slots');
-            });
-
-            Route::middleware(['can:Quản lý nhà thiết kế'])->group(function () {
-                Route::post('/', [DesignerController::class, 'store'])->name('store');
-                Route::put('/{designer}', [DesignerController::class, 'update'])->name('update');
-                Route::delete('/{designer}', [DesignerController::class, 'destroy'])->name('destroy');
-                Route::post('/{designer}/restore', [DesignerController::class, 'restore'])->name('restore')->withTrashed();
-            });
+            Route::get('/', [DesignerController::class, 'index'])->name('index');
+            Route::post('/', [DesignerController::class, 'store'])->name('store');
+            Route::put('/{designer}', [DesignerController::class, 'update'])->name('update');
+            Route::delete('/{designer}', [DesignerController::class, 'destroy'])->name('destroy');
+            Route::post('/{designer}/restore', [DesignerController::class, 'restore'])->name('restore')->withTrashed();
         });
     });
 
@@ -118,26 +104,22 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
     });
 
     /**
-     * Sales routes
+     * Routes bán hàng
      */
     Route::prefix('ban-hang')->name('sales.')->group(function () {
         Route::prefix('giam-gia')->name('discounts.')->group(function () {
+            // Routes lấy data
             Route::get('targets/variants', [DiscountController::class, 'getVariants'])->name('targets.variants');
             Route::get('targets/products', [DiscountController::class, 'getProducts'])->name('targets.products');
             Route::get('targets/categories', [DiscountController::class, 'getCategories'])->name('targets.categories');
             Route::get('targets/collections', [DiscountController::class, 'getCollections'])->name('targets.collections');
             Route::get('targets/vendors', [DiscountController::class, 'getVendors'])->name('targets.vendors');
-            // View Group
-            Route::middleware(['can:Xem khuyến mãi'])->group(function () {
-                Route::get('/', [DiscountController::class, 'index'])->name('index');
-            });
 
-            // Manage Group
-            Route::middleware(['can:Quản lý khuyến mãi'])->group(function () {
-                Route::post('/', [DiscountController::class, 'store'])->name('store');
-                Route::put('/{discount}', [DiscountController::class, 'update'])->name('update');
-                Route::delete('/{discount}', [DiscountController::class, 'destroy'])->name('destroy');
-            });
+            // Routes discount
+            Route::get('/', [DiscountController::class, 'index'])->name('index');
+            Route::post('/', [DiscountController::class, 'store'])->name('store');
+            Route::put('/{discount}', [DiscountController::class, 'update'])->name('update');
+            Route::delete('/{discount}', [DiscountController::class, 'destroy'])->name('destroy');
         });
 
         /**
@@ -158,48 +140,43 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
             Route::delete('/{order}', [OrderController::class, 'destroy'])->name('destroy');
         });
 
-        // Refunds
+        /**
+         * Routes hoàn tiền
+         */
         Route::prefix('hoan-tien')->name('refunds.')->group(function () {
-            Route::middleware(['can:Xem hoàn tiền'])->group(function () {
-                Route::get('/', [RefundController::class, 'index'])->name('index');
-            });
-            Route::middleware(['can:Quản lý hoàn tiền'])->group(function () {
-                Route::post('/{refund}/mark-processing', [RefundController::class, 'markProcessing'])->name('mark-processing');
-                Route::post('/{refund}/approve', [RefundController::class, 'approve'])->name('approve');
-                Route::post('/{refund}/reject', [RefundController::class, 'reject'])->name('reject');
-            });
-            Route::middleware(['can:Xem hoàn tiền'])->group(function () {
-                Route::get('/{refund}', [RefundController::class, 'show'])->name('show');
-            });
+            Route::get('/', [RefundController::class, 'index'])->name('index');
+            Route::post('/{refund}/mark-processing', [RefundController::class, 'markProcessing'])->name('mark-processing');
+            Route::post('/{refund}/approve', [RefundController::class, 'approve'])->name('approve');
+            Route::post('/{refund}/reject', [RefundController::class, 'reject'])->name('reject');
+            Route::get('/{refund}', [RefundController::class, 'show'])->name('show');
         });
 
-        // Invoices
+        /**
+         * Routes hóa đơn
+         */
         Route::prefix('hoa-don')->name('invoices.')->group(function () {
-            Route::middleware(['can:Xem hóa đơn'])->group(function () {
-                Route::get('/', [InvoiceController::class, 'index'])->name('index');
-                Route::get('/{invoice}', [InvoiceController::class, 'show'])->name('show');
-            });
-
-            Route::middleware(['can:Quản lý hóa đơn'])->group(function () {
-                Route::post('/', [InvoiceController::class, 'store'])->name('store');
-                Route::delete('/{invoice}', [InvoiceController::class, 'destroy'])->name('destroy');
-            });
+            Route::get('/', [InvoiceController::class, 'index'])->name('index');
+            Route::get('/{invoice}', [InvoiceController::class, 'show'])->name('show');
+            Route::post('/', [InvoiceController::class, 'store'])->name('store');
+            Route::delete('/{invoice}', [InvoiceController::class, 'destroy'])->name('destroy');
         });
 
-        // Payments
+        /**
+         * Routes thanh toán
+         */
         Route::prefix('thanh-toan')->name('payments.')->group(function () {
-            Route::middleware(['can:Xem thanh toán'])->group(function () {
-                Route::get('/', [PaymentController::class, 'index'])->name('index');
-            });
+            Route::get('/', [PaymentController::class, 'index'])->name('index');
         });
     });
 
     /**
-     * Fulfillment routes
+     * Routes vận chuyển
      */
     Route::prefix('van-chuyen')->name('fulfillment.')->group(function () {
 
-        // Shipments
+        /**
+         * Routes đơn vận chuyển
+         */
         Route::name('shipments.')->group(function () {
             Route::get('/', [ShipmentController::class, 'index'])->name('index');
             Route::get('/{shipment}', [ShipmentController::class, 'show'])->name('show');
@@ -214,36 +191,29 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
             Route::delete('/{shipment}', [ShipmentController::class, 'destroy'])->name('destroy');
         });
 
-        // Shipping Methods
+        /**
+         * Routes phương thức vận chuyển
+         */
         Route::prefix('phuong-thuc')->name('shipping-methods.')->group(function () {
-            Route::middleware(['can:Xem phương thức vận chuyển'])->group(function () {
-                Route::get('/', [ShippingMethodController::class, 'index'])->name('index');
-            });
-
-            Route::middleware(['can:Quản lý phương thức vận chuyển'])->group(function () {
-                Route::post('/', [ShippingMethodController::class, 'store'])->name('store');
-                Route::put('/{shippingMethod}', [ShippingMethodController::class, 'update'])->name('update');
-                Route::delete('/{shippingMethod}', [ShippingMethodController::class, 'destroy'])->name('destroy');
-                Route::post('/{shippingMethod}/restore', [ShippingMethodController::class, 'restore'])->name('restore')->withTrashed();
-                Route::delete('/{shippingMethod}/force', [ShippingMethodController::class, 'forceDestroy'])->name('force-destroy')->withTrashed();
-            });
+            Route::get('/', [ShippingMethodController::class, 'index'])->name('index');
+            Route::post('/', [ShippingMethodController::class, 'store'])->name('store');
+            Route::put('/{shippingMethod}', [ShippingMethodController::class, 'update'])->name('update');
+            Route::delete('/{shippingMethod}', [ShippingMethodController::class, 'destroy'])->name('destroy');
         });
     });
 
+    /**
+     * Routes thông tin khách hàng
+     */
     Route::prefix('khach-hang')->name('customers.')->group(function () {
-        Route::middleware(['can:Xem khách hàng'])->group(function () {
-            Route::get('/', [CustomerController::class, 'index'])->name('index');
-            Route::get('/{customer}', [CustomerController::class, 'show'])->name('show');
-        });
-
-        Route::middleware(['can:Quản lý khách hàng'])->group(function () {
-            Route::post('/{customer}/deactivate', [CustomerController::class, 'deactivate'])->name('deactivate');
-        });
+        Route::get('/', [CustomerController::class, 'index'])->name('index');
+        Route::get('/{customer}', [CustomerController::class, 'show'])->name('show');
+        Route::post('/{customer}/deactivate', [CustomerController::class, 'deactivate'])->name('deactivate');
     });
 
     Route::prefix('cau-hinh')->name('settings.')->group(function () {
         /**
-         * General Settings routes
+         * Routes cài đặt
          */
         Route::prefix('chung')->name('general.')->group(function () {
             Route::get('/', [GeneralSettingsController::class, 'index'])->name('index');
@@ -251,157 +221,114 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
         });
 
         /**
-         * Lookup Namespaces routes
+         * Routes danh mục tra cứu
          */
         Route::prefix('danh-muc-tra-cuu')->name('lookupNamespaces.')->group(function () {
-            Route::middleware(['can:Xem tra cứu'])->group(function () {
-                Route::get('/', [LookupNamespaceController::class, 'index'])->name('index');
-            });
-
-            Route::middleware(['can:Quản lý tra cứu'])->group(function () {
-                Route::post('/', [LookupNamespaceController::class, 'store'])->name('store');
-                Route::put('/{lookupNamespace}', [LookupNamespaceController::class, 'update'])->name('update');
-                Route::delete('/{lookupNamespace}', [LookupNamespaceController::class, 'destroy'])->name('destroy');
-            });
+            Route::get('/', [LookupNamespaceController::class, 'index'])->name('index');
+            Route::post('/', [LookupNamespaceController::class, 'store'])->name('store');
+            Route::put('/{lookupNamespace}', [LookupNamespaceController::class, 'update'])->name('update');
+            Route::delete('/{lookupNamespace}', [LookupNamespaceController::class, 'destroy'])->name('destroy');
         });
 
         /**
-         * Lookups routes
+         * Routes tra cứu
          */
         Route::prefix('tra-cuu')->name('lookups.')->group(function () {
-
-            // View Group
-            Route::middleware(['can:Xem tra cứu'])->group(function () {
-                Route::get('/{namespace?}', [LookupController::class, 'index'])->name('index');
-            });
-
-            // Manage Group
-            Route::middleware(['can:Quản lý tra cứu'])->group(function () {
-                Route::post('/', [LookupController::class, 'store'])->name('store');
-                Route::put('/{lookup}', [LookupController::class, 'update'])->name('update');
-                Route::delete('/{lookup}', [LookupController::class, 'destroy'])->name('destroy');
-            });
+            Route::get('/{namespace?}', [LookupController::class, 'index'])->name('index');
+            Route::post('/', [LookupController::class, 'store'])->name('store');
+            Route::put('/{lookup}', [LookupController::class, 'update'])->name('update');
+            Route::delete('/{lookup}', [LookupController::class, 'destroy'])->name('destroy');
         });
     });
 
     /**
-     * Products routes
+     * Routes sản phẩm
      */
     Route::prefix('san-pham')->name('products.')->group(function () {
-        Route::middleware(['can:Xem sản phẩm'])->group(function () {
-            Route::get('/', [ProductController::class, 'index'])->name('index');
-            Route::get('cards/search', [ProductController::class, 'searchCards'])->name('product-cards.search');
-        });
-
-        Route::middleware(['can:Quản lý sản phẩm'])->group(function () {
-            Route::get('/chinh-sua/{product}', [ProductController::class, 'edit'])->name('edit');
-            Route::get('/tao-san-pham', [ProductController::class, 'create'])->name('create');
-            Route::post('/', [ProductController::class, 'store'])->name('store');
-            Route::put('/{product}', [ProductController::class, 'update'])->name('update');
-            Route::delete('/{product}', [ProductController::class, 'destroy'])->name('destroy');
-        });
-        Route::middleware(['can:Xem sản phẩm'])->group(function () {
-            Route::get('/{product}', [ProductController::class, 'show'])->name('show');
-        });
-    });
-
-    Route::prefix('danh-muc')->name('categories.')->group(function () {
-        // View Group
-        Route::middleware(['can:Xem danh mục'])->group(function () {
-            Route::get('/{groupSlug?}', [CategoryController::class, 'index'])->name('index');
-        });
-
-        // Manage Group
-        Route::middleware(['can:Quản lý danh mục'])->group(function () {
-            Route::post('/', [CategoryController::class, 'store'])->name('store');
-            Route::put('/{category}', [CategoryController::class, 'update'])->name('update');
-            Route::delete('/{category}', [CategoryController::class, 'destroy'])->name('destroy');
-        });
-    });
-
-    Route::prefix('bo-suu-tap')->name('collections.')->group(function () {
-        // View Group
-        Route::middleware(['can:Xem bộ sưu tập'])->group(function () {
-            Route::get('/', [CollectionController::class, 'index'])->name('index');
-        });
-
-        // Manage Group
-        Route::middleware(['can:Quản lý bộ sưu tập'])->group(function () {
-            Route::post('/', [CollectionController::class, 'store'])->name('store');
-            Route::put('/{collection}', [CollectionController::class, 'update'])->name('update');
-            Route::delete('/{collection}', [CollectionController::class, 'destroy'])->name('destroy');
-        });
-    });
-
-    Route::prefix('goi-san-pham')->name('bundles.')->group(function () {
-        Route::middleware(['can:Xem gói sản phẩm'])->group(function () {
-            Route::get('/', [BundleController::class, 'index'])->name('index');
-        });
-
-        // Manage Group
-        Route::middleware(['can:Quản lý gói sản phẩm'])->group(function () {
-            Route::get('/tao-goi-san-pham', [BundleController::class, 'create'])->name('create');
-            Route::get('/chinh-sua/{bundle}', [BundleController::class, 'edit'])->name('edit');
-            Route::post('/', [BundleController::class, 'store'])->name('store');
-            Route::put('/{bundle}', [BundleController::class, 'update'])->name('update');
-            Route::delete('/{bundle}', [BundleController::class, 'destroy'])->name('destroy');
-        });
+        Route::get('/', [ProductController::class, 'index'])->name('index');
+        Route::get('cards/search', [ProductController::class, 'searchCards'])->name('product-cards.search');
+        Route::get('/chinh-sua/{product}', [ProductController::class, 'edit'])->name('edit');
+        Route::get('/tao-moi', [ProductController::class, 'create'])->name('create');
+        Route::post('/', [ProductController::class, 'store'])->name('store');
+        Route::put('/{product}', [ProductController::class, 'update'])->name('update');
+        Route::delete('/{product}', [ProductController::class, 'destroy'])->name('destroy');
+        Route::get('/{product}', [ProductController::class, 'show'])->name('show');
     });
 
     /**
-     * Inventory routes
+     * Routes danh mục
+     */
+    Route::prefix('danh-muc')->name('categories.')->group(function () {
+        Route::get('/{groupSlug?}', [CategoryController::class, 'index'])->name('index');
+        Route::post('/', [CategoryController::class, 'store'])->name('store');
+        Route::put('/{category}', [CategoryController::class, 'update'])->name('update');
+        Route::delete('/{category}', [CategoryController::class, 'destroy'])->name('destroy');
+    });
+
+    /**
+     * Routes bộ sưu tập
+     */
+    Route::prefix('bo-suu-tap')->name('collections.')->group(function () {
+        Route::get('/', [CollectionController::class, 'index'])->name('index');
+        Route::post('/', [CollectionController::class, 'store'])->name('store');
+        Route::put('/{collection}', [CollectionController::class, 'update'])->name('update');
+        Route::delete('/{collection}', [CollectionController::class, 'destroy'])->name('destroy');
+    });
+
+    /**
+     * Routes gói sản phẩm
+     */
+    Route::prefix('goi-san-pham')->name('bundles.')->group(function () {
+        Route::get('/', [BundleController::class, 'index'])->name('index');
+        Route::get('/tao-moi', [BundleController::class, 'create'])->name('create');
+        Route::get('/chinh-sua/{bundle}', [BundleController::class, 'edit'])->name('edit');
+        Route::post('/', [BundleController::class, 'store'])->name('store');
+        Route::put('/{bundle}', [BundleController::class, 'update'])->name('update');
+        Route::delete('/{bundle}', [BundleController::class, 'destroy'])->name('destroy');
+    });
+
+    /**
+     * Routes kho hàng
      */
     Route::prefix('kho-hang')->name('inventory.')->group(function () {
-        // Locations routes
+        Route::get('/variants-details/{variant}', [VariantDetailsController::class, 'show'])->name('variants-details');
+
+        /**
+         * Routes vị trí
+         */
         Route::prefix('vi-tri')->name('locations.')->group(function () {
-            // View Group
-            Route::middleware(['can:Xem kho hàng'])->group(function () {
-                Route::get('/', [LocationController::class, 'index'])->name('index');
-            });
-
-            // Manage Group
-            Route::middleware(['can:Quản lý kho hàng'])->group(function () {
-                Route::post('/', [LocationController::class, 'store'])->name('store');
-                Route::put('/{location}', [LocationController::class, 'update'])->name('update');
-                Route::get('/{location}', [LocationController::class, 'show'])->name('show');
-                Route::delete('/{location}', [LocationController::class, 'destroy'])->name('destroy');
-                Route::post('/adjust', [StockAdjustmentController::class, 'store'])->name('adjust');
-                Route::post('/{location}/bulk-import', [LocationController::class, 'bulkImport'])->name('bulk-import');
-                Route::get('/{location}/export', [LocationController::class, 'export'])->name('export');
-            });
+            Route::get('/', [LocationController::class, 'index'])->name('index');
+            Route::post('/', [LocationController::class, 'store'])->name('store');
+            Route::put('/{location}', [LocationController::class, 'update'])->name('update');
+            Route::get('/{location}', [LocationController::class, 'show'])->name('show');
+            Route::delete('/{location}', [LocationController::class, 'destroy'])->name('destroy');
+            Route::post('/adjust', [StockAdjustmentController::class, 'store'])->name('adjust');
+            Route::post('/{location}/bulk-import', [LocationController::class, 'bulkImport'])->name('bulk-import');
+            Route::get('/{location}/export', [LocationController::class, 'export'])->name('export');
         });
 
-        // Stock Transfers routes
-        Route::get('/variants-details/{variant}', [\App\Http\Controllers\Employee\Inventory\VariantDetailsController::class, 'show'])->name('variants-details');
-
+        /**
+         * Routes chuyển kho
+         */
         Route::prefix('chuyen-kho')->name('transfers.')->group(function () {
-            // View Group
-            Route::middleware(['can:Xem kho hàng'])->group(function () {
-                Route::get('/', [StockTransferController::class, 'index'])->name('index');
-                Route::get('/tao', [StockTransferController::class, 'create'])->name('create');
-                Route::get('/{transfer}', [StockTransferController::class, 'show'])->name('show');
-            });
+            Route::get('/', [StockTransferController::class, 'index'])->name('index');
+            Route::get('/tao', [StockTransferController::class, 'create'])->name('create');
+            Route::get('/{transfer}', [StockTransferController::class, 'show'])->name('show');
 
-            // Manage Group
-            Route::middleware(['can:Quản lý kho hàng'])->group(function () {
-                Route::post('/', [StockTransferController::class, 'store'])->name('store');
-                Route::post('/{transfer}/ship', [StockTransferController::class, 'ship'])->name('ship');
-                Route::post('/{transfer}/receive', [StockTransferController::class, 'receive'])->name('receive');
-                Route::post('/{transfer}/cancel', [StockTransferController::class, 'cancel'])->name('cancel');
-            });
+            Route::post('/', [StockTransferController::class, 'store'])->name('store');
+            Route::post('/{transfer}/ship', [StockTransferController::class, 'ship'])->name('ship');
+            Route::post('/{transfer}/receive', [StockTransferController::class, 'receive'])->name('receive');
+            Route::post('/{transfer}/cancel', [StockTransferController::class, 'cancel'])->name('cancel');
 
-            // API-like routes for dynamic form data
-            Route::middleware(['can:Xem kho hàng'])->group(function () {
-                Route::get('/variants/{locationId}', [StockTransferController::class, 'variants'])->name('variants');
-                Route::get('/locations/variant/{variantId}', [StockTransferController::class, 'locations'])->name('locations');
-            });
+            Route::get('/variants/{locationId}', [StockTransferController::class, 'variants'])->name('variants');
+            Route::get('/locations/variant/{variantId}', [StockTransferController::class, 'locations'])->name('locations');
         });
 
-        // Stock Movements routes
+        /**
+         * Routes biến động tồn kho
+         */
         Route::prefix('lich-su-ton-kho')->name('movements.')->group(function () {
-            Route::middleware(['can:Xem kho hàng'])->group(function () {
-                Route::get('/', [StockMovementController::class, 'index'])->name('index');
-            });
+            Route::get('/', [StockMovementController::class, 'index'])->name('index');
         });
 
         Route::prefix('nha-cung-cap')->name('vendor.')->group(function () {

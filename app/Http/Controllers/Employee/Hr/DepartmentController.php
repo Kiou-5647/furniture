@@ -25,7 +25,7 @@ class DepartmentController
     public function index(Request $request)
     {
         if (!Gate::allows('viewAny', Department::class)) {
-            return back()->with('error', 'Bạn không có quyền thực hiện hành động này!');
+            return back()->with('error', 'Bạn không có quyền xem danh sách phòng ban.');
         }
 
         $filter = DepartmentFilterData::fromRequest($request);
@@ -42,10 +42,14 @@ class DepartmentController
     public function store(StoreDepartmentRequest $request, CreateDepartmentAction $action)
     {
         if (!Gate::allows('create', Department::class)) {
-            return back()->with('error', 'Bạn không có quyền thực hiện hành động này!');
+            return back()->with('error', 'Bạn không có quyền tạo phòng ban mới.');
         }
 
-        $action->execute($request->validated());
+        try {
+            $action->execute($request->validated());
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Đã tạo phòng ban.');
     }
@@ -53,10 +57,14 @@ class DepartmentController
     public function update(UpdateDepartmentRequest $request, Department $department, UpdateDepartmentAction $action)
     {
         if (!Gate::allows('update', $department)) {
-            return back()->with('error', 'Bạn không có quyền thực hiện hành động này!');
+            return back()->with('error', 'Bạn không có quyền cập nhật phòng ban này.');
         }
 
-        $action->execute($department, $request->validated());
+        try {
+            $action->execute($department, $request->validated());
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Đã cập nhật phòng ban.');
     }
@@ -64,7 +72,7 @@ class DepartmentController
     public function destroy(Department $department)
     {
         if (!Gate::allows('delete', $department)) {
-            return back()->with('error', 'Bạn không có quyền thực hiện hành động này!');
+            return back()->with('error', 'Bạn không có quyền xóa phòng ban này.');
         }
 
         $department->delete();

@@ -40,6 +40,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { CheckUserPermission } from '@/lib';
 import { slugify } from '@/lib';
 import { store, update } from '@/routes/employee/categories';
 import type { ProductType } from '@/types';
@@ -64,6 +65,11 @@ const form = useForm({
     is_active: true,
     image: null as File | null,
     image_url: '',
+});
+
+const canUpdate = computed(() => {
+    if (!props.category) return CheckUserPermission('Tạo danh mục');
+    return CheckUserPermission('Sửa danh mục');
 });
 
 const typeOptions = [
@@ -194,7 +200,7 @@ function handleEmitError(message: string) {
                 </div>
             </DialogHeader>
 
-            <form @submit.prevent="submit" class="px-4 pb-4 sm:px-6">
+            <form @submit.prevent="submit" novalidate class="px-4 pb-4 sm:px-6">
                 <div class="grid grid-cols-1 gap-6 sm:grid-cols-[180px_1fr]">
                     <!-- Left: Image (desktop only) -->
                     <div class="hidden space-y-3 sm:block">
@@ -205,6 +211,7 @@ function handleEmitError(message: string) {
                             v-model="form.image"
                             :preview-url="previewUrl"
                             aspect-ratio="square"
+                            :disabled="!canUpdate"
                             @error="handleEmitError"
                             @remove-image="form.image_url = ''"
                         />
@@ -226,6 +233,7 @@ function handleEmitError(message: string) {
                                 <FieldContent>
                                     <Select
                                         v-model="form.group_id"
+                                        :disabled="!canUpdate"
                                         @update:model-value="
                                             (val) =>
                                                 (form.group_id = String(val))
@@ -267,7 +275,7 @@ function handleEmitError(message: string) {
                                     <span class="text-destructive">*</span>
                                 </FieldLabel>
                                 <FieldContent>
-                                    <Select v-model="form.product_type">
+                                    <Select v-model="form.product_type" :disabled="!canUpdate">
                                         <SelectTrigger class="w-full">
                                             <SelectValue
                                                 placeholder="Chọn loại..."
@@ -314,6 +322,7 @@ function handleEmitError(message: string) {
                                 <FieldContent>
                                     <Input
                                         v-model="form.display_name"
+                                        :disabled="!canUpdate"
                                         :placeholder="`VD: ${placeholders.name}`"
                                         class="text-sm"
                                         required
@@ -334,10 +343,12 @@ function handleEmitError(message: string) {
                                 <FieldContent>
                                     <Input
                                         v-model="form.slug"
+                                        :disabled="!canUpdate"
                                         :placeholder="`VD: ${placeholders.slug}`"
                                         class="font-mono text-sm"
                                     />
-                                    <FieldError :errors="[form.errors.slug]" />
+                                    <FieldError
+                                        :errors="[form.errors.slug]" />
                                 </FieldContent>
                             </Field>
                         </div>
@@ -356,6 +367,7 @@ function handleEmitError(message: string) {
                                         title="Phòng"
                                         :options="roomOptions"
                                         v-model="form.room_ids!"
+                                        :disabled="!canUpdate"
                                         placeholder="Thêm phòng..."
                                     />
                                     <FieldError
@@ -371,6 +383,7 @@ function handleEmitError(message: string) {
                             <FieldContent>
                                 <Textarea
                                     v-model="form.description"
+                                    :disabled="!canUpdate"
                                     placeholder="Mô tả ngắn gọn về danh mục này..."
                                     class="min-h-[60px] resize-y text-sm"
                                     rows="2"
@@ -389,6 +402,7 @@ function handleEmitError(message: string) {
                                 v-model="form.image"
                                 :preview-url="previewUrl"
                                 aspect-ratio="square"
+                                :disabled="!canUpdate"
                                 class="mt-2 w-60 justify-self-center"
                                 @error="handleEmitError"
                                 @remove-image="form.image_url = ''"
@@ -399,6 +413,7 @@ function handleEmitError(message: string) {
                         <!-- Status -->
                         <StatusToggle
                             v-model="form.is_active"
+                            :disabled="!canUpdate"
                             label="Kích hoạt"
                             description="Ẩn danh mục khỏi website khi tắt"
                             id="is_active"
@@ -414,6 +429,7 @@ function handleEmitError(message: string) {
                             type="button"
                             variant="outline"
                             class="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                            :disabled="!canUpdate"
                             @click="emit('delete', category)"
                         >
                             Xóa danh mục
@@ -429,7 +445,7 @@ function handleEmitError(message: string) {
                             </Button>
                             <Button
                                 type="submit"
-                                :disabled="form.processing"
+                                :disabled="form.processing || !canUpdate"
                                 class="min-w-[120px]"
                             >
                                 <Loader2

@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { cleanQuery, setCookie } from '@/lib';
+import { CheckUserPermission, cleanQuery, setCookie } from '@/lib';
 import { index, create, edit, destroy } from '@/routes/employee/bundles';
 import type { BreadcrumbItem } from '@/types';
 import type { Bundle, BundleFilterData, BundlePagination } from '@/types';
@@ -149,7 +149,7 @@ function performDelete() {
                     title="Quản lý gói sản phẩm"
                     description="Tạo và quản lý các combo sản phẩm khuyến mãi"
                 />
-                <Button @click="handleCreate">
+                <Button v-if="CheckUserPermission('Tạo gói sản phẩm')" @click="handleCreate">
                     <Plus class="mr-2 h-4 w-4" /> Thêm gói sản phẩm
                 </Button>
             </div>

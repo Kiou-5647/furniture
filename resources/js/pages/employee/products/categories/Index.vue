@@ -27,6 +27,7 @@ import {
 import { createLazyComponent } from '@/composables/createLazyComponent';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { cleanQuery, setCookie } from '@/lib';
+import { CheckUserPermission } from '@/lib';
 import { index, destroy } from '@/routes/employee/categories';
 import type { BreadcrumbItem } from '@/types';
 import type {
@@ -59,6 +60,10 @@ const activeColumns = computed(() =>
         confirmDelete,
         handlePreviewImage,
         !props.currentGroup,
+        {
+            canUpdate: canUpdate.value,
+            canDelete: canDelete.value,
+        },
     ),
 );
 
@@ -107,6 +112,10 @@ const statusOptions = [
 ];
 
 const selectedStatus = ref(props.filters.is_active ?? undefined);
+
+const canCreate = computed(() => CheckUserPermission('Tạo danh mục'));
+const canUpdate = computed(() => CheckUserPermission('Sửa danh mục'));
+const canDelete = computed(() => CheckUserPermission('Xóa danh mục'));
 
 // Filtering Logic (Debounced)
 const updateSearch = debounce(() => {
@@ -240,7 +249,7 @@ function handlePreviewImage(url: string) {
                     "
                     description="Quản lý cấu trúc phân loại sản phẩm và Landing Pages"
                 />
-                <Button @click="handleCreate">
+                <Button v-if="canCreate" @click="handleCreate">
                     <Plus class="mr-2 h-4 w-4" /> Thêm danh mục
                 </Button>
             </div>

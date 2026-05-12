@@ -2,6 +2,7 @@
 
 namespace App\Actions\Hr;
 
+use App\Constants\Permission;
 use App\Models\Hr\Designer;
 use App\Models\Hr\Employee;
 use App\Services\Hr\DesignerService;
@@ -26,9 +27,9 @@ class CreateDesignerAction
 
                 $user = $employee->user;
                 $user->givePermissionTo([
-                    'Xem lịch thiết kế',
-                    'Tạo lịch thiết kế',
-                    'Sửa lịch thiết kế',
+                    Permission::BOOKING['SELECT'],
+                    Permission::BOOKING['CREATE'],
+                    Permission::BOOKING['UPDATE'],
                 ]);
             } else {
                 throw new \Exception('Vui lòng chọn nhân viên!');

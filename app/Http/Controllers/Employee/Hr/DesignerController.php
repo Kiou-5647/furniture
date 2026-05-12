@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Employee\Hr;
 
 use App\Actions\Hr\CreateDesignerAction;
 use App\Actions\Hr\UpdateDesignerAction;
+use App\Constants\Permission;
 use App\Data\Hr\DesignerFilterData;
 use App\Http\Requests\Hr\StoreDesignerRequest;
 use App\Http\Requests\Hr\UpdateDesignerRequest;
@@ -91,9 +92,9 @@ class DesignerController
 
         if ($designer->user) {
             $designer->user->revokePermissionTo([
-                'Xem lịch thiết kế',
-                'Tạo lịch thiết kế',
-                'Sửa lịch thiết kế',
+                Permission::BOOKING['SELECT'],
+                Permission::BOOKING['CREATE'],
+                Permission::BOOKING['UPDATE'],
             ]);
         }
 

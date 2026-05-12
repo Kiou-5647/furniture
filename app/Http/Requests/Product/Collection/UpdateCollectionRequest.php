@@ -13,7 +13,7 @@ class UpdateCollectionRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()->can('Quản lý bộ sưu tập');
+        return true;
     }
 
     public function prepareForValidation()

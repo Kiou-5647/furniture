@@ -2,18 +2,34 @@
 
 namespace App\Policies;
 
+use App\Constants\Permission;
 use App\Models\Auth\User;
 use App\Models\Product\Category;
 
 class CategoryPolicy
 {
-    public function create(User $user): bool
+    public function viewAny(User $user): bool
     {
-        return $user->hasPermissionTo('Quản lý danh mục');
+        return $user->hasPermissionTo(Permission::CATEGORY['SELECT']);
     }
 
-    public function manage(User $user, Category $category): bool
+    public function view(User $user, Category $category): bool
     {
-        return $user->hasPermissionTo('Quản lý danh mục');
+        return $user->hasPermissionTo(Permission::CATEGORY['SELECT']);
+    }
+
+    public function create(User $user): bool
+    {
+        return $user->hasPermissionTo(Permission::CATEGORY['CREATE']);
+    }
+
+    public function update(User $user, Category $category): bool
+    {
+        return $user->hasPermissionTo(Permission::CATEGORY['UPDATE']);
+    }
+
+    public function delete(User $user, Category $category): bool
+    {
+        return $user->hasPermissionTo(Permission::CATEGORY['DELETE']);
     }
 }

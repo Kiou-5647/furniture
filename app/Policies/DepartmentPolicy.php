@@ -15,16 +15,16 @@ class DepartmentPolicy
 
     public function create(User $user): bool
     {
-        return $user->hasPermissionTo(Permission::DEPARTMENT['MANAGE']);
+        return $user->hasPermissionTo(Permission::DEPARTMENT['CREATE']);
     }
 
     public function update(User $user, Department $department): bool
     {
-        return $user->hasPermissionTo(Permission::DEPARTMENT['MANAGE']);
+        return $user->hasPermissionTo(Permission::DEPARTMENT['UPDATE']);
     }
 
     public function delete(User $user, Department $department): bool
     {
-        return $user->hasPermissionTo(Permission::DEPARTMENT['MANAGE']);
+        return $user->hasPermissionTo(Permission::DEPARTMENT['DELETE']);
     }
 }

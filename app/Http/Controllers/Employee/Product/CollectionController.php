@@ -18,8 +18,12 @@ class CollectionController
 {
     public function __construct(private CollectionService $service) {}
 
-    public function index(Request $request): Response
+    public function index(Request $request)
     {
+        if (!Gate::allows('viewAny', Collection::class)) {
+            return back()->with('error', 'Bạn không có quyền xem bộ sưu tập.');
+        }
+
         $filter = CollectionFilterData::fromRequest($request);
 
         return Inertia::render('employee/products/collections/Index', [
@@ -32,7 +36,9 @@ class CollectionController
 
     public function store(StoreCollectionRequest $request, UpsertCollectionAction $action)
     {
-        Gate::authorize('create', Collection::class);
+        if (!Gate::allows('create', Collection::class)) {
+            return back()->with('error', 'Bạn không có quyền tạo bộ sưu tập.');
+        }
 
         $action->execute($request->validated());
 
@@ -41,7 +47,9 @@ class CollectionController
 
     public function update(UpdateCollectionRequest $request, Collection $collection, UpsertCollectionAction $action)
     {
-        Gate::authorize('manage', $collection);
+        if (!Gate::allows('update', $collection)) {
+            return back()->with('error', 'Bạn không có quyền sửa bộ sưu tập.');
+        }
 
         $action->execute($request->validated(), $collection);
 
@@ -50,7 +58,10 @@ class CollectionController
 
     public function destroy(Collection $collection)
     {
-        Gate::authorize('manage', $collection);
+        if (!Gate::allows('delete', $collection)) {
+            return back()->with('error', 'Bạn không có quyền xóa bộ sưu tập.');
+        }
+
         $collection->delete();
 
         return back()->with('success', 'Đã xóa bộ sưu tập.');

@@ -1,9 +1,10 @@
-import { MoreHorizontal, Pencil, Trash2 } from '@lucide/vue';
+import { EyeIcon, MoreHorizontal, Pencil, Trash2 } from '@lucide/vue';
 import type { ColumnDef } from '@tanstack/vue-table';
 import { h } from 'vue';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import type { Bundle } from '@/types';
+import { CheckUserPermission } from '@/lib';
 
 export const getColumns = (
     handleEdit: (bundle: Bundle) => void,
@@ -43,10 +44,10 @@ export const getColumns = (
         {
             accessorKey: 'is_available',
             header: 'Kho',
-            cell: ({row}) => {
+            cell: ({ row }) => {
                 return row.original.is_available
-                    ? h('span',{ class: "text-green-500 text-xs font-medium"}, 'Sẵn hàng')
-                    : h('span',{ class: "text-destructive text-xs font-medium"}, 'Hết hàng')
+                    ? h('span', { class: "text-green-500 text-xs font-medium" }, 'Sẵn hàng')
+                    : h('span', { class: "text-destructive text-xs font-medium" }, 'Hết hàng')
             }
         },
         {
@@ -72,7 +73,6 @@ export const getColumns = (
                     row.original.created_at,
                 ),
         },
-
         {
             id: 'actions',
             header: 'Thao tác',
@@ -82,6 +82,7 @@ export const getColumns = (
             meta: { align: 'center' },
             cell: ({ row }) => {
                 const item = row.original;
+                const canDelete = CheckUserPermission('Xem gói sản phẩm');
                 return h(
                     DropdownMenu,
                     {},
@@ -104,26 +105,27 @@ export const getColumns = (
                                         DropdownMenuItem,
                                         { onClick: () => handleEdit(item) },
                                         () => [
-                                            h(Pencil, {
+                                            h(EyeIcon, {
                                                 class: 'mr-2 h-4 w-4',
                                             }),
-                                            'Sửa',
+                                            'Chi tiết',
                                         ],
                                     ),
                                     h(DropdownMenuSeparator),
-                                    h(
-                                        DropdownMenuItem,
-                                        {
-                                            class: 'text-destructive',
-                                            onClick: () => confirmDelete(item),
-                                        },
-                                        () => [
-                                            h(Trash2, {
-                                                class: 'mr-2 h-4 w-4',
-                                            }),
-                                            'Xóa',
-                                        ],
-                                    ),
+                                    canDelete ?
+                                        h(
+                                            DropdownMenuItem,
+                                            {
+                                                class: 'text-destructive',
+                                                onClick: () => confirmDelete(item),
+                                            },
+                                            () => [
+                                                h(Trash2, {
+                                                    class: 'mr-2 h-4 w-4',
+                                                }),
+                                                'Xóa',
+                                            ],
+                                        ) : null,
                                 ],
                             ),
                         ],

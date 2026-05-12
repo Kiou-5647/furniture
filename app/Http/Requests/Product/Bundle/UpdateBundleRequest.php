@@ -9,7 +9,7 @@ class UpdateBundleRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('Quản lý gói sản phẩm');
+        return true;
     }
 
     public function rules(): array

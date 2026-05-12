@@ -2,6 +2,7 @@
 import { useForm } from '@inertiajs/vue3';
 import { Loader2, Type, Hash } from '@lucide/vue';
 import { computed, watch } from 'vue';
+import { toast } from 'vue-sonner';
 import ImageUploader from '@/components/custom/ImageUploader.vue';
 import StatusToggle from '@/components/custom/StatusToggle.vue';
 import { Button } from '@/components/ui/button';
@@ -21,10 +22,10 @@ import {
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { CheckUserPermission } from '@/lib';
 import { slugify } from '@/lib';
 import { store, update } from '@/routes/employee/collections';
 import type { Collection } from '@/types';
-import { toast } from 'vue-sonner';
 
 const props = defineProps<{
     open: boolean;
@@ -40,6 +41,11 @@ const form = useForm({
     is_active: true,
     image: null as File | null,
     image_url: '',
+});
+
+const canUpdate = computed(() => {
+    if (!props.collection) return CheckUserPermission('Tạo bộ sưu tập');
+    return CheckUserPermission('Sửa bộ sưu tập');
 });
 
 watch(
@@ -104,7 +110,6 @@ function handleEmitError(message: string) {
         <DialogContent
             class="max-h-[90vh] gap-0 overflow-y-auto p-0 sm:max-w-[800px]"
         >
-            <!-- Header -->
             <DialogHeader class="px-4 pt-5 pb-3 sm:px-6 sm:pt-6 sm:pb-4">
                 <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
@@ -122,18 +127,16 @@ function handleEmitError(message: string) {
                 </div>
             </DialogHeader>
 
-            <form @submit.prevent="submit" class="px-4 pb-4 sm:px-6">
+            <form @submit.prevent="submit" novalidate class="px-4 pb-4 sm:px-6">
                 <div class="grid grid-cols-1 gap-6 sm:grid-cols-[180px_1fr]">
-                    <!-- Left: Images (desktop only) -->
                     <div class="hidden space-y-4 sm:block">
                         <div class="space-y-2">
-                            <FieldLabel class="text-sm font-medium"
-                                >Ảnh đại diện</FieldLabel
-                            >
+                            <FieldLabel class="text-sm font-medium">Ảnh đại diện</FieldLabel>
                             <ImageUploader
                                 v-model="form.image"
                                 :preview-url="imagePreviewUrl"
                                 aspect-ratio="square"
+                                :disabled="!canUpdate"
                                 @error="handleEmitError"
                                 @remove-image="form.image_url = ''"
                             />
@@ -141,40 +144,34 @@ function handleEmitError(message: string) {
                         </div>
                     </div>
 
-                    <!-- Right: Fields -->
                     <div class="space-y-4">
-                        <!-- Name + Slug -->
                         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                             <Field>
                                 <FieldLabel>
-                                    <Type
-                                        class="h-3.5 w-3.5 shrink-0 text-muted-foreground"
-                                    />
+                                    <Type class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                                     Tên hiển thị
                                     <span class="text-destructive">*</span>
                                 </FieldLabel>
                                 <FieldContent>
                                     <Input
                                         v-model="form.display_name"
+                                        :disabled="!canUpdate"
                                         placeholder="VD: Bộ sưu tập mùa hè"
                                         required
                                     />
-                                    <FieldError
-                                        :errors="[form.errors.display_name]"
-                                    />
+                                    <FieldError :errors="[form.errors.display_name]" />
                                 </FieldContent>
                             </Field>
 
                             <Field>
                                 <FieldLabel>
-                                    <Hash
-                                        class="h-3.5 w-3.5 shrink-0 text-muted-foreground"
-                                    />
+                                    <Hash class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                                     Slug
                                 </FieldLabel>
                                 <FieldContent>
                                     <Input
                                         v-model="form.slug"
+                                        :disabled="!canUpdate"
                                         placeholder="VD: bo-suu-tap-mua-he"
                                         class="font-mono text-sm"
                                     />
@@ -183,41 +180,37 @@ function handleEmitError(message: string) {
                             </Field>
                         </div>
 
-                        <!-- Description -->
                         <Field>
                             <FieldLabel>Mô tả</FieldLabel>
                             <FieldContent>
                                 <Textarea
                                     v-model="form.description"
+                                    :disabled="!canUpdate"
                                     placeholder="Mô tả chủ đề, phong cách của bộ sưu tập..."
                                     class="min-h-[60px] resize-y text-sm"
                                     rows="2"
                                 />
-                                <FieldError
-                                    :errors="[form.errors.description]"
-                                />
+                                <FieldError :errors="[form.errors.description]" />
                             </FieldContent>
                         </Field>
 
-                        <!-- Toggles: 2 items = even grid -->
                         <div class="grid grid-cols-2 gap-3">
                             <StatusToggle
                                 v-model="form.is_active"
+                                :disabled="!canUpdate"
                                 label="Kích hoạt"
                                 description="Ẩn bộ sưu tập khỏi website khi tắt"
                                 id="is_active"
                             />
                         </div>
-                        <!-- Mobile: Images on top -->
                         <div class="mb-4 flex flex-col gap-3 sm:hidden">
                             <div class="space-y-1.5">
-                                <FieldLabel class="text-sm font-medium"
-                                    >Ảnh đại diện</FieldLabel
-                                >
+                                <FieldLabel class="text-sm font-medium">Ảnh đại diện</FieldLabel>
                                 <ImageUploader
                                     v-model="form.image"
                                     :preview-url="imagePreviewUrl"
                                     aspect-ratio="square"
+                                    :disabled="!canUpdate"
                                     class="w-60 justify-self-center"
                                     @error="handleEmitError"
                                     @remove-image="form.image_url = ''"
@@ -228,7 +221,6 @@ function handleEmitError(message: string) {
                     </div>
                 </div>
 
-                <!-- Footer -->
                 <DialogFooter class="mt-6 border-t pt-4">
                     <div class="flex w-full gap-2 sm:justify-between">
                         <Button
@@ -236,32 +228,20 @@ function handleEmitError(message: string) {
                             type="button"
                             variant="outline"
                             class="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                            :disabled="!canUpdate"
                             @click="emit('delete', collection)"
                         >
                             Xóa bộ sưu tập
                         </Button>
                         <div class="ml-auto flex gap-2">
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                @click="closeModal"
-                            >
-                                Hủy
-                            </Button>
+                            <Button type="button" variant="ghost" @click="closeModal">Hủy</Button>
                             <Button
                                 type="submit"
-                                :disabled="form.processing"
+                                :disabled="form.processing || !canUpdate"
                                 class="min-w-[120px]"
                             >
-                                <Loader2
-                                    v-if="form.processing"
-                                    class="mr-2 h-4 w-4 animate-spin"
-                                />
-                                {{
-                                    collection
-                                        ? 'Lưu thay đổi'
-                                        : 'Tạo bộ sưu tập'
-                                }}
+                                <Loader2 v-if="form.processing" class="mr-2 h-4 w-4 animate-spin" />
+                                {{ collection ? 'Lưu thay đổi' : 'Tạo bộ sưu tập' }}
                             </Button>
                         </div>
                     </div>
