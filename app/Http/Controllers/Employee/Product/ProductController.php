@@ -158,7 +158,11 @@ class ProductController
         if (!Gate::allows('create', Product::class)) {
             return back()->with('error', 'Bạn không có quyền thực hiện hành động này.');
         }
-        $action->execute($request->validated());
+        try {
+            $action->execute($request->validated());
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Đã thêm sản phẩm mới.');
     }
@@ -169,7 +173,11 @@ class ProductController
             return back()->with('error', 'Bạn không có quyền thực hiện hành động này.');
         }
 
-        $action->execute($request->validated(), $product);
+        try {
+            $action->execute($request->validated(), $product);
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Đã cập nhật sản phẩm.');
     }

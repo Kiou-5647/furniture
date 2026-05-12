@@ -1,7 +1,7 @@
 import {
     CheckCircle2,
     CircleDashed,
-    Pencil,
+    EyeIcon,
     Trash2,
     MoreHorizontal,
 } from '@lucide/vue';
@@ -37,23 +37,23 @@ export function getColumns(
                         h('span', { class: 'font-medium' }, item.display_name),
                         item.is_system
                             ? h(
-                                  Badge,
-                                  {
-                                      variant: 'outline',
-                                      class: 'text-xs shrink-0',
-                                  },
-                                  () => 'Hệ thống',
-                              )
+                                Badge,
+                                {
+                                    variant: 'outline',
+                                    class: 'text-xs shrink-0',
+                                },
+                                () => 'Hệ thống',
+                            )
                             : null,
                         item.for_variants
                             ? h(
-                                  Badge,
-                                  {
-                                      variant: 'secondary',
-                                      class: 'text-xs shrink-0',
-                                  },
-                                  () => 'Biến thể',
-                              )
+                                Badge,
+                                {
+                                    variant: 'secondary',
+                                    class: 'text-xs shrink-0',
+                                },
+                                () => 'Biến thể',
+                            )
                             : null,
                     ]),
                     h(
@@ -138,40 +138,27 @@ export function getColumns(
                                         DropdownMenuItem,
                                         { onClick: () => onEdit(item) },
                                         () => [
-                                            h(Pencil, {
+                                            h(EyeIcon, {
                                                 class: 'mr-2 h-4 w-4',
                                             }),
-                                            'Sửa',
+                                            'Chi tiết',
                                         ],
                                     ),
-                                    h(DropdownMenuSeparator),
-                                    item.is_system
-                                        ? h(
-                                              DropdownMenuItem,
-                                              {
-                                                  disabled: true,
-                                                  class: 'text-muted-foreground opacity-50',
-                                              },
-                                              () => [
-                                                  h(Trash2, {
-                                                      class: 'mr-2 h-4 w-4',
-                                                  }),
-                                                  'Xóa',
-                                              ],
-                                          )
-                                        : h(
-                                              DropdownMenuItem,
-                                              {
-                                                  class: 'text-destructive',
-                                                  onClick: () => onDelete(item),
-                                              },
-                                              () => [
-                                                  h(Trash2, {
-                                                      class: 'mr-2 h-4 w-4',
-                                                  }),
-                                                  'Xóa',
-                                              ],
-                                          ),
+                                    item.can_update ? h(DropdownMenuSeparator) : null,
+                                    item.can_delete ?
+                                        h(
+                                            DropdownMenuItem,
+                                            {
+                                                class: 'text-destructive',
+                                                onClick: () => onDelete(item),
+                                            },
+                                            () => [
+                                                h(Trash2, {
+                                                    class: 'mr-2 h-4 w-4',
+                                                }),
+                                                'Xóa',
+                                            ],
+                                        ) : null,
                                 ],
                             ),
                         ],

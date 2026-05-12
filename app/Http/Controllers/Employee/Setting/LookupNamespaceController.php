@@ -19,6 +19,10 @@ class LookupNamespaceController
 
     public function index(Request $request): Response
     {
+        if (!Gate::allows('viewAny', LookupNamespace::class)) {
+            return back()->with('error', 'Bạn không có quyền truy cập danh mục tra cứu!');
+        }
+
         $filter = LookupNamespaceFilterData::fromRequest($request);
 
         return Inertia::render('employee/settings/lookup-namespaces/Index', [
@@ -32,12 +36,15 @@ class LookupNamespaceController
                 'order_by' => $filter->order_by,
                 'order_direction' => $filter->order_direction,
             ],
+            'canCreate' => Gate::allows('create', LookupNamespace::class),
         ]);
     }
 
     public function store(StoreLookupNamespaceRequest $request)
     {
-        Gate::authorize('create', LookupNamespace::class);
+        if (!Gate::allows('create', LookupNamespace::class)) {
+            return back()->with('error', 'Bạn không có quyền tạo danh mục tra cứu mới!');
+        }
 
         LookupNamespace::create($request->validated());
 
@@ -46,7 +53,9 @@ class LookupNamespaceController
 
     public function update(UpdateLookupNamespaceRequest $request, LookupNamespace $lookupNamespace)
     {
-        Gate::authorize('manage', $lookupNamespace);
+        if (!Gate::allows('update', $lookupNamespace)) {
+            return back()->with('error', 'Bạn không có quyền cập nhật danh mục tra cứu này!');
+        }
 
         $lookupNamespace->update($request->validated());
 
@@ -55,7 +64,9 @@ class LookupNamespaceController
 
     public function destroy(LookupNamespace $lookupNamespace)
     {
-        Gate::authorize('manage', $lookupNamespace);
+        if (!Gate::allows('delete', $lookupNamespace)) {
+            return back()->with('error', 'Bạn không có quyền xóa danh mục tra cứu này!');
+        }
 
         if ($lookupNamespace->is_system) {
             return back()->with('error', 'Không thể xóa danh mục hệ thống!');

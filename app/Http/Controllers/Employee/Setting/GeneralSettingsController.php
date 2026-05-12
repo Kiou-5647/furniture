@@ -24,7 +24,11 @@ class GeneralSettingsController
 
     public function update(Request $request, UpdateGeneralSettingsAction $action)
     {
-        $action->execute(UpdateGeneralSettingsData::fromRequest($request));
+        try {
+            $action->execute(UpdateGeneralSettingsData::fromRequest($request));
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
 
         return redirect()->back()->with('success', 'Settings updated successfully!');
     }

@@ -45,6 +45,16 @@ const props = defineProps<{
 
 const emit = defineEmits(['close', 'delete']);
 
+const canUpdate = computed(() => {
+    if (!props.lookup) return true; // Allow create if no lookup
+    return props.lookup.can_update;
+});
+
+const canDelete = computed(() => {
+    if (!props.lookup) return false;
+    return props.lookup.can_delete;
+});
+
 const form = useForm({
     namespace_id: props.namespace_id || '_null',
     slug: '',
@@ -180,7 +190,7 @@ const isSubCategories = computed(
                 </div>
             </DialogHeader>
 
-            <form @submit.prevent="submit" class="px-4 pb-4 sm:px-6">
+            <form @submit.prevent="submit" novalidate class="px-4 pb-4 sm:px-6">
                 <div class="grid grid-cols-1 gap-6 sm:grid-cols-[180px_1fr]">
                     <!-- Left: Image (desktop only) -->
                     <div class="hidden space-y-3 sm:block">
@@ -210,7 +220,7 @@ const isSubCategories = computed(
                                     Nhóm
                                 </FieldLabel>
                                 <FieldContent>
-                                    <Select v-model="form.namespace_id">
+                                    <Select v-model="form.namespace_id" :disabled="!canUpdate">
                                         <SelectTrigger class="w-full">
                                             <SelectValue
                                                 :placeholder="
@@ -251,6 +261,7 @@ const isSubCategories = computed(
                                             v-model="form.metadata.hex_code"
                                             placeholder="#FFFFFF"
                                             class="flex-1 font-mono text-sm"
+                                            :disabled="!canUpdate"
                                         />
                                         <div
                                             class="h-9 w-9 shrink-0 rounded-lg border"
@@ -282,7 +293,7 @@ const isSubCategories = computed(
                                     Nhóm
                                 </FieldLabel>
                                 <FieldContent>
-                                    <Select v-model="form.namespace_id">
+                                    <Select v-model="form.namespace_id" :disabled="!canUpdate">
                                         <SelectTrigger class="w-full">
                                             <SelectValue
                                                 :placeholder="
@@ -318,7 +329,7 @@ const isSubCategories = computed(
                                     Danh mục
                                 </FieldLabel>
                                 <FieldContent>
-                                    <Select v-model="form.metadata.category_id">
+                                    <Select v-model="form.metadata.category_id" :disabled="!canUpdate">
                                         <SelectTrigger class="w-full">
                                             <SelectValue
                                                 :placeholder="
@@ -358,7 +369,7 @@ const isSubCategories = computed(
                                     Nhóm
                                 </FieldLabel>
                                 <FieldContent>
-                                    <Select v-model="form.namespace_id">
+                                    <Select v-model="form.namespace_id" :disabled="!canUpdate">
                                         <SelectTrigger class="w-full">
                                             <SelectValue
                                                 :placeholder="
@@ -398,6 +409,7 @@ const isSubCategories = computed(
                                     description="Hiển thị trên web"
                                     id="is_active"
                                     class="h-9"
+                                    :disabled="!canUpdate"
                                 />
                             </div>
                         </div>
@@ -418,6 +430,7 @@ const isSubCategories = computed(
                                         placeholder="Tên hiển thị..."
                                         required
                                         class="text-sm"
+                                        :disabled="!canUpdate"
                                     />
                                     <FieldError
                                         :errors="[form.errors.display_name]"
@@ -437,6 +450,7 @@ const isSubCategories = computed(
                                         v-model="form.slug"
                                         placeholder="Slug..."
                                         class="font-mono text-xs"
+                                        :disabled="!canUpdate"
                                     />
                                     <FieldError :errors="[form.errors.slug]" />
                                 </FieldContent>
@@ -452,6 +466,7 @@ const isSubCategories = computed(
                                     placeholder="Mô tả ngắn gọn..."
                                     class="min-h-[60px] resize-y text-sm"
                                     rows="2"
+                                    :disabled="!canUpdate"
                                 />
                                 <FieldError
                                     :errors="[form.errors.description]"
@@ -483,6 +498,7 @@ const isSubCategories = computed(
                                 description="Hiển thị trên web"
                                 id="is_active"
                                 class="w-full"
+                                :disabled="!canUpdate"
                             />
                         </div>
                     </div>
@@ -496,6 +512,7 @@ const isSubCategories = computed(
                             type="button"
                             variant="outline"
                             class="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                            :disabled="!canDelete"
                             @click="emit('delete', lookup)"
                         >
                             Xóa tra cứu
@@ -511,7 +528,7 @@ const isSubCategories = computed(
                             </Button>
                             <Button
                                 type="submit"
-                                :disabled="form.processing"
+                                :disabled="form.processing || !canUpdate"
                                 class="min-w-[120px]"
                             >
                                 <Loader2

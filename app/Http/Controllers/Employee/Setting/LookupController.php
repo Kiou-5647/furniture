@@ -18,8 +18,12 @@ class LookupController
 {
     public function __construct(private LookupService $service) {}
 
-    public function index(Request $request, ?string $namespace = null): Response
+    public function index(Request $request, ?string $namespace = null)
     {
+        if (!Gate::allows('viewAny', Lookup::class)) {
+            return back()->with('error', 'Bạn không có quyền truy cập tra cứu!');
+        }
+
         $filter = LookupFilterData::fromRequest($request, $namespace);
 
         return Inertia::render('employee/settings/lookups/Index', [
@@ -29,30 +33,45 @@ class LookupController
                 $this->service->getFiltered($filter)
             )),
             'filters' => $filter,
+            'canCreate' => Gate::allows('create', Lookup::class),
         ]);
     }
 
     public function store(StoreLookupRequest $request, UpsertLookupAction $action)
     {
-        Gate::authorize('create', Lookup::class);
+        if (!Gate::allows('create', Lookup::class)) {
+            return back()->with('error', 'Bạn không có quyền tạo tra cứu mới!');
+        }
 
-        $action->execute($request->validated());
+        try {
+            $action->execute($request->validated());
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Đã thêm tra cứu mới.');
     }
 
     public function update(UpdateLookupRequest $request, Lookup $lookup, UpsertLookupAction $action)
     {
-        Gate::authorize('manage', $lookup);
+        if (!Gate::allows('update', $lookup)) {
+            return back()->with('error', 'Bạn không có quyền cập nhật tra cứu này!');
+        }
 
-        $action->execute($request->validated(), $lookup);
+        try {
+            $action->execute($request->validated(), $lookup);
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Đã cập nhật tra cứu.');
     }
 
     public function destroy(Lookup $lookup)
     {
-        Gate::authorize('manage', $lookup);
+        if (!Gate::allows('delete', $lookup)) {
+            return back()->with('error', 'Bạn không có quyền xóa tra cứu này!');
+        }
 
         $lookup->delete();
 

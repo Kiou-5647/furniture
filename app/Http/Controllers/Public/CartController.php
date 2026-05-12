@@ -59,7 +59,11 @@ class CartController
 
         $data = CartItemData::fromRequest($request);
 
-        $item = $this->addToCart->execute($cart, $data);
+        try {
+            $item = $this->addToCart->execute($cart, $data);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
+        }
 
         return response()->json([
             'message' => 'Added to cart',
@@ -79,7 +83,11 @@ class CartController
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $updatedItem = $this->updateCartItem->execute($item, $request->integer('quantity'));
+        try {
+            $updatedItem = $this->updateCartItem->execute($item, $request->integer('quantity'));
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
+        }
 
         return response()->json([
             'message' => 'Quantity updated',
@@ -98,14 +106,22 @@ class CartController
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $this->removeFromCart->execute($item);
+        try {
+            $this->removeFromCart->execute($item);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
+        }
         return response()->json(['message' => 'Item removed']);
     }
 
     public function clear(Request $request): JsonResponse
     {
         $cart = $this->cartService->getOrCreateForUser($request->user());
-        $this->clearCart->execute($cart);
+        try {
+            $this->clearCart->execute($cart);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
+        }
         return response()->json(['message' => 'Cart cleared']);
     }
 }

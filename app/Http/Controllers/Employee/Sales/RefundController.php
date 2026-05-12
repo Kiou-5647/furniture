@@ -51,7 +51,11 @@ class RefundController
         Gate::authorize('approve', $refund);
         $employee = $request->user()->employee;
 
-        $action->approve($refund, $employee);
+        try {
+            $action->approve($refund, $employee);
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Đã duyệt yêu cầu hoàn tiền.');
     }
@@ -62,7 +66,11 @@ class RefundController
         $employee = $request->user()->employee;
         $notes = $request->input('notes', '');
 
-        $action->reject($refund, $employee, $notes);
+        try {
+            $action->reject($refund, $employee, $notes);
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Đã từ chối yêu cầu hoàn tiền.');
     }

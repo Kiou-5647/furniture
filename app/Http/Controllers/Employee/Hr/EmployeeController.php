@@ -49,7 +49,12 @@ class EmployeeController
         $data = CreateEmployeeData::fromRequest($request);
         $roles = $request->input('roles', []);
         $permissions = $request->input('permissions', []);
-        $action->execute($data, $roles, $permissions);
+        
+        try {
+            $action->execute($data, $roles, $permissions);
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Đã tạo tài khoản nhân viên.');
     }
@@ -60,7 +65,12 @@ class EmployeeController
 
         $roles = $request->input('roles', []);
         $permissions = $request->input('permissions', []);
-        $employee = $action->execute($employee, $request->validated(), $roles, $permissions);
+        
+        try {
+            $employee = $action->execute($employee, $request->validated(), $roles, $permissions);
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Đã cập nhật nhân viên.');
     }
@@ -79,7 +89,12 @@ class EmployeeController
         Gate::authorize('terminate', $employee);
 
         $terminationDate = $request->input('termination_date') ? now() : null;
-        $action->execute($employee, $terminationDate);
+        
+        try {
+            $action->execute($employee, $terminationDate);
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Đã chấm dứt nhân viên.');
     }
@@ -88,7 +103,11 @@ class EmployeeController
     {
         Gate::authorize('manage', $employee);
 
-        $action->execute($employee);
+        try {
+            $action->execute($employee);
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Đã khôi phục nhân viên.');
     }

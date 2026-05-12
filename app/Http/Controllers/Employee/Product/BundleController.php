@@ -68,7 +68,11 @@ class BundleController
             return back()->with('error', 'Bạn không có quyền tạo gói sản phẩm mới.');
         }
 
-        $action->execute($request->validated());
+        try {
+            $action->execute($request->validated());
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Đã thêm gói sản phẩm mới.');
     }
@@ -79,7 +83,11 @@ class BundleController
             return back()->with('error', 'Bạn không có quyền cập nhật gói sản phẩm này.');
         }
 
-        $action->execute($request->validated(), $bundle);
+        try {
+            $action->execute($request->validated(), $bundle);
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Đã cập nhật gói sản phẩm.');
     }

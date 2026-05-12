@@ -77,8 +77,8 @@ class RolesAndPermissionsSeeder extends Seeder
             ConstantsPermission::INVOICE['UPDATE'],
             ConstantsPermission::INVOICE['DELETE'],
 
-            'Xem thanh toán',
-            'Quản lý thanh toán',
+            // Payments
+            ConstantsPermission::PAYMENT['SELECT'],
 
             // Shipments
             ConstantsPermission::SHIPMENT['SELECT'],
@@ -108,10 +108,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'Quản lý hoàn tiền',
 
             'Cấu hình hệ thống',
-            'Quản lý nhật ký',
 
-            'Xem tra cứu',
-            'Quản lý tra cứu',
+            // Lookups
+            ConstantsPermission::LOOKUP['SELECT'],
+            ConstantsPermission::LOOKUP['CREATE'],
+            ConstantsPermission::LOOKUP['UPDATE'],
+            ConstantsPermission::LOOKUP['DELETE'],
 
             'Xem phương thức vận chuyển',
             'Quản lý phương thức vận chuyển',
@@ -187,6 +189,12 @@ class RolesAndPermissionsSeeder extends Seeder
                 ConstantsPermission::BOOKING['CREATE'],
                 ConstantsPermission::BOOKING['UPDATE'],
                 ConstantsPermission::BOOKING['DELETE'],
+
+                // Lookups
+                ConstantsPermission::LOOKUP['SELECT'],
+                ConstantsPermission::LOOKUP['CREATE'],
+                ConstantsPermission::LOOKUP['UPDATE'],
+                ConstantsPermission::LOOKUP['DELETE'],
             ],
             'Quản lý cửa hàng' => [
                 // Categories
@@ -223,6 +231,11 @@ class RolesAndPermissionsSeeder extends Seeder
                 // Shipments
                 ConstantsPermission::SHIPMENT['CREATE'],
                 ConstantsPermission::SHIPMENT['UPDATE'],
+
+                // Lookups
+                ConstantsPermission::LOOKUP['SELECT'],
+                ConstantsPermission::LOOKUP['CREATE'],
+                ConstantsPermission::LOOKUP['UPDATE'],
             ],
             'Quản lý kho hàng' => [
                 // Products
@@ -265,6 +278,9 @@ class RolesAndPermissionsSeeder extends Seeder
                 ConstantsPermission::SHIPMENT['SELECT'],
                 ConstantsPermission::SHIPMENT['CREATE'],
                 ConstantsPermission::SHIPMENT['UPDATE'],
+
+                // Lookups
+                ConstantsPermission::LOOKUP['SELECT'],
             ]
         ];
 

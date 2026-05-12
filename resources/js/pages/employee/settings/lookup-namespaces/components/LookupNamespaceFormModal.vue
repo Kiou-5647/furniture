@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3';
 import { Loader2 } from '@lucide/vue';
-import { watch } from 'vue';
+import { computed, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -28,7 +28,17 @@ const props = defineProps<{
     namespace: LookupNamespaceFull | null;
 }>();
 
-const emit = defineEmits(['close']);
+const emit = defineEmits(['close', 'delete']);
+
+const canUpdate = computed(() => {
+    if (!props.namespace) return true;
+    return props.namespace.can_update;
+});
+
+const canDelete = computed(() => {
+    if (!props.namespace) return false;
+    return props.namespace.can_delete;
+});
 
 const form = useForm({
     slug: '',
@@ -96,7 +106,7 @@ function closeModal() {
                 </DialogDescription>
             </DialogHeader>
 
-            <form @submit.prevent="submit" class="space-y-4 py-4">
+            <form @submit.prevent="submit" novalidate class="space-y-4 py-4">
                 <Field>
                     <FieldLabel>
                         Tên hiển thị
@@ -107,7 +117,8 @@ function closeModal() {
                             v-model="form.display_name"
                             placeholder="VD: Màu sắc"
                             required
-                            :disabled="namespace?.is_system"
+                            :disabled="namespace?.is_system || !canUpdate"
+
                         />
                         <FieldError :errors="[form.errors.display_name]" />
                     </FieldContent>
@@ -119,7 +130,7 @@ function closeModal() {
                         <Input
                             v-model="form.slug"
                             placeholder="VD: mau-sac"
-                            :disabled="namespace?.is_system"
+                            :disabled="namespace?.is_system || !canUpdate"
                         />
                         <FieldError :errors="[form.errors.slug]" />
                     </FieldContent>
@@ -132,7 +143,7 @@ function closeModal() {
                             v-model="form.description"
                             placeholder="Mô tả ngắn gọn về danh mục này..."
                             class="h-20 resize-none"
-                            :disabled="namespace?.is_system"
+                            :disabled="namespace?.is_system || !canUpdate"
                         />
                     </FieldContent>
                 </Field>
@@ -148,7 +159,7 @@ function closeModal() {
                     </div>
                     <Switch
                         v-model="form.for_variants"
-                        :disabled="namespace?.is_system"
+                        :disabled="namespace?.is_system || !canUpdate"
                     />
                 </div>
 
@@ -165,16 +176,38 @@ function closeModal() {
                 </div>
 
                 <DialogFooter>
-                    <Button type="button" variant="ghost" @click="closeModal">
-                        Hủy
-                    </Button>
-                    <Button type="submit" :disabled="form.processing">
-                        <Loader2
-                            v-if="form.processing"
-                            class="mr-2 h-4 w-4 animate-spin"
-                        />
-                        {{ namespace ? 'Lưu thay đổi' : 'Tạo mới' }}
-                    </Button>
+                    <div class="flex w-full gap-2 sm:justify-between">
+                        <Button
+                            v-if="namespace"
+                            type="button"
+                            variant="outline"
+                            class="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                            :disabled="!canDelete"
+                            @click="emit('delete', namespace)"
+                        >
+                            Xóa danh mục
+                        </Button>
+
+                        <div class="ml-auto flex gap-2">
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                @click="closeModal"
+                            >
+                                Hủy
+                            </Button>
+                            <Button
+                                type="submit"
+                                :disabled="form.processing || !canUpdate"
+                            >
+                                <Loader2
+                                    v-if="form.processing"
+                                    class="mr-2 h-4 w-4 animate-spin"
+                                />
+                                {{ namespace ? 'Lưu thay đổi' : 'Tạo mới' }}
+                            </Button>
+                        </div>
+                    </div>
                 </DialogFooter>
             </form>
         </DialogContent>

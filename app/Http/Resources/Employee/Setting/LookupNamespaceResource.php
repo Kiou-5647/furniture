@@ -4,6 +4,7 @@ namespace App\Http\Resources\Employee\Setting;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Gate;
 
 class LookupNamespaceResource extends JsonResource
 {
@@ -17,6 +18,10 @@ class LookupNamespaceResource extends JsonResource
             'for_variants' => $this->for_variants,
             'is_active' => $this->is_active,
             'is_system' => $this->is_system,
+
+            'can_update' => Gate::allows('update', $this),
+            'can_delete' => !$this->is_system && Gate::allows('delete', $this),
+
             'created_at' => $this->created_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y H:i'),
             'updated_at' => $this->updated_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y H:i'),
         ];

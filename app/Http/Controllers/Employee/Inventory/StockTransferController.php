@@ -58,13 +58,17 @@ class StockTransferController
 
         $employee = $request->user()->employee;
 
-        $action->handle(
-            fromLocation: $fromLocation,
-            toLocation: $toLocation,
-            items: $validated['items'],
-            requestedBy: $employee,
-            notes: $validated['notes'] ?? null,
-        );
+        try {
+            $action->handle(
+                fromLocation: $fromLocation,
+                toLocation: $toLocation,
+                items: $validated['items'],
+                requestedBy: $employee,
+                notes: $validated['notes'] ?? null,
+            );
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return redirect()->route('employee.inventory.transfers.index')
             ->with('success', 'Đã tạo phiếu chuyển kho.');
@@ -85,10 +89,14 @@ class StockTransferController
 
         $employee = $request->user()->employee;
 
-        $action->handle(
-            transfer: $transfer,
-            performedBy: $employee,
-        );
+        try {
+            $action->handle(
+                transfer: $transfer,
+                performedBy: $employee,
+            );
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Đã xuất kho phiếu chuyển kho.');
     }
@@ -100,11 +108,15 @@ class StockTransferController
         $validated = $request->validated();
         $employee = $request->user()->employee;
 
-        $action->handle(
-            transfer: $transfer,
-            receivedQuantities: $validated['items'],
-            receivedBy: $employee,
-        );
+        try {
+            $action->handle(
+                transfer: $transfer,
+                receivedQuantities: $validated['items'],
+                receivedBy: $employee,
+            );
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Đã nhận hàng chuyển kho.');
     }
@@ -115,10 +127,14 @@ class StockTransferController
 
         $employee = $request->user()->employee;
 
-        $action->handle(
-            transfer: $transfer,
-            performedBy: $employee,
-        );
+        try {
+            $action->handle(
+                transfer: $transfer,
+                performedBy: $employee,
+            );
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Đã hủy phiếu chuyển kho.');
     }

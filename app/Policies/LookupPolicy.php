@@ -7,13 +7,28 @@ use App\Models\Setting\Lookup;
 
 class LookupPolicy
 {
-    public function create(User $user): bool
+    public function viewAny(User $user): bool
     {
-        return $user->hasPermissionTo('Quản lý tra cứu');
+        return $user->hasPermissionTo(\App\Constants\Permission::LOOKUP['SELECT']);
     }
 
-    public function manage(User $user, Lookup $lookup): bool
+    public function view(User $user, Lookup $lookup): bool
     {
-        return $user->hasPermissionTo('Quản lý tra cứu');
+        return $user->hasPermissionTo(\App\Constants\Permission::LOOKUP['SELECT']);
+    }
+
+    public function create(User $user): bool
+    {
+        return $user->hasPermissionTo(\App\Constants\Permission::LOOKUP['CREATE']);
+    }
+
+    public function update(User $user, Lookup $lookup): bool
+    {
+        return $user->hasPermissionTo(\App\Constants\Permission::LOOKUP['UPDATE']);
+    }
+
+    public function delete(User $user, Lookup $lookup): bool
+    {
+        return $user->hasPermissionTo(\App\Constants\Permission::LOOKUP['DELETE']);
     }
 }

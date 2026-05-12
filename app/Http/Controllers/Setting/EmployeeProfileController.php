@@ -50,7 +50,11 @@ class EmployeeProfileController
             'avatar' => 'nullable|image|max:10240',
         ]);
 
-        $updateEmployee->execute($employee, $validated);
+        try {
+            $updateEmployee->execute($employee, $validated);
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Cập nhật thông tin thành công!');
     }

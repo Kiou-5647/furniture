@@ -2,7 +2,7 @@ import {
     CheckCircle2,
     CircleDashed,
     MoreHorizontal,
-    Pencil,
+    EyeIcon,
     Trash2,
 } from '@lucide/vue';
 import type { ColumnDef } from '@tanstack/vue-table';
@@ -38,16 +38,16 @@ export function getColumns(
                 return h('div', { class: 'flex items-center gap-3' }, [
                     isColor && item.metadata?.hex_code
                         ? h('div', {
-                              class: 'w-8 h-8 rounded-md border shadow-sm shrink-0 cursor-pointer hover:scale-110 transition-transform',
-                              style: {
-                                  backgroundColor: item.metadata.hex_code,
-                              },
-                              onClick: (event: MouseEvent) => {
-                                  event.stopPropagation();
-                              },
-                          })
+                            class: 'w-8 h-8 rounded-md border shadow-sm shrink-0 cursor-pointer hover:scale-110 transition-transform',
+                            style: {
+                                backgroundColor: item.metadata.hex_code,
+                            },
+                            onClick: (event: MouseEvent) => {
+                                event.stopPropagation();
+                            },
+                        })
                         : item.image_thumb_url
-                          ? h('img', {
+                            ? h('img', {
                                 src: item.image_thumb_url,
                                 class: 'w-12 h-8 rounded-md object-cover border shadow-sm cursor-zoom-in hover:scale-105 transition-all shrink-0',
                                 onClick: (event: MouseEvent) => {
@@ -55,7 +55,7 @@ export function getColumns(
                                     onPreviewImage(item.image_url!);
                                 },
                             })
-                          : h(
+                            : h(
                                 'div',
                                 {
                                     class: 'w-12 h-8 rounded-md border border-dashed flex items-center justify-center bg-muted/50 shrink-0',
@@ -181,26 +181,26 @@ export function getColumns(
                                         DropdownMenuItem,
                                         { onClick: () => onEdit(item) },
                                         () => [
-                                            h(Pencil, {
+                                            h(EyeIcon, {
                                                 class: 'mr-2 h-4 w-4',
                                             }),
-                                            'Sửa',
+                                            'Chi tiết',
                                         ],
                                     ),
-                                    h(DropdownMenuSeparator),
-                                    h(
-                                        DropdownMenuItem,
-                                        {
-                                            class: 'text-destructive',
-                                            onClick: () => onDelete(item),
-                                        },
-                                        () => [
-                                            h(Trash2, {
-                                                class: 'mr-2 h-4 w-4',
-                                            }),
-                                            'Xóa',
-                                        ],
-                                    ),
+                                    item.can_delete ?
+                                        h(
+                                            DropdownMenuItem,
+                                            {
+                                                class: 'text-destructive',
+                                                onClick: () => onDelete(item),
+                                            },
+                                            () => [
+                                                h(Trash2, {
+                                                    class: 'mr-2 h-4 w-4',
+                                                }),
+                                                'Xóa',
+                                            ],
+                                        ) : null,
                                 ],
                             ),
                         ],

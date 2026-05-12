@@ -98,4 +98,54 @@ class Permission
         'UPDATE' => 'Sửa tra cứu',
         'DELETE' => 'Xóa tra cứu',
     ];
+
+    public const PAYMENT = [
+        'SELECT' => 'Xem lịch sử thanh toán',
+    ];
+
+    public const LOCATION = [
+        'SELECT' => 'Xem vị trí',
+        'CREATE' => 'Tạo vị trí',
+        'UPDATE' => 'Sửa vị trí',
+        'DELETE' => 'Xóa vị trí',
+    ];
+
+    public const REFUND = [
+        'SELECT' => 'Xem hoàn tiền',
+        'CREATE' => 'Tạo hoàn tiền',
+        'UPDATE' => 'Sửa hoàn tiền',
+        'DELETE' => 'Xóa hoàn tiền',
+    ];
+
+    public const SHIPPING_METHOD = [
+        'SELECT' => 'Xem phương thức vận chuyển',
+        'CREATE' => 'Tạo phương thức vận chuyển',
+        'UPDATE' => 'Sửa phương thức vận chuyển',
+        'DELETE' => 'Xóa phương thức vận chuyển',
+    ];
+
+    public const STOCK_MOVEMENT = [
+        'SELECT' => 'Xem lịch sử tồn kho',
+    ];
+
+    public const STOCK_TRANSFER = [
+        'SELECT' => 'Xem chuyển kho',
+        'CREATE' => 'Tạo chuyển kho',
+        'UPDATE' => 'Sửa chuyển kho',
+        'DELETE' => 'Xóa chuyển kho',
+    ];
+
+    public const CUSTOMER = [
+        'SELECT' => 'Xem khách hàng',
+        'CREATE' => 'Tạo khách hàng',
+        'UPDATE' => 'Sửa khách hàng',
+        'DELETE' => 'Xóa khách hàng',
+    ];
+
+    public const VENDOR = [
+        'SELECT' => 'Xem nhà cung cấp',
+        'CREATE' => 'Tạo nhà cung cấp',
+        'UPDATE' => 'Sửa nhà cung cấp',
+        'DELETE' => 'Xóa nhà cung cấp',
+    ];
 }

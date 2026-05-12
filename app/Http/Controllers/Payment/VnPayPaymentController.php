@@ -21,7 +21,11 @@ class VnPayPaymentController
     {
         $this->authorizeInvoice($request, $invoice);
 
-        $result = $action->execute($invoice);
+        try {
+            $result = $action->execute($invoice);
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return redirect($result['payment_url']);
     }

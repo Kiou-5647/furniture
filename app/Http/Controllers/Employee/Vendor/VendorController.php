@@ -38,7 +38,11 @@ class VendorController
         Gate::authorize('create', Vendor::class);
 
         $data = CreateVendorData::fromRequest($request);
-        $action->execute($data);
+        try {
+            $action->execute($data);
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Đã thêm nhà cung cấp mới.');
     }
@@ -48,7 +52,11 @@ class VendorController
         Gate::authorize('manage', $vendor);
 
         $data = CreateVendorData::fromRequest($request);
-        $action->execute($data, $vendor);
+        try {
+            $action->execute($data, $vendor);
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Đã cập nhật nhà cung cấp.');
     }

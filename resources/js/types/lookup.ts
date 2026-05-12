@@ -12,6 +12,8 @@ export interface Lookup {
     metadata: Record<string, any> | null;
     created_at: string;
     updated_at: string;
+    can_update: boolean;
+    can_delete: boolean;
 }
 
 export interface LookupNamespace {
@@ -33,6 +35,8 @@ export interface LookupNamespaceFull {
     is_system: boolean;
     created_at: string;
     updated_at: string;
+    can_update: boolean;
+    can_delete: boolean;
 }
 
 export interface LookupNamespacePagination {

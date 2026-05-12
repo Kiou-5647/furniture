@@ -20,7 +20,13 @@ class VnPayReturnController
 
         Log::info('VNPay return received', ['data' => $returnData]);
 
-        $result = $action->execute($returnData);
+        try {
+            $result = $action->execute($returnData);
+        } catch (\Exception $e) {
+            return redirect()->route('payment.vnpay.status')
+                ->with('error', $e->getMessage())
+                ->with('vnp_response', $returnData);
+        }
 
         if ($result['success']) {
             $invoice = $result['invoice'] ?? null;

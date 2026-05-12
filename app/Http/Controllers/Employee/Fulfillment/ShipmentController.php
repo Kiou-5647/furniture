@@ -98,7 +98,11 @@ class ShipmentController
             ];
         }
 
-        $action->executeWithLocations($order, $shipmentData);
+        try {
+            $action->executeWithLocations($order, $shipmentData);
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Đã tạo đơn vận chuyển.');
     }

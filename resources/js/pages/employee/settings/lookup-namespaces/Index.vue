@@ -8,6 +8,7 @@ import DataTableSingleFilter from '@/components/custom/data-table/DataTableSingl
 import DeleteConfirmation from '@/components/custom/DeleteConfirmation.vue';
 import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
+import CheckUserPermission from '@/components/custom/CheckUserPermission.vue';
 import { createLazyComponent } from '@/composables/createLazyComponent';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { cleanQuery, setCookie } from '@/lib';
@@ -28,6 +29,7 @@ const LookupNamespaceFormModal = createLazyComponent(
 const props = defineProps<{
     namespaces?: LookupNamespacePagination;
     filters: LookupNamespaceFilterData;
+    canCreate: boolean;
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -242,7 +244,7 @@ function handlePageSizeChange(per_page: number) {
                     >
                         <ArrowLeft class="h-4 mr-1" /> Quay lại
                     </Button>
-                    <Button @click="handleCreate">
+                    <Button v-if="canCreate" @click="handleCreate">
                         <Plus class="mr-2 h-4 w-4" /> Thêm danh mục
                     </Button>
                 </div>

@@ -37,7 +37,11 @@ class PaymentController
     {
         Gate::authorize('create', Payment::class);
 
-        $action->execute($request->validated());
+        try {
+            $action->execute($request->validated());
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Đã ghi nhận thanh toán.');
     }

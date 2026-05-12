@@ -40,7 +40,11 @@ class CollectionController
             return back()->with('error', 'Bạn không có quyền tạo bộ sưu tập.');
         }
 
-        $action->execute($request->validated());
+        try {
+            $action->execute($request->validated());
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Đã thêm bộ sưu tập mới.');
     }
@@ -51,7 +55,11 @@ class CollectionController
             return back()->with('error', 'Bạn không có quyền sửa bộ sưu tập.');
         }
 
-        $action->execute($request->validated(), $collection);
+        try {
+            $action->execute($request->validated(), $collection);
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Đã cập nhật bộ sưu tập.');
     }

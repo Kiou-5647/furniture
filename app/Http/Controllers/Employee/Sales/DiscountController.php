@@ -41,7 +41,11 @@ class DiscountController
             return back()->with('error', 'Bạn không có quyền thực hiện hành động này!');
         }
 
-        $action->execute($request->validated());
+        try {
+            $action->execute($request->validated());
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back();
     }
@@ -52,7 +56,11 @@ class DiscountController
             return back()->with('error', 'Bạn không có quyền thực hiện hành động này!');
         }
 
-        $action->execute($request->validated(), $discount);
+        try {
+            $action->execute($request->validated(), $discount);
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back();
     }

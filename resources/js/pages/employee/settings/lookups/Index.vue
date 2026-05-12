@@ -17,6 +17,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import CheckUserPermission from '@/components/custom/CheckUserPermission.vue';
 import { createLazyComponent } from '@/composables/createLazyComponent';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { cleanQuery, setCookie } from '@/lib';
@@ -42,6 +43,7 @@ const props = defineProps<{
     categories: {id: string, display_name: string}[];
     lookups?: LookupPagination;
     filters: LookupFilterData;
+    canCreate: boolean;
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Tra cứu', href: index().url }];
@@ -272,7 +274,7 @@ function handlePreviewImage(url: string) {
                     >
                         <Settings2 class="mr-2 h-4 w-4" /> Quản lý danh mục
                     </Button>
-                    <Button @click="handleCreate">
+                    <Button v-if="canCreate" @click="handleCreate">
                         <Plus class="mr-2 h-4 w-4" /> Thêm Tra cứu
                     </Button>
                 </div>

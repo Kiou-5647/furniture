@@ -38,7 +38,11 @@ class ShippingMethodController
         Gate::authorize('create', ShippingMethod::class);
 
         $data = CreateShippingMethodData::fromRequest($request);
-        $action->execute($data);
+        try {
+            $action->execute($data);
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Đã thêm phương thức vận chuyển.');
     }
@@ -48,7 +52,11 @@ class ShippingMethodController
         Gate::authorize('manage', $shippingMethod);
 
         $data = CreateShippingMethodData::fromRequest($request);
-        $action->execute($data, $shippingMethod);
+        try {
+            $action->execute($data, $shippingMethod);
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Đã cập nhật phương thức vận chuyển.');
     }
