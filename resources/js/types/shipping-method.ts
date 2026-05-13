@@ -6,6 +6,8 @@ export interface ShippingMethod {
     estimated_delivery_days: number | null;
     is_active: boolean;
     shipments_count?: number;
+    can_update: boolean;
+    can_delete: boolean;
     created_at: string;
     updated_at: string;
     deleted_at?: string;

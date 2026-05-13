@@ -4,6 +4,7 @@ namespace App\Http\Resources\Employee\Vendor;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Gate;
 
 class VendorResource extends JsonResource
 {
@@ -25,6 +26,8 @@ class VendorResource extends JsonResource
             'bank_account_number' => $this->bank_account_number,
             'bank_account_holder' => $this->bank_account_holder,
             'is_active' => $this->is_active,
+            'can_update' => Gate::allows('update', $this->resource),
+            'can_delete' => Gate::allows('delete', $this->resource),
             'created_at' => $this->created_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
             'updated_at' => $this->updated_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
         ];

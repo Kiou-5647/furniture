@@ -9,7 +9,7 @@ import {
     CreditCard,
     User,
 } from '@lucide/vue';
-import { nextTick, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 import { Button } from '@/components/ui/button';
 import {
@@ -44,6 +44,13 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits(['close']);
+
+const isEditing = computed(() => !!props.vendor);
+
+const canUpdate = computed(() => {
+    if (!isEditing.value) return true;
+    return props.vendor?.can_update ?? false;
+});
 
 const provinces = ref<{ value: string; label: string }[]>([]);
 const wards = ref<{ value: string; label: string }[]>([]);
@@ -157,7 +164,10 @@ function closeModal() {
 <template>
     <Dialog :open="open" @update:open="(val) => !val && closeModal()">
         <DialogContent
-            class="max-h-[90vh] gap-0 overflow-y-auto p-0 sm:max-w-[600px]"
+            :class="[
+                'max-h-[90vh] gap-0 overflow-y-auto p-0 sm:max-w-[600px]',
+                !canUpdate && isEditing ? 'pointer-events-none' : '',
+            ]"
         >
             <DialogHeader class="px-4 pt-5 pb-3 sm:px-6 sm:pt-6 sm:pb-4">
                 <div class="flex items-start justify-between gap-3">

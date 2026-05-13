@@ -4,6 +4,7 @@ namespace App\Http\Resources\Employee\Fulfillment;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Gate;
 
 class ShippingMethodResource extends JsonResource
 {
@@ -19,6 +20,8 @@ class ShippingMethodResource extends JsonResource
             'estimated_delivery_days' => $this->estimated_delivery_days,
             'is_active' => $this->is_active,
             'shipments_count' => $this->whenCounted('shipments'),
+            'can_update' => Gate::allows('update', $this->resource),
+            'can_delete' => Gate::allows('delete', $this->resource),
             'created_at' => $this->created_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
             'updated_at' => $this->updated_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
             'deleted_at' => $this->deleted_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),

@@ -1,4 +1,4 @@
-import { CheckCircle2, CircleDashed, MoreHorizontal, Eye, UserX } from '@lucide/vue';
+import { CheckCircle2, CircleDashed, Eye, MoreHorizontal, Pencil, UserX } from '@lucide/vue';
 import type { ColumnDef } from '@tanstack/vue-table';
 import { h } from 'vue';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import type { Customer } from '@/types';
 
 export function getColumns(
     onView: (customer: Customer) => void,
+    onUpdate: (customer: Customer) => void,
     onDeactivate: (customer: Customer) => void,
 ): ColumnDef<Customer>[] {
     return [
@@ -109,14 +110,21 @@ export function getColumns(
                                 h(Eye, { class: 'mr-2 h-4 w-4' }),
                                 'Chi tiết',
                             ]),
-                            h(DropdownMenuSeparator),
-                            h(DropdownMenuItem, {
+                            (item.can_update || item.can_deactivate) ? h(DropdownMenuSeparator) : null,
+                            item.can_update ? h(DropdownMenuItem, {
+                                class: 'text-orange-500',
+                                onClick: () => onUpdate(item)
+                            }, () => [
+                                h(Pencil, { class: 'mr-2 h-4 w-4' }),
+                                'Chỉnh sửa',
+                            ]) : null,
+                            item.can_deactivate ? h(DropdownMenuItem, {
                                 class: 'text-destructive',
                                 onClick: () => onDeactivate(item)
                             }, () => [
                                 h(UserX, { class: 'mr-2 h-4 w-4' }),
                                 'Vô hiệu hóa',
-                            ]),
+                            ]) : null,
                         ]),
                     ],
                 });

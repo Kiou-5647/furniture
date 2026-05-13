@@ -1,4 +1,4 @@
-import { MoreHorizontal, Pencil, Trash2 } from '@lucide/vue';
+import { EyeIcon, MoreHorizontal, Trash2 } from '@lucide/vue';
 import type { ColumnDef } from '@tanstack/vue-table';
 import { h } from 'vue';
 import { Badge } from '@/components/ui/badge';
@@ -123,15 +123,15 @@ export function getColumns(
                         ),
                         h(DropdownMenuContent, { align: 'end', class: 'w-40' }, () => [
                             h(DropdownMenuLabel, () => 'Thao tác'),
-                            h(DropdownMenuItem, { onClick: () => onEdit(method) }, () => [
-                                h(Pencil, { class: 'mr-2 h-4 w-4' }),
-                                'Sửa',
-                            ]),
-                            h(DropdownMenuSeparator),
-                            h(DropdownMenuItem, { class: 'text-destructive', onClick: () => onDelete(method) }, () => [
+                            method.can_update ? h(DropdownMenuItem, { onClick: () => onEdit(method) }, () => [
+                                h(EyeIcon, { class: 'mr-2 h-4 w-4' }),
+                                'Xem chi tiết',
+                            ]) : null,
+                            (method.can_update && method.can_delete) ? h(DropdownMenuSeparator) : null,
+                            method.can_delete ? h(DropdownMenuItem, { class: 'text-destructive', onClick: () => onDelete(method) }, () => [
                                 h(Trash2, { class: 'mr-2 h-4 w-4' }),
                                 'Xóa',
-                            ]),
+                            ]) : null,
                         ]),
                     ],
                 });

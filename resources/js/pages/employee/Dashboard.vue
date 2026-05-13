@@ -7,6 +7,7 @@ import {
     VisAxis,
     VisCrosshair,
     VisTooltip,
+    VisBulletLegend,
 } from '@unovis/vue';
 import axios from 'axios';
 
@@ -38,6 +39,7 @@ import {
 import AppLayout from '@/layouts/AppLayout.vue';
 import { formatPrice } from '@/lib';
 import type { BreadcrumbItem } from '@/types';
+import { getFinancialAnalysis, getOrdersTrend, getSummary } from '@/actions/App/Http/Controllers/Employee/EmployeeDashboardController';
 
 const props = defineProps<{
     user: {
@@ -91,9 +93,7 @@ const loadingFinance = ref(false);
 const fetchSummary = async () => {
     loadingSummary.value = true;
     try {
-        const res = await axios.get(
-            `/nhan-vien/dashboard/summary?period=${summaryPeriod.value}`,
-        );
+        const res = await axios.get(getSummary().url + `?period=${summaryPeriod.value}`);
         summary.value = res.data;
     } finally {
         loadingSummary.value = false;
@@ -103,9 +103,7 @@ const fetchSummary = async () => {
 const fetchOrdersTrend = async () => {
     loadingOrders.value = true;
     try {
-        const res = await axios.get(
-            `/nhan-vien/dashboard/orders-trend?period=${ordersPeriod.value}`,
-        );
+        const res = await axios.get(getOrdersTrend().url + `?period=${ordersPeriod.value}`);
         ordersTrend.value = res.data;
     } finally {
         loadingOrders.value = false;
@@ -115,9 +113,7 @@ const fetchOrdersTrend = async () => {
 const fetchFinancialAnalysis = async () => {
     loadingFinance.value = true;
     try {
-        const res = await axios.get(
-            `/nhan-vien/dashboard/financial-analysis?period=${financePeriod.value}`,
-        );
+        const res = await axios.get(getFinancialAnalysis().url + `?period=${financePeriod.value}`);
         financialAnalysis.value = res.data;
     } finally {
         loadingFinance.value = false;
@@ -159,16 +155,22 @@ const getXIndex = (d: any) => d.index;
 const getYCount = (d: any) => d.count;
 const getYRevenue = (d: any) => d.revenue;
 const getYProfit = (d: any) => d.profit;
+const getYRefunds = (d: any) => d.refunds;
+
+const financialItems = [
+    {name: 'Doanh thu', color: 'blue'},
+    {name: 'Lợi nhuận', color: 'green'},
+    {name: 'Hoàn tiền', color: 'red'},
+]
 </script>
 
 <template>
+
     <Head title="Bảng điều khiển nhân viên" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-8 p-6">
             <!-- Header -->
-            <div
-                class="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center"
-            >
+            <div class="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
                 <div>
                     <h1 class="text-3xl font-bold tracking-tight">
                         Xin chào, {{ user.name }} 👋
@@ -185,39 +187,32 @@ const getYProfit = (d: any) => d.profit;
                 <div class="space-y-4 lg:col-span-5">
                     <div class="flex items-center justify-between">
                         <h2 class="text-lg font-semibold">Chỉ số chính</h2>
-                        <div
-                            class="flex items-center gap-2 rounded-lg bg-muted p-1"
-                        >
-                            <button
-                                v-for="p in [
-                                    'today',
-                                    'week',
-                                    'month',
-                                    'quarter',
-                                    'year',
-                                ]"
-                                :key="p"
-                                @click="
-                                    summaryPeriod = p;
-                                    fetchSummary();
-                                "
-                                :class="[
+                        <div class="flex items-center gap-2 rounded-lg bg-muted p-1">
+                            <button v-for="p in [
+                                'today',
+                                'week',
+                                'month',
+                                'quarter',
+                                'year',
+                            ]" :key="p" @click="
+                                summaryPeriod = p;
+                            fetchSummary();
+                            " :class="[
                                     'rounded-md px-2 py-1 text-[10px] font-medium transition-all',
                                     summaryPeriod === p
                                         ? 'bg-background text-foreground shadow-sm'
                                         : 'text-muted-foreground hover:text-foreground',
-                                ]"
-                            >
+                                ]">
                                 {{
                                     p === 'today'
                                         ? 'Hôm nay'
                                         : p === 'week'
-                                          ? 'Tuần'
-                                          : p === 'month'
-                                            ? 'Tháng'
-                                            : p === 'quarter'
-                                              ? 'Quý'
-                                              : 'Năm'
+                                            ? 'Tuần'
+                                            : p === 'month'
+                                                ? 'Tháng'
+                                                : p === 'quarter'
+                                                    ? 'Quý'
+                                                    : 'Năm'
                                 }}
                             </button>
                         </div>
@@ -225,140 +220,100 @@ const getYProfit = (d: any) => d.profit;
 
                     <div class="grid grid-cols-2 gap-4" v-if="summary">
                         <Card>
-                            <CardHeader
-                                class="flex flex-row items-center justify-between space-y-0 pb-2"
-                            >
-                                <CardTitle class="text-xs font-medium"
-                                    >Khách hàng</CardTitle
-                                >
+                            <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle class="text-xs font-medium">Khách hàng</CardTitle>
                                 <Users class="h-3 w-3 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
                                 <div class="text-xl font-bold">
                                     {{ summary.customers.value }}
                                 </div>
-                                <div
-                                    :class="[
-                                        'flex items-center gap-1 text-[10px]',
-                                        getTrendClass(summary.customers.trend),
-                                    ]"
-                                >
-                                    <TrendingUp
-                                        :class="[
-                                            'h-2 w-2',
-                                            summary.customers.trend < 0
-                                                ? 'rotate-180'
-                                                : '',
-                                        ]"
-                                    />
+                                <div :class="[
+                                    'flex items-center gap-1 text-[10px]',
+                                    getTrendClass(summary.customers.trend),
+                                ]">
+                                    <TrendingUp :class="[
+                                        'h-2 w-2',
+                                        summary.customers.trend < 0
+                                            ? 'rotate-180'
+                                            : '',
+                                    ]" />
                                     {{ summary.customers.trend.toFixed(1) }}%
                                 </div>
                             </CardContent>
                         </Card>
                         <Card>
-                            <CardHeader
-                                class="flex flex-row items-center justify-between space-y-0 pb-2"
-                            >
-                                <CardTitle class="text-xs font-medium"
-                                    >Đơn hàng</CardTitle
-                                >
-                                <ShoppingCart
-                                    class="h-3 w-3 text-muted-foreground"
-                                />
+                            <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle class="text-xs font-medium">Đơn hàng</CardTitle>
+                                <ShoppingCart class="h-3 w-3 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
                                 <div class="text-xl font-bold">
                                     {{ summary.orders.value }}
                                 </div>
-                                <div
-                                    :class="[
-                                        'flex items-center gap-1 text-[10px]',
-                                        getTrendClass(summary.orders.trend),
-                                    ]"
-                                >
-                                    <TrendingUp
-                                        :class="[
-                                            'h-2 w-2',
-                                            summary.orders.trend < 0
-                                                ? 'rotate-180'
-                                                : '',
-                                        ]"
-                                    />
+                                <div :class="[
+                                    'flex items-center gap-1 text-[10px]',
+                                    getTrendClass(summary.orders.trend),
+                                ]">
+                                    <TrendingUp :class="[
+                                        'h-2 w-2',
+                                        summary.orders.trend < 0
+                                            ? 'rotate-180'
+                                            : '',
+                                    ]" />
                                     {{ summary.orders.trend.toFixed(1) }}%
                                 </div>
                             </CardContent>
                         </Card>
                         <Card>
-                            <CardHeader
-                                class="flex flex-row items-center justify-between space-y-0 pb-2"
-                            >
-                                <CardTitle class="text-xs font-medium"
-                                    >Doanh thu</CardTitle
-                                >
-                                <DollarSign
-                                    class="h-3 w-3 text-muted-foreground"
-                                />
+                            <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle class="text-xs font-medium">Doanh thu</CardTitle>
+                                <DollarSign class="h-3 w-3 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
                                 <div class="text-xl font-bold">
                                     {{ formatPrice(summary.revenue.value) }}
                                 </div>
-                                <div
-                                    :class="[
-                                        'flex items-center gap-1 text-[10px]',
-                                        getTrendClass(summary.revenue.trend),
-                                    ]"
-                                >
-                                    <TrendingUp
-                                        :class="[
-                                            'h-2 w-2',
-                                            summary.revenue.trend < 0
-                                                ? 'rotate-180'
-                                                : '',
-                                        ]"
-                                    />
+                                <div :class="[
+                                    'flex items-center gap-1 text-[10px]',
+                                    getTrendClass(summary.revenue.trend),
+                                ]">
+                                    <TrendingUp :class="[
+                                        'h-2 w-2',
+                                        summary.revenue.trend < 0
+                                            ? 'rotate-180'
+                                            : '',
+                                    ]" />
                                     {{ summary.revenue.trend.toFixed(1) }}%
                                 </div>
                             </CardContent>
                         </Card>
                         <Card>
-                            <CardHeader
-                                class="flex flex-row items-center justify-between space-y-0 pb-2"
-                            >
-                                <CardTitle class="text-xs font-medium"
-                                    >Lợi nhuận</CardTitle
-                                >
+                            <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle class="text-xs font-medium">Lợi nhuận</CardTitle>
                                 <TrendingUp class="h-3 w-3 text-green-500" />
                             </CardHeader>
                             <CardContent>
                                 <div class="text-xl font-bold text-green-600">
                                     {{ formatPrice(summary.profit.value) }}
                                 </div>
-                                <div
-                                    :class="[
-                                        'flex items-center gap-1 text-[10px]',
-                                        getTrendClass(summary.profit.trend),
-                                    ]"
-                                >
-                                    <TrendingUp
-                                        :class="[
-                                            'h-2 w-2',
-                                            summary.profit.trend < 0
-                                                ? 'rotate-180'
-                                                : '',
-                                        ]"
-                                    />
+                                <div :class="[
+                                    'flex items-center gap-1 text-[10px]',
+                                    getTrendClass(summary.profit.trend),
+                                ]">
+                                    <TrendingUp :class="[
+                                        'h-2 w-2',
+                                        summary.profit.trend < 0
+                                            ? 'rotate-180'
+                                            : '',
+                                    ]" />
                                     {{ summary.profit.trend.toFixed(1) }}%
                                 </div>
                             </CardContent>
                         </Card>
                     </div>
                     <div v-else class="grid grid-cols-2 gap-4 opacity-50">
-                        <Card
-                            v-for="i in 4"
-                            :key="i"
-                            class="h-24 animate-pulse bg-muted/50"
-                        ></Card>
+                        <Card v-for="i in 4" :key="i" class="h-24 animate-pulse bg-muted/50"></Card>
                     </div>
                 </div>
 
@@ -366,71 +321,48 @@ const getYProfit = (d: any) => d.profit;
                 <div class="space-y-4 lg:col-span-7">
                     <div class="flex items-center justify-between">
                         <h2 class="text-lg font-semibold">Số lượng đơn hàng</h2>
-                        <div
-                            class="flex items-center gap-2 rounded-lg bg-muted p-1"
-                        >
-                            <button
-                                v-for="p in [
-                                    'week',
-                                    'month',
-                                    'quarter',
-                                    'year',
-                                ]"
-                                :key="p"
-                                @click="
-                                    ordersPeriod = p;
-                                    fetchOrdersTrend();
-                                "
-                                :class="[
+                        <div class="flex items-center gap-2 rounded-lg bg-muted p-1">
+                            <button v-for="p in [
+                                'week',
+                                'month',
+                                'quarter',
+                                'year',
+                            ]" :key="p" @click="
+                                ordersPeriod = p;
+                            fetchOrdersTrend();
+                            " :class="[
                                     'rounded-md px-2 py-1 text-[10px] font-medium transition-all',
                                     ordersPeriod === p
                                         ? 'bg-background text-foreground shadow-sm'
                                         : 'text-muted-foreground hover:text-foreground',
-                                ]"
-                            >
+                                ]">
                                 {{
                                     p === 'week'
                                         ? 'Tuần'
                                         : p === 'month'
-                                          ? 'Tháng'
-                                          : p === 'quarter'
-                                            ? 'Quý'
-                                            : 'Năm'
+                                            ? 'Tháng'
+                                            : p === 'quarter'
+                                                ? 'Quý'
+                                                : 'Năm'
                                 }}
                             </button>
                         </div>
                     </div>
                     <Card>
-                        <CardContent
-                            class="flex h-[320px] items-center justify-center p-4"
-                        >
-                            <div
-                                v-if="loadingOrders"
-                                class="flex h-full items-center justify-center"
-                            >
+                        <CardContent class="flex h-[320px] items-center justify-center p-4">
+                            <div v-if="loadingOrders" class="flex h-full items-center justify-center">
                                 Đang tải...
                             </div>
                             <VisXYContainer v-else :data="ordersTrend">
-                                <VisAxis
-                                    type="x"
-                                    :tickFormat="
-                                        (v: string | number) =>
-                                            ordersTrend[v as any]?.label || v
-                                    "
-                                />
+                                <VisAxis type="x" :tickFormat="(v: string | number) =>
+                                    ordersTrend[v as any]?.label || v
+                                    " />
                                 <VisAxis type="y" />
-                                <VisGroupedBar
-                                    :x="getXIndex"
-                                    :y="getYCount"
-                                    color="#6366f1"
-                                />
+                                <VisGroupedBar :x="getXIndex" :y="getYCount" color="#6366f1" />
                                 <VisTooltip />
-                                <VisCrosshair
-                                    :template="
-                                        (d: any) =>
-                                            `${d.label} - Số đơn: ${d.count}`
-                                    "
-                                />
+                                <VisCrosshair :template="(d: any) =>
+                                    `${d.label} - Số đơn: ${d.count}`
+                                    " />
                             </VisXYContainer>
                         </CardContent>
                     </Card>
@@ -441,80 +373,51 @@ const getYProfit = (d: any) => d.profit;
             <div class="space-y-4">
                 <div class="flex items-center justify-between">
                     <h2 class="text-lg font-semibold">Phân tích Tài chính</h2>
-                    <div
-                        class="flex items-center gap-2 rounded-lg bg-muted p-1"
-                    >
-                        <button
-                            v-for="p in ['week', 'month', 'quarter', 'year']"
-                            :key="p"
-                            @click="
-                                financePeriod = p;
-                                fetchFinancialAnalysis();
-                            "
-                            :class="[
-                                'rounded-md px-2 py-1 text-[10px] font-medium transition-all',
-                                financePeriod === p
-                                    ? 'bg-background text-foreground shadow-sm'
-                                    : 'text-muted-foreground hover:text-foreground',
-                            ]"
-                        >
+                    <div class="flex items-center gap-2 rounded-lg bg-muted p-1">
+                        <button v-for="p in ['week', 'month', 'quarter', 'year']" :key="p" @click="
+                            financePeriod = p;
+                        fetchFinancialAnalysis();
+                        " :class="[
+                            'rounded-md px-2 py-1 text-[10px] font-medium transition-all',
+                            financePeriod === p
+                                ? 'bg-background text-foreground shadow-sm'
+                                : 'text-muted-foreground hover:text-foreground',
+                        ]">
                             {{
                                 p === 'week'
                                     ? 'Tuần'
                                     : p === 'month'
-                                      ? 'Tháng'
-                                      : p === 'quarter'
-                                        ? 'Quý'
-                                        : 'Năm'
+                                        ? 'Tháng'
+                                        : p === 'quarter'
+                                            ? 'Quý'
+                                            : 'Năm'
                             }}
                         </button>
                     </div>
                 </div>
                 <Card>
-                    <CardContent class="h-[500px] p-4">
-                        <div
-                            v-if="loadingFinance"
-                            class="flex h-full items-center justify-center"
-                        >
+                    <CardContent class="flex flex-col h-[500px] items-center justify-center p-4">
+                        <div v-if="loadingFinance" class="flex h-full items-center justify-center">
                             Đang tải...
                         </div>
-                        <VisXYContainer
-                            v-else
-                            :height="400"
-                            :padding="{ top: 20, bottom: 0 }"
-                            :data="financialAnalysis"
-                        >
-                            <VisAxis
-                                type="x"
-                                :tickFormat="
-                                    (v: string | number) =>
-                                        financialAnalysis[v as any]?.label || v
-                                "
-                            />
-                            <VisArea
-                                :x="getXIndex"
-                                :y="getYRevenue"
-                                color="#3b82f6"
-                                :opacity="0.2"
-                                :strokeWidth="2"
-                                :interpolateMissingData="true"
-                            />
-                            <VisArea
-                                :x="getXIndex"
-                                :y="getYProfit"
-                                :opacity="0.4"
-                                :strokeWidth="2"
-                                :interpolateMissingData="true"
-                            />
+                        <VisXYContainer v-else :height="400" :padding="{ top: 20, bottom: 0 }"
+                            :data="financialAnalysis">
+                            <VisAxis type="x" :tickFormat="(v: string | number) =>
+                                financialAnalysis[v as any]?.label || v
+                                " />
+                            <VisArea :x="getXIndex" :y="getYRevenue" color="blue" :opacity="0.2" :strokeWidth="2"
+                                :interpolateMissingData="true" />
+                            <VisArea :x="getXIndex" :y="getYProfit" color="green" :opacity="0.4" :strokeWidth="2"
+                                :interpolateMissingData="true" />
+                            <VisArea :x="getXIndex" :y="getYRefunds" color="red" :opacity="0.4" :strokeWidth="2"
+                                :interpolateMissingData="true" />
                             <VisAxis type="y" :tickFormat="tickPriceFormat" />
                             <VisTooltip />
-                            <VisCrosshair
-                                :template="
-                                    (d: any) =>
-                                        `${d.label} - Doanh thu: ${formatPrice(d.revenue)} - Lợi nhuận: ${formatPrice(d.profit)}`
-                                "
-                            />
+                            <VisCrosshair class="whitespace-pre-line" :template="(d: any) =>
+                                `${d.label}\nDoanh thu: ${formatPrice(d.revenue)}\nLợi nhuận: ${formatPrice(d.profit)}`
+                                " />
                         </VisXYContainer>
+                        <VisBulletLegend :items="financialItems" :shape="'line'" />
                     </CardContent>
                 </Card>
             </div>
@@ -522,19 +425,14 @@ const getYProfit = (d: any) => d.profit;
             <!-- Utility Tables -->
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
                 <Card class="lg:col-span-2">
-                    <CardHeader
-                        class="flex flex-row items-center justify-between"
-                    >
+                    <CardHeader class="flex flex-row items-center justify-between">
                         <div>
                             <CardTitle>Đơn hàng gần đây</CardTitle>
-                            <CardDescription
-                                >Theo dõi các giao dịch mới
-                                nhất</CardDescription
-                            >
+                            <CardDescription>Theo dõi các giao dịch mới
+                                nhất</CardDescription>
                         </div>
                         <ArrowUpRight
-                            class="h-4 w-4 cursor-pointer text-muted-foreground transition-colors hover:text-foreground"
-                        />
+                            class="h-4 w-4 cursor-pointer text-muted-foreground transition-colors hover:text-foreground" />
                     </CardHeader>
                     <CardContent class="max-h-[300px] overflow-y-auto">
                         <Table>
@@ -548,10 +446,7 @@ const getYProfit = (d: any) => d.profit;
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                <TableRow
-                                    v-for="order in tables.recent_orders"
-                                    :key="order.id"
-                                >
+                                <TableRow v-for="order in tables.recent_orders" :key="order.id">
                                     <TableCell class="font-medium">{{
                                         order.number
                                     }}</TableCell>
@@ -560,22 +455,16 @@ const getYProfit = (d: any) => d.profit;
                                         formatPrice(order.total)
                                     }}</TableCell>
                                     <TableCell>
-                                        <Badge
-                                            :variant="
-                                                getStatusBadge(order.status)
-                                                    .variant
-                                            "
-                                        >
+                                        <Badge :variant="getStatusBadge(order.status)
+                                            .variant
+                                            ">
                                             {{
                                                 getStatusBadge(order.status)
                                                     .label
                                             }}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell
-                                        class="text-xs text-muted-foreground"
-                                        >{{ order.created_at }}</TableCell
-                                    >
+                                    <TableCell class="text-xs text-muted-foreground">{{ order.created_at }}</TableCell>
                                 </TableRow>
                             </TableBody>
                         </Table>
@@ -588,31 +477,20 @@ const getYProfit = (d: any) => d.profit;
                             <AlertTriangle class="h-5 w-5 text-destructive" />
                             Cảnh báo tồn kho
                         </CardTitle>
-                        <CardDescription
-                            >Sản phẩm sắp hết hàng ( dưới 5)</CardDescription
-                        >
+                        <CardDescription>Sản phẩm sắp hết hàng ( dưới 5)</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div class="max-h-[300px] overflow-y-auto pr-2">
                             <Table>
-                                <TableHeader
-                                    class="sticky top-0 z-10 bg-background"
-                                >
+                                <TableHeader class="sticky top-0 z-10 bg-background">
                                     <TableRow>
                                         <TableHead>Sản phẩm</TableHead>
-                                        <TableHead class="text-center"
-                                            >Số lượng</TableHead
-                                        >
+                                        <TableHead class="text-center">Số lượng</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    <TableRow
-                                        v-for="item in tables.low_stock"
-                                        :key="item.variant"
-                                    >
-                                        <TableCell
-                                            class="flex flex-col font-medium"
-                                        >
+                                    <TableRow v-for="item in tables.low_stock" :key="item.variant">
+                                        <TableCell class="flex flex-col font-medium">
                                             <span>
                                                 {{
                                                     item.product +
@@ -622,21 +500,16 @@ const getYProfit = (d: any) => d.profit;
                                             </span>
                                             <span class="text-muted-foreground">
                                                 {{ item.location }}
-                                            </span></TableCell
-                                        >
+                                            </span>
+                                        </TableCell>
                                         <TableCell class="text-center">
                                             <Badge variant="destructive">{{
                                                 item.quantity
                                             }}</Badge>
                                         </TableCell>
                                     </TableRow>
-                                    <TableRow
-                                        v-if="tables.low_stock.length === 0"
-                                    >
-                                        <TableCell
-                                            colspan="2"
-                                            class="py-4 text-center text-muted-foreground"
-                                        >
+                                    <TableRow v-if="tables.low_stock.length === 0">
+                                        <TableCell colspan="2" class="py-4 text-center text-muted-foreground">
                                             Không có sản phẩm nào sắp hết hàng.
                                         </TableCell>
                                     </TableRow>

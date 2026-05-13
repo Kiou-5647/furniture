@@ -13,15 +13,16 @@ use App\Services\Vendor\VendorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
-use Inertia\Response;
 
 class VendorController
 {
     public function __construct(protected VendorService $service) {}
 
-    public function index(Request $request): Response
+    public function index(Request $request)
     {
-        Gate::authorize('view', Vendor::class);
+        if (!Gate::allows('viewAny', Vendor::class)) {
+            return back()->with('error', 'Bạn không có quyền xem danh sách nhà cung cấp.');
+        }
 
         $filter = VendorFilterData::fromRequest($request);
 
@@ -35,7 +36,9 @@ class VendorController
 
     public function store(StoreVendorRequest $request, UpsertVendorAction $action)
     {
-        Gate::authorize('create', Vendor::class);
+        if (!Gate::allows('create', Vendor::class)) {
+            return back()->with('error', 'Bạn không có quyền tạo nhà cung cấp.');
+        }
 
         $data = CreateVendorData::fromRequest($request);
         try {
@@ -49,7 +52,9 @@ class VendorController
 
     public function update(UpdateVendorRequest $request, Vendor $vendor, UpsertVendorAction $action)
     {
-        Gate::authorize('manage', $vendor);
+        if (!Gate::allows('update', $vendor)) {
+            return back()->with('error', 'Bạn không có quyền cập nhật nhà cung cấp này.');
+        }
 
         $data = CreateVendorData::fromRequest($request);
         try {
@@ -63,7 +68,9 @@ class VendorController
 
     public function destroy(Vendor $vendor)
     {
-        Gate::authorize('manage', $vendor);
+        if (!Gate::allows('delete', $vendor)) {
+            return back()->with('error', 'Bạn không có quyền xóa nhà cung cấp này.');
+        }
 
         $vendor->delete();
 

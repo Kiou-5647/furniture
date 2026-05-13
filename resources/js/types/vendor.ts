@@ -12,6 +12,8 @@ export interface Vendor {
     bank_account_number: string | null;
     bank_account_holder: string | null;
     is_active: boolean;
+    can_update: boolean;
+    can_delete: boolean;
     created_at: string;
     updated_at: string;
 }

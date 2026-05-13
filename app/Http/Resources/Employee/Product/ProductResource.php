@@ -6,6 +6,7 @@ use App\Http\Resources\Employee\Product\VariantResource;
 use App\Http\Resources\Public\Product\ProductCardResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Gate;
 
 class ProductResource extends JsonResource
 {

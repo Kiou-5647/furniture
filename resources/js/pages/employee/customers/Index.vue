@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
+import { Plus } from '@lucide/vue';
 import { debounce } from 'lodash';
 import { computed, ref, watch } from 'vue';
 import DataTableGroup from '@/components/custom/data-table/DataTableGroup.vue';
 import DataTableSingleFilter from '@/components/custom/data-table/DataTableSingleFilter.vue';
 import DeleteConfirmation from '@/components/custom/DeleteConfirmation.vue';
 import Heading from '@/components/Heading.vue';
+import { Button } from '@/components/ui/button';
+import { createLazyComponent } from '@/composables/createLazyComponent';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { CheckUserPermission } from '@/lib';
 import { cleanQuery, setCookie } from '@/lib';
 import { index, show, deactivate } from '@/routes/employee/customers';
 import type { BreadcrumbItem } from '@/types';
@@ -17,18 +21,25 @@ import type {
 } from '@/types';
 import { getColumns } from './types/columns';
 
+const CustomerFormModal = createLazyComponent(
+    () => import('./components/CustomerFormModal.vue'),
+);
+
 const props = defineProps<{
     customers?: CustomerPagination;
     filters: CustomerFilterData;
 }>();
+
+const canCreate = computed(() => CheckUserPermission('Tạo khách hàng'));
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Quản lý khách hàng', href: index().url },
     { title: 'Danh sách khách hàng', href: index().url },
 ];
 
-const activeColumns = computed(() => getColumns(handleView, confirmDeactivate));
+const activeColumns = computed(() => getColumns(handleView, handleUpdate, confirmDeactivate));
 
+const showFormModal = ref(false);
 const showDeactivateDialog = ref(false);
 const selectedCustomer = ref<Customer | null>(null);
 const isActuallyLoading = ref(true);
@@ -104,8 +115,18 @@ function resetFilters() {
     router.get(index().url, {}, { preserveState: false });
 }
 
+function handleCreate() {
+    selectedCustomer.value = null;
+    showFormModal.value = true;
+}
+
 function handleView(customer: Customer) {
     router.get(show({ customer: customer.id }).url);
+}
+
+function handleUpdate(customer: Customer) {
+    selectedCustomer.value = customer;
+    showFormModal.value = true;
 }
 
 function confirmDeactivate(customer: Customer) {
@@ -122,7 +143,6 @@ function performDeactivate() {
         },
     });
 }
-console.info(props.customers)
 </script>
 
 <template>
@@ -134,6 +154,9 @@ console.info(props.customers)
                     title="Khách hàng"
                     description="Quản lý thông tin khách hàng và chi tiêu."
                 />
+                <Button v-if="canCreate" @click="handleCreate">
+                    <Plus class="mr-2 h-4 w-4" /> Thêm khách hàng
+                </Button>
             </div>
 
             <DataTableGroup
@@ -165,6 +188,13 @@ console.info(props.customers)
                 </template>
             </DataTableGroup>
         </div>
+
+        <CustomerFormModal
+            v-if="showFormModal"
+            :open="showFormModal"
+            :customer="selectedCustomer"
+            @close="showFormModal = false"
+        />
 
         <DeleteConfirmation
             v-model:open="showDeactivateDialog"

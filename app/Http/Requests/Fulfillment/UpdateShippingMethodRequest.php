@@ -9,7 +9,7 @@ class UpdateShippingMethodRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('Quản lý phương thức vận chuyển');
+        return true;
     }
 
     public function rules(): array

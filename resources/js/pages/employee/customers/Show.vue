@@ -1,4 +1,5 @@
 <script setup lang="ts">
+
 import { Head, router } from '@inertiajs/vue3';
 import {
     ArrowLeft,
@@ -8,18 +9,20 @@ import {
     UserX,
     DollarSign,
     Package,
+    Calendar,
 } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import DataTableGroup from '@/components/custom/data-table/DataTableGroup.vue';
 import Heading from '@/components/Heading.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { index, deactivate } from '@/routes/employee/customers';
 import type { BreadcrumbItem } from '@/types';
 import type { Customer } from '@/types';
-import { getCustomerOrderColumns } from './types/customer-orders-columns';
-import type { CustomerOrder } from './types/customer-orders-columns';
+import { getCustomerOrderColumns, getCustomerBookingColumns } from './types/customer-orders-columns';
+import type { CustomerOrder, CustomerBooking } from './types/customer-orders-columns';
 
 interface OrderPagination {
     data: CustomerOrder[];
@@ -29,11 +32,21 @@ interface OrderPagination {
     total: number;
 }
 
+interface BookingPagination {
+    data: CustomerBooking[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+}
+
 const props = defineProps<{
     customer: Customer;
     orders: OrderPagination;
+    bookings: BookingPagination;
 }>();
 
+const viewMode = ref<'orders' | 'bookings'>('orders');
 const search = ref('');
 const isActuallyLoading = ref(false);
 const totalOrders = computed(() => {
@@ -106,10 +119,10 @@ function confirmDeactivate() {
         },
     );
 }
-console.info(props.orders);
 </script>
 
 <template>
+
     <Head :title="customer.full_name" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-4 p-4">
@@ -119,34 +132,24 @@ console.info(props.orders);
                         <ArrowLeft class="h-4 w-4" />
                     </Button>
                     <div>
-                        <Heading
-                            :title="customer.full_name"
-                            :description="`Mã khách hàng: ${customer.id}`"
-                        />
+                        <Heading :title="customer.full_name" :description="`Mã khách hàng: ${customer.id}`" />
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <Badge
-                        :class="[
-                            'text-xs',
-                            customer.user?.is_active
-                                ? 'border-green-200 bg-green-50 text-green-600'
-                                : 'border-red-200 bg-red-50 text-red-600',
-                        ]"
-                        variant="outline"
-                    >
+                    <Badge :class="[
+                        'text-xs',
+                        customer.user?.is_active
+                            ? 'border-green-200 bg-green-50 text-green-600'
+                            : 'border-red-200 bg-red-50 text-red-600',
+                    ]" variant="outline">
                         {{
                             customer.user?.is_active
                                 ? 'Hoạt động'
                                 : 'Đã vô hiệu hóa'
                         }}
                     </Badge>
-                    <Button
-                        v-if="customer.user?.is_active"
-                        variant="outline"
-                        class="text-destructive"
-                        @click="confirmDeactivate"
-                    >
+                    <Button v-if="customer.user?.is_active" variant="outline" class="text-destructive"
+                        @click="confirmDeactivate">
                         <UserX class="mr-2 h-4 w-4" /> Vô hiệu hóa tài khoản
                     </Button>
                 </div>
@@ -155,19 +158,12 @@ console.info(props.orders);
             <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
                 <!-- Profile Card -->
                 <div class="rounded-lg border bg-card p-6">
-                    <div
-                        class="flex flex-col items-center space-y-4 text-center"
-                    >
+                    <div class="flex flex-col items-center space-y-4 text-center">
                         <div class="relative">
-                            <img
-                                v-if="customer.avatar_url"
-                                :src="customer.avatar_url"
-                                class="h-24 w-24 rounded-full object-cover ring-4 ring-muted"
-                            />
-                            <div
-                                v-else
-                                class="flex h-24 w-24 items-center justify-center rounded-full bg-muted text-2xl font-bold text-muted-foreground ring-4 ring-muted"
-                            >
+                            <img v-if="customer.avatar_url" :src="customer.avatar_url"
+                                class="h-24 w-24 rounded-full object-cover ring-4 ring-muted" />
+                            <div v-else
+                                class="flex h-24 w-24 items-center justify-center rounded-full bg-muted text-2xl font-bold text-muted-foreground ring-4 ring-muted">
                                 {{ customer.full_name }}
                             </div>
                         </div>
@@ -192,29 +188,19 @@ console.info(props.orders);
                         </div>
                         <div class="flex items-center gap-3 text-sm">
                             <MapPin class="h-4 w-4 text-muted-foreground" />
-                            <span
-                                >{{ customer.province_name }}
-                                {{ customer.ward_name }}</span
-                            >
+                            <span>{{ customer.province_name }}
+                                {{ customer.ward_name }}</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Stats Card -->
-                <div
-                    class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:col-span-2"
-                >
-                    <div
-                        class="flex flex-col items-center justify-center rounded-lg border bg-card p-6 text-center"
-                    >
-                        <div
-                            class="mb-3 rounded-full bg-green-100 p-3 text-green-600"
-                        >
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-3 lg:col-span-2">
+                    <div class="flex flex-col items-center justify-center rounded-lg border bg-card p-6 text-center">
+                        <div class="mb-3 rounded-full bg-green-100 p-3 text-green-600">
                             <DollarSign class="h-6 w-6" />
                         </div>
-                        <span class="text-sm text-muted-foreground"
-                            >Tổng chi tiêu</span
-                        >
+                        <span class="text-sm text-muted-foreground">Tổng chi tiêu</span>
                         <span class="text-3xl font-bold tabular-nums">
                             {{
                                 Number(customer.total_spent).toLocaleString(
@@ -223,40 +209,50 @@ console.info(props.orders);
                             }}đ
                         </span>
                     </div>
-                    <div
-                        class="flex flex-col items-center justify-center rounded-lg border bg-card p-6 text-center"
-                    >
-                        <div
-                            class="mb-3 rounded-full bg-blue-100 p-3 text-blue-600"
-                        >
+                    <div class="flex flex-col items-center justify-center rounded-lg border bg-card p-6 text-center">
+                        <div class="mb-3 rounded-full bg-blue-100 p-3 text-blue-600">
                             <Package class="h-6 w-6" />
                         </div>
-                        <span class="text-sm text-muted-foreground"
-                            >Số đơn hàng</span
-                        >
+                        <span class="text-sm text-muted-foreground">Số đơn hàng</span>
                         <span class="text-3xl font-bold tabular-nums">
                             {{ props.orders?.total ?? 0 }}
+                        </span>
+                    </div>
+                    <div class="flex flex-col items-center justify-center rounded-lg border bg-card p-6 text-center">
+                        <div class="mb-3 rounded-full bg-purple-100 p-3 text-purple-600">
+                            <Calendar class="h-6 w-6" />
+                        </div>
+                        <span class="text-sm text-muted-foreground">Số lịch hẹn</span>
+                        <span class="text-3xl font-bold tabular-nums">
+                            {{ props.bookings?.total ?? 0 }}
                         </span>
                     </div>
                 </div>
             </div>
 
-            <!-- Orders Table -->
-            <DataTableGroup
-                :searchable="false"
-                :search="search"
-                @update:search="handleSearchUpdate"
-                :is-actually-loading="isActuallyLoading"
-                :columns="getCustomerOrderColumns()"
-                :data="orders.data ?? []"
-                :has-active-filters="!!search"
-                :total="totalOrders"
-                :page-size="perPage"
-                :current-page="currentPage"
-                :last-page="lastPage"
-                @update:page="handlePageUpdate"
-                @update:page-size="handlePageSizeUpdate"
-            />
+            <!-- Data Tables -->
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <Heading title="Chi tiết giao dịch" />
+                    <ToggleGroup v-model="viewMode" type="single" class="justify-start">
+                        <ToggleGroupItem value="orders" class="flex items-center gap-2">
+                            <Package class="h-4 w-4" /> Đơn hàng
+                        </ToggleGroupItem>
+                        <ToggleGroupItem value="bookings" class="flex items-center gap-2">
+                            <Calendar class="h-4 w-4" /> Lịch hẹn
+                        </ToggleGroupItem>
+                    </ToggleGroup>
+                </div>
+                <DataTableGroup :searchable="false" :search="search" @update:search="handleSearchUpdate"
+                    :is-actually-loading="isActuallyLoading"
+                    :columns="viewMode === 'orders' ? getCustomerOrderColumns() : getCustomerBookingColumns()"
+                    :data="viewMode === 'orders' ? (orders.data ?? []) : (bookings.data ?? [])"
+                    :has-active-filters="!!search" :total="viewMode === 'orders' ? totalOrders : (bookings.total ?? 0)"
+                    :page-size="viewMode === 'orders' ? perPage : (bookings.per_page ?? 15)"
+                    :current-page="viewMode === 'orders' ? currentPage : (bookings.current_page ?? 1)"
+                    :last-page="viewMode === 'orders' ? lastPage : (bookings.last_page ?? 1)"
+                    @update:page="handlePageUpdate" @update:page-size="handlePageSizeUpdate" />
+            </div>
         </div>
     </AppLayout>
 </template>

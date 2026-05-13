@@ -13,7 +13,6 @@ use App\Services\Fulfillment\ShippingMethodService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
-use Inertia\Response;
 
 class ShippingMethodController
 {
@@ -21,8 +20,12 @@ class ShippingMethodController
         private ShippingMethodService $service,
     ) {}
 
-    public function index(Request $request): Response
+    public function index(Request $request)
     {
+        if (!Gate::allows('viewAny', ShippingMethod::class)) {
+            return back()->with('error', 'Bạn không có quyền xem danh sách phương thức vận chuyển.');
+        }
+
         $filter = ShippingMethodFilterData::fromRequest($request);
 
         return Inertia::render('employee/fulfillment/shipping-methods/Index', [
@@ -35,7 +38,9 @@ class ShippingMethodController
 
     public function store(StoreShippingMethodRequest $request, UpsertShippingMethodAction $action)
     {
-        Gate::authorize('create', ShippingMethod::class);
+        if (!Gate::allows('create', ShippingMethod::class)) {
+            return back()->with('error', 'Bạn không có quyền tạo phương thức vận chuyển.');
+        }
 
         $data = CreateShippingMethodData::fromRequest($request);
         try {
@@ -49,7 +54,9 @@ class ShippingMethodController
 
     public function update(UpdateShippingMethodRequest $request, ShippingMethod $shippingMethod, UpsertShippingMethodAction $action)
     {
-        Gate::authorize('manage', $shippingMethod);
+        if (!Gate::allows('update', $shippingMethod)) {
+            return back()->with('error', 'Bạn không có quyền cập nhật phương thức vận chuyển này.');
+        }
 
         $data = CreateShippingMethodData::fromRequest($request);
         try {
@@ -63,7 +70,9 @@ class ShippingMethodController
 
     public function destroy(ShippingMethod $shippingMethod)
     {
-        Gate::authorize('manage', $shippingMethod);
+        if (!Gate::allows('delete', $shippingMethod)) {
+            return back()->with('error', 'Bạn không có quyền xóa phương thức vận chuyển này.');
+        }
 
         $shippingMethod->delete();
 

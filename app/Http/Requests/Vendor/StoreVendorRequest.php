@@ -8,7 +8,7 @@ class StoreVendorRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('Quản lý nhà cung cấp');
+        return true;
     }
 
     protected function prepareForValidation(): void

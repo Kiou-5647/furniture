@@ -174,6 +174,15 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
      * Routes vận chuyển
      */
     Route::prefix('van-chuyen')->name('fulfillment.')->group(function () {
+        /**
+         * Routes phương thức vận chuyển
+         */
+        Route::prefix('phuong-thuc')->name('shipping-methods.')->group(function () {
+            Route::get('/', [ShippingMethodController::class, 'index'])->name('index');
+            Route::post('/', [ShippingMethodController::class, 'store'])->name('store');
+            Route::put('/{shippingMethod}', [ShippingMethodController::class, 'update'])->name('update');
+            Route::delete('/{shippingMethod}', [ShippingMethodController::class, 'destroy'])->name('destroy');
+        });
 
         /**
          * Routes đơn vận chuyển
@@ -191,16 +200,6 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
             Route::post('/{shipment}/items/{shipmentItem}/update-location', [ShipmentController::class, 'updateItemLocation'])->name('update-item-location');
             Route::delete('/{shipment}', [ShipmentController::class, 'destroy'])->name('destroy');
         });
-
-        /**
-         * Routes phương thức vận chuyển
-         */
-        Route::prefix('phuong-thuc')->name('shipping-methods.')->group(function () {
-            Route::get('/', [ShippingMethodController::class, 'index'])->name('index');
-            Route::post('/', [ShippingMethodController::class, 'store'])->name('store');
-            Route::put('/{shippingMethod}', [ShippingMethodController::class, 'update'])->name('update');
-            Route::delete('/{shippingMethod}', [ShippingMethodController::class, 'destroy'])->name('destroy');
-        });
     });
 
     /**
@@ -208,7 +207,9 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
      */
     Route::prefix('khach-hang')->name('customers.')->group(function () {
         Route::get('/', [CustomerController::class, 'index'])->name('index');
-        Route::get('/{customer}', [CustomerController::class, 'show'])->name('show');
+        Route::post('/', [CustomerController::class, 'store'])->name('store');
+        Route::put('/{customer:id}', [CustomerController::class, 'update'])->name('update');
+        Route::get('/{customer:id}', [CustomerController::class, 'show'])->name('show');
         Route::post('/{customer}/deactivate', [CustomerController::class, 'deactivate'])->name('deactivate');
     });
 

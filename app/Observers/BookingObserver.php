@@ -26,6 +26,10 @@ class BookingObserver
         $oldStatus = $booking->getOriginal('status');
         $newStatus = $booking->status;
 
+        if ($newStatus === BookingStatus::Completed) {
+            app(\App\Actions\Customer\UpdateCustomerTotalSpentAction::class)->execute($booking);
+        }
+
         if (
             $newStatus === BookingStatus::Confirmed
             && $oldStatus !== BookingStatus::Confirmed

@@ -34,6 +34,11 @@ const emit = defineEmits<{
 
 const isEditing = computed(() => !!props.method);
 
+const canUpdate = computed(() => {
+    if (!isEditing.value) return true;
+    return props.method?.can_update ?? false;
+});
+
 const form = useForm({
     code: '',
     name: '',
@@ -101,7 +106,7 @@ function closeModal() {
                 <Field>
                     <FieldLabel>Mã phương thức</FieldLabel>
                     <FieldContent>
-                        <Input v-model="form.code" placeholder="VD: STANDARD" />
+                        <Input v-model="form.code" :disabled="!canUpdate" placeholder="VD: STANDARD" />
                         <FieldError :errors="[form.errors.code]" />
                     </FieldContent>
                 </Field>
@@ -109,7 +114,7 @@ function closeModal() {
                 <Field>
                     <FieldLabel>Tên phương thức</FieldLabel>
                     <FieldContent>
-                        <Input v-model="form.name" placeholder="VD: Giao hàng tiêu chuẩn" />
+                        <Input v-model="form.name" :disabled="!canUpdate" placeholder="VD: Giao hàng tiêu chuẩn" />
                         <FieldError :errors="[form.errors.name]" />
                     </FieldContent>
                 </Field>
@@ -118,7 +123,7 @@ function closeModal() {
                     <Field>
                         <FieldLabel>Giá (VNĐ)</FieldLabel>
                         <FieldContent>
-                            <Input v-model="form.price" type="number" placeholder="0" />
+                            <Input v-model="form.price" type="number" :disabled="!canUpdate" placeholder="0" />
                             <FieldError :errors="[form.errors.price]" />
                         </FieldContent>
                     </Field>
@@ -129,6 +134,7 @@ function closeModal() {
                             <Input
                                 v-model="form.estimated_delivery_days"
                                 type="number"
+                                :disabled="!canUpdate"
                                 placeholder="—"
                             />
                             <FieldError :errors="[form.errors.estimated_delivery_days]" />
@@ -140,6 +146,7 @@ function closeModal() {
                     <Checkbox
                         :id="method ? `active-${method.id}` : 'active-new'"
                         :model-value="form.is_active"
+                        :disabled="!canUpdate"
                         @update:model-value="form.is_active = $event as boolean"
                     />
                     <Label
@@ -157,7 +164,7 @@ function closeModal() {
                 </Button>
                 <Button
                     type="button"
-                    :disabled="form.processing"
+                    :disabled="form.processing || !canUpdate"
                     @click="submit"
                 >
                     <Loader2

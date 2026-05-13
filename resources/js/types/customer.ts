@@ -9,10 +9,14 @@ export interface Customer {
     full_name: string;
     phone: string;
     street: string | null;
+    province_code: string;
     province_name: string;
+    ward_code:string;
     ward_name: string;
     address: string;
     total_spent: string;
+    can_update: boolean;
+    can_deactivate: boolean;
     avatar_url: string | null;
     created_at: string;
     updated_at: string;

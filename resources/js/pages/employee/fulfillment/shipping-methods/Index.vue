@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { Link } from '@inertiajs/vue3';
-import { Trash2, Plus } from '@lucide/vue';
+import { Plus } from '@lucide/vue';
 import { debounce } from 'lodash';
 import { computed, ref, watch } from 'vue';
 import DataTableGroup from '@/components/custom/data-table/DataTableGroup.vue';
@@ -20,6 +19,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { createLazyComponent } from '@/composables/createLazyComponent';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { CheckUserPermission } from '@/lib';
 import { cleanQuery, setCookie } from '@/lib';
 import { index, destroy } from '@/routes/employee/fulfillment/shipping-methods';
 import type { BreadcrumbItem } from '@/types';
@@ -38,6 +38,8 @@ const props = defineProps<{
     shippingMethods?: ShippingMethodPagination;
     filters: ShippingMethodFilterData;
 }>();
+
+const canCreate = computed(() => CheckUserPermission('Tạo phương thức vận chuyển'));
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Phương thức vận chuyển', href: index().url },
@@ -164,7 +166,7 @@ function handleDialogClose() {
                     description="Quản lý phương thức và giá vận chuyển"
                 />
                 <div class="flex items-center gap-2">
-                    <Button @click="handleCreate">
+                    <Button v-if="canCreate" @click="handleCreate">
                         <Plus class="mr-2 h-4 w-4" /> Thêm phương thức
                     </Button>
                 </div>
