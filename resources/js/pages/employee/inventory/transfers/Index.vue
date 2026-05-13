@@ -9,7 +9,7 @@ import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { cleanQuery, setCookie } from '@/lib';
-import { index, create, show } from '@/routes/employee/inventory/transfers';
+import { index, create, show, cancel, destroy } from '@/routes/employee/inventory/transfers';
 import type { BreadcrumbItem } from '@/types';
 import type {
     StockTransfer,
@@ -19,6 +19,7 @@ import type {
 import { getColumns } from './types/columns';
 
 const props = defineProps<{
+    canCreate: boolean;
     statusOptions: { value: string; label: string; color: string }[];
     locationOptions: { id: string; label: string; type: string }[];
     transfers?: StockTransferPagination;
@@ -34,7 +35,15 @@ function handleView(transfer: StockTransfer) {
     router.get(show(transfer).url);
 }
 
-const activeColumns = computed(() => getColumns(handleView));
+function handleCancel(transfer: StockTransfer) {
+    router.post(cancel(transfer).url);
+}
+
+function handleDelete(transfer: StockTransfer){
+    router.delete(destroy(transfer).url);
+}
+
+const activeColumns = computed(() => getColumns(handleView, handleCancel, handleDelete));
 
 const isActuallyLoading = ref(true);
 const search = ref(props.filters.search ?? '');
@@ -44,12 +53,16 @@ const selectedStatus = ref<string | undefined>(
 const selectedFromLocation = ref<string | undefined>(
     props.filters.from_location_id ?? undefined,
 );
+const selectedToLocation = ref<string | undefined>(
+    props.filters.to_location_id ?? undefined,
+);
 
 const hasActiveFilters = computed(() => {
     return (
         !!props.filters.search ||
         !!props.filters.status ||
-        !!props.filters.from_location_id
+        !!props.filters.from_location_id ||
+        !!props.filters.to_location_id
     );
 });
 
@@ -74,6 +87,7 @@ const updateSearch = debounce(() => {
             search: search.value,
             status: selectedStatus.value ?? undefined,
             from_location_id: selectedFromLocation.value ?? undefined,
+            to_location_id: selectedToLocation.value ?? undefined,
             page: 1,
         }),
         { preserveState: true, replace: true },
@@ -136,7 +150,7 @@ function resetFilters() {
                     title="Chuyển kho"
                     description="Quản lý phiếu chuyển kho giữa các vị trí"
                 />
-                <Button as="a" :href="create().url">
+                <Button v-if="canCreate" as="a" :href="create().url">
                     <Plus class="mr-2 h-4 w-4" /> Tạo phiếu chuyển kho
                 </Button>
             </div>
@@ -169,6 +183,12 @@ function resetFilters() {
                     />
                     <DataTableSingleFilter
                         v-model="selectedFromLocation"
+                        title="Từ vị trí"
+                        :options="locationFilterOptions"
+                        @update:model-value="updateSearch"
+                    />
+                    <DataTableSingleFilter
+                        v-model="selectedToLocation"
                         title="Từ vị trí"
                         :options="locationFilterOptions"
                         @update:model-value="updateSearch"

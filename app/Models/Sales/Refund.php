@@ -33,7 +33,7 @@ class Refund extends Model
             ->logOnly(['order_id', 'invoice_id', 'payment_id', 'amount', 'status', 'reason', 'notes'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
-            ->setDescriptionForEvent(fn (string $eventName) => "Refund {$eventName}");
+            ->setDescriptionForEvent(fn(string $eventName) => "Refund {$eventName}");
     }
 
     public function order(): BelongsTo
@@ -64,5 +64,44 @@ class Refund extends Model
     public function processedBy(): BelongsTo
     {
         return $this->belongsTo(Employee::class, 'processed_by');
+    }
+
+    public static function generateRefundNumber(): string
+    {
+        $date = now()->format('dmy');
+
+        do {
+            $number = 'REF-' . $date . '-' . self::randomToken();
+        } while (self::where('refund_number', $number)->exists());
+
+        return $number;
+    }
+
+    protected static function randomToken(int $length = 8): string
+    {
+        $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        $token = '';
+        for ($i = 0; $i < $length; $i++) {
+            $token .= $chars[random_int(0, strlen($chars) - 1)];
+        }
+
+        return $token;
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function ($refund) {
+            $refund->refund_number = $refund->generateRefundNumber();
+        });
+    }
+
+    public function canBeApproved(): bool
+    {
+        return $this->status === RefundStatus::Pending;
+    }
+
+    public function canBeRejected(): bool
+    {
+        return $this->status === RefundStatus::Pending;
     }
 }

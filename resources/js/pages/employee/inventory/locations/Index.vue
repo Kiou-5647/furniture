@@ -26,6 +26,7 @@ const LocationFormModal = createLazyComponent(
 );
 
 const props = defineProps<{
+    canCreate: boolean;
     typeOptions: { value: string; label: string }[];
     managerOptions: { id: string; label: string }[];
     locations?: LocationPagination;
@@ -171,7 +172,7 @@ function performDelete() {
                     title="Vị trí kho hàng"
                     description="Quản lý các kho hàng, cửa hàng và nhà cung cấp"
                 />
-                <Button @click="handleCreate">
+                <Button v-if="canCreate" @click="handleCreate">
                     <Plus class="mr-2 h-4 w-4" /> Thêm vị trí
                 </Button>
             </div>
@@ -190,7 +191,6 @@ function performDelete() {
                 :order-direction="filters.order_direction"
                 @reset="resetFilters"
                 @sort="handleSort"
-                @row-click="handleEdit"
                 @update:page="handlePageChange"
                 @update:page-size="handlePageSizeChange"
             >

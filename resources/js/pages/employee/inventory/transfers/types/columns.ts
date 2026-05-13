@@ -1,4 +1,4 @@
-import { Eye, MoreHorizontal } from '@lucide/vue';
+import { Eye, MoreHorizontal, Trash2, XCircle } from '@lucide/vue';
 import type { ColumnDef } from '@tanstack/vue-table';
 import { h } from 'vue';
 import { Badge } from '@/components/ui/badge';
@@ -21,6 +21,8 @@ const statusColorMap: Record<string, string> = {
 
 export function getColumns(
     onView: (transfer: StockTransfer) => void,
+    onCancel: (transfer: StockTransfer) => void,
+    onDelete: (transer: StockTransfer) => void
 ): ColumnDef<StockTransfer>[] {
     return [
         {
@@ -178,6 +180,32 @@ export function getColumns(
                                             'Xem chi tiết',
                                         ],
                                     ),
+                                    item.can_cancel ? h(
+                                        DropdownMenuItem,
+                                        {
+                                            class: 'text-destructive',
+                                            onClick: () => onCancel(item),
+                                        },
+                                        () => [
+                                            h(XCircle, {
+                                                class: 'mr-2 h-4 w-4',
+                                            }),
+                                            'Hủy',
+                                        ],
+                                    ) : null,
+                                    item.can_delete ? h(
+                                        DropdownMenuItem,
+                                        {
+                                            class: 'text-destructive',
+                                            onClick: () => onDelete(item),
+                                        },
+                                        () => [
+                                            h(Trash2, {
+                                                class: 'mr-2 h-4 w-4',
+                                            }),
+                                            'Xóa',
+                                        ],
+                                    ) : null,
                                 ],
                             ),
                         ],

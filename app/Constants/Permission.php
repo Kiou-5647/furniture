@@ -124,15 +124,11 @@ class Permission
         'DELETE' => 'Xóa phương thức vận chuyển',
     ];
 
-    public const STOCK_MOVEMENT = [
-        'SELECT' => 'Xem lịch sử tồn kho',
-    ];
-
-    public const STOCK_TRANSFER = [
-        'SELECT' => 'Xem chuyển kho',
-        'CREATE' => 'Tạo chuyển kho',
-        'UPDATE' => 'Sửa chuyển kho',
-        'DELETE' => 'Xóa chuyển kho',
+    public const STOCK = [
+        'SELECT' => 'Xem tồn kho',
+        'CREATE' => 'Tạo tồn kho',
+        'UPDATE' => 'Sửa tồn kho',
+        'DELETE' => 'Xóa tồn kho',
     ];
 
     public const CUSTOMER = [
@@ -147,5 +143,9 @@ class Permission
         'CREATE' => 'Tạo nhà cung cấp',
         'UPDATE' => 'Sửa nhà cung cấp',
         'DELETE' => 'Xóa nhà cung cấp',
+    ];
+
+    public const SETTING = [
+        'MANAGE' => 'Cấu hình hệ thống',
     ];
 }

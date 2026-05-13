@@ -60,12 +60,6 @@ const statusColorMap: Record<string, string> = {
     red: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900 dark:text-red-300 dark:border-red-800',
 };
 
-// --- State & Permissions ---
-const isDraft = computed(() => props.transfer.status === 'draft');
-const isInTransit = computed(() => props.transfer.status === 'in_transit');
-const canShip = computed(() => isDraft.value);
-const canReceive = computed(() => isInTransit.value);
-const canCancel = computed(() => isDraft.value || isInTransit.value);
 
 const showReceiveForm = ref(false);
 const previewImageOpen = ref(false);
@@ -187,7 +181,7 @@ function goBack() {
 
                 <div class="flex items-center gap-2">
                     <Button
-                        v-if="canCancel"
+                        v-if="transfer.can_cancel"
                         variant="ghost"
                         class="text-destructive hover:bg-destructive/10"
                         @click="handleCancel"
@@ -195,7 +189,7 @@ function goBack() {
                         <Ban class="mr-2 h-4 w-4" /> Hủy phiếu
                     </Button>
                     <Button
-                        v-if="canShip"
+                        v-if="transfer.can_ship"
                         variant="outline"
                         class="border-blue-200 bg-blue-50/50 text-blue-600"
                         @click="handleShip"
@@ -203,7 +197,7 @@ function goBack() {
                         <Truck class="mr-2 h-4 w-4" /> Xuất kho
                     </Button>
                     <Button
-                        v-if="canReceive && !showReceiveForm"
+                        v-if="transfer.can_receive && !showReceiveForm"
                         variant="default"
                         class="bg-emerald-600 hover:bg-emerald-700"
                         @click="showReceiveForm = true"

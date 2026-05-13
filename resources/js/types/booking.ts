@@ -1,3 +1,5 @@
+import { Refund } from "./refund";
+
 export interface Booking {
     booking_number: string;
     address_line: any;
@@ -48,6 +50,7 @@ export interface Booking {
         status_label: string;
         status_color: string;
     };
+    refunds?: Refund[];
     can_confirm: boolean;
     can_cancel: boolean;
     can_pay_deposit: boolean;

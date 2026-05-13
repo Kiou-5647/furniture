@@ -53,8 +53,6 @@ class OrderObserver
                 }
             }
 
-
-
             $this->createRefundForOverpaidInvoice($order);
         }
     }
@@ -76,18 +74,19 @@ class OrderObserver
             return;
         }
 
-        // Update invoice to overpaid
+        // Cập nhật hóa đơn thành thanh toán vượt mức
         if ($invoice->status !== InvoiceStatus::Overpaid) {
             $invoice->updateQuietly(['status' => InvoiceStatus::Overpaid]);
         }
 
         $overpaidAmount = $invoice->amount_paid - $invoice->amount_due;
 
-        // Check if a pending refund already exists — update it instead of creating new
+        // Kiểm tra xem có đơn hoàn tiền nào đang chờ không
         $existingRefund = $order->refunds()
             ->where('status', RefundStatus::Pending)
             ->first();
 
+        // Nếu có đơn hoàn tiền đang chờ thì update số lượng cần hoàn
         if ($existingRefund) {
             $existingRefund->update([
                 'amount' => max(0, (float) $overpaidAmount),
@@ -96,7 +95,7 @@ class OrderObserver
             return;
         }
 
-        // Get the employee who accepted the order (or first available employee)
+        // Lấy nhân viên xử lý đơn hàng
         $employee = $order->acceptedBy
             ?? Employee::whereHas('user', fn($q) => $q->where('type', 'employee'))->first();
 

@@ -15,27 +15,41 @@ use Illuminate\Support\Facades\Cache;
 
 class StockMovementService
 {
-    public function getFiltered(StockMovementFilterData $filter): LengthAwarePaginator
+    protected function applyRoleFilter($query, \App\Models\Auth\User $user): void
     {
-        $user = Auth::user();
-        $employee = $user?->employee;
+        if ($user->hasAnyRole(['Quản trị viên', 'Quản lý'])) {
+            return;
+        }
 
-        return StockMovement::query()
+        if ($user->isEmployee()) {
+            $employee = $user->employee;
+            $query->where(function ($q) use ($employee) {
+                $q->where('location_id', $employee?->store_location_id)
+                    // OR
+                    ->orWhere('location_id', $employee?->warehouse_location_id)
+                    // OR
+                    ->orWhereHas('location', fn($sub) => $sub->where('manager_id', $employee?->id));
+            });
+            return;
+        }
+
+        // False Base cho các trường hợp còn lại
+        $query->whereRaw('1 = 0');
+    }
+
+    public function getFiltered(StockMovementFilterData $filter, \App\Models\Auth\User $user): LengthAwarePaginator
+    {
+        $query = StockMovement::query()
             ->with([
                 'variant:id,sku,name,product_id',
                 'variant.product:id,name',
                 'location:id,code,name',
                 'performedBy:id,full_name',
-            ])
-            ->when(!$user->hasAnyRole(['Quản trị viên', 'Quản lý']), function ($q) use ($employee) {
-                $storeId = $employee?->store_location_id;
-                $warehouseId = $employee?->warehouse_location_id;
+            ]);
 
-                return $q->where(function ($sub) use ($storeId, $warehouseId) {
-                    $sub->where('location_id', $storeId)
-                        ->orWhere('location_id', $warehouseId);
-                });
-            })
+        $this->applyRoleFilter($query, $user);
+
+        return $query
             ->when($filter->type, fn($q) => $q->byType(StockMovementType::from($filter->type)))
             ->when($filter->location_id, fn($q) => $q->byLocation($filter->location_id))
             ->when($filter->variant_id, fn($q) => $q->byVariant($filter->variant_id))
@@ -66,7 +80,6 @@ class StockMovementService
 
     public function getVariantOptions(): array
     {
-        // Not caching variant options as they can grow very large and change frequently
         return ProductVariant::query()
             ->with('product:id,name')
             ->orderBy('sku')

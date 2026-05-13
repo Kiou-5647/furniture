@@ -18,6 +18,8 @@ withDefaults(defineProps<Props>(), {
                     ? 'mb-0.5 text-base font-medium'
                     : 'text-xl font-semibold tracking-tight'
             "
+            class="whitespace-pre-line"
+            :title="title"
         >
             {{ title }}
         </h2>

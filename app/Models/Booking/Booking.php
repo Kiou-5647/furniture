@@ -8,10 +8,12 @@ use App\Enums\InvoiceStatus;
 use App\Models\Customer\Customer;
 use App\Models\Hr\Designer;
 use App\Models\Sales\Invoice;
+use App\Models\Sales\Refund;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Gate;
@@ -86,6 +88,11 @@ class Booking extends Model
     public function finalInvoice(): BelongsTo
     {
         return $this->belongsTo(Invoice::class, 'final_invoice_id');
+    }
+
+    public function refunds(): HasMany
+    {
+        return $this->hasMany(Refund::class);
     }
 
     public function hasDepositPaid(): bool

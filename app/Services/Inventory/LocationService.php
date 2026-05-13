@@ -14,11 +14,38 @@ use Illuminate\Support\Collection;
 
 class LocationService
 {
-    public function getFiltered(LocationFilterData $filter): LengthAwarePaginator
+    protected function applyRoleFilter($query, User $user): void
     {
-        return Location::query()
+        if ($user->hasAnyRole(['Quản trị viên', 'Quản lý'])) {
+            return;
+        }
+
+        if ($user->isEmployee()) {
+            $employee = $user->employee;
+            $query->where(function ($q) use ($employee) {
+                // Vị trí làm việc
+                $q->where('id', $employee?->store_location_id)
+                    // OR
+                    ->orWhere('id', $employee?->warehouse_location_id)
+                    // OR
+                    ->orWhere('manager_id', $employee?->id);
+            });
+            return;
+        }
+
+        // False cho các trường hợp còn lại
+        $query->whereRaw('1 = 0');
+    }
+
+    public function getFiltered(LocationFilterData $filter, User $user): LengthAwarePaginator
+    {
+        $query = Location::query()
             ->with(['manager'])
-            ->withCount('inventories')
+            ->withCount('inventories');
+
+        $this->applyRoleFilter($query, $user);
+
+        return $query
             ->when($filter->type, fn($q) => $q->where('type', $filter->type))
             ->when(! is_null($filter->is_active), fn($q) => $q->where('is_active', $filter->is_active))
             ->when($filter->search, fn($q) => $q->where('name', 'ilike', "%{$filter->search}%"))

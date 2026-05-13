@@ -4,6 +4,7 @@ namespace App\Http\Resources\Employee\Sales;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Gate;
 
 class RefundResource extends JsonResource
 {
@@ -13,6 +14,7 @@ class RefundResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'refund_number' => $this->refund_number,
             'invoice_number' => $this->invoice?->invoice_number,
             'order' => $this->whenLoaded('order', fn() => [
                 'id' => $this->order->id,
@@ -55,6 +57,8 @@ class RefundResource extends JsonResource
             'notes' => $this->notes,
             'processed_at' => $this->processed_at?->format('d/m/Y H:i'),
             'created_at' => $this->created_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
+            'can_approve' => $this->canBeApproved() && Gate::allows('approve', $this),
+            'can_reject' => $this->canBeRejected() && Gate::allows('reject', $this),
         ];
     }
 }

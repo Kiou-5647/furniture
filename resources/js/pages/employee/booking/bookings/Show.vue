@@ -420,6 +420,56 @@ const fullAddress = computed(
                                 </div>
                             </div>
                         </div>
+
+                    </div>
+
+                    <!-- Refunds Section -->
+                    <div v-if="booking.refunds?.length" class="space-y-3">
+                        <div class="flex items-center gap-2">
+                            <DollarSign class="h-4 w-4 text-muted-foreground" />
+                            <h3 class="text-sm font-semibold">
+                                Yêu cầu hoàn tiền ({{ booking.refunds.length }})
+                            </h3>
+                        </div>
+                        <div v-for="refund in booking.refunds" :key="refund.id"
+                            class="overflow-hidden rounded-xl border bg-card shadow-sm">
+                            <div class="flex items-center justify-between border-b bg-muted/20 px-4 py-3">
+                                <div class="flex items-center gap-3">
+                                    <span class="font-mono text-xs font-bold text-muted-foreground">{{
+                                        refund.refund_number
+                                    }}</span>
+                                    <Badge :class="[
+                                        'text-[10px]',
+                                        refund.status_color
+                                            ? `text-${refund.status_color}-600 border-${refund.status_color}-200 bg-${refund.status_color}-50`
+                                            : '',
+                                    ]" variant="outline">
+                                        {{ refund.status_label }}
+                                    </Badge>
+                                </div>
+                                <span class="text-sm font-bold text-destructive tabular-nums">
+                                    -{{
+                                        Number(refund.amount).toLocaleString(
+                                            'vi-VN',
+                                        )
+                                    }}đ
+                                </span>
+                            </div>
+                            <div class="flex flex-wrap gap-x-6 gap-y-2 px-4 py-3 text-xs text-muted-foreground">
+                                <span v-if="refund.reason" class="flex items-center gap-1">
+                                    <span class="font-medium text-foreground">Lý do:</span>
+                                    {{ refund.reason }}
+                                </span>
+                                <span v-if="refund.requested_by" class="flex items-center gap-1">
+                                    <span class="font-medium text-foreground">Yêu cầu:</span>
+                                    {{ refund.requested_by.full_name }}
+                                </span>
+                                <span v-if="refund.processed_by" class="flex items-center gap-1">
+                                    <span class="font-medium text-foreground">Duyệt:</span>
+                                    {{ refund.processed_by.full_name }}
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

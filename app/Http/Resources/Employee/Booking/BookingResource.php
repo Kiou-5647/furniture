@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Employee\Booking;
 
+use App\Http\Resources\Employee\Sales\RefundResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Gate;
@@ -57,6 +58,7 @@ class BookingResource extends JsonResource
                 'status_label' => $this->finalInvoice->status->label(),
                 'status_color' => $this->finalInvoice->status->color(),
             ] : null),
+            'refunds' => RefundResource::collection($this->whenLoaded('refunds')),
 
             'can_confirm' => $this->canBeConfirmed() && Gate::allows('confirm', $this),
             'can_cancel' => $this->canBeCancelled() && Gate::allows('cancel', $this),

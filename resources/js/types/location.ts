@@ -20,6 +20,8 @@ export interface Location {
     } | null;
     is_active: boolean;
     inventories_count: number;
+    can_update: boolean;
+    can_delete: boolean;
     created_at: string;
     updated_at: string;
 }

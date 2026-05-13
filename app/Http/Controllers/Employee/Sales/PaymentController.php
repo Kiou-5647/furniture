@@ -19,8 +19,12 @@ class PaymentController
         private PaymentService $service,
     ) {}
 
-    public function index(Request $request): Response
+    public function index(Request $request)
     {
+        if (!Gate::allows('viewAny', Payment::class)) {
+            return back()->with('error', 'Bạn không có quyền truy cập danh sách thanh toán.');
+        }
+
         $filter = PaymentFilterData::fromRequest($request);
 
         return Inertia::render('employee/sales/payments/Index', [
@@ -35,8 +39,6 @@ class PaymentController
 
     public function store(ProcessPaymentRequest $request, ProcessPaymentAction $action)
     {
-        Gate::authorize('create', Payment::class);
-
         try {
             $action->execute($request->validated());
         } catch (\Exception $e) {

@@ -9,7 +9,6 @@ use App\Enums\RefundStatus;
 use App\Enums\ShipmentStatus;
 use App\Models\Fulfillment\ShipmentItem;
 use App\Models\Hr\Employee;
-use App\Models\Sales\Refund;
 use App\Services\Location\OrderStockDeductionService;
 use Illuminate\Support\Facades\DB;
 
@@ -67,7 +66,7 @@ class ReturnShipmentItemAction
 
         // Check for existing pending refund for this order
         $existingRefund = $order->refunds()
-            ->whereIn('status', [RefundStatus::Pending, RefundStatus::Processing])
+            ->whereIn('status', [RefundStatus::Pending])
             ->first();
 
         if ($existingRefund) {
@@ -82,7 +81,7 @@ class ReturnShipmentItemAction
         } else {
             $employee = $performedBy
                 ?? $order->acceptedBy
-                ?? Employee::whereHas('user', fn ($q) => $q->where('type', 'employee'))->first();
+                ?? Employee::whereHas('user', fn($q) => $q->where('type', 'employee'))->first();
 
             if ($employee && $overpaidAmount > 0) {
                 app(CreateRefundRequestAction::class)->execute($invoice, $employee, $reason);

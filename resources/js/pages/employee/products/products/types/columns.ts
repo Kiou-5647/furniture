@@ -330,9 +330,11 @@ export function getColumns(
                                         ],
                                     ),
                                     h(DropdownMenuSeparator),
-                                    h(
+                                    item.can_update && h(
                                         DropdownMenuItem,
-                                        { onClick: () => onEdit(item) },
+                                        {
+                                            onClick: () => onEdit(item),
+                                        },
                                         () => [
                                             h(Pencil, {
                                                 class: 'mr-2 h-4 w-4',
@@ -341,7 +343,7 @@ export function getColumns(
                                         ],
                                     ),
                                     h(DropdownMenuSeparator),
-                                    h(
+                                    item.can_delete && h(
                                         DropdownMenuItem,
                                         {
                                             class: 'text-destructive',

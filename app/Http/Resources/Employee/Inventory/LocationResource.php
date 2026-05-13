@@ -4,6 +4,7 @@ namespace App\Http\Resources\Employee\Inventory;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Gate;
 
 class LocationResource extends JsonResource
 {
@@ -31,6 +32,8 @@ class LocationResource extends JsonResource
             ]),
             'is_active' => $this->is_active,
             'inventories_count' => $this->whenCounted('inventories', $this->inventories_count),
+            'can_update' => Gate::allows('update', $this->resource),
+            'can_delete' => Gate::allows('delete', $this->resource),
             'created_at' => $this->created_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
             'updated_at' => $this->updated_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
         ];

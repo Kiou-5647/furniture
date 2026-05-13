@@ -34,7 +34,7 @@ class StockTransfer extends Model
             ->logOnly(['transfer_number', 'status', 'from_location_id', 'to_location_id', 'notes'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
-            ->setDescriptionForEvent(fn (string $eventName) => "Stock transfer {$eventName}");
+            ->setDescriptionForEvent(fn(string $eventName) => "Stock transfer {$eventName}");
     }
 
     public function fromLocation(): BelongsTo
@@ -72,7 +72,7 @@ class StockTransfer extends Model
         $date = now()->format('dmy');
 
         do {
-            $number = 'ST-'.$date.'-'.self::randomToken();
+            $number = 'ST-' . $date . '-' . self::randomToken();
         } while (static::where('transfer_number', $number)->exists());
 
         return $number;
@@ -87,5 +87,25 @@ class StockTransfer extends Model
         }
 
         return $token;
+    }
+
+    public function canBeShipped()
+    {
+        return $this->status === StockTransferStatus::Draft;
+    }
+
+    public function canBeReceived()
+    {
+        return $this->status === StockTransferStatus::InTransit;
+    }
+
+    public function canBeCancelled()
+    {
+        return in_array($this->status, [StockTransferStatus::Draft, StockTransferStatus::InTransit]);
+    }
+
+    public function canBeDeleted()
+    {
+        return in_array($this->status, [StockTransferStatus::Draft, StockTransferStatus::Cancelled]);
     }
 }

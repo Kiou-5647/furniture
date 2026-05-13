@@ -33,6 +33,7 @@ import type {
 import { getColumns } from './types/columns';
 
 const props = defineProps<{
+    canCreate: boolean;
     statusOptions: { value: string; label: string; color: string }[];
     vendorOptions: { id: string; label: string }[];
     categoryOptions: { id: string; label: string }[];
@@ -233,7 +234,7 @@ function performDelete() {
                     title="Quản lý sản phẩm"
                     description="Quản lý thông tin, biến thể và hình ảnh sản phẩm"
                 />
-                <Button @click="handleCreate">
+                <Button v-if="canCreate" @click="handleCreate">
                     <Plus class="mr-2 h-4 w-4" /> Thêm sản phẩm
                 </Button>
             </div>

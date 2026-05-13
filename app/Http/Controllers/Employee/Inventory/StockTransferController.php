@@ -16,6 +16,7 @@ use App\Models\Inventory\StockTransfer;
 use App\Services\Inventory\StockTransferService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -26,30 +27,42 @@ class StockTransferController
         private StockTransferService $service,
     ) {}
 
-    public function index(Request $request): Response
+    public function index(Request $request)
     {
+        if (!Gate::allows('viewAny', StockTransfer::class)) {
+            return back()->with('error', 'Bạn không có quyền truy cập danh sách chuyển kho.');
+        }
+
         $filter = StockTransferFilterData::fromRequest($request);
 
         return Inertia::render('employee/inventory/transfers/Index', [
+            'canCreate' => Gate::allows('create', StockTransfer::class),
             'statusOptions' => $this->service->getStatusOptions(),
             'locationOptions' => $this->service->getLocationOptions(),
-            'transfers' => Inertia::defer(fn () => StockTransferResource::collection(
-                $this->service->getFiltered($filter)
+            'transfers' => Inertia::defer(fn() => StockTransferResource::collection(
+                $this->service->getFiltered($filter, $request->user())
             )),
             'filters' => $filter,
         ]);
     }
 
-    public function create(): Response
+    public function create()
     {
+        if (!Gate::allows('create', StockTransfer::class)) {
+            return back()->with('error', 'Bạn không có quyền tạo phiếu chuyển kho.');
+        }
+
         return Inertia::render('employee/inventory/transfers/Create', [
-            'locationOptions' => $this->service->getLocationOptions(),
+            'locationOptions' => $this->service->getLocationOptionsForFromLocation(Auth::user()),
+            'toLocationOptions' => $this->service->getLocationOptions(),
         ]);
     }
 
     public function store(StoreStockTransferRequest $request, CreateStockTransferAction $action)
     {
-        Gate::authorize('create', StockTransfer::class);
+        if (!Gate::allows('create', StockTransfer::class)) {
+            return back()->with('error', 'Bạn không có quyền tạo phiếu chuyển kho.');
+        }
 
         $validated = $request->validated();
 
@@ -70,12 +83,15 @@ class StockTransferController
             return back()->with('error', $e->getMessage());
         }
 
-        return redirect()->route('employee.inventory.transfers.index')
-            ->with('success', 'Đã tạo phiếu chuyển kho.');
+        return redirect()->route('employee.inventory.transfers.index');
     }
 
-    public function show(StockTransfer $transfer): Response
+    public function show(StockTransfer $transfer)
     {
+        if (!Gate::allows('view', $transfer)) {
+            return back()->with('error', 'Bạn không có quyền xem chi tiết phiếu chuyển kho này.');
+        }
+
         $transfer = $this->service->getById($transfer->id);
 
         return Inertia::render('employee/inventory/transfers/Show', [
@@ -85,7 +101,9 @@ class StockTransferController
 
     public function ship(StockTransfer $transfer, Request $request, ShipStockTransferAction $action)
     {
-        Gate::authorize('ship', $transfer);
+        if (!Gate::allows('ship', $transfer)) {
+            return back()->with('error', 'Bạn không có quyền xuất kho cho phiếu chuyển này.');
+        }
 
         $employee = $request->user()->employee;
 
@@ -103,7 +121,9 @@ class StockTransferController
 
     public function receive(ReceiveStockTransferRequest $request, StockTransfer $transfer, ReceiveStockTransferAction $action)
     {
-        Gate::authorize('receive', $transfer);
+        if (!Gate::allows('receive', $transfer)) {
+            return back()->with('error', 'Bạn không có quyền nhận hàng cho phiếu chuyển này.');
+        }
 
         $validated = $request->validated();
         $employee = $request->user()->employee;
@@ -123,7 +143,9 @@ class StockTransferController
 
     public function cancel(StockTransfer $transfer, Request $request, CancelStockTransferAction $action)
     {
-        Gate::authorize('cancel', $transfer);
+        if (!Gate::allows('cancel', $transfer)) {
+            return back()->with('error', 'Bạn không có quyền hủy phiếu chuyển kho này.');
+        }
 
         $employee = $request->user()->employee;
 
@@ -139,6 +161,17 @@ class StockTransferController
         return back()->with('success', 'Đã hủy phiếu chuyển kho.');
     }
 
+    public function destroy(StockTransfer $transfer)
+    {
+        if (!Gate::allows('delete', $transfer)) {
+            return back()->with('error', 'Bạn không có quyền xóa phiếu chuyển kho này.');
+        }
+
+        $transfer->delete();
+
+        return back()->with('success', 'Đã xóa phiếu chuyển kho.');
+    }
+
     public function variants(string $locationId): JsonResponse
     {
         $variants = Inventory::query()
@@ -146,7 +179,7 @@ class StockTransferController
             ->where('quantity', '>', 0)
             ->with('variant:id,sku,name,product_id,option_values,price', 'variant.product:id,name')
             ->get()
-            ->map(fn (Inventory $inventory) => [
+            ->map(fn(Inventory $inventory) => [
                 'id' => $inventory->variant->id,
                 'sku' => $inventory->variant->sku,
                 'name' => $inventory->variant->name,
@@ -168,7 +201,7 @@ class StockTransferController
             ->where('quantity', '>', 0)
             ->with('location:id,code,name,type')
             ->get()
-            ->map(fn (Inventory $inventory) => [
+            ->map(fn(Inventory $inventory) => [
                 'id' => $inventory->location->id,
                 'code' => $inventory->location->code,
                 'name' => $inventory->location->name,

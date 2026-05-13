@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Employee\Inventory;
 use App\Actions\Inventory\RecordStockMovementAction;
 use App\Enums\StockMovementType;
 use App\Models\Inventory\Location;
+use App\Models\Inventory\StockMovement;
 use App\Models\Product\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 
 class StockAdjustmentController
 {
@@ -27,8 +29,13 @@ class StockAdjustmentController
             'force_update_price' => 'boolean',
         ]);
 
-        $variant = ProductVariant::findOrFail($validated['variant_id']);
         $location = Location::findOrFail($validated['location_id']);
+
+        if (!Gate::allows('update', StockMovement::class)) {
+            return redirect()->back()->with('error', 'Bạn không có quyền điều chỉnh tồn kho.');
+        }
+
+        $variant = ProductVariant::findOrFail($validated['variant_id']);
 
         $typeStr = $validated['type'];
         $quantity = (int) ($validated['quantity'] ?? 0);

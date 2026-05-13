@@ -30,7 +30,7 @@ class BulkImportStockAction
 
             foreach ($items as $item) {
                 $variant = ProductVariant::findOrFail($item['variant_id']);
-                
+
                 $movements[] = $this->recordStockMovement->handle(
                     $variant,
                     $location,

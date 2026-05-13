@@ -57,6 +57,8 @@ class ProductResource extends JsonResource
             'product_cards' => ProductCardResource::collection($this->whenLoaded('productCards')),
             'created_at' => $this->created_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
             'updated_at' => $this->updated_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
+            'can_update' => Gate::allows('update', $this),
+            'can_delete' => Gate::allows('delete', $this),
         ];
     }
 }

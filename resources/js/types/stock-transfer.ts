@@ -52,6 +52,10 @@ export interface StockTransfer {
     received_at: string | null;
     created_at: string;
     updated_at: string;
+    can_ship: boolean;
+    can_receive: boolean;
+    can_cancel: boolean;
+    can_delete: boolean;
 }
 
 export interface StockTransferPagination {

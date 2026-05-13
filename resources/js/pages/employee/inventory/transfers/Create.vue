@@ -43,6 +43,7 @@ import type { LocationOption, VariantOption } from '@/types';
 
 const props = defineProps<{
     locationOptions: LocationOption[];
+    toLocationOptions: LocationOption[];
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -69,7 +70,7 @@ const previewImageOpen = ref(false);
 const previewImageSrc = ref<string | null>(null);
 
 const destinationOptions = computed(() =>
-    props.locationOptions.filter((l) => l.id !== form.from_location_id),
+    props.toLocationOptions.filter((l) => l.id !== form.from_location_id),
 );
 
 const totalItemsCount = computed(() =>

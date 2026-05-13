@@ -43,6 +43,7 @@ class BookingService
             'designer.employee',
             'depositInvoice',
             'finalInvoice',
+            'refunds',
         ]);
 
         return $this->applyRoleFilter($query, $user)->findOrFail($id);

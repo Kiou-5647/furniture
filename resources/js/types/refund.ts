@@ -8,6 +8,7 @@ export interface RefundCustomer {
 
 export interface Refund {
     id: string;
+    refund_number: string;
     invoice_number: string | null;
     order: {
         id: string;
@@ -43,6 +44,8 @@ export interface Refund {
     notes: string | null;
     processed_at: string | null;
     created_at: string;
+    can_approve: boolean;
+    can_reject: boolean;
 }
 
 export interface RefundFilterData {

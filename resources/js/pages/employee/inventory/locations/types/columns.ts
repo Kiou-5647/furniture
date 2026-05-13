@@ -196,7 +196,7 @@ export function getColumns(
                                             'Xem chi tiết',
                                         ],
                                     ),
-                                    h(
+                                    item.can_update ? h(
                                         DropdownMenuItem,
                                         { onClick: () => onEdit(item) },
                                         () => [
@@ -205,9 +205,9 @@ export function getColumns(
                                             }),
                                             'Sửa',
                                         ],
-                                    ),
-                                    h(DropdownMenuSeparator),
-                                    h(
+                                    ) : null,
+                                    item.can_delete ? h(DropdownMenuSeparator) : null,
+                                    item.can_delete ? h(
                                         DropdownMenuItem,
                                         {
                                             class: 'text-destructive',
@@ -219,7 +219,7 @@ export function getColumns(
                                             }),
                                             'Xóa',
                                         ],
-                                    ),
+                                    ) : null,
                                 ],
                             ),
                         ],

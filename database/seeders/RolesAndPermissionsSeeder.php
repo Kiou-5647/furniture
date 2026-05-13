@@ -20,6 +20,9 @@ class RolesAndPermissionsSeeder extends Seeder
     protected function seedRolesAndPermissions(): void
     {
         $permissions = [
+            //Permissions
+            ConstantsPermission::PERMISSION['GRANT'],
+
             // Products
             ConstantsPermission::PRODUCT['SELECT'],
             ConstantsPermission::PRODUCT['CREATE'],
@@ -44,8 +47,11 @@ class RolesAndPermissionsSeeder extends Seeder
             ConstantsPermission::BUNDLE['UPDATE'],
             ConstantsPermission::BUNDLE['DELETE'],
 
-            'Xem khách hàng',
-            'Quản lý khách hàng',
+            // Customers
+            ConstantsPermission::CUSTOMER['SELECT'],
+            ConstantsPermission::CUSTOMER['CREATE'],
+            ConstantsPermission::CUSTOMER['UPDATE'],
+            ConstantsPermission::CUSTOMER['DELETE'],
 
             // Employees
             ConstantsPermission::EMPLOYEE['SELECT'],
@@ -92,11 +98,17 @@ class RolesAndPermissionsSeeder extends Seeder
             ConstantsPermission::BOOKING['UPDATE'],
             ConstantsPermission::BOOKING['DELETE'],
 
-            'Xem kho hàng',
-            'Quản lý kho hàng',
+            // Locations
+            ConstantsPermission::LOCATION['SELECT'],
+            ConstantsPermission::LOCATION['CREATE'],
+            ConstantsPermission::LOCATION['UPDATE'],
+            ConstantsPermission::LOCATION['DELETE'],
 
-            'Xem nhà cung cấp',
-            'Quản lý nhà cung cấp',
+            // Vendors
+            ConstantsPermission::VENDOR['SELECT'],
+            ConstantsPermission::VENDOR['CREATE'],
+            ConstantsPermission::VENDOR['UPDATE'],
+            ConstantsPermission::VENDOR['DELETE'],
 
             // Discounts
             ConstantsPermission::DISCOUNT['SELECT'],
@@ -104,10 +116,11 @@ class RolesAndPermissionsSeeder extends Seeder
             ConstantsPermission::DISCOUNT['UPDATE'],
             ConstantsPermission::DISCOUNT['DELETE'],
 
-            'Xem hoàn tiền',
-            'Quản lý hoàn tiền',
-
-            'Cấu hình hệ thống',
+            // Refunds
+            ConstantsPermission::REFUND['SELECT'],
+            ConstantsPermission::REFUND['CREATE'],
+            ConstantsPermission::REFUND['UPDATE'],
+            ConstantsPermission::REFUND['DELETE'],
 
             // Lookups
             ConstantsPermission::LOOKUP['SELECT'],
@@ -115,8 +128,19 @@ class RolesAndPermissionsSeeder extends Seeder
             ConstantsPermission::LOOKUP['UPDATE'],
             ConstantsPermission::LOOKUP['DELETE'],
 
-            'Xem phương thức vận chuyển',
-            'Quản lý phương thức vận chuyển',
+            // ShippingMethods
+            ConstantsPermission::SHIPPING_METHOD['SELECT'],
+            ConstantsPermission::SHIPPING_METHOD['CREATE'],
+            ConstantsPermission::SHIPPING_METHOD['UPDATE'],
+            ConstantsPermission::SHIPPING_METHOD['DELETE'],
+
+            // Stock
+            ConstantsPermission::STOCK['SELECT'],
+            ConstantsPermission::STOCK['CREATE'],
+            ConstantsPermission::STOCK['UPDATE'],
+            ConstantsPermission::STOCK['DELETE'],
+
+            ConstantsPermission::SETTING['MANAGE'],
         ];
 
         foreach ($permissions as $perm) {
@@ -141,6 +165,12 @@ class RolesAndPermissionsSeeder extends Seeder
                 ConstantsPermission::DESIGNER['CREATE'],
                 ConstantsPermission::DESIGNER['UPDATE'],
                 ConstantsPermission::DESIGNER['DELETE'],
+
+                // Customers
+                ConstantsPermission::CUSTOMER['SELECT'],
+                ConstantsPermission::CUSTOMER['CREATE'],
+                ConstantsPermission::CUSTOMER['UPDATE'],
+                ConstantsPermission::CUSTOMER['DELETE'],
 
                 // Categories
                 ConstantsPermission::CATEGORY['SELECT'],
@@ -195,8 +225,49 @@ class RolesAndPermissionsSeeder extends Seeder
                 ConstantsPermission::LOOKUP['CREATE'],
                 ConstantsPermission::LOOKUP['UPDATE'],
                 ConstantsPermission::LOOKUP['DELETE'],
+
+                // Locations
+                ConstantsPermission::LOCATION['SELECT'],
+                ConstantsPermission::LOCATION['CREATE'],
+                ConstantsPermission::LOCATION['UPDATE'],
+                ConstantsPermission::LOCATION['DELETE'],
+
+                // Vendors
+                ConstantsPermission::VENDOR['SELECT'],
+                ConstantsPermission::VENDOR['CREATE'],
+                ConstantsPermission::VENDOR['UPDATE'],
+                ConstantsPermission::VENDOR['DELETE'],
+
+                // Discounts
+                ConstantsPermission::DISCOUNT['SELECT'],
+                ConstantsPermission::DISCOUNT['CREATE'],
+                ConstantsPermission::DISCOUNT['UPDATE'],
+                ConstantsPermission::DISCOUNT['DELETE'],
+
+                // Refunds
+                ConstantsPermission::REFUND['SELECT'],
+                ConstantsPermission::REFUND['CREATE'],
+                ConstantsPermission::REFUND['UPDATE'],
+                ConstantsPermission::REFUND['DELETE'],
+
+                // ShippingMethods
+                ConstantsPermission::SHIPPING_METHOD['SELECT'],
+                ConstantsPermission::SHIPPING_METHOD['CREATE'],
+                ConstantsPermission::SHIPPING_METHOD['UPDATE'],
+                ConstantsPermission::SHIPPING_METHOD['DELETE'],
+
+                // Stock
+                ConstantsPermission::STOCK['SELECT'],
+                ConstantsPermission::STOCK['CREATE'],
+                ConstantsPermission::STOCK['UPDATE'],
+                ConstantsPermission::STOCK['DELETE'],
             ],
             'Quản lý cửa hàng' => [
+                // Customers
+                ConstantsPermission::CUSTOMER['SELECT'],
+                ConstantsPermission::CUSTOMER['CREATE'],
+                ConstantsPermission::CUSTOMER['UPDATE'],
+
                 // Categories
                 ConstantsPermission::CATEGORY['SELECT'],
                 ConstantsPermission::CATEGORY['CREATE'],
@@ -211,6 +282,9 @@ class RolesAndPermissionsSeeder extends Seeder
                 ConstantsPermission::PRODUCT['SELECT'],
                 ConstantsPermission::PRODUCT['CREATE'],
                 ConstantsPermission::PRODUCT['UPDATE'],
+
+                // Stock
+                ConstantsPermission::STOCK['UPDATE'],
 
                 // Bundles
                 ConstantsPermission::BUNDLE['SELECT'],
@@ -236,6 +310,11 @@ class RolesAndPermissionsSeeder extends Seeder
                 ConstantsPermission::LOOKUP['SELECT'],
                 ConstantsPermission::LOOKUP['CREATE'],
                 ConstantsPermission::LOOKUP['UPDATE'],
+
+                // Discounts
+                ConstantsPermission::DISCOUNT['SELECT'],
+                ConstantsPermission::DISCOUNT['CREATE'],
+                ConstantsPermission::DISCOUNT['UPDATE'],
             ],
             'Quản lý kho hàng' => [
                 // Products
@@ -249,9 +328,30 @@ class RolesAndPermissionsSeeder extends Seeder
                 ConstantsPermission::SHIPMENT['CREATE'],
                 ConstantsPermission::SHIPMENT['UPDATE'],
                 ConstantsPermission::SHIPMENT['DELETE'],
+
+                // Locations
+                ConstantsPermission::LOCATION['SELECT'],
+                ConstantsPermission::LOCATION['CREATE'],
+                ConstantsPermission::LOCATION['UPDATE'],
+
+                // Vendors
+                ConstantsPermission::VENDOR['SELECT'],
+                ConstantsPermission::VENDOR['CREATE'],
+                ConstantsPermission::VENDOR['UPDATE'],
+
+                // ShippingMethods
+                ConstantsPermission::SHIPPING_METHOD['SELECT'],
+
+                // Stock
+                ConstantsPermission::STOCK['SELECT'],
+                ConstantsPermission::STOCK['CREATE'],
+                ConstantsPermission::STOCK['UPDATE'],
             ],
 
             'Nhân viên' => [
+                // Customers
+                ConstantsPermission::CUSTOMER['SELECT'],
+
                 // Categories
                 ConstantsPermission::CATEGORY['SELECT'],
 
@@ -281,6 +381,17 @@ class RolesAndPermissionsSeeder extends Seeder
 
                 // Lookups
                 ConstantsPermission::LOOKUP['SELECT'],
+
+                // Discounts
+                ConstantsPermission::DISCOUNT['SELECT'],
+
+                // Locations
+                ConstantsPermission::LOCATION['SELECT'],
+
+                // Stock
+                ConstantsPermission::STOCK['SELECT'],
+                ConstantsPermission::STOCK['CREATE'],
+                ConstantsPermission::STOCK['UPDATE'],
             ]
         ];
 

@@ -181,8 +181,8 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
         Route::name('shipments.')->group(function () {
             Route::get('/', [ShipmentController::class, 'index'])->name('index');
             Route::get('/{shipment}', [ShipmentController::class, 'show'])->name('show');
-            Route::get('/{order}/create-shipments', [OrderController::class, 'createShipments'])->name('create');
-            Route::post('/{order}/store-shipments', [OrderController::class, 'storeShipments'])->name('store');
+            Route::get('/{order}/create-shipments', [ShipmentController::class, 'createShipments'])->name('create');
+            Route::post('/{order}/store-shipments', [ShipmentController::class, 'storeShipments'])->name('store');
             Route::post('/{shipment}/ship', [ShipmentController::class, 'ship'])->name('ship');
             Route::post('/{shipment}/deliver', [ShipmentController::class, 'deliver'])->name('deliver');
             Route::post('/{shipment}/cancel', [ShipmentController::class, 'cancel'])->name('cancel');
@@ -301,7 +301,7 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
             Route::get('/', [LocationController::class, 'index'])->name('index');
             Route::post('/', [LocationController::class, 'store'])->name('store');
             Route::put('/{location}', [LocationController::class, 'update'])->name('update');
-            Route::get('/{location}', [LocationController::class, 'show'])->name('show');
+            Route::get('/{location:code}', [LocationController::class, 'show'])->name('show');
             Route::delete('/{location}', [LocationController::class, 'destroy'])->name('destroy');
             Route::post('/adjust', [StockAdjustmentController::class, 'store'])->name('adjust');
             Route::post('/{location}/bulk-import', [LocationController::class, 'bulkImport'])->name('bulk-import');
@@ -320,6 +320,7 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
             Route::post('/{transfer}/ship', [StockTransferController::class, 'ship'])->name('ship');
             Route::post('/{transfer}/receive', [StockTransferController::class, 'receive'])->name('receive');
             Route::post('/{transfer}/cancel', [StockTransferController::class, 'cancel'])->name('cancel');
+            Route::delete('/{transfer}', [StockTransferController::class, 'destroy'])->name('destroy');
 
             Route::get('/variants/{locationId}', [StockTransferController::class, 'variants'])->name('variants');
             Route::get('/locations/variant/{variantId}', [StockTransferController::class, 'locations'])->name('locations');

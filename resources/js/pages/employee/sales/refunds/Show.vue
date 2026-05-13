@@ -91,7 +91,7 @@ function goBack() {
                     <div>
                         <div class="flex items-center gap-2">
                             <Heading
-                                :title="`Yêu cầu hoàn tiền #${refund.id.slice(0, 8)}`"
+                                :title="`Yêu cầu hoàn tiền ${refund.refund_number}`"
                             />
                             <Badge
                                 :class="[
@@ -114,13 +114,13 @@ function goBack() {
                 </div>
 
                 <div
-                    v-if="refund.status === 'pending'"
+                    v-if="refund.can_approve || refund.can_reject"
                     class="flex items-center gap-2 border-l pl-2"
                 >
                     <Button
                         variant="outline"
                         class="border-red-200 bg-red-50/50 text-red-600"
-                        :disabled="isProcessing"
+                        :disabled="isProcessing || !refund.can_reject"
                         @click="handleReject"
                     >
                         <XCircle class="mr-2 h-4 w-4" /> Từ chối
@@ -128,7 +128,7 @@ function goBack() {
                     <Button
                         variant="default"
                         class="bg-green-600 hover:bg-green-700"
-                        :disabled="isProcessing"
+                        :disabled="isProcessing || !refund.can_approve"
                         @click="handleApprove"
                     >
                         <CheckCircle2 class="mr-2 h-4 w-4" /> Duyệt & Hoàn tiền
@@ -195,7 +195,7 @@ function goBack() {
                     </div>
 
                     <div
-                        v-if="refund.status === 'pending'"
+                        v-if="refund.can_reject"
                         class="space-y-3 rounded-xl border bg-yellow-50/50 p-4"
                     >
                         <div class="flex items-center gap-2 text-yellow-700">

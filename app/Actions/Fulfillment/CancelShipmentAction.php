@@ -2,6 +2,7 @@
 
 namespace App\Actions\Fulfillment;
 
+use App\Actions\Sales\CancelOrderAction;
 use App\Enums\OrderStatus;
 use App\Enums\ShipmentStatus;
 use App\Models\Fulfillment\Shipment;
@@ -13,6 +14,7 @@ class CancelShipmentAction
 {
     public function __construct(
         protected OrderStockDeductionService $stockDeductionService,
+        protected CancelOrderAction $cancelOrderAction,
     ) {}
 
     public function execute(Shipment $shipment, ?Employee $performedBy = null): Shipment
@@ -49,9 +51,7 @@ class CancelShipmentAction
                 ->exists() === false;
 
             if ($allCancelled) {
-                $order->update([
-                    'status' => OrderStatus::Cancelled,
-                ]);
+                $this->cancelOrderAction->execute($order, $performedBy);
             } else {
                 $order->update([
                     'status' => OrderStatus::Processing,

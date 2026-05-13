@@ -17,7 +17,7 @@ import {
 import type { ColumnDef } from '@tanstack/vue-table';
 import { debounce } from 'lodash';
 import { ref, computed, h, watch } from 'vue';
-import {toast} from 'vue-sonner';
+import { toast } from 'vue-sonner';
 import DataTableGroup from '@/components/custom/data-table/DataTableGroup.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -54,7 +54,8 @@ import type { Location } from '@/types';
 
 const props = defineProps<{
     location: Location;
-    variantsList: any[]; // Added this
+    canManageStock: boolean;
+    variantsList: any[];
     inventory: {
         data: any[];
         meta: {
@@ -139,7 +140,7 @@ async function handleVariantSelect(index: number, variantId: string) {
 function submitBulkImport() {
     bulkImportForm.transform((data) => ({
         ...data,
-            location_id: props.location.id,
+        location_id: props.location.id,
     })).post(`/nhan-vien/kho-hang/vi-tri/${props.location.id}/bulk-import`, {
         onSuccess: () => {
             toast.success('Nhập kho hàng loạt thành công');
@@ -282,29 +283,35 @@ const columns: ColumnDef<any>[] = [
         meta: { align: 'right' },
         size: 150,
     },
-    {
-        id: 'actions',
-        header: 'Hành động',
-        enableSorting: false,
-        enableHiding: false,
-        cell: ({ row }: any) => {
-            return h('div', { class: 'flex justify-end' }, [
-                h(
-                    Button,
-                    {
-                        variant: 'ghost',
-                        size: 'sm',
-                        class: 'h-8 w-8 p-0',
-                        onClick: () => openAdjustmentDialog(row.original),
-                    },
-                    () => h(Settings2, { class: 'size-4' }),
-                ),
-            ]);
-        },
-        meta: { align: 'center' },
-        size: 100,
-    },
 ];
+
+if (props.canManageStock) {
+    columns.push(
+        {
+            id: 'actions',
+            header: 'Hành động',
+            enableSorting: false,
+            enableHiding: false,
+            cell: ({ row }: any) => {
+                if (!props.canManageStock) return null;
+                return h('div', { class: 'flex justify-end' }, [
+                    h(
+                        Button,
+                        {
+                            variant: 'ghost',
+                            size: 'sm',
+                            class: 'h-8 w-8 p-0',
+                            onClick: () => openAdjustmentDialog(row.original),
+                        },
+                        () => h(Settings2, { class: 'size-4' }),
+                    ),
+                ]);
+            },
+            meta: { align: 'center' },
+            size: 100,
+        }
+    )
+}
 
 const search = ref(props.filters.search || '');
 const isActuallyLoading = ref(true);
@@ -382,24 +389,18 @@ function handleExport() {
 </script>
 
 <template>
+
     <Head :title="`Kho: ${location.name}`" />
-    <AppLayout
-        :breadcrumbs="[
-            { title: 'Kho hàng', href: index().url },
-            { title: 'Vị trí', href: index().url },
-            { title: location.name, href: '#' },
-        ]"
-    >
+    <AppLayout :breadcrumbs="[
+        { title: 'Kho hàng', href: index().url },
+        { title: 'Vị trí', href: index().url },
+        { title: location.name, href: '#' },
+    ]">
         <div class="space-y-6 p-6">
             <!-- Header & Navigation -->
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-4">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        class="h-8 w-8 p-0"
-                        @click="handleReturn"
-                    >
+                    <Button variant="ghost" size="sm" class="h-8 w-8 p-0" @click="handleReturn">
                         <ArrowLeft class="size-4" />
                     </Button>
                     <div>
@@ -407,34 +408,22 @@ function handleExport() {
                             <h1 class="text-2xl font-bold text-zinc-900">
                                 {{ location.name }}
                             </h1>
-                            <Badge
-                                variant="outline"
-                                class="bg-zinc-100 text-zinc-600"
-                            >
+                            <Badge variant="outline" class="bg-zinc-100 text-zinc-600">
                                 {{ location.code }}
                             </Badge>
                         </div>
-                        <p
-                            class="flex items-center gap-1 text-sm text-muted-foreground"
-                        >
+                        <p class="flex items-center gap-1 text-sm text-muted-foreground">
                             <MapPin class="size-3" />
                             {{ location.full_address }}
                         </p>
                     </div>
                 </div>
                 <div class="flex gap-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        @click="handleExport"
-                    >
+                    <Button variant="outline" size="sm" @click="handleExport">
                         Xuất báo cáo
                     </Button>
-                    <Button
-                        size="sm"
-                        class="bg-zinc-900 text-white hover:bg-zinc-800"
-                        @click="isBulkImportOpen = true"
-                    >
+                    <Button v-if="canManageStock" size="sm" class="bg-zinc-900 text-white hover:bg-zinc-800"
+                        @click="isBulkImportOpen = true">
                         <div class="flex items-center gap-2">
                             <PlusCircle class="size-4" /> Nhập kho
                         </div>
@@ -451,7 +440,7 @@ function handleExport() {
                         </CardDescription>
                         <CardTitle class="text-2xl font-bold">{{
                             stats.total_sku
-                        }}</CardTitle>
+                            }}</CardTitle>
                     </CardHeader>
                 </Card>
                 <Card class="border-none bg-zinc-50/50 shadow-sm">
@@ -462,7 +451,7 @@ function handleExport() {
                         </CardDescription>
                         <CardTitle class="text-2xl font-bold">{{
                             stats.total_quantity
-                        }}
+                            }}
                         </CardTitle>
                     </CardHeader>
                 </Card>
@@ -474,7 +463,7 @@ function handleExport() {
                         </CardDescription>
                         <CardTitle class="text-2xl font-bold text-red-500">{{
                             stats.low_stock_count
-                        }}</CardTitle>
+                            }}</CardTitle>
                     </CardHeader>
                 </Card>
                 <Card class="border-none bg-zinc-50/50 shadow-sm">
@@ -485,7 +474,7 @@ function handleExport() {
                         </CardDescription>
                         <CardTitle class="text-2xl font-bold">{{
                             formatPrice(Number(stats.total_value))
-                        }}</CardTitle>
+                            }}</CardTitle>
                     </CardHeader>
                 </Card>
             </div>
@@ -496,33 +485,19 @@ function handleExport() {
                     <h2 class="text-lg font-semibold text-zinc-900">
                         Chi tiết tồn kho
                     </h2>
-                    <div
-                        class="flex items-center gap-2 text-xs text-muted-foreground"
-                    >
+                    <div class="flex items-center gap-2 text-xs text-muted-foreground">
                         <span class="flex items-center gap-1">
                             <div class="size-2 rounded-full bg-red-500"></div>
-                            {{ `Thấp (<= 5)` }}
-                        </span>
+                            {{ `Thấp (<= 5)` }} </span>
                     </div>
                 </div>
 
-                <DataTableGroup
-                    :columns="columns"
-                    :data="props.inventory.data"
-                    v-model:search="search"
-                    :has-active-filters="hasActiveFilters"
-                    :is-actually-loading="isActuallyLoading"
-                    :total="props.inventory.meta.total"
-                    :page-size="props.inventory.meta.per_page ?? 12"
-                    :current-page="props.inventory.meta.current_page"
-                    :last-page="props.inventory.meta.last_page"
-                    :order-by="filters.order_by"
-                    :order-direction="filters.order_direction"
-                    @reset="resetFilters"
-                    @sort="handleSort"
-                    @update:page="handlePageChange"
-                    @update:page-size="handlePageSizeChange"
-                />
+                <DataTableGroup :columns="columns" :data="props.inventory.data" v-model:search="search"
+                    :has-active-filters="hasActiveFilters" :is-actually-loading="isActuallyLoading"
+                    :total="props.inventory.meta.total" :page-size="props.inventory.meta.per_page ?? 12"
+                    :current-page="props.inventory.meta.current_page" :last-page="props.inventory.meta.last_page"
+                    :order-by="filters.order_by" :order-direction="filters.order_direction" @reset="resetFilters"
+                    @sort="handleSort" @update:page="handlePageChange" @update:page-size="handlePageSizeChange" />
             </div>
         </div>
 
@@ -550,39 +525,39 @@ function handleExport() {
                             <tr v-for="(item, index) in bulkImportForm.items" :key="index">
                                 <td class="px-3 py-4">
                                     <div class="flex flex-col gap-2">
-                                        <SearchableSelect
-                                            v-model="bulkImportForm.items[index].variant_id"
-                                            :options="variantsList"
-                                            value-key="id"
-                                            :label-key="'name'"
-                                            placeholder="Chọn biến thể..."
-                                            :searchable-keys="['sku', 'name']"
+                                        <SearchableSelect v-model="bulkImportForm.items[index].variant_id"
+                                            :options="variantsList" value-key="id" :label-key="'name'"
+                                            placeholder="Chọn biến thể..." :searchable-keys="['sku', 'name']"
                                             :custom-label="(opt) => `${opt.product.name} - ${opt.name}`"
-                                            @update:model-value="(val) => handleVariantSelect(index, String(val))"
-                                        >
+                                            @update:model-value="(val) => handleVariantSelect(index, String(val))">
                                             <template #item="{ option }">
                                                 <div class="flex flex-col">
-                                                    <span class="font-medium">{{ option.product.name }} - {{ option.name }}</span>
+                                                    <span class="font-medium">{{ option.product.name }} - {{ option.name
+                                                        }}</span>
                                                     <span class="text-xs text-muted-foreground">{{ option.sku }}</span>
                                                 </div>
                                             </template>
                                         </SearchableSelect>
-                                        <Input v-model="bulkImportForm.items[index].notes" placeholder="Ghi chú..." class="h-8 text-xs" />
+                                        <Input v-model="bulkImportForm.items[index].notes" placeholder="Ghi chú..."
+                                            class="h-8 text-xs" />
                                     </div>
                                 </td>
                                 <td class="px-3 py-4">
                                     <div class="flex items-center">
-                                        <Input type="number" v-model.number="bulkImportForm.items[index].quantity" class="h-8" min="1" />
+                                        <Input type="number" v-model.number="bulkImportForm.items[index].quantity"
+                                            class="h-8" min="1" />
                                     </div>
                                 </td>
                                 <td class="px-3 py-4">
                                     <div class="flex items-center">
-                                        <Input type="number" v-model.number="bulkImportForm.items[index].cost_per_unit!" class="h-8" step="1000" />
+                                        <Input type="number" v-model.number="bulkImportForm.items[index].cost_per_unit!"
+                                            class="h-8" step="1000" />
                                     </div>
                                 </td>
                                 <td class="px-3 py-4">
                                     <div class="flex items-center">
-                                        <Button variant="ghost" size="sm" class="h-8 w-8 p-0 text-red-500" @click="removeBulkItem(index)">
+                                        <Button variant="ghost" size="sm" class="h-8 w-8 p-0 text-red-500"
+                                            @click="removeBulkItem(index)">
                                             <Trash2 class="size-4" />
                                         </Button>
                                     </div>
@@ -599,11 +574,8 @@ function handleExport() {
                     <Button variant="outline" @click="isBulkImportOpen = false">
                         Hủy
                     </Button>
-                    <Button
-                        class="bg-zinc-900 text-white hover:bg-zinc-800"
-                        :disabled="bulkImportForm.processing"
-                        @click="submitBulkImport"
-                    >
+                    <Button class="bg-zinc-900 text-white hover:bg-zinc-800" :disabled="bulkImportForm.processing"
+                        @click="submitBulkImport">
                         {{ bulkImportForm.processing ? 'Đang xử lý...' : 'Xác nhận nhập kho' }}
                     </Button>
                 </DialogFooter>
@@ -656,46 +628,30 @@ function handleExport() {
                         </div>
                         <div class="space-y-2">
                             <Label>Số lượng</Label>
-                            <Input
-                                type="number"
-                                v-model.number="adjustmentForm.quantity"
-                                :disabled="adjustmentForm.type === 'cost'"
-                                min="0"
-                            />
+                            <Input type="number" v-model.number="adjustmentForm.quantity"
+                                :disabled="adjustmentForm.type === 'cost'" min="0" />
                         </div>
                     </div>
 
                     <div class="space-y-2">
                         <Label>Giá vốn mới (tùy chọn)</Label>
-                        <Input
-                            type="number"
-                            v-model.number="adjustmentForm.cost_per_unit!"
-                            step="0.01"
-                        />
+                        <Input type="number" v-model.number="adjustmentForm.cost_per_unit!" step="0.01" />
                     </div>
 
                     <div class="space-y-2">
                         <Label>Lý do</Label>
                         <div class="flex flex-wrap gap-2 mb-2">
-                            <Button
-                                v-for="note in getSampleNotes(adjustmentForm.type)"
-                                :key="note"
-                                variant="outline"
-                                size="sm"
-                                class="text-xs h-7 px-2"
-                                @click="adjustmentForm.notes = note"
-                            >
+                            <Button v-for="note in getSampleNotes(adjustmentForm.type)" :key="note" variant="outline"
+                                size="sm" class="text-xs h-7 px-2" @click="adjustmentForm.notes = note">
                                 {{ note }}
                             </Button>
                         </div>
-                        <Textarea
-                            v-model="adjustmentForm.notes"
-                            placeholder="Chọn lý do nhanh hoặc nhập chi tiết..."
-                        />
+                        <Textarea v-model="adjustmentForm.notes" placeholder="Chọn lý do nhanh hoặc nhập chi tiết..." />
                     </div>
 
                     <div class="flex items-center gap-2 py-2">
-                        <Checkbox :model-value="adjustmentForm.force_update_price" @update:model-value="adjustmentForm.force_update_price = !adjustmentForm.force_update_price"/>
+                        <Checkbox :model-value="adjustmentForm.force_update_price"
+                            @update:model-value="adjustmentForm.force_update_price = !adjustmentForm.force_update_price" />
                         <Label for="force_price" class="text-xs cursor-pointer">
                             Cập nhật lại giá bán tự động
                         </Label>
@@ -706,11 +662,8 @@ function handleExport() {
                     <Button variant="outline" @click="isAdjustmentOpen = false">
                         Hủy
                     </Button>
-                    <Button
-                        class="bg-zinc-900 text-white hover:bg-zinc-800"
-                        :disabled="adjustmentForm.processing"
-                        @click="submitAdjustment"
-                    >
+                    <Button class="bg-zinc-900 text-white hover:bg-zinc-800" :disabled="adjustmentForm.processing"
+                        @click="submitAdjustment">
                         {{ adjustmentForm.processing ? 'Đang lưu...' : 'Lưu điều chỉnh' }}
                     </Button>
                 </DialogFooter>

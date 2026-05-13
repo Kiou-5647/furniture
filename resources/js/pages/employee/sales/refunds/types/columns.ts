@@ -12,6 +12,15 @@ export function getColumns(
 ): ColumnDef<Refund>[] {
     return [
         {
+            accessorKey: 'refund_number',
+            header: 'Mã hoàn tiền',
+            size: 140,
+            enableSorting: false,
+            enableHiding: false,
+            meta: { align: 'center' },
+            cell: ({ row }) => h('span', { class: 'font-mono text-xs' }, row.original.refund_number),
+        },
+        {
             accessorKey: 'invoice_number',
             header: 'Mã hóa đơn',
             size: 140,
@@ -79,8 +88,8 @@ export function getColumns(
             meta: { align: 'center' },
             cell: ({ row }) => {
                 const r = row.original;
-                const canApprove = r.status === 'pending';
-                const canReject = r.status === 'pending';
+                const canApprove = r.can_approve;
+                const canReject = r.can_reject;
                 return h(DropdownMenu, {}, {
                     default: () => [
                         h(DropdownMenuTrigger, { asChild: true }, () => h(Button, { variant: 'ghost', class: 'h-8 w-8 p-0' }, () => h(MoreHorizontal, { class: 'h-4 w-4' }))),

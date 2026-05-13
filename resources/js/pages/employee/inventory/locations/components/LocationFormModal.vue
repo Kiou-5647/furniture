@@ -36,6 +36,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { CheckUserPermission } from '@/lib';
 import { store, update } from '@/routes/employee/inventory/locations';
 
 const props = defineProps<{
@@ -157,6 +158,11 @@ const selectedType = computed(() =>
     props.typeOptions.find((t) => t.value === form.type),
 );
 
+const canUpdate = computed(() => {
+    if (!props.location) return CheckUserPermission('Tạo vị trí');
+    return props.location.can_update;
+});
+
 const wardDisplayLabel = computed(() => {
     if (form.ward_name) return form.ward_name;
     if (!form.province_code) return 'Chọn Tỉnh trước';
@@ -185,9 +191,7 @@ function closeModal() {
 
 <template>
     <Dialog :open="open" @update:open="(val) => !val && closeModal()">
-        <DialogContent
-            class="max-h-[90vh] gap-0 overflow-y-auto p-0 sm:max-w-[600px]"
-        >
+        <DialogContent class="max-h-[90vh] gap-0 overflow-y-auto p-0 sm:max-w-[600px]">
             <DialogHeader class="px-4 pt-5 pb-3 sm:px-6 sm:pt-6 sm:pb-4">
                 <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
@@ -202,38 +206,31 @@ function closeModal() {
                             }}
                         </DialogDescription>
                     </div>
-                    <Badge
-                        v-if="selectedType"
-                        variant="outline"
-                        class="shrink-0 gap-1.5"
-                    >
-                        <component
-                            :is="typeIconMap[form.type]"
-                            class="h-3.5 w-3.5"
-                        />
-                        {{ selectedType.label }}
-                    </Badge>
+                    <div class="flex space-x-2 justify-items-center items-center">
+                        <Badge v-if="selectedType" variant="outline" class="shrink-0 gap-1.5">
+                            <component :is="typeIconMap[form.type]" class="h-3.5 w-3.5" />
+                            {{ selectedType.label }}
+                        </Badge>
+                        <Badge v-if="!canUpdate" variant="default" class="shrink-0 gap-1.5">
+                            Chỉ xem
+                        </Badge>
+                    </div>
+
                 </div>
             </DialogHeader>
 
             <form @submit.prevent="submit" class="px-4 pb-4 sm:px-6">
-                <div class="space-y-4">
+                <div :class="['space-y-4', { 'opacity-80 pointer-events-none': !canUpdate }]">
                     <!-- Name + Type -->
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <Field>
                             <FieldLabel>
-                                <Package
-                                    class="h-3.5 w-3.5 shrink-0 text-muted-foreground"
-                                />
+                                <Package class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                                 Tên vị trí
                                 <span class="text-destructive">*</span>
                             </FieldLabel>
                             <FieldContent>
-                                <Input
-                                    v-model="form.name"
-                                    placeholder="Ví dụ: Kho chính HCM"
-                                    class="w-full"
-                                />
+                                <Input v-model="form.name" placeholder="Ví dụ: Kho chính HCM" class="w-full" />
                                 <FieldError :errors="[form.errors.name]" />
                             </FieldContent>
                         </Field>
@@ -249,22 +246,13 @@ function closeModal() {
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem
-                                            v-for="typeOption in typeOptions"
-                                            :key="typeOption.value"
-                                            :value="typeOption.value"
-                                        >
-                                            <div
-                                                class="flex items-center gap-2"
-                                            >
-                                                <component
-                                                    :is="
-                                                        typeIconMap[
-                                                            typeOption.value
-                                                        ]
-                                                    "
-                                                    class="h-4 w-4"
-                                                />
+                                        <SelectItem v-for="typeOption in typeOptions" :key="typeOption.value"
+                                            :value="typeOption.value">
+                                            <div class="flex items-center gap-2">
+                                                <component :is="typeIconMap[
+                                                    typeOption.value
+                                                    ]
+                                                    " class="h-4 w-4" />
                                                 {{ typeOption.label }}
                                             </div>
                                         </SelectItem>
@@ -279,48 +267,32 @@ function closeModal() {
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <Field>
                             <FieldLabel>
-                                <Phone
-                                    class="h-3.5 w-3.5 shrink-0 text-muted-foreground"
-                                />
+                                <Phone class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                                 Số điện thoại
                             </FieldLabel>
                             <FieldContent>
-                                <Input
-                                    v-model="form.phone"
-                                    placeholder="0123 456 789"
-                                    class="w-full"
-                                />
+                                <Input v-model="form.phone" placeholder="0123 456 789" class="w-full" />
                                 <FieldError :errors="[form.errors.phone]" />
                             </FieldContent>
                         </Field>
 
                         <Field>
                             <FieldLabel>
-                                <User
-                                    class="h-3.5 w-3.5 shrink-0 text-muted-foreground"
-                                />
+                                <User class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                                 Người quản lý
                             </FieldLabel>
                             <FieldContent>
                                 <Select v-model="form.manager_id">
                                     <SelectTrigger class="w-full">
-                                        <SelectValue
-                                            placeholder="Chọn người quản lý..."
-                                        />
+                                        <SelectValue placeholder="Chọn người quản lý..." />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem
-                                            v-for="m in managerOptions"
-                                            :key="m.id"
-                                            :value="m.id"
-                                        >
+                                        <SelectItem v-for="m in managerOptions" :key="m.id" :value="m.id">
                                             {{ m.label }}
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>
-                                <FieldError
-                                    :errors="[form.errors.manager_id]"
-                                />
+                                <FieldError :errors="[form.errors.manager_id]" />
                             </FieldContent>
                         </Field>
                     </div>
@@ -329,69 +301,45 @@ function closeModal() {
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <Field>
                             <FieldLabel>
-                                <MapPin
-                                    class="h-3.5 w-3.5 shrink-0 text-muted-foreground"
-                                />
+                                <MapPin class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                                 Tỉnh/Thành phố
                             </FieldLabel>
                             <FieldContent>
                                 <Select v-model="form.province_code">
                                     <SelectTrigger class="w-full">
-                                        <SelectValue
-                                            :placeholder="
-                                                loadingProvinces
-                                                    ? 'Đang tải...'
-                                                    : 'Chọn Tỉnh/Thành'
-                                            "
-                                        />
+                                        <SelectValue :placeholder="loadingProvinces
+                                                ? 'Đang tải...'
+                                                : 'Chọn Tỉnh/Thành'
+                                            " />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem
-                                            v-for="province in provinces"
-                                            :key="province.value"
-                                            :value="province.value"
-                                        >
+                                        <SelectItem v-for="province in provinces" :key="province.value"
+                                            :value="province.value">
                                             {{ province.label }}
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>
-                                <FieldError
-                                    :errors="[form.errors.province_code]"
-                                />
+                                <FieldError :errors="[form.errors.province_code]" />
                             </FieldContent>
                         </Field>
 
                         <Field>
                             <FieldLabel>Phường/Xã</FieldLabel>
                             <FieldContent>
-                                <Select
-                                    v-model="form.ward_code"
-                                    :disabled="
-                                        !form.province_code || loadingWards
-                                    "
-                                >
+                                <Select v-model="form.ward_code" :disabled="!form.province_code || loadingWards
+                                    ">
                                     <SelectTrigger class="w-full">
-                                        <SelectValue
-                                            :placeholder="wardDisplayLabel"
-                                        />
+                                        <SelectValue :placeholder="wardDisplayLabel" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         <template v-if="loadingWards">
                                             <div
-                                                class="flex items-center gap-2 px-2 py-1.5 text-sm text-muted-foreground"
-                                            >
-                                                <Loader2
-                                                    class="h-3 w-3 animate-spin"
-                                                />
+                                                class="flex items-center gap-2 px-2 py-1.5 text-sm text-muted-foreground">
+                                                <Loader2 class="h-3 w-3 animate-spin" />
                                                 Đang tải phường/xã...
                                             </div>
                                         </template>
-                                        <SelectItem
-                                            v-else
-                                            v-for="ward in wards"
-                                            :key="ward.value"
-                                            :value="ward.value"
-                                        >
+                                        <SelectItem v-else v-for="ward in wards" :key="ward.value" :value="ward.value">
                                             {{ ward.label }}
                                         </SelectItem>
                                     </SelectContent>
@@ -405,20 +353,15 @@ function closeModal() {
                     <Field>
                         <FieldLabel>Địa chỉ</FieldLabel>
                         <FieldContent>
-                            <Input
-                                v-model="form.street"
-                                placeholder="Ví dụ: Tòa nhà A, Khu phức hợp B"
-                                class="w-full"
-                            />
+                            <Input v-model="form.street" placeholder="Ví dụ: Tòa nhà A, Khu phức hợp B"
+                                class="w-full" />
                             <FieldError :errors="[form.errors.street]" />
                         </FieldContent>
                     </Field>
                 </div>
 
                 <!-- Status Toggle -->
-                <div
-                    class="mt-6 flex items-center justify-between rounded-lg border p-4"
-                >
+                <div class="mt-6 flex items-center justify-between rounded-lg border p-4">
                     <div class="space-y-0.5">
                         <Label class="text-base">Kích hoạt</Label>
                         <p class="text-sm text-muted-foreground">
@@ -432,11 +375,8 @@ function closeModal() {
                     <Button type="button" variant="outline" @click="closeModal">
                         Hủy
                     </Button>
-                    <Button type="submit" :disabled="form.processing">
-                        <Loader2
-                            v-if="form.processing"
-                            class="mr-2 h-4 w-4 animate-spin"
-                        />
+                    <Button type="submit" :disabled="form.processing || !canUpdate">
+                        <Loader2 v-if="form.processing" class="mr-2 h-4 w-4 animate-spin" />
                         {{ location ? 'Lưu thay đổi' : 'Tạo mới' }}
                     </Button>
                 </DialogFooter>

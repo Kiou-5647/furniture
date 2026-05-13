@@ -51,6 +51,8 @@ export interface Product {
     product_cards?: ProductCard[];
     created_at: string;
     updated_at: string;
+    can_update: boolean;
+    can_delete: boolean;
 }
 
 export interface ProductPagination {

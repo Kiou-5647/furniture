@@ -936,8 +936,8 @@ function confirmReturn() {
                                     <span
                                         class="font-mono text-xs font-bold text-muted-foreground"
                                         >{{
-                                            refund.id.substring(0, 8)
-                                        }}...</span
+                                            refund.refund_number
+                                        }}</span
                                     >
                                     <Badge
                                         :class="[

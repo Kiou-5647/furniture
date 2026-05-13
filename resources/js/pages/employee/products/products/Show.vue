@@ -51,6 +51,7 @@ import type {BreadcrumbItem} from '@/types';
 import type { Product } from '@/types';
 
 const props = defineProps<{
+    canUpdate: boolean;
     product: Product;
 }>();
 
@@ -193,6 +194,7 @@ onMounted(() => {
                 </div>
                 <div class="flex items-center gap-2">
                     <Link
+                        v-if="canUpdate"
                         :href="edit(product.id).url"
                         class="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
                     >
