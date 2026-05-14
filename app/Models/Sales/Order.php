@@ -53,7 +53,7 @@ class Order extends Model
             ->logOnly(['order_number', 'status', 'total_amount', 'customer_id', 'accepted_by'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
-            ->setDescriptionForEvent(fn (string $eventName) => "Order {$eventName}");
+            ->setDescriptionForEvent(fn(string $eventName) => "Order {$eventName}");
     }
 
     public function customer(): BelongsTo
@@ -114,7 +114,7 @@ class Order extends Model
         $date = now()->format('dmy');
 
         do {
-            $number = 'ORD-'.$date.'-'.self::randomToken();
+            $number = 'ORD-' . $date . '-' . self::randomToken();
         } while (self::where('order_number', $number)->exists());
 
         return $number;
@@ -170,7 +170,7 @@ class Order extends Model
                 }
 
                 $hasPendingItems = $this->shipments()
-                    ->whereHas('items', fn ($q) => $q->whereNotIn('status', [ShipmentStatus::Delivered, ShipmentStatus::Returned]))
+                    ->whereHas('items', fn($q) => $q->whereNotIn('status', [ShipmentStatus::Delivered, ShipmentStatus::Returned]))
                     ->exists();
 
                 if ($hasPendingItems) {
@@ -192,7 +192,7 @@ class Order extends Model
 
         if ($this->payment_method === PaymentMethod::BankTransfer) {
             $hasPendingItems = $this->shipments()
-                ->whereHas('items', fn ($q) => $q->whereNotIn('status', [ShipmentStatus::Delivered, ShipmentStatus::Returned]))
+                ->whereHas('items', fn($q) => $q->whereNotIn('status', [ShipmentStatus::Delivered, ShipmentStatus::Returned]))
                 ->exists();
 
             if ($hasPendingItems) {
@@ -218,7 +218,7 @@ class Order extends Model
 
             $hasPendingItems = $this->shipments()
                 ->where('status', '!=', ShipmentStatus::Cancelled)
-                ->whereHas('items', fn ($q) => $q->whereNotIn('status', [ShipmentStatus::Delivered, ShipmentStatus::Returned]))
+                ->whereHas('items', fn($q) => $q->whereNotIn('status', [ShipmentStatus::Delivered, ShipmentStatus::Returned]))
                 ->exists();
 
             if ($hasPendingItems) {
@@ -252,6 +252,10 @@ class Order extends Model
 
     public function canCreateShipment(): bool
     {
+        if ($this->payment_method !== PaymentMethod::Cod && $this->paid_at === null) {
+            return false;
+        }
+
         return $this->status === OrderStatus::Processing;
     }
 }

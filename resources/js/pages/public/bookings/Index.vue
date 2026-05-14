@@ -148,10 +148,8 @@ async function syncSlotFromInputs() {
 
     if (!result.isValid) {
         toast.error(result.error!);
-        // We don't clear the input to avoid loop, but the visual grid will show red/gray
     } else {
         form.date = result.date!;
-        form.start_time = result.startTime!;
     }
 }
 
@@ -240,7 +238,7 @@ watch(
     () => form.date,
     async (newDate) => {
         if (!newDate) return;
-        
+
         // Tính toán lại ngày bắt đầu tuần dựa trên ngày được chọn trong DatePicker
         const selectedDate = new Date(newDate);
         const day = selectedDate.getDay();
@@ -248,9 +246,9 @@ watch(
         const monday = new Date(selectedDate);
         monday.setHours(0, 0, 0, 0);
         monday.setDate(diff);
-        
+
         currentWeekStart.value = monday;
-        
+
         // Tải lại slots cho tuần mới
         await loadDesignerAvailability();
     },

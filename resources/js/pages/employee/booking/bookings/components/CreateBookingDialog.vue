@@ -92,6 +92,32 @@ const wards = ref<{ value: string; label: string }[]>([]);
 const loadingProvinces = ref(false);
 const loadingWards = ref(false);
 
+// --- METHODS ---
+async function syncSlotFromInputs() {
+    if (!form.date || !form.start_time) return;
+
+    const dateObj = new Date(form.date);
+    const day = dateObj.getDay();
+    const hour = parseInt(form.start_time.split(':')[0]);
+
+    if (isNaN(hour)) return;
+
+    const result = handleSlotClick(
+        day,
+        hour,
+        currentWeekStart.value,
+        designerAvailability.value,
+        weeklySlots.value,
+    );
+
+    if (!result.isValid) {
+        toast.error(result.error!);
+        // We don't clear the input to avoid loop, but the visual grid will show red/gray
+    } else {
+        form.date = result.date!;
+    }
+}
+
 async function loadProvinces() {
     loadingProvinces.value = true;
     try {
@@ -301,11 +327,30 @@ async function doHandleSlotClick(day: number, hour: number) {
 }
 
 watch(
-    () => form.date,
-    () => {
-        autoSelectFirstSlot();
+    () => [form.date, form.start_time],
+    async ([newDate, newTime]) => {
+        if (!newDate) return;
+
+        // 1. Sync the week navigation and load data
+        const selectedDate = new Date(newDate);
+        const day = selectedDate.getDay();
+        const diff = selectedDate.getDate() - day + (day === 0 ? -6 : 1);
+        const monday = new Date(selectedDate);
+        monday.setHours(0, 0, 0, 0);
+        monday.setDate(diff);
+
+        if (currentWeekStart.value.getTime() !== monday.getTime()) {
+            currentWeekStart.value = monday;
+            await loadDesignerAvailability();
+        }
+
+        // 2. Sync the highlight only if we have a time selected
+        if (newTime) {
+            await syncSlotFromInputs();
+        }
     },
 );
+
 
 watch(
     () => form.designer_id,
@@ -322,8 +367,6 @@ async function submit() {
     }
 
     form.processing = true;
-
-    console.info(form.customer_id)
 
     try {
         await router.post(
