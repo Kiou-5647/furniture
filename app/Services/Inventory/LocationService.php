@@ -14,7 +14,7 @@ use Illuminate\Support\Collection;
 
 class LocationService
 {
-    protected function applyRoleFilter($query, User $user): void
+    public function applyRoleFilter($query, User $user): void
     {
         if ($user->hasAnyRole(['Quản trị viên', 'Quản lý'])) {
             return;

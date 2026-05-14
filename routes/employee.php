@@ -42,6 +42,9 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
     Route::get('/dashboard/summary', [EmployeeDashboardController::class, 'getSummary'])->name('dashboard.summary');
     Route::get('/dashboard/orders-trend', [EmployeeDashboardController::class, 'getOrdersTrend'])->name('dashboard.orders-trend');
     Route::get('/dashboard/financial-analysis', [EmployeeDashboardController::class, 'getFinancialAnalysis'])->name('dashboard.financial-analysis');
+    Route::get('/dashboard/orders-distribution', [EmployeeDashboardController::class, 'getOrderStatusDistribution'])->name('dashboard.orders-distribution');
+    Route::get('/dashboard/bookings-distribution', [EmployeeDashboardController::class, 'getBookingStatusDistribution'])->name('dashboard.bookings-distribution');
+    Route::get('/dashboard/refunds-distribution', [EmployeeDashboardController::class, 'getRefundStatusDistribution'])->name('dashboard.refunds-distribution');
 
     /**
      * Routes nhân sự

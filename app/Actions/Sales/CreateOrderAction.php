@@ -29,8 +29,8 @@ class CreateOrderAction
 
         try {
             $validatedItems = $this->validateAndResolveItems($data);
-            $totalAmount = collect($validatedItems)->sum(fn ($item) => $item['unit_price'] * $item['quantity']);
-            $originalTotal = collect($validatedItems)->sum(fn ($item) => $item['original_unit_price'] * $item['quantity']);
+            $totalAmount = collect($validatedItems)->sum(fn($item) => $item['unit_price'] * $item['quantity']);
+            $originalTotal = collect($validatedItems)->sum(fn($item) => $item['original_unit_price'] * $item['quantity']);
             $totalItems = collect($validatedItems)->sum('quantity');
 
             $shippingCost = (float) ($data->shipping_cost ?? 0);
@@ -158,7 +158,7 @@ class CreateOrderAction
             $stockOptions = $this->stockLocator->findStockForItem($item['purchasable_type'], $item['purchasable_id'], null, null, $storeLocationId);
             $storeStock = $stockOptions->firstWhere('location_id', $storeLocationId);
             if (! $storeStock || $storeStock['available_qty'] <= 0) {
-                throw new \RuntimeException('Sản phẩm "'.$purchasable->name.'" hết hàng tại cửa hàng.');
+                throw new \RuntimeException('Sản phẩm "' . $purchasable->name . '" hết hàng tại cửa hàng.');
             }
         }
     }
@@ -255,7 +255,7 @@ class CreateOrderAction
         $config = $item['configuration'] ?? [];
 
         if (empty($config)) {
-            throw new \RuntimeException('Gói sản phẩm "'.$bundle->name.'" thiếu thông tin tùy chọn phiên bản.');
+            throw new \RuntimeException('Gói sản phẩm "' . $bundle->name . '" thiếu thông tin tùy chọn phiên bản.');
         }
 
         foreach ($bundle->contents as $content) {

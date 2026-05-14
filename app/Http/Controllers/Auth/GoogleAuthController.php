@@ -22,7 +22,7 @@ class GoogleAuthController
 
             Auth::login($user);
 
-            return redirect()->intended('/dashboard');
+            return redirect()->intended('/');
         } catch (\Exception $e) {
             return redirect('/login')->withErrors(['auth' => 'Google authentication failed.']);
         }

@@ -436,13 +436,13 @@ function confirmBundleSelection() {
     if (!selectedBundle.value) return;
 
     const contents = props.bundleContents?.[selectedBundle.value!.id] ?? [];
-    const configuration: Record<string, string> = {};
+    const configuration: Record<string, any> = {};
     let variantTotal = 0;
 
     contents.forEach((content) => {
         const variantId = bundleVariantSelections.value[content.id];
         if (variantId) {
-            configuration[content.id] = variantId;
+            configuration[content.id] = { variant_id: variantId };
             const variant = content.variants.find((v) => v.id === variantId);
             variantTotal +=
                 parseFloat(variant?.price || '0') * content.quantity;
@@ -486,6 +486,7 @@ function updateQuantity(index: number, delta: number) {
 }
 
 function submit() {
+
     form.post(store().url, {
         preserveScroll: true,
         onSuccess: () => {

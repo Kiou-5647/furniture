@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Customer\BookingController;
 use App\Http\Controllers\Customer\OrderController;
 use App\Http\Controllers\Customer\ReviewController;
@@ -74,6 +75,14 @@ Route::middleware(['auth', 'verified', 'user_type:customer'])->name('customer.')
 Route::get('/vnpay/{invoice}', [VnPayPaymentController::class, 'initiate'])->name('payment.vnpay.initiate');
 Route::get('/payment/vnpay/return', VnPayReturnController::class)->name('payment.vnpay.return');
 Route::inertia('/payment/vnpay/status', 'payment/vnpay-status')->name('payment.vnpay.status');
+
+/**
+ * Google Auth
+ */
+Route::name('auth.google.')->group(function () {
+    Route::get('api/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('redirect');
+    Route::get('api/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('callback');
+});
 
 require __DIR__ . '/employee.php';
 require __DIR__ . '/settings.php';

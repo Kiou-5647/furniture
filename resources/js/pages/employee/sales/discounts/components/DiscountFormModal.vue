@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3';
 import { ref, watch, onMounted, computed } from 'vue';
+import { toast } from 'vue-sonner';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -22,7 +23,6 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { CheckUserPermission } from '@/lib';
-import { toast } from 'vue-sonner';
 import { store, update } from '@/routes/employee/sales/discounts';
 import type { Discount } from '@/types';
 

@@ -6,14 +6,6 @@ use App\Http\Controllers\Auth\GoogleAuthController;
 use Illuminate\Support\Facades\Route;
 
 /**
- * Google Auth
- */
-Route::name('auth.google.')->group(function () {
-    Route::get('auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('redirect');
-    Route::get('auth/google/callback', [GoogleAuthController::class, 'callback'])->name('callback');
-});
-
-/**
  * Dữ liệu tỉnh thành
  */
 Route::get('/geodata/provinces', [GeodataController::class, 'provinces']);

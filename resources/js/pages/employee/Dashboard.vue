@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
+import { Calendar } from '@lucide/vue';
 import {
     VisXYContainer,
     VisArea,
@@ -8,6 +9,8 @@ import {
     VisCrosshair,
     VisTooltip,
     VisBulletLegend,
+    VisDonut,
+    VisSingleContainer,
 } from '@unovis/vue';
 import axios from 'axios';
 
@@ -19,7 +22,8 @@ import {
     ArrowUpRight,
     AlertTriangle,
 } from 'lucide-vue-next';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, shallowRef, computed } from 'vue';
+import { getBookingStatusDistribution, getFinancialAnalysis, getOrderStatusDistribution, getOrdersTrend, getRefundStatusDistribution, getSummary } from '@/actions/App/Http/Controllers/Employee/EmployeeDashboardController';
 import { Badge } from '@/components/ui/badge';
 import {
     Card,
@@ -39,14 +43,17 @@ import {
 import AppLayout from '@/layouts/AppLayout.vue';
 import { formatPrice } from '@/lib';
 import type { BreadcrumbItem } from '@/types';
-import { getFinancialAnalysis, getOrdersTrend, getSummary } from '@/actions/App/Http/Controllers/Employee/EmployeeDashboardController';
 
 const props = defineProps<{
     user: {
         name: string;
         email: string;
-        roles: string[];
-        permissions: string[];
+        can: {
+            order: boolean;
+            booking: boolean;
+            inventory: boolean;
+            refund: boolean;
+        };
     };
     employee?: Record<string, unknown>;
     tables: {
@@ -90,6 +97,49 @@ const loadingSummary = ref(false);
 const loadingOrders = ref(false);
 const loadingFinance = ref(false);
 
+const orderDistPeriod = ref('month');
+const bookingDistPeriod = ref('month');
+const refundDistPeriod = ref('month');
+
+// State cho data
+const orderDist = ref<any[]>([]);
+const bookingDist = ref<any[]>([]);
+const refundDist = ref<any[]>([]);
+const loadingOrderDist = ref(false);
+const loadingBookingDist = ref(false);
+const loadingRefundDist = ref(false);
+
+const fetchOrderDist = async () => {
+    loadingOrderDist.value = true;
+    try {
+        const res = await axios.get(getOrderStatusDistribution().url + `?period=${orderDistPeriod.value}`);
+        orderDist.value = res.data;
+        console.log(orderDist.value)
+    } finally {
+        loadingOrderDist.value = false;
+    }
+};
+
+const fetchBookingDist = async () => {
+    loadingBookingDist.value = true;
+    try {
+        const res = await axios.get(getBookingStatusDistribution().url + `?period=${bookingDistPeriod.value}`);
+        bookingDist.value = res.data;
+    } finally {
+        loadingBookingDist.value = false;
+    }
+};
+
+const fetchRefundDist = async () => {
+    loadingRefundDist.value = true
+    try {
+        const res = await axios.get(getRefundStatusDistribution().url + `?period=${refundDistPeriod.value}`);
+        refundDist.value = res.data;
+    } finally {
+        loadingRefundDist.value = false;
+    }
+};
+
 const fetchSummary = async () => {
     loadingSummary.value = true;
     try {
@@ -115,6 +165,7 @@ const fetchFinancialAnalysis = async () => {
     try {
         const res = await axios.get(getFinancialAnalysis().url + `?period=${financePeriod.value}`);
         financialAnalysis.value = res.data;
+        console.log(financialAnalysis.value)
     } finally {
         loadingFinance.value = false;
     }
@@ -124,6 +175,9 @@ onMounted(() => {
     fetchSummary();
     fetchOrdersTrend();
     fetchFinancialAnalysis();
+    fetchOrderDist();
+    fetchBookingDist();
+    fetchRefundDist();
 });
 
 const getTrendClass = (trend: number) => {
@@ -158,10 +212,34 @@ const getYProfit = (d: any) => d.profit;
 const getYRefunds = (d: any) => d.refunds;
 
 const financialItems = [
-    {name: 'Doanh thu', color: 'blue'},
-    {name: 'Lợi nhuận', color: 'green'},
-    {name: 'Hoàn tiền', color: 'red'},
+    { name: 'Doanh thu', color: 'blue' },
+    { name: 'Lợi nhuận', color: 'green' },
+    { name: 'Hoàn tiền', color: 'red' },
 ]
+
+const donutValue = (d: any) => d.value;
+const donutColor = (d: any) => d.color;
+
+const orderLegendItems = computed(() => {
+    return orderDist.value.map(item => ({
+        name: item.key,
+        color: item.color
+    }));
+});
+
+const bookingLegendItems = computed(() => {
+    return bookingDist.value.map(item => ({
+        name: item.key,
+        color: item.color
+    }));
+});
+const refundLegendItems = computed(() => {
+    return refundDist.value.map(item => ({
+        name: item.key,
+        color: item.color
+    }));
+});
+
 </script>
 
 <template>
@@ -198,11 +276,11 @@ const financialItems = [
                                 summaryPeriod = p;
                             fetchSummary();
                             " :class="[
-                                    'rounded-md px-2 py-1 text-[10px] font-medium transition-all',
-                                    summaryPeriod === p
-                                        ? 'bg-background text-foreground shadow-sm'
-                                        : 'text-muted-foreground hover:text-foreground',
-                                ]">
+                                'rounded-md px-2 py-1 text-[10px] font-medium transition-all',
+                                summaryPeriod === p
+                                    ? 'bg-background text-foreground shadow-sm'
+                                    : 'text-muted-foreground hover:text-foreground',
+                            ]">
                                 {{
                                     p === 'today'
                                         ? 'Hôm nay'
@@ -267,6 +345,27 @@ const financialItems = [
                         </Card>
                         <Card>
                             <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle class="text-xs font-medium">Lịch hẹn</CardTitle>
+                                <Calendar class="h-3 w-3 text-muted-foreground" />
+                            </CardHeader>
+                            <CardContent>
+                                <div class="text-xl font-bold">
+                                    {{ summary.bookings.value }}
+                                </div>
+                                <div :class="[
+                                    'flex items-center gap-1 text-[10px]',
+                                    getTrendClass(summary.bookings.trend),
+                                ]">
+                                    <TrendingUp :class="[
+                                        'h-2 w-2',
+                                        summary.bookings.trend < 0 ? 'rotate-180' : '',
+                                    ]" />
+                                    {{ summary.bookings.trend.toFixed(1) }}%
+                                </div>
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <CardTitle class="text-xs font-medium">Doanh thu</CardTitle>
                                 <DollarSign class="h-3 w-3 text-muted-foreground" />
                             </CardHeader>
@@ -311,6 +410,22 @@ const financialItems = [
                                 </div>
                             </CardContent>
                         </Card>
+                        <Card>
+                            <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle class="text-xs font-medium">Hoàn tiền</CardTitle>
+                                <ArrowUpRight class="h-3 w-3 text-destructive" />
+                            </CardHeader>
+                            <CardContent>
+                                <div class="text-xl font-bold text-destructive">
+                                    {{ formatPrice(summary.refunds.value) }}
+                                </div>
+                                <div
+                                    :class="['flex items-center gap-1 text-[10px]', getTrendClass(summary.refunds.trend)]">
+                                    <TrendingUp :class="['h-2 w-2', summary.refunds.trend < 0 ? 'rotate-180' : '']" />
+                                    {{ summary.refunds.trend.toFixed(1) }}%
+                                </div>
+                            </CardContent>
+                        </Card>
                     </div>
                     <div v-else class="grid grid-cols-2 gap-4 opacity-50">
                         <Card v-for="i in 4" :key="i" class="h-24 animate-pulse bg-muted/50"></Card>
@@ -331,11 +446,11 @@ const financialItems = [
                                 ordersPeriod = p;
                             fetchOrdersTrend();
                             " :class="[
-                                    'rounded-md px-2 py-1 text-[10px] font-medium transition-all',
-                                    ordersPeriod === p
-                                        ? 'bg-background text-foreground shadow-sm'
-                                        : 'text-muted-foreground hover:text-foreground',
-                                ]">
+                                'rounded-md px-2 py-1 text-[10px] font-medium transition-all',
+                                ordersPeriod === p
+                                    ? 'bg-background text-foreground shadow-sm'
+                                    : 'text-muted-foreground hover:text-foreground',
+                            ]">
                                 {{
                                     p === 'week'
                                         ? 'Tuần'
@@ -361,7 +476,7 @@ const financialItems = [
                                 <VisGroupedBar :x="getXIndex" :y="getYCount" color="#6366f1" />
                                 <VisTooltip />
                                 <VisCrosshair :template="(d: any) =>
-                                    `${d.label} - Số đơn: ${d.count}`
+                                    `${d.label}<br /> Số đơn: ${d.count}`
                                     " />
                             </VisXYContainer>
                         </CardContent>
@@ -413,23 +528,120 @@ const financialItems = [
                                 :interpolateMissingData="true" />
                             <VisAxis type="y" :tickFormat="tickPriceFormat" />
                             <VisTooltip />
-                            <VisCrosshair class="whitespace-pre-line" :template="(d: any) =>
-                                `${d.label}\nDoanh thu: ${formatPrice(d.revenue)}\nLợi nhuận: ${formatPrice(d.profit)}`
-                                " />
+                            <VisCrosshair :template="(d: any) => `${d.label}
+                                <br /> Doanh thu: ${formatPrice(d.revenue)}
+                                <br /> Lợi nhuận: ${formatPrice(d.profit)}
+                                <br /> Hoàn tiền: ${formatPrice(d.refunds)}`" />
                         </VisXYContainer>
                         <VisBulletLegend :items="financialItems" :shape="'line'" />
                     </CardContent>
                 </Card>
             </div>
+            <!-- Distribution Charts Section -->
+            <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+                <!-- Order Distribution -->
+                <Card>
+                    <CardHeader class="flex flex-row items-center justify-between">
+                        <CardTitle class="text-sm font-medium">Trạng thái Đơn hàng</CardTitle>
+                        <div class="flex items-center gap-1 rounded-lg bg-muted p-1">
+                            <button v-for="p in ['today', 'week', 'month', 'quarter', 'year']" :key="p"
+                                @click="orderDistPeriod = p; fetchOrderDist()"
+                                :class="['rounded-md px-2 py-1 text-[10px] font-medium', orderDistPeriod === p ? 'bg-background shadow-sm' : 'text-muted-foreground']">
+                                {{
+                                    p === 'today'
+                                        ? 'Hôm nay'
+                                        : p === 'week'
+                                            ? 'Tuần'
+                                            : p === 'month'
+                                                ? 'Tháng'
+                                                : p === 'quarter'
+                                                    ? 'Quý'
+                                                    : 'Năm'
+                                }}
+                            </button>
+                        </div>
+                    </CardHeader>
+                    <CardContent class="flex h-[400px] items-center justify-center">
+                        <VisSingleContainer :height="300">
+                            <VisDonut :data="orderDist" :value="donutValue" :color="donutColor"
+                                :showEmptySegments="true" :padAngle="0.01" :arcWidth="100" :radius="100" />
+                            <VisBulletLegend :items="orderLegendItems" />
+                            <VisTooltip />
+                        </VisSingleContainer>
+                    </CardContent>
+                </Card>
 
+                <!-- Booking Distribution -->
+                <Card>
+                    <CardHeader class="flex flex-row items-center justify-between">
+                        <CardTitle class="text-sm font-medium">Trạng thái Lịch hẹn</CardTitle>
+                        <div class="flex items-center gap-1 rounded-lg bg-muted p-1">
+                            <button v-for="p in ['today', 'week', 'month', 'quarter', 'year']" :key="p"
+                                @click="bookingDistPeriod = p; fetchBookingDist()"
+                                :class="['rounded-md px-2 py-1 text-[10px] font-medium', bookingDistPeriod === p ? 'bg-background shadow-sm' : 'text-muted-foreground']">
+                                {{
+                                    p === 'today'
+                                        ? 'Hôm nay'
+                                        : p === 'week'
+                                            ? 'Tuần'
+                                            : p === 'month'
+                                                ? 'Tháng'
+                                                : p === 'quarter'
+                                                    ? 'Quý'
+                                                    : 'Năm'
+                                }}
+                            </button>
+                        </div>
+                    </CardHeader>
+                    <CardContent class="flex h-[400px] items-center justify-center">
+                        <VisSingleContainer :height="300">
+                            <VisDonut :data="bookingDist" :value="donutValue" :color="donutColor"
+                                :showEmptySegments="true" :padAngle="0.01" :arcWidth="100" :radius="100" />
+                            <VisBulletLegend :items="bookingLegendItems" />
+                            <VisTooltip />
+                        </VisSingleContainer>
+                    </CardContent>
+                </Card>
+
+                <!-- Refund Distribution -->
+                <Card>
+                    <CardHeader class="flex flex-row items-center justify-between">
+                        <CardTitle class="text-sm font-medium">Trạng thái Hoàn tiền</CardTitle>
+                        <div class="flex items-center gap-1 rounded-lg bg-muted p-1">
+                            <button v-for="p in ['today', 'week', 'month', 'quarter', 'year']" :key="p"
+                                @click="refundDistPeriod = p; fetchRefundDist()"
+                                :class="['rounded-md px-2 py-1 text-[10px] font-medium', refundDistPeriod === p ? 'bg-background shadow-sm' : 'text-muted-foreground']">
+                                {{
+                                    p === 'today'
+                                        ? 'Hôm nay'
+                                        : p === 'week'
+                                            ? 'Tuần'
+                                            : p === 'month'
+                                                ? 'Tháng'
+                                                : p === 'quarter'
+                                                    ? 'Quý'
+                                                    : 'Năm'
+                                }}
+                            </button>
+                        </div>
+                    </CardHeader>
+                    <CardContent class="flex h-[400px] items-center justify-center">
+                        <VisSingleContainer :height="300">
+                            <VisBulletLegend :items="refundLegendItems" />
+                            <VisDonut :data="refundDist" :value="donutValue" :color="donutColor"
+                                :showEmptySegments="true" :padAngle="0.01" :arcWidth="100" :radius="100" />
+                        </VisSingleContainer>
+                    </CardContent>
+                </Card>
+            </div>
             <!-- Utility Tables -->
-            <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                <Card class="lg:col-span-2">
+            <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <!-- Bảng Đơn hàng (Giữ nguyên nhưng đổi lg:col-span-2 thành không có span) -->
+                <Card>
                     <CardHeader class="flex flex-row items-center justify-between">
                         <div>
                             <CardTitle>Đơn hàng gần đây</CardTitle>
-                            <CardDescription>Theo dõi các giao dịch mới
-                                nhất</CardDescription>
+                            <CardDescription>Theo dõi các giao dịch mới nhất</CardDescription>
                         </div>
                         <ArrowUpRight
                             class="h-4 w-4 cursor-pointer text-muted-foreground transition-colors hover:text-foreground" />
@@ -447,21 +659,12 @@ const financialItems = [
                             </TableHeader>
                             <TableBody>
                                 <TableRow v-for="order in tables.recent_orders" :key="order.id">
-                                    <TableCell class="font-medium">{{
-                                        order.number
-                                    }}</TableCell>
+                                    <TableCell class="font-medium">{{ order.number }}</TableCell>
                                     <TableCell>{{ order.customer }}</TableCell>
-                                    <TableCell>{{
-                                        formatPrice(order.total)
-                                    }}</TableCell>
+                                    <TableCell>{{ formatPrice(order.total) }}</TableCell>
                                     <TableCell>
-                                        <Badge :variant="getStatusBadge(order.status)
-                                            .variant
-                                            ">
-                                            {{
-                                                getStatusBadge(order.status)
-                                                    .label
-                                            }}
+                                        <Badge :variant="getStatusBadge(order.status).variant">
+                                            {{ getStatusBadge(order.status).label }}
                                         </Badge>
                                     </TableCell>
                                     <TableCell class="text-xs text-muted-foreground">{{ order.created_at }}</TableCell>
@@ -471,62 +674,86 @@ const financialItems = [
                     </CardContent>
                 </Card>
 
+                <!-- Bảng Lịch hẹn mới thêm -->
                 <Card>
-                    <CardHeader>
-                        <CardTitle class="flex items-center gap-2">
-                            <AlertTriangle class="h-5 w-5 text-destructive" />
-                            Cảnh báo tồn kho
-                        </CardTitle>
-                        <CardDescription>Sản phẩm sắp hết hàng ( dưới 5)</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div class="max-h-[300px] overflow-y-auto pr-2">
-                            <Table>
-                                <TableHeader class="sticky top-0 z-10 bg-background">
-                                    <TableRow>
-                                        <TableHead>Sản phẩm</TableHead>
-                                        <TableHead class="text-center">Số lượng</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    <TableRow v-for="item in tables.low_stock" :key="item.variant">
-                                        <TableCell class="flex flex-col font-medium">
-                                            <span>
-                                                {{
-                                                    item.product +
-                                                    ' ' +
-                                                    item.variant
-                                                }}
-                                            </span>
-                                            <span class="text-muted-foreground">
-                                                {{ item.location }}
-                                            </span>
-                                        </TableCell>
-                                        <TableCell class="text-center">
-                                            <Badge variant="destructive">{{
-                                                item.quantity
-                                            }}</Badge>
-                                        </TableCell>
-                                    </TableRow>
-                                    <TableRow v-if="tables.low_stock.length === 0">
-                                        <TableCell colspan="2" class="py-4 text-center text-muted-foreground">
-                                            Không có sản phẩm nào sắp hết hàng.
-                                        </TableCell>
-                                    </TableRow>
-                                </TableBody>
-                            </Table>
+                    <CardHeader class="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle>Lịch hẹn gần đây</CardTitle>
+                            <CardDescription>Danh sách khách hẹn tư vấn mới nhất</CardDescription>
                         </div>
+                        <ArrowUpRight
+                            class="h-4 w-4 cursor-pointer text-muted-foreground transition-colors hover:text-foreground" />
+                    </CardHeader>
+                    <CardContent class="max-h-[300px] overflow-y-auto">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Khách hàng</TableHead>
+                                    <TableHead>Thời gian</TableHead>
+                                    <TableHead>Trạng thái</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                <TableRow v-for="booking in tables.recent_bookings" :key="booking.id">
+                                    <TableCell class="font-medium">{{ booking.customer }}</TableCell>
+                                    <TableCell class="text-xs">{{ booking.start_at }}</TableCell>
+                                    <TableCell>
+                                        <Badge variant="outline">{{ booking.status }}</Badge>
+                                    </TableCell>
+                                </TableRow>
+                                <TableRow v-if="tables.recent_bookings.length === 0">
+                                    <TableCell colspan="3" class="py-4 text-center text-muted-foreground">
+                                        Không có lịch hẹn nào.
+                                    </TableCell>
+                                </TableRow>
+                            </TableBody>
+                        </Table>
                     </CardContent>
                 </Card>
             </div>
+
+            <!-- Bảng Cảnh báo tồn kho (Đặt riêng một hàng dưới cùng) -->
+            <Card class="mt-6">
+                <CardHeader>
+                    <CardTitle class="flex items-center gap-2">
+                        <AlertTriangle class="h-5 w-5 text-destructive" />
+                        Cảnh báo tồn kho
+                    </CardTitle>
+                    <CardDescription>Sản phẩm sắp hết hàng (dưới 5)</CardDescription>
+                </CardHeader>
+                <CardContent class="max-h-[400px] overflow-y-auto">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Sản phẩm</TableHead>
+                                <TableHead class="text-center">Số lượng</TableHead>
+                                <TableHead>Vị trí</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow v-for="item in tables.low_stock" :key="item.variant">
+                                <TableCell class="font-medium">{{ item.product }} {{ item.variant }}</TableCell>
+                                <TableCell class="text-center">
+                                    <Badge variant="destructive">{{ item.quantity }}</Badge>
+                                </TableCell>
+                                <TableCell class="text-muted-foreground">{{ item.location }}</TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
         </div>
     </AppLayout>
 </template>
 
 <style scoped>
 :deep(.unovis-crosshair) {
-    white-space: pre-wrap;
+    white-space: pre-line;
     line-height: 1.4;
     padding: 8px;
+}
+
+.unovis-crosshair-template {
+    white-space: pre-line !important;
 }
 </style>
