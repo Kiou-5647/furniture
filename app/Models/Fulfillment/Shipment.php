@@ -12,8 +12,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
@@ -36,7 +34,7 @@ class Shipment extends Model
             ->logOnly(['shipment_number', 'status', 'shipped_by', 'handled_by'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
-            ->setDescriptionForEvent(fn(string $eventName) => "Shipment {$eventName}");
+            ->setDescriptionForEvent(fn (string $eventName) => "Shipment {$eventName}");
     }
 
     public function order(): BelongsTo
@@ -69,7 +67,7 @@ class Shipment extends Model
         $date = now()->format('dmy');
 
         do {
-            $number = 'SHP-' . $date . '-' . self::randomToken();
+            $number = 'SHP-'.$date.'-'.self::randomToken();
         } while (self::where('shipment_number', $number)->exists());
 
         return $number;
@@ -104,6 +102,6 @@ class Shipment extends Model
     public function canBeResent(): bool
     {
         return $this->status === ShipmentStatus::Cancelled
-            && !in_array($this->status, [OrderStatus::Cancelled, OrderStatus::Completed], true);
+            && ! in_array($this->order->status, [OrderStatus::Cancelled, OrderStatus::Completed], true);
     }
 }

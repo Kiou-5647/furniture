@@ -4,10 +4,10 @@ import { h } from 'vue';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import type { Employee } from '@/types';
+import { access } from '@/routes/employee/hr/employees';
 
 export function getColumns(
     onEdit: (employee: Employee) => void,
-    onViewRoles: (employee: Employee) => void,
     onTerminate: (employee: Employee) => void,
     onRestore: (employee: Employee) => void,
     onDelete: (employee: Employee) => void,
@@ -67,7 +67,7 @@ export function getColumns(
                         variant: 'outline',
                         size: 'sm',
                         class: 'gap-1 text-xs',
-                        onClick: () => onViewRoles(row.original),
+                        onClick: () => window.location.href = access(row.original.id).url,
                     },
                     () => [
                         h(Shield, { class: 'h-3.5 w-3.5' }),
@@ -147,7 +147,7 @@ export function getColumns(
                                 h(Pencil, { class: 'mr-2 h-4 w-4' }),
                                 'Sửa',
                             ]),
-                            h(DropdownMenuItem, { onClick: () => onViewRoles(item) }, () => [
+                            h(DropdownMenuItem, { onClick: () => window.location.href = access(row.original.id).url }, () => [
                                 h(Shield, { class: 'mr-2 h-4 w-4' }),
                                 'Quản lý quyền',
                             ]),

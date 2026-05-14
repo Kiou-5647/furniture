@@ -15,14 +15,22 @@ class BookingResource extends JsonResource
     {
         return [
             'id' => $this->id,
+
+            'can_confirm' => $this->canBeConfirmed() && Gate::allows('confirm', $this->resource),
+            'can_cancel' => $this->canBeCancelled() && Gate::allows('cancel', $this->resource),
+            'can_pay_deposit' => $this->canPayDeposit() && Gate::allows('markAsPaid', $this->resource),
+            'can_open_invoice' => $this->canOpenInvoice() && Gate::allows('openInvoice', $this->resource),
+            'can_mark_final_paid' => $this->canMarkFinalPaid() && Gate::allows('markAsPaid', $this->resource),
+            'can_delete' => Gate::allows('delete', $this->resource),
+
             'booking_number' => $this->booking_number,
-            'customer' => $this->whenLoaded('customer', fn() => [
+            'customer' => $this->whenLoaded('customer', fn () => [
                 'id' => $this->customer->id,
                 'name' => $this->customer_name ?? $this->customer->full_name ?? $this->customer->name,
                 'email' => $this->customer_email ?? $this->customer->user?->email,
                 'phone' => $this->customer_phone ?? $this->customer->phone,
             ]),
-            'designer' => $this->whenLoaded('designer', fn() => [
+            'designer' => $this->whenLoaded('designer', fn () => [
                 'id' => $this->designer->id,
                 'name' => $this->designer->display_name,
                 'hourly_rate' => $this->designer->hourly_rate,
@@ -41,8 +49,8 @@ class BookingResource extends JsonResource
             'status' => $this->status->value,
             'status_label' => $this->status->label(),
             'status_color' => $this->status->color(),
-            'accepted_by' => $this->whenLoaded('acceptedBy', fn() => $this->acceptedBy->full_name),
-            'deposit_invoice' => $this->whenLoaded('depositInvoice', fn() => $this->depositInvoice ? [
+            'accepted_by' => $this->whenLoaded('acceptedBy', fn () => $this->acceptedBy->full_name),
+            'deposit_invoice' => $this->whenLoaded('depositInvoice', fn () => $this->depositInvoice ? [
                 'id' => $this->depositInvoice->id,
                 'invoice_number' => $this->depositInvoice->invoice_number,
                 'amount_due' => $this->depositInvoice->amount_due,
@@ -50,7 +58,7 @@ class BookingResource extends JsonResource
                 'status_label' => $this->depositInvoice->status->label(),
                 'status_color' => $this->depositInvoice->status->color(),
             ] : null),
-            'final_invoice' => $this->whenLoaded('finalInvoice', fn() => $this->finalInvoice ? [
+            'final_invoice' => $this->whenLoaded('finalInvoice', fn () => $this->finalInvoice ? [
                 'id' => $this->finalInvoice->id,
                 'invoice_number' => $this->finalInvoice->invoice_number,
                 'amount_due' => $this->finalInvoice->amount_due,
@@ -59,13 +67,6 @@ class BookingResource extends JsonResource
                 'status_color' => $this->finalInvoice->status->color(),
             ] : null),
             'refunds' => RefundResource::collection($this->whenLoaded('refunds')),
-
-            'can_confirm' => $this->canBeConfirmed() && Gate::allows('confirm', $this),
-            'can_cancel' => $this->canBeCancelled() && Gate::allows('cancel', $this),
-            'can_pay_deposit' => $this->canPayDeposit() && Gate::allows('markAsPaid', $this),
-            'can_open_invoice' => $this->canOpenInvoice() && Gate::allows('openInvoice', $this),
-            'can_mark_final_paid' => $this->canMarkFinalPaid() && Gate::allows('markAsPaid', $this),
-            'can_delete' => Gate::allows('delete', $this),
 
             'created_at' => $this->created_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
             'updated_at' => $this->updated_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),

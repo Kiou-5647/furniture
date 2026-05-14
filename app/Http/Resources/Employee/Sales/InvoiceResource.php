@@ -26,8 +26,8 @@ class InvoiceResource extends JsonResource
             'amount_due' => $this->amount_due,
             'amount_paid' => $this->amount_paid,
             'remaining_balance' => $this->remainingBalance(),
-            'validated_by' => $this->whenLoaded('validatedBy', fn() => $this->validatedBy->full_name),
-            'allocations' => $this->whenLoaded('allocations', fn() => $this->allocations->map(fn($allocation) => [
+            'validated_by' => $this->whenLoaded('validatedBy', fn () => $this->validatedBy->full_name),
+            'allocations' => $this->whenLoaded('allocations', fn () => $this->allocations->map(fn ($allocation) => [
                 'id' => $allocation->id,
                 'amount_applied' => $allocation->amount_applied,
                 'applied_at' => $allocation->created_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
@@ -41,10 +41,10 @@ class InvoiceResource extends JsonResource
             ])),
             'created_at' => $this->created_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
             'updated_at' => $this->updated_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
-            'can_view' => Gate::allows('view', $this),
-            'can_update' => Gate::allows('update', $this),
-            'can_delete' => $this->canBeDeleted() && Gate::allows('delete', $this),
-            'can_cancel' => $this->canBeCancelled() && Gate::allows('update', $this),
+            'can_view' => Gate::allows('view', $this->resource),
+            'can_update' => Gate::allows('update', $this->resource),
+            'can_delete' => $this->canBeDeleted() && Gate::allows('delete', $this->resource),
+            'can_cancel' => $this->canBeCancelled() && Gate::allows('update', $this->resource),
         ];
     }
 

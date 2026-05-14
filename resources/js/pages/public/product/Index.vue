@@ -49,7 +49,6 @@ const handleUpdateFilter = (newFilters: ProductFilters) => {
     Object.assign(query, rest.filters);
 
     router.get(index().url, cleanQuery(query), {
-        preserveScroll: true,
         replace: true,
     });
 };

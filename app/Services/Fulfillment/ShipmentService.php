@@ -29,7 +29,7 @@ class ShipmentService
         return $query->where(function ($q) use ($user) {
             $q->whereRaw('1 = 0');
 
-            if ($user->isEmployee() && $user->employee?->is_active && $user->hasPermissionTo(Permission::SHIPMENT['SELECT'])) {
+            if ($user->isEmployee() && $user->is_active && $user->hasPermissionTo(Permission::SHIPMENT['SELECT'])) {
                 $employee = $user->employee;
 
                 // Quản lý kho hàng
@@ -66,9 +66,9 @@ class ShipmentService
     {
         $query = Shipment::query()
             ->with(['order', 'originLocation', 'shippingMethod', 'handledBy', 'items'])
-            ->when($filter->order_id, fn($q) => $q->where('order_id', $filter->order_id))
-            ->when($filter->status, fn($q) => $q->where('status', $filter->status))
-            ->when($filter->search, fn($q) => $q->where('shipment_number', 'ilike', "%{$filter->search}%"));
+            ->when($filter->order_id, fn ($q) => $q->where('order_id', $filter->order_id))
+            ->when($filter->status, fn ($q) => $q->where('status', $filter->status))
+            ->when($filter->search, fn ($q) => $q->where('shipment_number', 'ilike', "%{$filter->search}%"));
 
         $query = $this->applyRoleFilter($query, $user);
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Payment;
 
 use App\Actions\Payment\InitiateVnPayPaymentAction;
+use App\Constants\Permission;
 use App\Enums\UserType;
 use App\Models\Booking\Booking;
 use App\Models\Sales\Invoice;
@@ -42,14 +43,14 @@ class VnPayPaymentController
 
         // For orders: check orders.manage permission
         if ($invoiceable instanceof Order) {
-            if ($user->type !== UserType::Customer && ! $user->can('Quản lý đơn hàng')) {
+            if ($user->type !== UserType::Customer && ! $user->can(Permission::ORDER['UPDATE'])) {
                 abort(403, 'Không đủ quyền hạn tạo đơn hàng!');
             }
         }
 
         // For bookings: check bookings.manage permission
         if ($invoiceable instanceof Booking) {
-            if ($user->type !== UserType::Customer && ! $user->can('Quản lý lịch thiết kế')) {
+            if ($user->type !== UserType::Customer && ! $user->can(Permission::BOOKING['UPDATE'])) {
                 abort(403, 'Không đủ quyền hạn tạo lịch thiết kế!');
             }
         }

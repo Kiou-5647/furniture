@@ -60,12 +60,6 @@ const props = defineProps<{
 
 const emit = defineEmits(['close', 'refresh']);
 
-const showRoleSection = ref(false);
-const selectedRoles = ref<string[]>([]);
-const selectedPermissions = ref<string[]>([]);
-const initialRoles = ref<string[]>([]);
-const initialPermissions = ref<string[]>([]);
-
 const form = useForm({
     name: '',
     email: '',
@@ -107,10 +101,6 @@ watch(
                 parseHireDate(newEmp.hire_date)?.toISOString().split('T')[0] ??
                 '';
             form.is_active = newEmp.user?.is_active ?? true;
-            selectedRoles.value = newEmp.user?.roles ?? [];
-            selectedPermissions.value = newEmp.user?.permissions ?? [];
-            initialRoles.value = [...selectedRoles.value];
-            initialPermissions.value = [...selectedPermissions.value];
             avatarPreview.value = newEmp.avatar_url ?? null;
             form.avatar = null;
         } else if (!newEmp && props.open) {
@@ -118,10 +108,6 @@ watch(
             form.is_active = true;
             form.hire_date = new Date().toISOString().split('T')[0];
             form.avatar = null;
-            selectedRoles.value = [];
-            selectedPermissions.value = [];
-            initialRoles.value = [];
-            initialPermissions.value = [];
             avatarPreview.value = null;
         }
     },
@@ -129,9 +115,6 @@ watch(
 );
 
 function submit() {
-    form.roles = selectedRoles.value;
-    form.permissions = selectedPermissions.value;
-
     if (props.employee) {
         form.put(update(props.employee).url, {
             preserveScroll: true,
@@ -154,59 +137,11 @@ function submit() {
 function closeModal() {
     form.reset();
     form.clearErrors();
-    form.roles = [];
-    form.permissions = [];
     form.avatar = null;
-    showRoleSection.value = false;
     avatarPreview.value = null;
     emit('close');
 }
 
-function toggleRole(roleId: string) {
-    const idx = selectedRoles.value.indexOf(roleId);
-    const perms = props.rolePermissions[roleId] ?? [];
-
-    if (idx === -1) {
-        selectedRoles.value.push(roleId);
-        perms.forEach((p) => {
-            if (!selectedPermissions.value.includes(p)) {
-                selectedPermissions.value.push(p);
-            }
-        });
-    } else {
-        selectedRoles.value.splice(idx, 1);
-        const remaining = new Set<string>();
-        selectedRoles.value.forEach((role) => {
-            (props.rolePermissions[role] ?? []).forEach((p) =>
-                remaining.add(p),
-            );
-        });
-        const manualPerms = selectedPermissions.value.filter(
-            (p) => !perms.includes(p),
-        );
-        selectedPermissions.value = [
-            ...new Set([...remaining, ...manualPerms]),
-        ];
-    }
-}
-
-function togglePermission(permId: string) {
-    const idx = selectedPermissions.value.indexOf(permId);
-    if (idx === -1) {
-        selectedPermissions.value.push(permId);
-    } else {
-        selectedPermissions.value.splice(idx, 1);
-    }
-}
-
-function resetPermissions() {
-    selectedPermissions.value = [...initialPermissions.value];
-}
-
-function clearAll() {
-    selectedRoles.value = [];
-    selectedPermissions.value = [];
-}
 console.info(props.storeLocationOptions)
 </script>
 
@@ -479,118 +414,6 @@ console.info(props.storeLocationOptions)
                                     />
                                 </FieldContent>
                             </Field>
-                        </div>
-
-                        <div
-                            class="mt-4 flex cursor-pointer items-center justify-between rounded-lg border p-4 hover:bg-muted/50"
-                            @click="showRoleSection = !showRoleSection"
-                        >
-                            <div class="space-y-0.5">
-                                <Label class="text-base"
-                                    >Vai trò & Quyền hạn</Label
-                                >
-                                <p class="text-sm text-muted-foreground">
-                                    {{
-                                        showRoleSection
-                                            ? 'Ẩn phần cấu hình quyền'
-                                            : 'Mở để cấu hình vai trò và quyền hạn'
-                                    }}
-                                </p>
-                            </div>
-                            <Button type="button" variant="outline" size="sm">
-                                {{ showRoleSection ? 'Ẩn' : 'Mở' }}
-                            </Button>
-                        </div>
-
-                        <div
-                            v-if="showRoleSection"
-                            class="space-y-4 rounded-lg border p-4"
-                        >
-                            <div>
-                                <div class="flex items-center justify-between">
-                                    <h4 class="text-sm font-medium">Vai trò</h4>
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="sm"
-                                        class="h-7 text-xs"
-                                        @click="clearAll"
-                                    >
-                                        Xóa tất cả
-                                    </Button>
-                                </div>
-                                <p class="mb-2 text-xs text-muted-foreground">
-                                    Chọn vai trò làm gợi ý, quyền hạn phải cấp
-                                    thủ công
-                                </p>
-                                <div class="flex flex-wrap gap-2">
-                                    <Button
-                                        v-for="role in roleOptions"
-                                        :key="role.id"
-                                        type="button"
-                                        :variant="
-                                            selectedRoles.includes(role.id)
-                                                ? 'default'
-                                                : 'outline'
-                                        "
-                                        size="sm"
-                                        @click="toggleRole(role.id)"
-                                    >
-                                        {{ role.label }}
-                                    </Button>
-                                </div>
-                            </div>
-
-                            <div>
-                                <div class="flex items-center justify-between">
-                                    <h4 class="text-sm font-medium">
-                                        Quyền hạn
-                                    </h4>
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="sm"
-                                        class="h-7 text-xs"
-                                        @click="resetPermissions"
-                                    >
-                                        Đặt lại
-                                    </Button>
-                                </div>
-                                <p class="mb-2 text-xs text-muted-foreground">
-                                    Cấp quyền thủ công, vai trò chỉ để tham khảo
-                                </p>
-                                <div class="flex flex-wrap gap-2">
-                                    <Button
-                                        v-for="perm in permissionOptions"
-                                        :key="perm.id"
-                                        type="button"
-                                        :variant="
-                                            selectedPermissions.includes(
-                                                perm.id,
-                                            )
-                                                ? 'default'
-                                                : 'outline'
-                                        "
-                                        class="text-xs"
-                                        @click="togglePermission(perm.id)"
-                                    >
-                                        {{ perm.label }}
-                                    </Button>
-                                </div>
-                            </div>
-
-                            <div
-                                class="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground"
-                            >
-                                Vai trò:
-                                <span class="font-medium text-foreground">{{
-                                    selectedRoles.length
-                                }}</span>
-                                · Quyền:
-                                <span class="font-medium text-foreground">{{
-                                    selectedPermissions.length
-                                }}</span>
-                            </div>
                         </div>
 
                         <div

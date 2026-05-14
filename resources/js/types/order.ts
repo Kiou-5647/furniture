@@ -6,6 +6,7 @@ export interface Order {
     id: string;
     can_accept: boolean;
     can_mark_paid: boolean;
+    can_bank: boolean;
     can_complete: boolean;
     can_cancel: boolean;
     can_create_shipment: boolean;

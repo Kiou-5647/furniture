@@ -34,7 +34,7 @@ class OrderService
         return $query->where(function ($q) use ($user) {
             $q->whereRaw('1 = 0');
 
-            if ($user->isEmployee() && $user->employee?->is_active && $user->hasPermissionTo(Permission::ORDER['SELECT'])) {
+            if ($user->isEmployee() && $user->is_active && $user->hasPermissionTo(Permission::ORDER['SELECT'])) {
                 $employee = $user->employee;
 
                 // Quản lý cửa hàng
@@ -74,16 +74,17 @@ class OrderService
         $orderDirection = $filter->order_direction === 'asc' ? 'asc' : 'desc';
 
         $query = Order::query()
-            ->with(['customer', 'acceptedBy', 'invoices', 'storeLocation'])
-            ->when($filter->customer_id, fn($q) => $q->byCustomerId($filter->customer_id))
-            ->when($filter->status, fn($q) => $q->byStatus($filter->status))
-            ->when($filter->source, fn($q) => $q->bySource($filter->source))
-            ->when($filter->store_location_id, fn($q) => $q->byStoreLocation($filter->store_location_id))
-            ->when($filter->search, fn($q) => $q->search($filter->search));
+            ->with(['customer', 'acceptedBy', 'invoices', 'storeLocation']);
 
         $query = $this->applyRoleFilter($query, $user);
 
-        return $query->orderBy($orderBy, $orderDirection)
+        return $query
+            ->when($filter->customer_id, fn ($q) => $q->byCustomerId($filter->customer_id))
+            ->when($filter->status, fn ($q) => $q->byStatus($filter->status))
+            ->when($filter->source, fn ($q) => $q->bySource($filter->source))
+            ->when($filter->store_location_id, fn ($q) => $q->byStoreLocation($filter->store_location_id))
+            ->when($filter->search, fn ($q) => $q->search($filter->search))
+            ->orderBy($orderBy, $orderDirection)
             ->paginate($filter->per_page);
     }
 
@@ -157,13 +158,13 @@ class OrderService
     {
         return Product::query()
             ->where('status', 'published')
-            ->with(['variants' => fn($q) => $q->where('status', 'active')->orderBy('price')])
+            ->with(['variants' => fn ($q) => $q->where('status', 'active')->orderBy('price')])
             ->orderBy('name')
             ->get(['id', 'name'])
-            ->map(fn($p) => [
+            ->map(fn ($p) => [
                 'id' => $p->id,
                 'name' => $p->name,
-                'variants' => $p->variants->map(fn($v) => [
+                'variants' => $p->variants->map(fn ($v) => [
                     'id' => $v->id,
                     'name' => $v->name,
                     'sku' => $v->sku,
@@ -179,7 +180,7 @@ class OrderService
             ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name', 'discount_value', 'discount_type'])
-            ->map(fn($b) => [
+            ->map(fn ($b) => [
                 'id' => $b->id,
                 'name' => $b->name,
                 'price' => $b->calculateBundlePrice(),
@@ -194,9 +195,9 @@ class OrderService
             ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name', 'code'])
-            ->map(fn($loc) => [
+            ->map(fn ($loc) => [
                 'id' => $loc->id,
-                'label' => $loc->name . ' (' . $loc->code . ')',
+                'label' => $loc->name.' ('.$loc->code.')',
             ]);
     }
 
@@ -229,7 +230,7 @@ class OrderService
         // Get all variants with stock at store and total stock
         $variants = ProductVariant::query()
             ->where('status', 'active')
-            ->whereHas('product', fn($q) => $q->where('status', 'published'))
+            ->whereHas('product', fn ($q) => $q->where('status', 'published'))
             ->with(['product.category', 'product.collection', 'product.vendor'])
             ->get();
 
@@ -246,7 +247,7 @@ class OrderService
 
             $items[] = [
                 'id' => $variant->id,
-                'name' => $variant->product?->name . ' — ' . $variant->name,
+                'name' => $variant->product?->name.' — '.$variant->name,
                 'sku' => $variant->sku,
                 'price' => $variant->getEffectivePrice(),
                 'stock_at_store' => $stockAtStore,
@@ -271,16 +272,17 @@ class OrderService
                 if (! $productCard) {
                     $availableAtStore = false;
                     $availableSystemWide = false;
+
                     continue;
                 }
 
                 // 1. Check if ANY variant of this product has stock at the specific store
                 $hasStockAtStore = $locationId
-                    ? $productCard->variants->some(fn($v) => $v->inventories->where('location_id', $locationId)->sum('quantity') > 0)
+                    ? $productCard->variants->some(fn ($v) => $v->inventories->where('location_id', $locationId)->sum('quantity') > 0)
                     : false;
 
                 // 2. Check if ANY variant has stock anywhere in the system
-                $hasStockTotal = $productCard->variants->some(fn($v) => $v->inventories->sum('quantity') > 0);
+                $hasStockTotal = $productCard->variants->some(fn ($v) => $v->inventories->sum('quantity') > 0);
 
                 if (! $hasStockAtStore) {
                     $availableAtStore = false;
@@ -313,17 +315,17 @@ class OrderService
     {
         $bundles = Bundle::query()
             ->where('is_active', true)
-            ->with(['contents.productCard.variants' => fn($q) => $q->where('status', 'active')])
+            ->with(['contents.productCard.variants' => fn ($q) => $q->where('status', 'active')])
             ->get();
 
         $result = [];
         foreach ($bundles as $bundle) {
-            $result[$bundle->id] = $bundle->contents->map(fn($c) => [
+            $result[$bundle->id] = $bundle->contents->map(fn ($c) => [
                 'id' => $c->id,
                 'product_card_id' => $c->productCard?->id,
                 'product_name' => $c->productCard?->product?->name ?? 'Unknown',
                 'quantity' => $c->quantity,
-                'variants' => $c->productCard?->variants->map(fn($v) => [
+                'variants' => $c->productCard?->variants->map(fn ($v) => [
                     'id' => $v->id,
                     'sku' => $v->sku,
                     'slug' => $v->slug,
@@ -332,7 +334,7 @@ class OrderService
                     'price' => $v->getEffectivePrice(),
                     'in_stock' => $v->getAvailableStock() > 0,
                     'primary_image_url' => $v->getFirstMediaUrl('primary_image'),
-                    'swatch_image_url' => $v->getFirstMediaUrl('swatch_image', 'swatch')
+                    'swatch_image_url' => $v->getFirstMediaUrl('swatch_image', 'swatch'),
                 ])->values()->toArray() ?? [],
             ])->values()->toArray();
         }
@@ -348,19 +350,20 @@ class OrderService
 
         foreach ($order->items as $item) {
             if ($item->purchasable_type === 'App\\Models\\Product\\Bundle') {
-                $bundle = \App\Models\Product\Bundle::find($item->purchasable_id);
+                $bundle = Bundle::find($item->purchasable_id);
                 $config = $item->configuration;
 
                 // Ensure bundle exists and config is actually an array
-                if (!$bundle || !is_array($config)) {
-                    Log::warning("config is not array");
+                if (! $bundle || ! is_array($config)) {
+                    Log::warning('config is not array');
+
                     continue;
                 }
 
                 foreach ($bundle->contents as $content) {
                     $configValue = $config[$content->id] ?? null;
 
-                    if (!$configValue) {
+                    if (! $configValue) {
                         // This content is in the bundle but not in the order config.
                         // This happens if the bundle was expanded after the order was placed.
                         continue;
@@ -369,17 +372,19 @@ class OrderService
                     $variantId = $configValue['variant_id'] ?? null;
 
                     if ($variantId) {
-                        $variant = \App\Models\Product\ProductVariant::find($variantId);
+                        $variant = ProductVariant::find($variantId);
 
-                        if (!$variant) continue;
+                        if (! $variant) {
+                            continue;
+                        }
 
                         $shippableItems[] = [
                             'bundle_name' => $bundle->name,
                             'order_item_id' => $item->id,
                             'variant_id' => $variant->id,
                             'sku' => $variant->sku,
-                            'name' => $variant->product->name . ' ' . $variant->name,
-                            'quantity' => (int)(($configValue['quantity'] ?? $content->quantity) * $item->quantity),
+                            'name' => $variant->product->name.' '.$variant->name,
+                            'quantity' => (int) (($configValue['quantity'] ?? $content->quantity) * $item->quantity),
                             'is_bundle_component' => true,
                             'stock_options' => $this->getVariantStockOptions($variant->id),
                         ];
@@ -391,20 +396,22 @@ class OrderService
                 $bundleContentIds = $bundle->contents->pluck('id')->toArray();
                 $missingKeys = array_diff($configKeys, $bundleContentIds);
 
-                if (!empty($missingKeys)) {
+                if (! empty($missingKeys)) {
                     throw new \RuntimeException("Đơn hàng không còn hợp lệ: Một hoặc nhiều thành phần trong gói sản phẩm \"{$bundle->name}\" đã bị thay đổi hoặc xóa bỏ.");
                 }
             } else {
-                $variant = \App\Models\Product\ProductVariant::find($item->purchasable_id);
-                if (!$variant) continue;
+                $variant = ProductVariant::find($item->purchasable_id);
+                if (! $variant) {
+                    continue;
+                }
 
                 $shippableItems[] = [
                     'bundle_name' => null,
                     'order_item_id' => $item->id,
                     'variant_id' => $variant->id,
                     'sku' => $variant->sku,
-                    'name' => $variant->product->name . ' ' . $variant->name,
-                    'quantity' => (int)$item->quantity,
+                    'name' => $variant->product->name.' '.$variant->name,
+                    'quantity' => (int) $item->quantity,
                     'is_bundle_component' => false,
                     'stock_options' => $this->getVariantStockOptions($variant->id),
                 ];

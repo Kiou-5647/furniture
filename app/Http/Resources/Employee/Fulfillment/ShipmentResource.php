@@ -15,7 +15,7 @@ class ShipmentResource extends JsonResource
         return [
             'id' => $this->id,
             'shipment_number' => $this->shipment_number,
-            'order' => $this->whenLoaded('order', fn() => [
+            'order' => $this->whenLoaded('order', fn () => [
                 'id' => $this->order->id,
                 'order_number' => $this->order->order_number,
                 'status' => $this->order->status->value,
@@ -32,15 +32,15 @@ class ShipmentResource extends JsonResource
                 'shipping_cost' => $this->order->shipping_cost,
                 'notes' => $this->order->notes,
             ]),
-            'origin_location' => $this->whenLoaded('originLocation', fn() => [
+            'origin_location' => $this->whenLoaded('originLocation', fn () => [
                 'id' => $this->originLocation->id,
                 'name' => $this->originLocation->name,
             ]),
-            'shipping_method' => $this->whenLoaded('shippingMethod', fn() => [
+            'shipping_method' => $this->whenLoaded('shippingMethod', fn () => [
                 'id' => $this->shippingMethod->id,
                 'name' => $this->shippingMethod->name,
             ]),
-            'handled_by' => $this->whenLoaded('handledBy', fn() => [
+            'handled_by' => $this->whenLoaded('handledBy', fn () => [
                 'full_name' => $this->handledBy->full_name,
                 'phone' => $this->handledBy->phone,
             ]),
@@ -49,11 +49,11 @@ class ShipmentResource extends JsonResource
             'status_label' => $this->status->label(),
             'status_color' => $this->status->color(),
 
-            'can_ship' => $this->canBeShipped() && Gate::allows('ship', $this),
-            'can_deliver' => $this->canBeDelivered() && Gate::allows('deliver', $this),
-            'can_cancel' => $this->canBeCancelled() && Gate::allows('cancel', $this),
-            'can_resend' => $this->canBeResent() && Gate::allows('resend', $this),
-            'can_delete' => Gate::allows('delete', $this),
+            'can_ship' => $this->canBeShipped() && Gate::allows('ship', $this->resource),
+            'can_deliver' => $this->canBeDelivered() && Gate::allows('deliver', $this->resource),
+            'can_cancel' => $this->canBeCancelled() && Gate::allows('cancel', $this->resource),
+            'can_resend' => $this->canBeResent() && Gate::allows('resend', $this->resource),
+            'can_delete' => Gate::allows('delete', $this->resource),
 
             'items' => ShipmentItemResource::collection($this->whenLoaded('items')),
             'created_at' => $this->created_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),

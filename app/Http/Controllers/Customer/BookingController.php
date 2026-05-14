@@ -13,11 +13,8 @@ use App\Http\Resources\Public\Booking\BookingDetailsResource;
 use App\Http\Resources\Public\Booking\BookingResource;
 use App\Models\Booking\Booking;
 use App\Models\Hr\Designer;
-use App\Services\Booking\BookingAvailabilityService;
 use App\Services\Booking\BookingService;
-use App\Services\Hr\DesignerService;
 use App\Settings\BookingSettings;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -28,8 +25,6 @@ class BookingController
 {
     public function __construct(
         private CreateBookingAction $createBookingAction,
-        private DesignerService $designerService,
-        private BookingAvailabilityService $availabilityService,
         private BookingService $bookingService,
         private BookingSettings $settings
     ) {}

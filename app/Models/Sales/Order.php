@@ -6,13 +6,11 @@ use App\Builders\Sales\OrderBuilder;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\ShipmentStatus;
+use App\Models\Customer\Customer;
 use App\Models\Fulfillment\Shipment;
 use App\Models\Fulfillment\ShippingMethod;
 use App\Models\Hr\Employee;
 use App\Models\Inventory\Location;
-use App\Models\Sales\Invoice;
-use App\Models\Sales\OrderItem;
-use App\Models\Sales\Refund;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -20,7 +18,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Gate;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
@@ -56,12 +53,12 @@ class Order extends Model
             ->logOnly(['order_number', 'status', 'total_amount', 'customer_id', 'accepted_by'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
-            ->setDescriptionForEvent(fn(string $eventName) => "Order {$eventName}");
+            ->setDescriptionForEvent(fn (string $eventName) => "Order {$eventName}");
     }
 
     public function customer(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Customer\Customer::class, 'customer_id');
+        return $this->belongsTo(Customer::class, 'customer_id');
     }
 
     public function items(): HasMany
@@ -117,7 +114,7 @@ class Order extends Model
         $date = now()->format('dmy');
 
         do {
-            $number = 'ORD-' . $date . '-' . self::randomToken();
+            $number = 'ORD-'.$date.'-'.self::randomToken();
         } while (self::where('order_number', $number)->exists());
 
         return $number;
@@ -173,10 +170,33 @@ class Order extends Model
                 }
 
                 $hasPendingItems = $this->shipments()
-                    ->whereHas('items', fn($q) => $q->whereNotIn('status', [ShipmentStatus::Delivered, ShipmentStatus::Returned]))
+                    ->whereHas('items', fn ($q) => $q->whereNotIn('status', [ShipmentStatus::Delivered, ShipmentStatus::Returned]))
                     ->exists();
 
-                if ($hasPendingItems) return false;
+                if ($hasPendingItems) {
+                    return false;
+                }
+            }
+        } else {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function canBeBankTranfered(): bool
+    {
+        if ($this->paid_at !== null || $this->status !== OrderStatus::Processing) {
+            return false;
+        }
+
+        if ($this->payment_method === PaymentMethod::BankTransfer) {
+            $hasPendingItems = $this->shipments()
+                ->whereHas('items', fn ($q) => $q->whereNotIn('status', [ShipmentStatus::Delivered, ShipmentStatus::Returned]))
+                ->exists();
+
+            if ($hasPendingItems) {
+                return false;
             }
         } else {
             return false;
@@ -198,12 +218,16 @@ class Order extends Model
 
             $hasPendingItems = $this->shipments()
                 ->where('status', '!=', ShipmentStatus::Cancelled)
-                ->whereHas('items', fn($q) => $q->whereNotIn('status', [ShipmentStatus::Delivered, ShipmentStatus::Returned]))
+                ->whereHas('items', fn ($q) => $q->whereNotIn('status', [ShipmentStatus::Delivered, ShipmentStatus::Returned]))
                 ->exists();
 
-            if ($hasPendingItems) return false;
+            if ($hasPendingItems) {
+                return false;
+            }
         } else {
-            if (!$this->isFullyPaid()) return false;
+            if (! $this->isFullyPaid()) {
+                return false;
+            }
         }
 
         return true;
@@ -219,7 +243,9 @@ class Order extends Model
             ->whereIn('status', [ShipmentStatus::Shipped, ShipmentStatus::Delivered, ShipmentStatus::Returned])
             ->doesntExist();
 
-        if (!$hasActiveShipments) return false;
+        if (! $hasActiveShipments) {
+            return false;
+        }
 
         return true;
     }

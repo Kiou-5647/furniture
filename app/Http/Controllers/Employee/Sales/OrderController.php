@@ -34,7 +34,7 @@ class OrderController
 
     public function index(Request $request)
     {
-        if (!Gate::allows('viewAny', Order::class)) {
+        if (! Gate::allows('viewAny', Order::class)) {
             return back()->with('error', 'Bạn không có quyền truy cập danh sách đơn hàng!');
         }
 
@@ -64,13 +64,13 @@ class OrderController
 
     public function show(Request $request, Order $order)
     {
-        if (!Gate::allows('view', $order)) {
+        if (! Gate::allows('view', $order)) {
             return back()->with('error', 'Bạn không có quyền xem chi tiết đơn hàng này!');
         }
 
         $order = $this->service->getById($order->id, $request->user());
         $variantStockOptions = $this->service->getOrderVariantStockOptions($order);
-        $order->load(['shipments.items.variant']);
+        $order->load(['shipments.items.variant', 'shipments.originLocation']);
 
         return Inertia::render('employee/sales/orders/Show', [
             'order' => new OrderResource($order),
@@ -80,7 +80,7 @@ class OrderController
 
     public function store(CreateOrderRequest $request, CreateOrderAction $action)
     {
-        if (!Gate::allows('create', Order::class)) {
+        if (! Gate::allows('create', Order::class)) {
             return back()->with('error', 'Bạn không có quyền tạo đơn hàng!');
         }
 
@@ -93,7 +93,7 @@ class OrderController
         $data = CreateOrderData::fromRequest($request);
 
         try {
-            $order = $action->execute($data);
+            $order = $action->execute($data, $employee->id);
 
             return redirect()->route('employee.sales.orders.show', $order)
                 ->with('success', 'Đã tạo đơn hàng mới.');
@@ -104,7 +104,7 @@ class OrderController
 
     public function updateStatus(UpdateOrderStatusRequest $request, Order $order, UpdateOrderStatusAction $action)
     {
-        if (!Gate::allows('updateStatus', $order)) {
+        if (! Gate::allows('updateStatus', $order)) {
             return back()->with('error', 'Bạn không có quyền cập nhật trạng thái đơn hàng này!');
         }
 
@@ -122,7 +122,7 @@ class OrderController
 
     public function cancel(Order $order, Request $request, CancelOrderAction $action)
     {
-        if (!Gate::allows('cancel', $order)) {
+        if (! Gate::allows('cancel', $order)) {
             return back()->with('error', 'Bạn không có quyền hủy đơn hàng này!');
         }
 
@@ -139,7 +139,7 @@ class OrderController
 
     public function complete(Order $order, Request $request, CompleteOrderAction $action)
     {
-        if (!Gate::allows('complete', $order)) {
+        if (! Gate::allows('complete', $order)) {
             return back()->with('error', 'Bạn không có quyền hoàn thành đơn hàng này!');
         }
 
@@ -151,13 +151,12 @@ class OrderController
             return back()->with('error', $e->getMessage());
         }
 
-
         return back()->with('success', 'Đã hoàn thành đơn hàng.');
     }
 
     public function destroy(Order $order)
     {
-        if (!Gate::allows('delete', $order)) {
+        if (! Gate::allows('delete', $order)) {
             return back()->with('error', 'Bạn không có quyền xóa đơn hàng này!');
         }
 
@@ -175,7 +174,7 @@ class OrderController
 
     public function markAsPaid(Request $request, Order $order, MarkOrderAsPaidAction $action)
     {
-        if (!Gate::allows('markAsPaid', $order)) {
+        if (! Gate::allows('markAsPaid', $order)) {
             return back()->with('error', 'Bạn không có quyền xác nhận thanh toán cho đơn hàng này!');
         }
 

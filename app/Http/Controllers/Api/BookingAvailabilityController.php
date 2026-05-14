@@ -34,8 +34,8 @@ class BookingAvailabilityController
         $slots = $this->checker->getAvailableSlotsForDate($designer, $request->input('date'));
 
         $slotsMap = [];
-        for ($hour = $this->settings->morning_start; $hour <= $this->settings->afternoon_end; $hour++) {
-            $slotsMap[$hour] = in_array($hour, $slots) ? 1 : 0;
+        for ($hour = 5; $hour <= 23; $hour++) {
+            $slotsMap[$hour] = $slots[$hour] ? 1 : 0;
         }
 
         return response()->json([

@@ -19,8 +19,8 @@ class LookupNamespaceResource extends JsonResource
             'is_active' => $this->is_active,
             'is_system' => $this->is_system,
 
-            'can_update' => Gate::allows('update', $this),
-            'can_delete' => !$this->is_system && Gate::allows('delete', $this),
+            'can_update' => Gate::allows('update', $this->resource),
+            'can_delete' => ! $this->is_system && Gate::allows('delete', $this->resource),
 
             'created_at' => $this->created_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y H:i'),
             'updated_at' => $this->updated_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y H:i'),

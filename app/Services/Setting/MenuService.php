@@ -2,6 +2,7 @@
 
 namespace App\Services\Setting;
 
+use App\Constants\Permission;
 use App\Enums\UserType;
 use App\Models\Auth\User;
 use Illuminate\Support\Facades\Route;
@@ -32,10 +33,17 @@ class MenuService
         ];
 
         // HR Group
-        if ($user->canAny(['Xem nhân viên', 'Quản lý nhân viên', 'Xem phòng ban', 'Quản lý phòng ban', 'Xem nhà thiết kế', 'Quản lý nhà thiết kế'])) {
+        if ($user->canAny([
+            Permission::EMPLOYEE['SELECT'],
+            Permission::EMPLOYEE['UPDATE'],
+            Permission::DEPARTMENT['SELECT'],
+            Permission::DEPARTMENT['UPDATE'],
+            Permission::DESIGNER['SELECT'],
+            Permission::DESIGNER['UPDATE'],
+        ])) {
             $hrItems = [];
 
-            if ($user->can('Quản lý phòng ban')) {
+            if ($user->can(Permission::DEPARTMENT['UPDATE'])) {
                 $hrItems[] = [
                     'title' => 'Phòng ban',
                     'href' => route('employee.hr.departments.index'),
@@ -43,7 +51,7 @@ class MenuService
                 ];
             }
 
-            if ($user->can('Quản lý nhân viên')) {
+            if ($user->can(Permission::EMPLOYEE['UPDATE'])) {
                 $hrItems[] = [
                     'title' => 'Nhân viên',
                     'href' => route('employee.hr.employees.index'),
@@ -51,7 +59,7 @@ class MenuService
                 ];
             }
 
-            if ($user->can('Xem nhà thiết kế')) {
+            if ($user->can(Permission::DESIGNER['SELECT'])) {
                 $hrItems[] = [
                     'title' => 'Nhà thiết kế',
                     'href' => route('employee.hr.designers.index'),
@@ -69,10 +77,14 @@ class MenuService
         }
 
         // Product Management Group
-        if ($user->canAny(['Xem danh mục', 'Xem bộ sưu tập', 'Xem sản phẩm'])) {
+        if ($user->canAny([
+            Permission::CATEGORY['SELECT'],
+            Permission::COLLECTION['SELECT'],
+            Permission::PRODUCT['SELECT'],
+        ])) {
             $productItems = [];
 
-            if ($user->can('Xem sản phẩm')) {
+            if ($user->can(Permission::PRODUCT['SELECT'])) {
                 $productItems[] = [
                     'title' => 'Danh sách sản phẩm',
                     'href' => route('employee.products.index'),
@@ -80,7 +92,7 @@ class MenuService
                 ];
             }
 
-            if ($user->can('Xem danh mục')) {
+            if ($user->can(Permission::CATEGORY['SELECT'])) {
                 $productItems[] = [
                     'title' => 'Danh mục',
                     'href' => route('employee.categories.index'),
@@ -88,7 +100,7 @@ class MenuService
                 ];
             }
 
-            if ($user->can('Xem bộ sưu tập')) {
+            if ($user->can(Permission::COLLECTION['SELECT'])) {
                 $productItems[] = [
                     'title' => 'Bộ sưu tập',
                     'href' => route('employee.collections.index'),
@@ -96,7 +108,7 @@ class MenuService
                 ];
             }
 
-            if ($user->can('Xem gói sản phẩm')) {
+            if ($user->can(Permission::BUNDLE['SELECT'])) {
                 $productItems[] = [
                     'title' => 'Gói sản phẩm',
                     'href' => route('employee.bundles.index'),
@@ -114,7 +126,7 @@ class MenuService
         }
 
         // Booking Group
-        if ($user->canAny(['Xem lịch thiết kế'])) {
+        if ($user->canAny([Permission::BOOKING['SELECT']])) {
             $bookingItems = [];
 
             $menu[] = [
@@ -127,10 +139,16 @@ class MenuService
         }
 
         // Sales Group
-        if ($user->canAny(['Xem khuyến mãi', 'Xem đơn hàng', 'Xem hóa đơn', 'Xem thanh toán', 'Quản lý thanh toán'])) {
+        if ($user->canAny([
+            Permission::DISCOUNT['SELECT'],
+            Permission::ORDER['SELECT'],
+            Permission::INVOICE['SELECT'],
+            Permission::PAYMENT['SELECT'],
+            Permission::REFUND['SELECT'],
+        ])) {
             $salesItems = [];
 
-            if ($user->can('Xem đơn hàng')) {
+            if ($user->can(Permission::ORDER['SELECT'])) {
                 $salesItems[] = [
                     'title' => 'Đơn hàng',
                     'href' => route('employee.sales.orders.index'),
@@ -138,7 +156,7 @@ class MenuService
                 ];
             }
 
-            if ($user->can('Xem khuyến mãi')) {
+            if ($user->can(Permission::DISCOUNT['SELECT'])) {
                 $salesItems[] = [
                     'title' => 'Khuyến mãi',
                     'href' => route('employee.sales.discounts.index'),
@@ -146,7 +164,7 @@ class MenuService
                 ];
             }
 
-            if ($user->can('Xem hóa đơn')) {
+            if ($user->can(Permission::INVOICE['SELECT'])) {
                 $salesItems[] = [
                     'title' => 'Hóa đơn',
                     'href' => route('employee.sales.invoices.index'),
@@ -154,7 +172,7 @@ class MenuService
                 ];
             }
 
-            if ($user->can('Xem thanh toán')) {
+            if ($user->can(Permission::PAYMENT['SELECT'])) {
                 $salesItems[] = [
                     'title' => 'Thanh toán',
                     'href' => route('employee.sales.payments.index'),
@@ -162,14 +180,14 @@ class MenuService
                 ];
             }
 
-            if ($user->can('Quản lý thanh toán')) {
+            if ($user->can(Permission::REFUND['SELECT'])) {
                 $salesItems[] = [
                     'title' => 'Hoàn tiền',
                     'href' => route('employee.sales.refunds.index'),
                     'isActive' => Route::is('sales.refunds.*'),
                 ];
             }
-            if ($user->can('Xem khách hàng')) {
+            if ($user->can(Permission::CUSTOMER['SELECT'])) {
                 $salesItems[] = [
                     'title' => 'Khách hàng',
                     'href' => route('employee.customers.index'),
@@ -187,10 +205,13 @@ class MenuService
         }
 
         // Fulfillment Group
-        if ($user->canAny(['Xem vận chuyển', 'Xem phương thức vận chuyển'])) {
+        if ($user->canAny([
+            Permission::SHIPMENT['SELECT'],
+            Permission::SHIPPING_METHOD['SELECT'],
+        ])) {
             $fulfillmentItems = [];
 
-            if ($user->can('Xem vận chuyển')) {
+            if ($user->can(Permission::SHIPMENT['SELECT'])) {
                 $fulfillmentItems[] = [
                     'title' => 'Vận chuyển',
                     'href' => route('employee.fulfillment.shipments.index'),
@@ -198,7 +219,7 @@ class MenuService
                 ];
             }
 
-            if ($user->can('Xem phương thức vận chuyển')) {
+            if ($user->can(Permission::SHIPPING_METHOD['SELECT'])) {
                 $fulfillmentItems[] = [
                     'title' => 'Phương thức vận chuyển',
                     'href' => route('employee.fulfillment.shipping-methods.index'),
@@ -216,11 +237,11 @@ class MenuService
         }
 
         // Inventory Management Group
-        if ($user->can('Xem kho hàng')) {
+        if ($user->can(Permission::STOCK['SELECT'])) {
             $inventoryItems = [];
 
-            if ($user->canAny(['Xem kho hàng', 'Quản lý kho hàng'])) {
-                if ($user->canAny(['Xem nhà cung cấp', 'Quản lý nhà cung cấp'])) {
+            if ($user->canAny([Permission::STOCK['SELECT'], Permission::STOCK['UPDATE']])) {
+                if ($user->canAny([Permission::VENDOR['SELECT'], Permission::VENDOR['UPDATE']])) {
                     $inventoryItems[] = [
                         'title' => 'Nhà cung cấp',
                         'href' => route('employee.inventory.vendor.index'),
@@ -257,7 +278,7 @@ class MenuService
         }
 
         // Settings Group
-        if ($user->can('Xem tra cứu')) {
+        if ($user->can(Permission::LOOKUP['SELECT'])) {
             $menu[] = [
                 'title' => 'Cấu hình',
                 'href' => '#',

@@ -34,7 +34,7 @@ class OrderController
             per_page: (int) ($request->query('per_page') ?? 15),
         );
 
-        $orders = $this->orderService->getFiltered($filter);
+        $orders = $this->orderService->getFiltered($filter, $request->user());
 
         return Inertia::render('public/orders/Index', [
             'orders' => OrderResource::collection($orders),

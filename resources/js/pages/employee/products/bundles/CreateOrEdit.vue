@@ -48,7 +48,7 @@ const {
     setHoverImage,
 } = useBundleForm(props.bundle);
 
-const canUpdate = computed(() => CheckUserPermission('Sửa gói sản phẩm') && props.bundle != null);
+const canUpdate = computed(() => (CheckUserPermission('Sửa gói sản phẩm') && props.bundle != null) || (CheckUserPermission('Tạo gói sản phẩm') && props.bundle == null));
 
 const showSearchModal = ref(false);
 const previewVariantMap = ref<Record<string, string>>({});

@@ -11,8 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import CustomerLayout from '@/layouts/settings/CustomerLayout.vue';
 import ShopLayout from '@/layouts/ShopLayout.vue';
-import { formatDateTime } from '@/lib/date-utils';
 import { cleanQuery, formatPrice } from '@/lib';
+import { formatDateTime } from '@/lib/date-utils';
 import { bookings as bookingsRoute } from '@/routes/customer/profile';
 import { show } from '@/routes/customer/profile/bookings';
 import { initiate } from '@/routes/payment/vnpay';
@@ -210,14 +210,14 @@ const pageSize = computed(() => props.bookings?.meta?.per_page ?? 15);
 <template>
     <ShopLayout>
         <CustomerLayout>
-            <Head title="Lịch đặt thiết kế của tôi" />
+            <Head title="Lịch hẹn của tôi" />
             <div class="space-y-6 p-6">
                 <div>
                     <h1 class="text-2xl font-bold tracking-tight">
-                        Lịch đặt thiết kế của tôi
+                        Lịch đặt hẹn của tôi
                     </h1>
                     <p class="text-muted-foreground">
-                        Theo dõi và quản lý các buổi tư vấn thiết kế của bạn.
+                        Theo dõi và quản lý các buổi hẹn của bạn.
                     </p>
                 </div>
 

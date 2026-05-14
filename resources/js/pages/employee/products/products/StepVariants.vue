@@ -1716,7 +1716,7 @@ function removeVariantCareInstruction(variantIndex: number, index: number) {
                 @click.self="closeVariantSpecForm"
             >
                 <div
-                    class="w-full max-w-2xl animate-in overflow-hidden rounded-3xl border bg-card shadow-2xl duration-200 fade-in zoom-in"
+                    class="w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-in overflow-hidden rounded-3xl border bg-card shadow-2xl duration-200 fade-in zoom-in"
                 >
                     <div
                         class="flex items-center justify-between border-b bg-muted/30 px-6 py-4"

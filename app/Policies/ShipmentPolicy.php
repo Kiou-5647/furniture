@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Constants\Permission;
 use App\Models\Auth\User;
+use App\Models\Employee;
 use App\Models\Fulfillment\Shipment;
 
 class ShipmentPolicy
@@ -16,12 +17,16 @@ class ShipmentPolicy
         }
 
         // 2. Check vai trò nhân viên
-        if (!$user->isEmployee()) {
+        if (! $user->isEmployee()) {
             return false;
         }
 
         $employee = $user->employee;
         $originId = $shipment->origin_location_id;
+
+        if ($shipment->handled_by === $employee?->id) {
+            return true;
+        }
 
         // 3. Check vị trí xuất kho
         if ($originId !== $employee?->store_location_id && $originId !== $employee?->warehouse_location_id) {
@@ -34,7 +39,7 @@ class ShipmentPolicy
         }
 
         // 5. Check quyền sở hữu (Người xử lý đơn vận chuyển)
-        return is_null($shipment->handled_by) || $shipment->handled_by === $employee?->id;
+        return is_null($shipment->handled_by);
     }
 
     public function viewAny(User $user): bool
@@ -94,7 +99,7 @@ class ShipmentPolicy
 
                 // Nếu là Quản lý cửa hàng và người duyệt đơn đó cùng chi nhánh với họ
                 if ($user->hasRole('Quản lý cửa hàng')) {
-                    $acceptedEmployee = \App\Models\Employee::find($acceptedEmployeeId);
+                    $acceptedEmployee = Employee::find($acceptedEmployeeId);
                     if ($acceptedEmployee && $acceptedEmployee->store_location_id === $user->employee?->store_location_id) {
                         return true;
                     }

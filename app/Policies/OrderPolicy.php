@@ -16,14 +16,19 @@ class OrderPolicy
         }
 
         // 2. Check vai trò nhân viên
-        if (!$user->isEmployee()) {
+        if (! $user->isEmployee()) {
             return false;
         }
 
         $employee = $user->employee;
 
-        // 3. Check đơn hàng có thuộc cửa hàng của nhân viên không hoặc đơn online.
-        if (!is_null($order->store_location_id) && $order->store_location_id !== $employee?->store_location_id) {
+        // 3. Check xem liệu nhân viên có phải là người đảm nhận đơn hàng đó không.
+        if ($order->accepted_by === $employee?->id) {
+            return true;
+        }
+
+        // 4. Check đơn hàng có thuộc cửa hàng của nhân viên không hoặc đơn online.
+        if (! is_null($order->store_location_id) && $order->store_location_id !== $employee?->store_location_id) {
             return false;
         }
 
@@ -32,8 +37,7 @@ class OrderPolicy
             return true;
         }
 
-        // 5. Check xem liệu nhân viên có phải là người đảm nhận đơn hàng đó không.
-        return is_null($order->accepted_by) || $order->accepted_by === $employee?->id;
+        return is_null($order->accepted_by);
     }
 
     public function viewAny(User $user): bool

@@ -60,7 +60,7 @@ const props = defineProps<{
 
 const emit = defineEmits(['close']);
 
-const selectedEmployeeId = ref<string | undefined>(undefined);
+const selectedEmployeeId = ref<string | null>(null);
 const avatarPreview = ref<string | null>(null);
 const weeklySlots = ref<WeeklySlots>({});
 
@@ -179,6 +179,7 @@ watch(selectedEmployeeId, (empId) => {
     if (!empId || props.designer) return;
     const emp = props.employeeOptions.find((e) => e.id === empId);
     if (emp) {
+        form.employee_id = emp.id;
         form.full_name = emp.full_name ?? '';
         form.email = emp.email ?? '';
         form.phone = emp.phone ?? undefined;
@@ -189,7 +190,7 @@ function resetForm() {
     form.reset();
     form.clearErrors();
     form.avatar = null;
-    selectedEmployeeId.value = undefined;
+    selectedEmployeeId.value = null;
     avatarPreview.value = null;
     weeklySlots.value = {};
 }
@@ -241,6 +242,8 @@ function clearDay(day: number) {
 function submit() {
     form.availabilities = flattenSlots();
 
+    console.info(form);
+
     if (props.designer) {
         form.put(update({ designer: props.designer.id }).url, {
             preserveScroll: true,
@@ -263,7 +266,7 @@ function closeModal() {
     form.clearErrors();
     form.avatar = null;
     avatarPreview.value = null;
-    selectedEmployeeId.value = undefined;
+    selectedEmployeeId.value = null;
     weeklySlots.value = {};
     emit('close');
 }
@@ -421,41 +424,24 @@ function closeModal() {
 
                             <Field>
                                 <FieldLabel>
-                                    <Mail
+                                    <Phone
                                         class="h-3.5 w-3.5 text-muted-foreground"
                                     />
-                                    Email
-                                    <span class="text-destructive">*</span>
+                                    Số điện thoại
                                 </FieldLabel>
                                 <FieldContent>
                                     <Input
-                                        v-model="form.email"
-                                        type="email"
-                                        placeholder="email@example.com"
+                                        v-model="form.phone"
+                                        :disabled="!canUpdate"
+                                        placeholder="0123 456 789"
                                         class="w-full"
                                     />
-                                    <FieldError :errors="[form.errors.email]" />
+                                    <FieldError :errors="[form.errors.phone]" />
                                 </FieldContent>
                             </Field>
                         </div>
 
-                        <Field>
-                            <FieldLabel>
-                                <Phone
-                                    class="h-3.5 w-3.5 text-muted-foreground"
-                                />
-                                Số điện thoại
-                            </FieldLabel>
-                            <FieldContent>
-                                <Input
-                                    v-model="form.phone"
-                                    :disabled="!canUpdate"
-                                    placeholder="0123 456 789"
-                                    class="w-full"
-                                />
-                                <FieldError :errors="[form.errors.phone]" />
-                            </FieldContent>
-                        </Field>
+
 
                         <Field>
                             <FieldLabel>

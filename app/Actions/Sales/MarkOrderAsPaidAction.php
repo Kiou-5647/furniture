@@ -21,7 +21,7 @@ class MarkOrderAsPaidAction
         $customerId = $order->customer_id;
         if (! $customerId) {
             $admin = User::where('type', 'employee')
-                ->whereHas('roles', fn($q) => $q->where('name', 'Quản trị viên'))
+                ->whereHas('roles', fn ($q) => $q->where('name', 'Quản trị viên'))
                 ->first();
             $customerId = $admin?->id;
 
@@ -46,6 +46,11 @@ class MarkOrderAsPaidAction
                 'validated_by' => $performedBy?->id,
             ]);
 
+            // Mark the order as accepted by the performing employee only if not already accepted
+            if ($performedBy && ! $order->accepted_by) {
+                $order->update(['accepted_by' => $performedBy->id]);
+            }
+
             // InvoiceObserver will set order.paid_at when amount_paid >= amount_due
             // and auto-create refund if invoice becomes overpaid
 
@@ -58,7 +63,7 @@ class MarkOrderAsPaidAction
             $payment = Payment::create([
                 'customer_id' => $customerId,
                 'gateway' => 'cash',
-                'transaction_id' => 'CASH-' . now()->format('YmdHis') . '-' . substr(md5($order->id), 0, 8),
+                'transaction_id' => 'CASH-'.now()->format('YmdHis').'-'.substr(md5($order->id), 0, 8),
                 'amount' => $order->total_amount,
                 'gateway_payload' => null,
             ]);

@@ -16,6 +16,10 @@ export async function loadWeeklyActualSlots(
             const res = await fetch(`${availableSlots(designerId).url}?date=${date}`);
             const data = await res.json();
             updatedSlots[date] = data.slots;
+
+            console.info(designerId)
+            console.info(day)
+            console.info(data.slots)
         } catch (e) {
             console.error(`Error loading slots for ${date}`, e);
         }

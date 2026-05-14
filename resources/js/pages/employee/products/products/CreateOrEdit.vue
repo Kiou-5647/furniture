@@ -441,7 +441,7 @@ const currentStepTitle = computed(() => {
                             v-if="
                                 !ctx.isValid && ctx.validationErrors.length > 0
                             "
-                            class="fixed right-8 bottom-24 z-50 w-80 animate-in fade-in slide-in-from-bottom-4"
+                            class="fixed left-8 bottom-24 z-50 w-80 animate-in fade-in slide-in-from-bottom-4"
                         >
                             <Alert
                                 variant="destructive"

@@ -18,36 +18,36 @@ class StockTransferResource extends JsonResource
             'status' => $this->status->value,
             'status_label' => $this->status->label(),
             'status_color' => $this->status->color(),
-            'from_location' => $this->whenLoaded('fromLocation', fn() => [
+            'from_location' => $this->whenLoaded('fromLocation', fn () => [
                 'id' => $this->fromLocation->id,
                 'code' => $this->fromLocation->code,
                 'name' => $this->fromLocation->name,
                 'type' => $this->fromLocation->type?->value,
             ]),
-            'to_location' => $this->whenLoaded('toLocation', fn() => [
+            'to_location' => $this->whenLoaded('toLocation', fn () => [
                 'id' => $this->toLocation->id,
                 'code' => $this->toLocation->code,
                 'name' => $this->toLocation->name,
                 'type' => $this->toLocation->type?->value,
             ]),
-            'requested_by' => $this->whenLoaded('requestedBy', fn() => [
+            'requested_by' => $this->whenLoaded('requestedBy', fn () => [
                 'id' => $this->requestedBy->id,
                 'full_name' => $this->requestedBy->full_name,
             ]),
-            'received_by' => $this->whenLoaded('receivedBy', fn() => [
+            'received_by' => $this->whenLoaded('receivedBy', fn () => [
                 'id' => $this->receivedBy?->id,
                 'full_name' => $this->receivedBy?->full_name,
             ]),
-            'items' => $this->whenLoaded('items', fn() => StockTransferItemResource::collection($this->items)->resolve()),
+            'items' => $this->whenLoaded('items', fn () => StockTransferItemResource::collection($this->items)->resolve()),
             'items_count' => $this->whenCounted('items', $this->items_count),
             'notes' => $this->notes,
             'received_at' => $this->received_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
             'created_at' => $this->created_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
             'updated_at' => $this->updated_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
-            'can_ship' =>  $this->canBeShipped() && Gate::allows('ship', $this),
-            'can_receive' =>  $this->canBeReceived() && Gate::allows('receive', $this),
-            'can_cancel' => $this->canBeCancelled() && Gate::allows('cancel', $this),
-            'can_delete' => $this->canBeDeleted() && Gate::allows('delete', $this),
+            'can_ship' => $this->canBeShipped() && Gate::allows('ship', $this->resource),
+            'can_receive' => $this->canBeReceived() && Gate::allows('receive', $this->resource),
+            'can_cancel' => $this->canBeCancelled() && Gate::allows('cancel', $this->resource),
+            'can_delete' => $this->canBeDeleted() && Gate::allows('delete', $this->resource),
         ];
     }
 }

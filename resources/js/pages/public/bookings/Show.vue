@@ -15,8 +15,8 @@ import {
 } from '@/components/ui/dialog';
 import CustomerLayout from '@/layouts/settings/CustomerLayout.vue';
 import ShopLayout from '@/layouts/ShopLayout.vue';
-import { formatDateTime } from '@/lib/date-utils';
 import { formatPrice } from '@/lib';
+import { formatDateTime } from '@/lib/date-utils';
 import { bookings } from '@/routes/customer/profile';
 import { cancel } from '@/routes/customer/profile/bookings';
 import { initiate } from '@/routes/payment/vnpay';
@@ -31,6 +31,8 @@ type Props = {
         start_at: string;
         end_at: string;
         full_address: string;
+        can_pay_deposit: boolean;
+        can_pay_final: boolean;
         can_cancel: boolean;
         notes?: string;
         designer: {
@@ -90,7 +92,7 @@ function cancelBooking() {
 <template>
     <ShopLayout>
         <CustomerLayout>
-            <Head :title="`Chi tiết lịch đặt ${booking.booking_number}`" />
+            <Head :title="`Chi tiết lịch hẹn ${booking.booking_number}`" />
             <div class="space-y-8 p-6">
                 <!-- Header Section -->
                 <div class="flex items-center justify-between">
@@ -104,7 +106,7 @@ function cancelBooking() {
                         </Button>
                         <div>
                             <h1 class="text-2xl font-bold tracking-tight">
-                                Chi tiết lịch đặt
+                                Chi tiết lịch hẹn
                             </h1>
                             <p class="text-muted-foreground">
                                 Mã đặt lịch: {{ booking.booking_number }}
@@ -127,7 +129,7 @@ function cancelBooking() {
                             size="sm"
                             @click="isCancelConfirming = true"
                         >
-                            Hủy lịch đặt
+                            Hủy lịch hẹn
                         </Button>
                     </div>
                 </div>
@@ -211,7 +213,7 @@ function cancelBooking() {
                                         }}</span>
                                     </div>
                                     <div
-                                        v-if="!booking.is_deposit_paid"
+                                        v-if="booking.can_pay_deposit"
                                         class="flex items-center justify-between"
                                     >
                                         <span
@@ -246,7 +248,7 @@ function cancelBooking() {
                                         </a>
                                     </div>
                                     <div
-                                        v-else
+                                        v-else-if="booking.is_deposit_paid"
                                         class="flex items-center justify-end"
                                     >
                                         <span
@@ -277,9 +279,7 @@ function cancelBooking() {
                                     </div>
                                     <div
                                         v-if="
-                                            !booking.is_final_paid &&
-                                            booking.final_invoice.status ==
-                                                'open'
+                                            booking.can_pay_final
                                         "
                                         class="flex items-center justify-between"
                                     >
@@ -349,7 +349,8 @@ function cancelBooking() {
                                 >
                                     <div class="flex items-center gap-4">
                                         <img
-                                            :src="booking.designer.avatar"
+                                            :src="booking.designer.avatar ||
+                                            `https://ui-avatars.com/api/?name=${booking.designer.name}&background=random`"
                                             class="h-16 w-16 rounded-full bg-muted object-cover"
                                         />
                                         <div>
@@ -387,6 +388,7 @@ function cancelBooking() {
                                         {{ booking.designer.bio }}
                                     </p>
                                     <a
+                                        v-if="booking.designer.portfolio"
                                         :href="booking.designer.portfolio"
                                         target="_blank"
                                         class="inline-flex items-center gap-1 text-xs text-blue-500 hover:underline"
@@ -402,14 +404,14 @@ function cancelBooking() {
                         <Card>
                             <CardHeader>
                                 <CardTitle class="text-base"
-                                    >Ghi chú lịch đặt</CardTitle
+                                    >Ghi chú lịch hẹn</CardTitle
                                 >
                             </CardHeader>
                             <CardContent>
                                 <p class="text-sm text-muted-foreground italic">
                                     {{
                                         booking.notes ||
-                                        'Không có ghi chú nào cho lịch đặt này.'
+                                        'Không có ghi chú nào cho lịch hẹn này.'
                                     }}
                                 </p>
                             </CardContent>
@@ -425,9 +427,9 @@ function cancelBooking() {
             >
                 <DialogContent class="max-w-sm">
                     <DialogHeader>
-                        <DialogTitle>Xác nhận hủy lịch đặt</DialogTitle>
+                        <DialogTitle>Xác nhận hủy lịch hẹn</DialogTitle>
                         <DialogDescription>
-                            Bạn có chắc chắn muốn hủy lịch đặt này không? Hành
+                            Bạn có chắc chắn muốn hủy lịch hẹn này không? Hành
                             động này không thể hoàn tác.
                         </DialogDescription>
                     </DialogHeader>

@@ -12,7 +12,6 @@ use App\Models\Hr\Employee;
 use App\Models\Sales\Invoice;
 use App\Models\Sales\Order;
 use App\Services\Booking\BookingService;
-use App\Services\Sales\OrderService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -43,7 +42,7 @@ class InvoiceService
         return $query->where(function ($q) use ($user) {
             $q->whereRaw('1 = 0');
 
-            if ($user->isEmployee() && $user->employee?->is_active && $user->hasPermissionTo(Permission::INVOICE['SELECT'])) {
+            if ($user->isEmployee() && $user->is_active && $user->hasPermissionTo(Permission::INVOICE['SELECT'])) {
                 $employee = $user->employee;
 
                 // Quản lý cửa hàng
@@ -80,6 +79,7 @@ class InvoiceService
             }
         });
     }
+
     public function getFiltered(InvoiceFilterData $filter, User $user): LengthAwarePaginator
     {
         $allowedSortColumns = ['invoice_number', 'amount_due', 'amount_paid', 'created_at', 'updated_at'];
@@ -91,10 +91,10 @@ class InvoiceService
 
         $this->applyRoleFilter($query, $user);
 
-        return $query->when($filter->status, fn($q) => $q->byStatus($filter->status))
-            ->when($filter->type, fn($q) => $q->byType($filter->type))
-            ->when($filter->invoiceable_type, fn($q) => $q->byInvoiceableType($filter->invoiceable_type))
-            ->when($filter->search, fn($q) => $q->search($filter->search))
+        return $query->when($filter->status, fn ($q) => $q->byStatus($filter->status))
+            ->when($filter->type, fn ($q) => $q->byType($filter->type))
+            ->when($filter->invoiceable_type, fn ($q) => $q->byInvoiceableType($filter->invoiceable_type))
+            ->when($filter->search, fn ($q) => $q->search($filter->search))
             ->orderBy($orderBy, $orderDirection)
             ->paginate($filter->per_page);
     }
@@ -102,6 +102,7 @@ class InvoiceService
     public function getById(string $id, User $user): Invoice
     {
         $query = Invoice::with(['invoiceable', 'validatedBy', 'allocations.payment']);
+
         return $this->applyRoleFilter($query, $user)->findOrFail($id);
     }
 
@@ -118,10 +119,10 @@ class InvoiceService
     public function getEmployeeOptions(): Collection
     {
         return Employee::query()
-            ->whereHas('user', fn($q) => $q->where('is_active', true))
+            ->whereHas('user', fn ($q) => $q->where('is_active', true))
             ->orderBy('full_name')
             ->get(['id', 'full_name'])
-            ->map(fn($emp) => [
+            ->map(fn ($emp) => [
                 'id' => $emp->id,
                 'label' => $emp->full_name,
             ]);
@@ -139,7 +140,7 @@ class InvoiceService
 
         return $query->orderByDesc('created_at')
             ->get(['id', 'order_number', 'total_amount', 'status'])
-            ->map(fn($order) => [
+            ->map(fn ($order) => [
                 'id' => $order->id,
                 'order_number' => $order->order_number,
                 'total_amount' => $order->total_amount,
@@ -163,15 +164,15 @@ class InvoiceService
 
         return $query->orderByDesc('created_at')
             ->get()
-            ->map(fn($booking) => [
+            ->map(fn ($booking) => [
                 'id' => $booking->id,
                 'booking_number' => $booking->booking_number,
                 'status' => $booking->status,
                 'customer_name' => $booking->customer_name ?? '—',
                 'designer_name' => $booking->designer?->full_name ?? '—',
                 'total_amount' => (string) $booking->total_price,
-                'has_deposit' => !is_null($booking->deposit_invoice_id),
-                'has_final' => !is_null($booking->final_invoice_id),
+                'has_deposit' => ! is_null($booking->deposit_invoice_id),
+                'has_final' => ! is_null($booking->final_invoice_id),
             ]);
     }
 }

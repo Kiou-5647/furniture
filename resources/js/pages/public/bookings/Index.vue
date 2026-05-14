@@ -129,6 +129,32 @@ const wardDisplayLabel = computed(() => {
 });
 
 // --- METHODS ---
+async function syncSlotFromInputs() {
+    if (!form.date || !form.start_time) return;
+
+    const dateObj = new Date(form.date);
+    const day = dateObj.getDay();
+    const hour = parseInt(form.start_time.split(':')[0]);
+
+    if (isNaN(hour)) return;
+
+    const result = handleSlotClick(
+        day,
+        hour,
+        currentWeekStart.value,
+        designerAvailability.value,
+        weeklySlots.value,
+    );
+
+    if (!result.isValid) {
+        toast.error(result.error!);
+        // We don't clear the input to avoid loop, but the visual grid will show red/gray
+    } else {
+        form.date = result.date!;
+        form.start_time = result.startTime!;
+    }
+}
+
 async function loadProvinces() {
     loadingProvinces.value = true;
     try {
@@ -210,6 +236,35 @@ async function submit() {
 }
 
 // --- WATCHERS ---
+watch(
+    () => form.date,
+    async (newDate) => {
+        if (!newDate) return;
+        
+        // Tính toán lại ngày bắt đầu tuần dựa trên ngày được chọn trong DatePicker
+        const selectedDate = new Date(newDate);
+        const day = selectedDate.getDay();
+        const diff = selectedDate.getDate() - day + (day === 0 ? -6 : 1);
+        const monday = new Date(selectedDate);
+        monday.setHours(0, 0, 0, 0);
+        monday.setDate(diff);
+        
+        currentWeekStart.value = monday;
+        
+        // Tải lại slots cho tuần mới
+        await loadDesignerAvailability();
+    },
+);
+
+watch(
+    () => [form.date, form.start_time],
+    async ([newDate, newTime]) => {
+        if (newDate && newTime) {
+            await syncSlotFromInputs();
+        }
+    },
+);
+
 watch(
     () => form.province_code,
     async (newCode) => {

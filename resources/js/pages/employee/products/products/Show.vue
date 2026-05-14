@@ -141,11 +141,6 @@ async function fetchReviews(page = 1) {
     }
 }
 
-function updateScope(scope: string) {
-    reviewScope.value = scope;
-    fetchReviews(1);
-}
-
 function updateRating(rating: number | null) {
     selectedRating.value = rating;
     fetchReviews(1);
@@ -583,14 +578,6 @@ onMounted(() => {
                                 </div>
 
                                 <div class="flex flex-wrap items-center gap-3">
-                                    <div class="flex p-1 bg-muted rounded-lg border">
-                                        <button @click="updateScope('all')" :class="['px-3 py-1 text-xs font-bold rounded-md transition-all', reviewScope === 'all' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground']">
-                                            Tất cả
-                                        </button>
-                                        <button @click="updateScope('variant')" :class="['px-3 py-1 text-xs font-bold rounded-md transition-all', reviewScope === 'variant' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground']">
-                                            Biến thể
-                                        </button>
-                                    </div>
                                     <div class="flex items-center gap-2">
                                         <span class="text-xs font-bold text-muted-foreground uppercase">Sao:</span>
                                         <div class="flex gap-1">

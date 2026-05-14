@@ -183,10 +183,6 @@ const breadcrumbs = computed((): BreadcrumbItem[] => {
     const items: BreadcrumbItem[] = [{ title: 'Trang chủ', href: '/' }];
     const cat = props.product_page.category;
     if (cat) {
-        items.push({
-            title: cat.product_type.name,
-            href: `/san-pham?loai=${cat.product_type.slug}`,
-        });
         items.push({ title: cat.name, href: `/san-pham?danh-muc=${cat.slug}` });
     }
     if (!isMobile.value) {

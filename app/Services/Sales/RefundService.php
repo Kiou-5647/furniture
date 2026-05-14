@@ -4,7 +4,6 @@ namespace App\Services\Sales;
 
 use App\Constants\Permission;
 use App\Data\Sales\RefundFilterData;
-use App\Enums\RefundStatus;
 use App\Models\Auth\User;
 use App\Models\Sales\Refund;
 use Illuminate\Database\Eloquent\Builder;
@@ -21,7 +20,7 @@ class RefundService
         return $query->where(function ($q) use ($user) {
             $q->whereRaw('1 = 0');
 
-            if ($user->isEmployee() && $user->employee?->is_active && $user->hasPermissionTo(Permission::REFUND['SELECT'])) {
+            if ($user->isEmployee() && $user->is_active && $user->hasPermissionTo(Permission::REFUND['SELECT'])) {
                 $employee = $user->employee;
 
                 // Quản lý cửa hàng
@@ -40,9 +39,9 @@ class RefundService
                         // OR Đơn mình xử lý
                         ->orWhere('processed_by', $employee?->id)
                         // OR của đơn hàng mình xử lý
-                        ->orWhereHas('order', fn($qOrder) => $qOrder->where('accepted_by', $employee?->id))
+                        ->orWhereHas('order', fn ($qOrder) => $qOrder->where('accepted_by', $employee?->id))
                         // OR của lịch hẹn mình xử lý
-                        ->orWhereHas('booking', fn($qBooking) => $qBooking->where('designer_id', $employee?->designer?->id));
+                        ->orWhereHas('booking', fn ($qBooking) => $qBooking->where('designer_id', $employee?->designer?->id));
                 }
             }
         });
@@ -55,9 +54,9 @@ class RefundService
 
         $query = $this->applyRoleFilter($query, $user);
 
-        return $query->when($filter->status, fn($q) => $q->where('status', $filter->status))
-            ->when($filter->order_id, fn($q) => $q->where('order_id', $filter->order_id))
-            ->when($filter->search, fn($q) => $q->whereHas('order', fn($oq) => $oq->where('order_number', 'ilike', "%{$filter->search}%")))
+        return $query->when($filter->status, fn ($q) => $q->where('status', $filter->status))
+            ->when($filter->order_id, fn ($q) => $q->where('order_id', $filter->order_id))
+            ->when($filter->search, fn ($q) => $q->whereHas('order', fn ($oq) => $oq->where('order_number', 'ilike', "%{$filter->search}%")))
             ->orderBy($filter->order_by, $filter->order_direction)
             ->paginate($filter->per_page);
     }
@@ -69,7 +68,7 @@ class RefundService
             'booking',
             'invoice',
             'requestedBy',
-            'processedBy'
+            'processedBy',
         ]);
 
         return $this->applyRoleFilter($query, $user)->findOrFail($id);

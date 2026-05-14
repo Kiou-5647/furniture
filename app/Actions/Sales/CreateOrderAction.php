@@ -6,6 +6,7 @@ use App\Data\Sales\CreateOrderData;
 use App\Enums\InvoiceStatus;
 use App\Enums\InvoiceType;
 use App\Enums\OrderStatus;
+use App\Models\Inventory\Inventory;
 use App\Models\Product\Bundle;
 use App\Models\Product\ProductVariant;
 use App\Models\Public\CartItem;
@@ -22,14 +23,14 @@ class CreateOrderAction
         protected StockLocatorService $stockLocator,
     ) {}
 
-    public function execute(CreateOrderData $data): Order
+    public function execute(CreateOrderData $data, ?string $acceptedBy = null): Order
     {
         DB::beginTransaction();
 
         try {
             $validatedItems = $this->validateAndResolveItems($data);
-            $totalAmount = collect($validatedItems)->sum(fn($item) => $item['unit_price'] * $item['quantity']);
-            $originalTotal = collect($validatedItems)->sum(fn($item) => $item['original_unit_price'] * $item['quantity']);
+            $totalAmount = collect($validatedItems)->sum(fn ($item) => $item['unit_price'] * $item['quantity']);
+            $originalTotal = collect($validatedItems)->sum(fn ($item) => $item['original_unit_price'] * $item['quantity']);
             $totalItems = collect($validatedItems)->sum('quantity');
 
             $shippingCost = (float) ($data->shipping_cost ?? 0);
@@ -44,38 +45,38 @@ class CreateOrderAction
                 ? OrderStatus::Processing
                 : OrderStatus::Pending;
 
-
             // Create order
             $order = Order::create([
-                'order_number'          => Order::generateOrderNumber(),
-                'customer_id'           => $data->customer_id,
-                'guest_name'            => $data->guest_name,
-                'guest_phone'           => $data->guest_phone,
-                'guest_email'           => $data->guest_email,
-                'notes'                 => $data->notes,
-                'source'                => $data->source,
-                'store_location_id'     => $data->store_location_id,
-                'shipping_method_id'    => $data->shipping_method_id,
-                'shipping_cost'         => $shippingCost,
-                'payment_method'        => $data->payment_method ?? 'cash',
-                'province_code'         => $data->province_code,
-                'ward_code'             => $data->ward_code,
-                'province_name'         => $data->province_name,
-                'ward_name'             => $data->ward_name,
-                'street'                => $data->street ?? null,
-                'total_amount'          => $grandTotal,
-                'total_items'           => $totalItems,
-                'status'                => $initialStatus,
+                'order_number' => Order::generateOrderNumber(),
+                'customer_id' => $data->customer_id,
+                'guest_name' => $data->guest_name,
+                'guest_phone' => $data->guest_phone,
+                'guest_email' => $data->guest_email,
+                'notes' => $data->notes,
+                'source' => $data->source,
+                'store_location_id' => $data->store_location_id,
+                'shipping_method_id' => $data->shipping_method_id,
+                'shipping_cost' => $shippingCost,
+                'payment_method' => $data->payment_method ?? 'cash',
+                'province_code' => $data->province_code,
+                'ward_code' => $data->ward_code,
+                'province_name' => $data->province_name,
+                'ward_name' => $data->ward_name,
+                'street' => $data->street ?? null,
+                'total_amount' => $grandTotal,
+                'total_items' => $totalItems,
+                'status' => $initialStatus,
+                'accepted_by' => $acceptedBy,
             ]);
 
             Invoice::create([
-                'invoice_number'        => Invoice::generateInvoiceNumber(),
-                'invoiceable_type'      => Order::class,
-                'invoiceable_id'        => $order->id,
-                'type'                  => InvoiceType::Full,
-                'amount_due'            => $grandTotal,
-                'amount_paid'           => 0,
-                'status'                => InvoiceStatus::Open,
+                'invoice_number' => Invoice::generateInvoiceNumber(),
+                'invoiceable_type' => Order::class,
+                'invoiceable_id' => $order->id,
+                'type' => InvoiceType::Full,
+                'amount_due' => $grandTotal,
+                'amount_paid' => 0,
+                'status' => InvoiceStatus::Open,
             ]);
 
             foreach ($validatedItems as $itemData) {
@@ -84,10 +85,10 @@ class CreateOrderAction
                 }
 
                 // For in-store orders, record the cost per unit immediately upon creation
-                if (!$data->shipping_method_id && $data->store_location_id) {
+                if (! $data->shipping_method_id && $data->store_location_id) {
                     $purchasable = $this->resolvePurchasable($itemData['purchasable_type'], $itemData['purchasable_id']);
                     if ($purchasable instanceof ProductVariant) {
-                        $itemData['cost_per_unit'] = \App\Models\Inventory\Inventory::where('variant_id', $purchasable->id)
+                        $itemData['cost_per_unit'] = Inventory::where('variant_id', $purchasable->id)
                             ->where('location_id', $data->store_location_id)
                             ->value('cost_per_unit') ?? 0;
                     } elseif ($purchasable instanceof Bundle) {
@@ -95,7 +96,7 @@ class CreateOrderAction
                         foreach ($purchasable->contents as $content) {
                             $variantId = $itemData['configuration'][$content->id]['variant_id'] ?? null;
                             if ($variantId) {
-                                $bundleCost += (\App\Models\Inventory\Inventory::where('variant_id', $variantId)
+                                $bundleCost += (Inventory::where('variant_id', $variantId)
                                     ->where('location_id', $data->store_location_id)
                                     ->value('cost_per_unit') ?? 0) * $content->quantity;
                             }
@@ -109,7 +110,7 @@ class CreateOrderAction
                             if ($variantId) {
                                 $enrichedConfig[$content->id] = [
                                     'variant_id' => $variantId,
-                                    'cost' => \App\Models\Inventory\Inventory::where('variant_id', $variantId)
+                                    'cost' => Inventory::where('variant_id', $variantId)
                                         ->where('location_id', $data->store_location_id)
                                         ->value('cost_per_unit') ?? 0,
                                     'quantity' => $content->quantity,
@@ -144,19 +145,20 @@ class CreateOrderAction
     {
         if ($purchasable instanceof Bundle) {
             $this->validateBundleAvailability($purchasable, $item, $isShipping, $storeLocationId, $provinceCode);
+
             return;
         }
 
         if ($isShipping) {
             $hasStock = $this->stockLocator->findStockForItem($item['purchasable_type'], $item['purchasable_id'])->isNotEmpty();
-            if (!$hasStock) {
+            if (! $hasStock) {
                 throw new \RuntimeException("Sản phẩm '{$purchasable->name}' hiện hết hàng trên toàn hệ thống.");
             }
         } elseif ($storeLocationId) {
             $stockOptions = $this->stockLocator->findStockForItem($item['purchasable_type'], $item['purchasable_id'], null, null, $storeLocationId);
             $storeStock = $stockOptions->firstWhere('location_id', $storeLocationId);
             if (! $storeStock || $storeStock['available_qty'] <= 0) {
-                throw new \RuntimeException('Sản phẩm "' . $purchasable->name . '" hết hàng tại cửa hàng.');
+                throw new \RuntimeException('Sản phẩm "'.$purchasable->name.'" hết hàng tại cửa hàng.');
             }
         }
     }
@@ -166,7 +168,7 @@ class CreateOrderAction
         if ($purchasable instanceof ProductVariant) {
             return [
                 'original_unit_price' => (float) $purchasable->price,
-                'configuration'       => $item['configuration'] ?? [],
+                'configuration' => $item['configuration'] ?? [],
             ];
         }
 
@@ -195,16 +197,16 @@ class CreateOrderAction
 
                 $enrichedConfig[$content->id] = [
                     'variant_id' => $variantId,
-                    'price'      => round($discountedPrice, -3),
-                    'cost'       => $variant->getAverageCostPerUnit(),
-                    'quantity'   => $config[$content->id]['quantity'] ?? $content->quantity,
+                    'price' => round($discountedPrice, -3),
+                    'cost' => $variant->getAverageCostPerUnit(),
+                    'quantity' => $config[$content->id]['quantity'] ?? $content->quantity,
                 ];
             }
         }
 
         return [
             'original_unit_price' => $originalTotalValue,
-            'configuration'       => $enrichedConfig,
+            'configuration' => $enrichedConfig,
         ];
     }
 
@@ -231,12 +233,12 @@ class CreateOrderAction
             $pricing = $this->resolvePricing($purchasable, $item);
 
             $validated[] = [
-                'purchasable_type'   => $item['purchasable_type'],
-                'purchasable_id'     => $item['purchasable_id'],
-                'quantity'           => $item['quantity'],
-                'unit_price'         => $item['unit_price'],
+                'purchasable_type' => $item['purchasable_type'],
+                'purchasable_id' => $item['purchasable_id'],
+                'quantity' => $item['quantity'],
+                'unit_price' => $item['unit_price'],
                 'original_unit_price' => $pricing['original_unit_price'],
-                'configuration'      => $pricing['configuration'],
+                'configuration' => $pricing['configuration'],
             ];
         }
 
@@ -253,13 +255,13 @@ class CreateOrderAction
         $config = $item['configuration'] ?? [];
 
         if (empty($config)) {
-            throw new \RuntimeException('Gói sản phẩm "' . $bundle->name . '" thiếu thông tin tùy chọn phiên bản.');
+            throw new \RuntimeException('Gói sản phẩm "'.$bundle->name.'" thiếu thông tin tùy chọn phiên bản.');
         }
 
         foreach ($bundle->contents as $content) {
             $variantId = $config[$content->id]['variant_id'] ?? null;
 
-            if (!$variantId) {
+            if (! $variantId) {
                 throw new \RuntimeException("Gói sản phẩm '{$bundle->name}' chưa chọn phiên bản cho sản phẩm '{$content->productCard->product->name}'.");
             }
 
@@ -272,7 +274,7 @@ class CreateOrderAction
                     $variantId
                 )->sum('available_qty') >= $requiredQty;
 
-                if (!$hasStock) {
+                if (! $hasStock) {
                     throw new \RuntimeException("Phiên bản đã chọn của sản phẩm '{$content->productCard->product->name}' trong gói '{$bundle->name}' đã hết hàng.");
                 }
             } elseif ($storeLocationId) {

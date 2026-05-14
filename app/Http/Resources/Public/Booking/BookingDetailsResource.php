@@ -22,8 +22,9 @@ class BookingDetailsResource extends JsonResource
             'end_at' => $this->end_at->toDateTimeString(),
             'full_address' => $this->getFullAddress(),
             'notes' => $this->notes,
+            'can_pay_deposit' => $this->canPayDeposit(),
+            'can_pay_final' => $this->canMarkFinalPaid(),
             'can_cancel' => $this->canBeCancelled(),
-
             'designer' => [
                 'name' => $this->designer?->full_name,
                 'avatar' => $this->designer?->getFirstMediaUrl('avatar', 'thumb'),

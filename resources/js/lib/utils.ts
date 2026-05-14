@@ -39,6 +39,9 @@ export function cleanQuery(query: Record<string, any>) {
             if (key === 'limit' && Number(value) === 0) {
                 return false;
             }
+            if (key === 'sale' && Number(value) === 0) {
+                return false;
+            }
 
             return true;
         })

@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Hr;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class StoreDesignerRequest extends FormRequest
 {
@@ -14,13 +13,8 @@ class StoreDesignerRequest extends FormRequest
 
     public function rules(): array
     {
-        $isEmployee = $this->filled('employee_id');
-
         return [
             'full_name' => ['required', 'string', 'max:255'],
-            'email' => $isEmployee
-                ? ['nullable', 'email', 'max:255']
-                : ['required', 'email', 'max:255', Rule::unique('users', 'email')],
             'phone' => ['nullable', 'string', 'max:20'],
             'user_id' => ['nullable', 'uuid', 'exists:users,id'],
             'employee_id' => ['nullable', 'uuid', 'exists:employees,id'],

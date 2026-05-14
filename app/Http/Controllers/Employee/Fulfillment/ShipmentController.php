@@ -18,10 +18,8 @@ use App\Models\Sales\Order;
 use App\Services\Fulfillment\ShipmentService;
 use App\Services\Sales\OrderService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
-use Inertia\Response;
 
 class ShipmentController
 {
@@ -32,7 +30,7 @@ class ShipmentController
 
     public function index(Request $request)
     {
-        if (!Gate::allows('viewAny', Shipment::class)) {
+        if (! Gate::allows('viewAny', Shipment::class)) {
             return back()->with('error', 'Bạn không có quyền truy cập danh sách đơn vận chuyển!');
         }
 
@@ -40,7 +38,7 @@ class ShipmentController
 
         return Inertia::render('employee/fulfillment/shipments/Index', [
             'statusOptions' => ShipmentStatus::options(),
-            'shipments' => Inertia::defer(fn() => ShipmentResource::collection(
+            'shipments' => Inertia::defer(fn () => ShipmentResource::collection(
                 $this->shipmentService->getFiltered($filter, $request->user())
             )),
             'filters' => $filter,
@@ -49,7 +47,7 @@ class ShipmentController
 
     public function show(Request $request, Shipment $shipment)
     {
-        if (!Gate::allows('view', $shipment)) {
+        if (! Gate::allows('view', $shipment)) {
             return back()->with('error', 'Bạn không có quyền xem chi tiết đơn vận chuyển này!');
         }
 
@@ -62,7 +60,7 @@ class ShipmentController
 
     public function createShipments(Order $order, CreateShipmentsAction $action)
     {
-        if (!Gate::allows('createShipments', $order)) {
+        if (! Gate::allows('createShipments', $order)) {
             return back()->with('error', 'Bạn không có quyền tạo vận chuyển cho đơn hàng này!');
         }
 
@@ -80,7 +78,7 @@ class ShipmentController
 
     public function storeShipments(StoreShipmentsRequest $request, Order $order, CreateShipmentsAction $action)
     {
-        if (!Gate::allows('storeShipments', $order)) {
+        if (! Gate::allows('storeShipments', $order)) {
             return back()->with('error', 'Bạn không có quyền lưu vận chuyển cho đơn hàng này!');
         }
 
@@ -94,7 +92,7 @@ class ShipmentController
                 'order_item_id' => $itemData['order_item_id'],
                 'location_id' => $itemData['location_id'],
                 'quantity' => $itemData['quantity'],
-                'variant_id' => $itemData['variant_id']
+                'variant_id' => $itemData['variant_id'],
             ];
         }
 
@@ -109,7 +107,7 @@ class ShipmentController
 
     public function ship(Shipment $shipment, ShipShipmentAction $action)
     {
-        if (!Gate::allows('ship', $shipment)) {
+        if (! Gate::allows('ship', $shipment)) {
             return back()->with('error', 'Bạn không có quyền gửi đơn vận chuyển này!');
         }
 
@@ -126,7 +124,7 @@ class ShipmentController
 
     public function deliver(Shipment $shipment, Request $request, DeliverShipmentAction $action)
     {
-        if (!Gate::allows('deliver', $shipment)) {
+        if (! Gate::allows('deliver', $shipment)) {
             return back()->with('error', 'Bạn không có quyền giao đơn vận chuyển này!');
         }
 
@@ -143,7 +141,7 @@ class ShipmentController
 
     public function cancel(Shipment $shipment, CancelShipmentAction $action)
     {
-        if (!Gate::allows('cancel', $shipment)) {
+        if (! Gate::allows('cancel', $shipment)) {
             return back()->with('error', 'Bạn không có quyền hủy đơn vận chuyển này!');
         }
 
@@ -160,7 +158,7 @@ class ShipmentController
 
     public function resend(Shipment $shipment, ResendShipmentAction $action)
     {
-        if (!Gate::allows('resend', $shipment)) {
+        if (! Gate::allows('resend', $shipment)) {
             return back()->with('error', 'Bạn không có quyền gửi lại đơn vận chuyển này!');
         }
 
@@ -172,13 +170,13 @@ class ShipmentController
             return back()->with('error', $e->getMessage());
         }
 
-        return redirect()->route('employee.shipments.show', $newShipment)
+        return redirect()->route('employee.fulfillment.shipments.show', $newShipment)
             ->with('success', 'Đã tạo đơn vận chuyển mới.');
     }
 
     public function returnItem(Shipment $shipment, ShipmentItem $shipmentItem, ReturnShipmentItemAction $action)
     {
-        if (!Gate::allows('returnItem', $shipment)) {
+        if (! Gate::allows('returnItem', $shipment)) {
             return back()->with('error', 'Bạn không có quyền đánh dấu trả hàng cho đơn này!');
         }
 
@@ -200,7 +198,7 @@ class ShipmentController
 
     public function destroy(Shipment $shipment)
     {
-        if (!Gate::allows('delete', $shipment)) {
+        if (! Gate::allows('delete', $shipment)) {
             return back()->with('error', 'Không đủ quyền hạn để xóa đơn vận chuyển này!');
         }
 

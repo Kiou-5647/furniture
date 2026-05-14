@@ -32,6 +32,7 @@ class ProductController
         $filter = ProductFilterData::fromRequest($request);
 
         return Inertia::render('employee/products/products/Index', [
+            'canCreate' => Gate::allows('create', Product::class),
             'statusOptions' => $this->service->getStatusOptions(),
             'vendorOptions' => $this->service->getVendorOptions(),
             'categoryOptions' => $this->service->getCategoryOptions(),

@@ -11,14 +11,14 @@ import {
     Package,
     Calendar,
 } from '@lucide/vue';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import DataTableGroup from '@/components/custom/data-table/DataTableGroup.vue';
 import Heading from '@/components/Heading.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { index, deactivate } from '@/routes/employee/customers';
+import { index, deactivate, show } from '@/routes/employee/customers';
 import type { BreadcrumbItem } from '@/types';
 import type { Customer } from '@/types';
 import { getCustomerOrderColumns, getCustomerBookingColumns } from './types/customer-orders-columns';
@@ -64,38 +64,50 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     { title: props.customer?.full_name ?? 'Chi tiết khách hàng', href: '#' },
 ]);
 
+watch(() => viewMode.value,
+    () => {
+        handlePageUpdate(1);
+    }
+);
+
 function handlePageUpdate(page: number) {
     router.get(
-        index().url,
+        show(props.customer.id).url,
         {
-            customer_id: props.customer.id,
             page,
         },
-        { preserveState: true },
+        {
+            preserveState: true,
+            preserveScroll: true,
+        },
     );
 }
 
 function handlePageSizeUpdate(size: number) {
     router.get(
-        index().url,
+        show(props.customer.id).url,
         {
-            customer_id: props.customer.id,
             per_page: size,
         },
-        { preserveState: true },
+        {
+            preserveState: true,
+            preserveScroll: true,
+        },
     );
 }
 
 function handleSearchUpdate(value: string) {
     search.value = value;
     router.get(
-        index().url,
+        show(props.customer.id).url,
         {
-            customer_id: props.customer.id,
             search: value,
             page: 1,
         },
-        { preserveState: true },
+        {
+            preserveState: true,
+            preserveScroll: true,
+        },
     );
 }
 

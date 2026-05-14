@@ -2,13 +2,12 @@
 
 namespace App\Services\Public;
 
-use App\Data\Product\BundleFilterData;
 use App\Data\Public\CartTotalsData;
 use App\Enums\UserType;
 use App\Models\Auth\User;
+use App\Models\Product\Bundle;
+use App\Models\Product\ProductVariant;
 use App\Models\Public\Cart;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Log;
 
 class CartService
 {
@@ -32,6 +31,10 @@ class CartService
         $itemCount = 0;
 
         foreach ($cart->items as $item) {
+            if (! $item->validateAvailability()) {
+                continue;
+            }
+
             $quantity = $item->quantity;
             $effectivePrice = $item->getEffectivePrice();
             $itemActualTotal = $effectivePrice * $quantity;
@@ -42,15 +45,15 @@ class CartService
             // Calculate the "Original Price" for this line item
             $itemOriginalPrice = 0.0;
 
-            if ($item->purchasable instanceof \App\Models\Product\ProductVariant) {
+            if ($item->purchasable instanceof ProductVariant) {
                 // For simple items: base price * qty
                 $itemOriginalPrice = (float) $item->purchasable->price * $quantity;
-            } elseif ($item->purchasable instanceof \App\Models\Product\Bundle) {
+            } elseif ($item->purchasable instanceof Bundle) {
                 // For bundles: SUM of (base price of each component * component qty) * bundle qty
                 $bundleBaseSum = 0.0;
                 foreach ($item->purchasable->contents as $content) {
                     $variantId = $item->configuration[$content->id] ?? null;
-                    $variant = $variantId ? \App\Models\Product\ProductVariant::find($variantId) : null;
+                    $variant = $variantId ? ProductVariant::find($variantId) : null;
 
                     // Use base price, NOT effective price, to find the absolute original value
                     $componentBasePrice = $variant ? (float) $variant->price : 0;
@@ -108,9 +111,13 @@ class CartService
             ->where('session_id', $sessionId)
             ->first();
 
-        if (!$guestCart) return;
+        if (! $guestCart) {
+            return;
+        }
 
-        if ($user->type !== UserType::Customer) return;
+        if ($user->type !== UserType::Customer) {
+            return;
+        }
 
         $userCart = $this->getOrCreateForUser($user);
 

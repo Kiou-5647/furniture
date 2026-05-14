@@ -16,7 +16,7 @@ class RefundResource extends JsonResource
             'id' => $this->id,
             'refund_number' => $this->refund_number,
             'invoice_number' => $this->invoice?->invoice_number,
-            'order' => $this->whenLoaded('order', fn() => [
+            'order' => $this->whenLoaded('order', fn () => [
                 'id' => $this->order->id,
                 'order_number' => $this->order->order_number,
                 'total_amount' => $this->order->total_amount,
@@ -26,7 +26,7 @@ class RefundResource extends JsonResource
                     'phone' => $this->order->guest_phone ?? $this->order->customer?->phone,
                 ],
             ]),
-            'booking' => $this->whenLoaded('booking', fn() => [
+            'booking' => $this->whenLoaded('booking', fn () => [
                 'id' => $this->booking->id,
                 'booking_number' => $this->booking->booking_number,
                 'total_amount' => $this->booking->total_price,
@@ -36,8 +36,8 @@ class RefundResource extends JsonResource
                     'phone' => $this->booking->customer_phone ?? $this->booking->customer?->phone,
                 ],
             ]),
-            'invoice' => $this->whenLoaded('invoice', fn() => new InvoiceResource($this->invoice)),
-            'payment' => $this->whenLoaded('payment', fn() => [
+            'invoice' => $this->whenLoaded('invoice', fn () => new InvoiceResource($this->invoice)),
+            'payment' => $this->whenLoaded('payment', fn () => [
                 'id' => $this->payment->id,
                 'gateway' => $this->payment->gateway,
                 'amount' => $this->payment->amount,
@@ -47,18 +47,18 @@ class RefundResource extends JsonResource
             'status' => $this->status?->value,
             'status_label' => $this->status?->label(),
             'status_color' => $this->status?->color(),
-            'requested_by' => $this->whenLoaded('requestedBy', fn() => [
+            'requested_by' => $this->whenLoaded('requestedBy', fn () => [
                 'full_name' => $this->requestedBy->full_name,
                 'phone' => $this->requestedBy->phone,
             ]),
-            'processed_by' => $this->whenLoaded('processedBy', fn() => [
+            'processed_by' => $this->whenLoaded('processedBy', fn () => [
                 'full_name' => $this->processedBy->full_name,
             ]),
             'notes' => $this->notes,
             'processed_at' => $this->processed_at?->format('d/m/Y H:i'),
             'created_at' => $this->created_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
-            'can_approve' => $this->canBeApproved() && Gate::allows('approve', $this),
-            'can_reject' => $this->canBeRejected() && Gate::allows('reject', $this),
+            'can_approve' => $this->canBeApproved() && Gate::allows('approve', $this->resource),
+            'can_reject' => $this->canBeRejected() && Gate::allows('reject', $this->resource),
         ];
     }
 }

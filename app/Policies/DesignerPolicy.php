@@ -21,7 +21,7 @@ class DesignerPolicy
     public function update(User $user, Designer $designer): bool
     {
         // 1. Check quyền cập nhật
-        if ($user->hasPermissionTo(Permission::DESIGNER['UPDATE'])) {
+        if ($user->hasRole('Quản lý') && $user->hasPermissionTo(Permission::DESIGNER['UPDATE'])) {
             return true;
         }
 

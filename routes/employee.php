@@ -29,7 +29,6 @@ use App\Http\Controllers\Employee\Vendor\VendorController;
 use App\Http\Controllers\Setting\EmployeeProfileController;
 use Illuminate\Support\Facades\Route;
 
-
 Route::middleware(['auth', 'user_type:employee'])->prefix('nhan-vien')->name('employee.')->group(function () {
     Route::get('/ho-so', [EmployeeProfileController::class, 'edit'])->name('profile.edit');
     Route::post('/ho-so', [EmployeeProfileController::class, 'update'])->name('profile.update');
@@ -55,6 +54,7 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
         Route::prefix('nhan-vien')->name('employees.')->group(function () {
             Route::get('/', [EmployeeController::class, 'index'])->name('index');
             Route::get('/{employee}', [EmployeeController::class, 'show'])->name('show');
+            Route::get('/{employee}/access', [EmployeeController::class, 'access'])->name('access');
 
             Route::post('/', [EmployeeController::class, 'store'])->name('store');
             Route::put('/{employee}', [EmployeeController::class, 'update'])->name('update');
@@ -63,6 +63,9 @@ Route::middleware(['auth', 'verified', 'user_type:employee'])->prefix('nhan-vien
             Route::post('/{employee}/restore', [EmployeeController::class, 'restore'])->name('restore');
 
             Route::get('/{employee}/permissions', [EmployeeController::class, 'permissions'])->name('permissions');
+            Route::patch('/{employee}/roles', [EmployeeController::class, 'syncRoles'])->name('sync-roles');
+            Route::patch('/{employee}/permissions', [EmployeeController::class, 'syncPermissions'])->name('sync-permissions');
+
             Route::post('/{employee}/sync-roles-permissions', [EmployeeController::class, 'syncRolesPermissions'])->name('sync-roles-permissions');
         });
 

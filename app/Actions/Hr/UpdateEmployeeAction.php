@@ -7,7 +7,7 @@ use Illuminate\Http\UploadedFile;
 
 class UpdateEmployeeAction
 {
-    public function execute(Employee $employee, array $data, ?array $roles = null, ?array $permissions = null): Employee
+    public function execute(Employee $employee, array $data): Employee
     {
         $avatarFile = $data['avatar'] ?? null;
         unset($data['avatar']);
@@ -46,14 +46,6 @@ class UpdateEmployeeAction
             $employee->clearMediaCollection('avatar');
             $employee->addMedia($avatarFile)->toMediaCollection('avatar');
             $employee->touch();
-        }
-
-        if ($roles !== null) {
-            $employee->user->syncRoles($roles);
-        }
-
-        if ($permissions !== null) {
-            $employee->user->syncPermissions($permissions);
         }
 
         return $employee->fresh(['user', 'department']);

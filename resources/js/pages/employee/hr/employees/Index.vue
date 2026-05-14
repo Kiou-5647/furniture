@@ -45,7 +45,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const activeColumns = computed(() =>
-    getColumns(handleEdit, viewRoles, confirmTerminate, confirmRestore, confirmDelete),
+    getColumns(handleEdit, confirmTerminate, confirmRestore, confirmDelete),
 );
 
 const showFormModal = ref(false);

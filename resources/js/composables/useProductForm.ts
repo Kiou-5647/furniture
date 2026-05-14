@@ -400,7 +400,7 @@ export function useProductForm(
         const hasOptionGroups = form.option_groups.length > 0;
         const hasVariants =
             form.variants.length > 0 &&
-            form.variants.some((v) => v.price && v.sku);
+            form.variants.some((v) => v.sku);
         const hasStock =
             form.variants.length > 0 &&
             form.variants.some(
@@ -427,14 +427,13 @@ export function useProductForm(
         const errors: string[] = [];
         if (!form.name.trim()) errors.push('Tên sản phẩm là bắt buộc');
         if (!form.category_id) errors.push('Danh mục là bắt buộc');
-        if (!form.collection_id) errors.push('Bộ sưu tập là bắt buộc');
         if (!form.status) errors.push('Trạng thái là bắt buộc');
         if (form.variants.length === 0) {
             errors.push('Cần ít nhất một biến thể');
         } else {
-            const invalid = form.variants.filter((v) => !v.price || !v.sku);
+            const invalid = form.variants.filter((v) => !v.sku);
             if (invalid.length > 0) {
-                errors.push(`${invalid.length} biến thể thiếu SKU hoặc giá`);
+                errors.push(`${invalid.length} biến thể thiếu SKU`);
             }
         }
 

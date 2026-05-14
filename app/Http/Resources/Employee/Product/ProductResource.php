@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources\Employee\Product;
 
-use App\Http\Resources\Employee\Product\VariantResource;
 use App\Http\Resources\Public\Product\ProductCardResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -15,21 +14,20 @@ class ProductResource extends JsonResource
     public function toArray(Request $request): array
     {
 
-
         return [
             'id' => $this->id,
             'vendor_id' => $this->vendor_id,
             'category_id' => $this->category_id,
             'collection_id' => $this->collection_id,
-            'vendor' => $this->whenLoaded('vendor', fn() => [
+            'vendor' => $this->whenLoaded('vendor', fn () => [
                 'id' => $this->vendor?->id,
                 'name' => $this->vendor?->name,
             ]),
-            'category' => $this->whenLoaded('category', fn() => [
+            'category' => $this->whenLoaded('category', fn () => [
                 'id' => $this->category?->id,
                 'display_name' => $this->category?->display_name,
             ]),
-            'collection' => $this->whenLoaded('collection', fn() => [
+            'collection' => $this->whenLoaded('collection', fn () => [
                 'id' => $this->collection?->id,
                 'display_name' => $this->collection?->display_name,
             ]),
@@ -58,8 +56,8 @@ class ProductResource extends JsonResource
             'product_cards' => ProductCardResource::collection($this->whenLoaded('productCards')),
             'created_at' => $this->created_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
             'updated_at' => $this->updated_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
-            'can_update' => Gate::allows('update', $this),
-            'can_delete' => Gate::allows('delete', $this),
+            'can_update' => Gate::allows('update', $this->resource),
+            'can_delete' => Gate::allows('delete', $this->resource),
         ];
     }
 }

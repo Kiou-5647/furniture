@@ -31,11 +31,14 @@ class CancelOrderAction
 
             // Cancel pending shipments for shipping orders
             if ($order->shipping_method_id) {
-                $shipments = $order->shipments()
-                    ->whereIn('status', [ShipmentStatus::Pending]);
-                foreach ($shipments as $shipment) {
-                    $shipment->update(['status' => ShipmentStatus::Cancelled]);
-                }
+                $order->shipments()
+                    ->whereIn('status', [ShipmentStatus::Pending])
+                    ->get()
+                    ->each(function ($shipment) {
+                        $shipment->update(['status' => ShipmentStatus::Cancelled]);
+                        $shipment->items()->whereIn('status', [ShipmentStatus::Pending])->get()
+                            ->each(fn ($item) => $item->update(['status' => ShipmentStatus::Cancelled]));
+                    });
             }
 
             // Create refund requests for paid invoices
@@ -47,7 +50,7 @@ class CancelOrderAction
                     app(CreateRefundRequestAction::class)->execute(
                         $invoice,
                         $performedBy,
-                        'Hủy đơn hàng ' . $orderNumber
+                        'Hủy đơn hàng '.$orderNumber
                     );
                 }
             });
@@ -55,7 +58,7 @@ class CancelOrderAction
             // Mark order as cancelled
             $order->update([
                 'status' => OrderStatus::Cancelled,
-                'accepted_by' => $performedBy?->id ?? $order->accepted_by,
+                'accepted_by' => $performedBy && ! $order->accepted_by ? $performedBy->id : $order->accepted_by,
             ]);
         });
 

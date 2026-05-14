@@ -29,7 +29,7 @@ class CompleteOrderAction
 
         $order->update([
             'status' => OrderStatus::Completed,
-            'accepted_by' => $performedBy?->id ?? $order->accepted_by,
+            'accepted_by' => $performedBy && ! $order->accepted_by ? $performedBy->id : $order->accepted_by,
         ]);
 
         return $order->refresh();

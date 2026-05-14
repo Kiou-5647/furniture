@@ -25,8 +25,8 @@ class LookupResource extends JsonResource
             'is_active' => $this->is_active,
             'metadata' => $this->metadata ?? [],
 
-            'can_update' => Gate::allows('update', $this),
-            'can_delete' => Gate::allows('delete', $this),
+            'can_update' => Gate::allows('update', $this->resource),
+            'can_delete' => Gate::allows('delete', $this->resource),
 
             'created_at' => $this->created_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
             'updated_at' => $this->updated_at?->timezone($request->attributes->get('user_timezone', 'UTC'))->format('d/m/Y-H:i:s'),
