@@ -643,8 +643,6 @@ const refundLegendItems = computed(() => {
                             <CardTitle>Đơn hàng gần đây</CardTitle>
                             <CardDescription>Theo dõi các giao dịch mới nhất</CardDescription>
                         </div>
-                        <ArrowUpRight
-                            class="h-4 w-4 cursor-pointer text-muted-foreground transition-colors hover:text-foreground" />
                     </CardHeader>
                     <CardContent class="max-h-[300px] overflow-y-auto">
                         <Table>
@@ -681,8 +679,6 @@ const refundLegendItems = computed(() => {
                             <CardTitle>Lịch hẹn gần đây</CardTitle>
                             <CardDescription>Danh sách khách hẹn tư vấn mới nhất</CardDescription>
                         </div>
-                        <ArrowUpRight
-                            class="h-4 w-4 cursor-pointer text-muted-foreground transition-colors hover:text-foreground" />
                     </CardHeader>
                     <CardContent class="max-h-[300px] overflow-y-auto">
                         <Table>
